@@ -1,4 +1,4 @@
-import { MessagingResponse } from 'twilio/lib/twiml/MessagingResponse.js';
+const twilio = require('twilio');
 
 const SENDGRID_API_KEY = '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';
 const CORREO_DESTINO = 'citas@vitalclub.com.ec';
@@ -8,7 +8,6 @@ const sesiones = {};
 
 async function enviarCorreo(datos) {
   const cuerpo = `Nueva cita agendada en Vital Club\n\nNombre: ${datos.nombre}\nEdad: ${datos.edad}\nCédula: ${datos.cedula}\nNúmero: ${datos.numero}\nCorreo: ${datos.correo}\nFecha de nacimiento: ${datos.fechaNacimiento}\nHorario requerido: ${datos.horario}`;
-
   await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
@@ -24,7 +23,7 @@ async function enviarCorreo(datos) {
   });
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   const body = req.body || {};
@@ -32,12 +31,10 @@ export default async function handler(req, res) {
   const telefono = body.From || '';
   const nombreWhatsApp = body.ProfileName || 'estimado/a';
 
-  if (!sesiones[telefono]) {
-    sesiones[telefono] = { paso: 0, datos: {} };
-  }
+  if (!sesiones[telefono]) sesiones[telefono] = { paso: 0, datos: {} };
 
   const sesion = sesiones[telefono];
-  const twiml = new MessagingResponse();
+  const twiml = new twilio.twiml.MessagingResponse();
   let respuesta = '';
 
   if (sesion.paso === 0) {
@@ -101,4 +98,4 @@ export default async function handler(req, res) {
   twiml.message(respuesta);
   res.setHeader('Content-Type', 'text/xml');
   res.status(200).send(twiml.toString());
-}
+};

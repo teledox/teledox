@@ -1,7 +1,6 @@
 {
   "name": "vital-club-bot",
   "version": "1.0.0",
-  "type": "module",
   "dependencies": {
     "twilio": "^5.0.0"
   }

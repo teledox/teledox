@@ -3,6 +3,8 @@ const twilio = require('twilio');
 const SUPABASE_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
 const SENDGRID_API_KEY = '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';
+const CORREO_DESTINO = 'gerencia@vitalclub.com.ec';
+const CORREO_REMITENTE = 'gerencia@vitalclub.com.ec';
 const TWILIO_SID = 'AC37998a4481bd86a7017c898df68f96e5';
 const TWILIO_TOKEN = 'a0ddbeb684ee71818d106c922747829b';
 const OPERADOR_WHATSAPP = 'whatsapp:+593998433126';
@@ -21,6 +23,23 @@ async function supabaseQuery(method, table, body, query = '') {
   });
   if (res.status === 204) return null;
   return res.json();
+}
+
+async function enviarCorreo(datos) {
+  const cuerpo = `Nueva consulta agendada en Vital Club\n\nNombre: ${datos.nombre}\nEdad: ${datos.edad}\nCorreo: ${datos.correo}\nFecha de nacimiento: ${datos.fecha_nacimiento}\nHorario: ${datos.horario}\nSíntomas: ${datos.sintomas}\nEmpresa: ${datos.empresa}\nCédula: ${datos.cedula}`;
+  await fetch('https://api.sendgrid.com/v3/mail/send', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      personalizations: [{ to: [{ email: CORREO_DESTINO }] }],
+      from: { email: CORREO_REMITENTE },
+      subject: `Nueva teleconsulta - ${datos.nombre}`,
+      content: [{ type: 'text/plain', value: cuerpo }]
+    })
+  });
 }
 
 async function obtenerSesion(telefono) {
@@ -133,44 +152,50 @@ module.exports = async function handler(req, res) {
       return res.status(200).send(twiml.toString());
 
     } else {
-      respuesta = `✅ Sus síntomas pueden ser atendidos por teleconsulta.\n\nPor favor complete sus datos:\n\n*Nombre completo:*`;
+      respuesta = `✅ Sus síntomas pueden ser atendidos por teleconsulta.\n\nPor favor complete sus datos:\n\n*Nombres completos:*`;
       paso = 4;
     }
 
   } else if (paso === 4) {
     datos.nombre = mensaje;
-    respuesta = `*Edad:*`;
+    respuesta = `*Apellidos completos:*`;
     paso = 5;
 
   } else if (paso === 5) {
-    datos.edad = mensaje;
-    respuesta = `*Correo electrónico:*`;
+    datos.apellidos = mensaje;
+    respuesta = `*Edad:*`;
     paso = 6;
 
   } else if (paso === 6) {
-    datos.correo = mensaje;
-    respuesta = `*Fecha de nacimiento* (ej: 15/03/1990):`;
+    datos.edad = mensaje;
+    respuesta = `*Correo electrónico:*`;
     paso = 7;
 
   } else if (paso === 7) {
-    datos.fecha_nacimiento = mensaje;
-    respuesta = `*Horario de preferencia* (ej: mañana martes a las 10:00 AM):`;
+    datos.correo = mensaje;
+    respuesta = `*Fecha de nacimiento* (ej: 15/03/1990):`;
     paso = 8;
 
   } else if (paso === 8) {
-    datos.horario = mensaje;
-    respuesta = `Confirme sus datos:\n\n👤 *Nombre:* ${datos.nombre}\n🎂 *Edad:* ${datos.edad}\n📧 *Correo:* ${datos.correo}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n🕐 *Horario:* ${datos.horario}\n\nResponda *Confirmar* o *Corregir*`;
+    datos.fecha_nacimiento = mensaje;
+    respuesta = `*Horario de preferencia* (ej: mañana martes a las 10:00 AM):`;
     paso = 9;
 
   } else if (paso === 9) {
+    datos.horario = mensaje;
+    respuesta = `Confirme sus datos:\n\n👤 *Nombres:* ${datos.nombre}\n👤 *Apellidos:* ${datos.apellidos}\n🎂 *Edad:* ${datos.edad}\n📧 *Correo:* ${datos.correo}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n🕐 *Horario:* ${datos.horario}\n\nResponda *Confirmar* o *Corregir*`;
+    paso = 10;
+
+  } else if (paso === 10) {
     if (mensaje.toLowerCase() === 'confirmar') {
       await supabaseQuery('POST', 'consultas', { paciente_id: datos.paciente_id, nivel_sintomas: 1, sintomas_descripcion: datos.sintomas, estado: 'pendiente' });
-      await alertarOperador(`📅 NUEVA TELECONSULTA\nPaciente: ${datos.nombre}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}`);
+      await alertarOperador(`📅 NUEVA TELECONSULTA\nPaciente: ${datos.nombre} ${datos.apellidos}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}`);
+      await enviarCorreo({ ...datos, nombre: `${datos.nombre} ${datos.apellidos}` });
       respuesta = `🎉 *¡Solicitud recibida!*\n\nUn asesor de Vital Club le confirmará su teleconsulta a la brevedad.\n\nGracias por confiar en nosotros. 💙`;
       await eliminarSesion(telefono);
     } else {
       datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
-      respuesta = `Volvamos a empezar. *Nombre completo:*`;
+      respuesta = `Volvamos a empezar. *Nombres completos:*`;
       paso = 4;
     }
 

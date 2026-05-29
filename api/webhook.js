@@ -58,10 +58,50 @@ async function buscarPaciente(cedula) {
   return Array.isArray(data) && data.length > 0 ? data[0] : null;
 }
 
+function tieneApellidos(texto) {
+  const palabras = texto.trim().split(/\s+/);
+  return palabras.length >= 3;
+}
+
 function clasificarSintomas(texto) {
   const t = texto.toLowerCase();
-  const graves = ['dolor de pecho', 'presion en el pecho', 'no puedo respirar', 'dificultad para respirar', 'perdida de conciencia', 'convulsion', 'paralisis', 'sangrado incontrolable', 'infarto'];
-  const medios = ['fiebre alta', 'vomito repetitivo', 'diarrea con sangre', 'dolor abdominal fuerte', 'desmayo', 'herida infectada', 'dificultad respirar'];
+
+  const graves = [
+    'dolor de pecho', 'presion en el pecho', 'opresion en el pecho',
+    'no puedo respirar', 'dificultad para respirar', 'dificultad respiratoria',
+    'no respiro', 'me ahogo', 'ahogamiento',
+    'perdida de conciencia', 'perdi el conocimiento', 'me desmaye', 'desmayo repentino',
+    'convulsion', 'convulsiones', 'ataque epileptico',
+    'paralisis', 'no puedo mover', 'no muevo el brazo', 'no muevo la pierna',
+    'sangrado incontrolable', 'hemorragia',
+    'infarto', 'ataque al corazon', 'ataque cardiaco',
+    'derrame cerebral', 'stroke',
+    'labios morados', 'piel azul', 'cianosis',
+    'presion 180', 'presion alta grave', 'glucosa 400', 'azucar 400',
+    'intoxicacion grave', 'envenenamiento',
+    'quemadura grave', 'accidente grave',
+    'trauma craneo', 'golpe en la cabeza fuerte',
+    'vomito con sangre', 'heces con sangre',
+    'dolor abdominal insoportable'
+  ];
+
+  const medios = [
+    'fiebre alta', 'fiebre de 39', 'fiebre de 40', 'temperatura alta',
+    'vomito repetitivo', 'vomitos frecuentes', 'no puedo retener liquidos',
+    'diarrea con sangre', 'diarrea severa',
+    'dolor abdominal fuerte', 'dolor de estomago intenso',
+    'desmayo leve', 'mareo intenso', 'mareos frecuentes',
+    'herida infectada', 'infeccion en herida',
+    'dificultad respirar leve', 'falta de aire leve',
+    'dolor de pecho leve', 'palpitaciones',
+    'presion 160', 'presion 170', 'hipertension descontrolada',
+    'glucosa 300', 'azucar 300', 'hipoglucemia',
+    'reaccion alergica fuerte', 'urticaria generalizada',
+    'fractura', 'hueso roto', 'luxacion',
+    'dolor intenso', 'dolor severo',
+    'sangrado moderado', 'cortada profunda'
+  ];
+
   if (graves.some(s => t.includes(s))) return 3;
   if (medios.some(s => t.includes(s))) return 2;
   return 1;
@@ -83,8 +123,16 @@ module.exports = async function handler(req, res) {
   let paso = sesion.paso;
   let datos = sesion.datos || {};
 
+  // Si la consulta ya fue confirmada, responder con mensaje de cierre
+  if (paso === 99) {
+    respuesta = `Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nSi necesita una nueva consulta escriba *hola*.`;
+    twiml.message(respuesta);
+    res.setHeader('Content-Type', 'text/xml');
+    return res.status(200).send(twiml.toString());
+  }
+
   if (paso === 0) {
-    respuesta = `¡Hola, ${nombreWhatsApp}! 👋 Estamos listos para ayudarte.\n\nPara continuar, por favor indícanos tu número de *cédula de identidad*:`;
+    respuesta = `¡Hola, ${nombreWhatsApp}! 👋 Bienvenido a *MediLyft*.\n\nEstamos listos para ayudarte.\n\nPor favor indícanos tu número de *cédula de identidad*:`;
     paso = 1;
 
   } else if (paso === 1) {
@@ -95,7 +143,7 @@ module.exports = async function handler(req, res) {
       datos.nombre_paciente = paciente.nombre;
       datos.empresa = paciente.clientes_b2b?.nombre_empresa || 'su empresa';
       datos.seguro = paciente.clientes_b2b?.nombre_seguro || 'su seguro';
-      respuesta = `✅ Hemos identificado que pertenece a <b>${datos.empresa}</b> con cobertura de <b>${datos.seguro}</b>.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?\n\nResponda *Sí* o *No*`;
+      respuesta = `✅ Hemos identificado que pertenece a *${datos.empresa}* con cobertura de *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?\n\nResponda *Sí* o *No*`;
       paso = 2;
     } else {
       respuesta = `No encontramos la cédula *${mensaje}* en nuestro sistema.\n\nVerifique el número e inténtelo nuevamente:`;
@@ -103,7 +151,7 @@ module.exports = async function handler(req, res) {
 
   } else if (paso === 2) {
     if (mensaje.toLowerCase() === 'sí' || mensaje.toLowerCase() === 'si') {
-      respuesta = `Gracias por su autorización. ✅\n\n¿Cuál es el motivo de su consulta?\n\nDescríbanos sus síntomas:`;
+      respuesta = `Gracias por su autorización. ✅\n\n¿Cuál es el motivo de su consulta?\n\nDescríbanos sus síntomas con detalle:`;
       paso = 3;
     } else {
       respuesta = `Sin su autorización no es posible continuar.\n\nSi cambia de opinión escríbanos *hola*. 👋`;
@@ -119,16 +167,16 @@ module.exports = async function handler(req, res) {
     datos.nivel = nivel;
 
     if (nivel === 3) {
-      respuesta = `🚨 *ALERTA GRAVE* 🚨\n\nSus síntomas requieren atención de *emergencia inmediata*.\n\nLlame al *911* ahora mismo.\n\n📞 tel:911`;
-      await alertarTelegram(`🚨 <b>ALERTA GRAVE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+      respuesta = `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*\n\n📞 tel:911\n\nNo espere — su vida puede estar en peligro.`;
+      await alertarTelegram(`🚨 <b>ALERTA GRAVE - EMERGENCIA</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await eliminarSesion(telefono);
       twiml.message(respuesta);
       res.setHeader('Content-Type', 'text/xml');
       return res.status(200).send(twiml.toString());
 
     } else if (nivel === 2) {
-      respuesta = `⚠️ Sus síntomas requieren *atención prioritaria*.\n\nHemos notificado a nuestro equipo y le contactarán a la brevedad.\n\nSi los síntomas empeoran llame al *911* inmediatamente.`;
-      await alertarTelegram(`⚠️ <b>SÍNTOMAS MEDIOS - URGENTE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+      respuesta = `⚠️ *Atención prioritaria requerida*\n\nSus síntomas necesitan evaluación médica urgente.\n\nHemos notificado a nuestro equipo y le contactarán a la brevedad.\n\nMientras espera: si los síntomas empeoran *llame al 911 de inmediato*.`;
+      await alertarTelegram(`⚠️ <b>SÍNTOMAS MEDIOS - ATENCIÓN URGENTE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await supabaseQuery('POST', 'consultas', { paciente_id: datos.paciente_id, nivel_sintomas: 2, sintomas_descripcion: mensaje, estado: 'pendiente' });
       await eliminarSesion(telefono);
       twiml.message(respuesta);
@@ -136,17 +184,28 @@ module.exports = async function handler(req, res) {
       return res.status(200).send(twiml.toString());
 
     } else {
-      respuesta = `✅ Sus síntomas pueden ser atendidos por teleconsulta.\n\nPor favor complete sus datos:\n\n*Nombres completos:*`;
+      respuesta = `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nPor favor complete sus datos:\n\n👤 *Nombre y apellidos completos:*`;
       paso = 4;
     }
 
   } else if (paso === 4) {
-    datos.nombre = mensaje;
-    respuesta = `*Apellidos completos:*`;
-    paso = 5;
+    const nombreCompleto = mensaje.trim();
+    datos.nombreCompleto = nombreCompleto;
+
+    if (tieneApellidos(nombreCompleto)) {
+      // Ya tiene nombre y apellidos — saltamos el paso de apellidos
+      respuesta = `*Edad:*`;
+      paso = 6;
+    } else {
+      // Solo tiene nombre — pedimos apellidos
+      datos.nombre = nombreCompleto;
+      respuesta = `*Apellidos completos:*`;
+      paso = 5;
+    }
 
   } else if (paso === 5) {
     datos.apellidos = mensaje;
+    datos.nombreCompleto = `${datos.nombre} ${datos.apellidos}`;
     respuesta = `*Edad:*`;
     paso = 6;
 
@@ -167,23 +226,41 @@ module.exports = async function handler(req, res) {
 
   } else if (paso === 9) {
     datos.horario = mensaje;
-    respuesta = `Confirme sus datos:\n\n👤 *Nombres:* ${datos.nombre}\n👤 *Apellidos:* ${datos.apellidos}\n🎂 *Edad:* ${datos.edad}\n📧 *Correo:* ${datos.correo}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n🕐 *Horario:* ${datos.horario}\n\nResponda *Confirmar* o *Corregir*`;
+    respuesta = `Confirme sus datos:\n\n👤 *Nombre completo:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad}\n📧 *Correo:* ${datos.correo}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n🕐 *Horario:* ${datos.horario}\n\nResponda *Confirmar* o *Corregir*`;
     paso = 10;
 
   } else if (paso === 10) {
     if (mensaje.toLowerCase() === 'confirmar') {
-      await supabaseQuery('POST', 'consultas', { paciente_id: datos.paciente_id, nivel_sintomas: 1, sintomas_descripcion: datos.sintomas, estado: 'pendiente' });
-      await alertarTelegram(`📅 <b>NUEVA TELECONSULTA</b>\nPaciente: ${datos.nombre} ${datos.apellidos}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}`);
-      respuesta = `🎉 *¡Solicitud recibida!*\n\nUn asesor de Vital Club le confirmará su teleconsulta a la brevedad.\n\nGracias por confiar en nosotros. 💙`;
+      await supabaseQuery('POST', 'consultas', {
+        paciente_id: datos.paciente_id,
+        nivel_sintomas: 1,
+        sintomas_descripcion: datos.sintomas,
+        estado: 'pendiente'
+      });
+      await alertarTelegram(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario solicitado: ${datos.horario}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}`);
+      respuesta = `🎉 *¡Consulta registrada exitosamente!*\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.\n\n¡Gracias por confiar en nosotros! 💙`;
       await eliminarSesion(telefono);
+      // Guardamos sesión en paso 99 para manejar mensajes post-confirmación
+      await guardarSesion(telefono, 99, {});
+      twiml.message(respuesta);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
     } else {
-      datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
-      respuesta = `Volvamos a empezar. *Nombres completos:*`;
+      datos = {
+        cedula: datos.cedula,
+        paciente_id: datos.paciente_id,
+        nombre_paciente: datos.nombre_paciente,
+        empresa: datos.empresa,
+        seguro: datos.seguro,
+        sintomas: datos.sintomas,
+        nivel: datos.nivel
+      };
+      respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos:*`;
       paso = 4;
     }
 
   } else {
-    respuesta = `Escriba *hola* para iniciar. 👋`;
+    respuesta = `Escriba *hola* para iniciar una nueva consulta. 👋`;
     await eliminarSesion(telefono);
     paso = 0;
     datos = {};

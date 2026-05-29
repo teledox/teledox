@@ -2,13 +2,11 @@ const twilio = require('twilio');
 
 const SUPABASE_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
-const SENDGRID_API_KEY = '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';
-const CORREO_DESTINO = 'gerencia@vitalclub.com.ec';
-const CORREO_REMITENTE = 'gerencia@vitalclub.com.ec';
 const TWILIO_SID = 'AC37998a4481bd86a7017c898df68f96e5';
 const TWILIO_TOKEN = 'a0ddbeb684ee71818d106c922747829b';
-const OPERADOR_WHATSAPP = 'whatsapp:+593998433126';
 const TWILIO_NUMBER = 'whatsapp:+14155238886';
+const TELEGRAM_TOKEN = '8210302688:AAGYUXIg0ys0pMxJmtD2HeYFLV1hk50Qcq4';
+const TELEGRAM_CHAT_ID = '8239902044';
 
 async function supabaseQuery(method, table, body, query = '') {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${query}`, {
@@ -25,19 +23,14 @@ async function supabaseQuery(method, table, body, query = '') {
   return res.json();
 }
 
-async function enviarCorreo(datos) {
-  const cuerpo = `Nueva consulta agendada en Vital Club\n\nNombre: ${datos.nombre}\nEdad: ${datos.edad}\nCorreo: ${datos.correo}\nFecha de nacimiento: ${datos.fecha_nacimiento}\nHorario: ${datos.horario}\nSíntomas: ${datos.sintomas}\nEmpresa: ${datos.empresa}\nCédula: ${datos.cedula}`;
-  await fetch('https://api.sendgrid.com/v3/mail/send', {
+async function alertarTelegram(mensaje) {
+  await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${SENDGRID_API_KEY}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      personalizations: [{ to: [{ email: CORREO_DESTINO }] }],
-      from: { email: CORREO_REMITENTE },
-      subject: `Nueva teleconsulta - ${datos.nombre}`,
-      content: [{ type: 'text/plain', value: cuerpo }]
+      chat_id: TELEGRAM_CHAT_ID,
+      text: mensaje,
+      parse_mode: 'HTML'
     })
   });
 }
@@ -63,15 +56,6 @@ async function eliminarSesion(telefono) {
 async function buscarPaciente(cedula) {
   const data = await supabaseQuery('GET', 'pacientes', null, `?cedula=eq.${cedula}&select=*,clientes_b2b(*)`);
   return Array.isArray(data) && data.length > 0 ? data[0] : null;
-}
-
-async function alertarOperador(mensaje) {
-  const client = twilio(TWILIO_SID, TWILIO_TOKEN);
-  await client.messages.create({
-    from: TWILIO_NUMBER,
-    to: OPERADOR_WHATSAPP,
-    body: mensaje
-  });
 }
 
 function clasificarSintomas(texto) {
@@ -111,7 +95,7 @@ module.exports = async function handler(req, res) {
       datos.nombre_paciente = paciente.nombre;
       datos.empresa = paciente.clientes_b2b?.nombre_empresa || 'su empresa';
       datos.seguro = paciente.clientes_b2b?.nombre_seguro || 'su seguro';
-      respuesta = `✅ Hemos identificado que pertenece a *${datos.empresa}* con cobertura de *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?\n\nResponda *Sí* o *No*`;
+      respuesta = `✅ Hemos identificado que pertenece a <b>${datos.empresa}</b> con cobertura de <b>${datos.seguro}</b>.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?\n\nResponda *Sí* o *No*`;
       paso = 2;
     } else {
       respuesta = `No encontramos la cédula *${mensaje}* en nuestro sistema.\n\nVerifique el número e inténtelo nuevamente:`;
@@ -136,7 +120,7 @@ module.exports = async function handler(req, res) {
 
     if (nivel === 3) {
       respuesta = `🚨 *ALERTA GRAVE* 🚨\n\nSus síntomas requieren atención de *emergencia inmediata*.\n\nLlame al *911* ahora mismo.\n\n📞 tel:911`;
-      await alertarOperador(`🚨 ALERTA GRAVE\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+      await alertarTelegram(`🚨 <b>ALERTA GRAVE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await eliminarSesion(telefono);
       twiml.message(respuesta);
       res.setHeader('Content-Type', 'text/xml');
@@ -144,7 +128,7 @@ module.exports = async function handler(req, res) {
 
     } else if (nivel === 2) {
       respuesta = `⚠️ Sus síntomas requieren *atención prioritaria*.\n\nHemos notificado a nuestro equipo y le contactarán a la brevedad.\n\nSi los síntomas empeoran llame al *911* inmediatamente.`;
-      await alertarOperador(`⚠️ SÍNTOMAS MEDIOS - URGENTE\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+      await alertarTelegram(`⚠️ <b>SÍNTOMAS MEDIOS - URGENTE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await supabaseQuery('POST', 'consultas', { paciente_id: datos.paciente_id, nivel_sintomas: 2, sintomas_descripcion: mensaje, estado: 'pendiente' });
       await eliminarSesion(telefono);
       twiml.message(respuesta);
@@ -189,8 +173,7 @@ module.exports = async function handler(req, res) {
   } else if (paso === 10) {
     if (mensaje.toLowerCase() === 'confirmar') {
       await supabaseQuery('POST', 'consultas', { paciente_id: datos.paciente_id, nivel_sintomas: 1, sintomas_descripcion: datos.sintomas, estado: 'pendiente' });
-      await alertarOperador(`📅 NUEVA TELECONSULTA\nPaciente: ${datos.nombre} ${datos.apellidos}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}`);
-      await enviarCorreo({ ...datos, nombre: `${datos.nombre} ${datos.apellidos}` });
+      await alertarTelegram(`📅 <b>NUEVA TELECONSULTA</b>\nPaciente: ${datos.nombre} ${datos.apellidos}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}`);
       respuesta = `🎉 *¡Solicitud recibida!*\n\nUn asesor de Vital Club le confirmará su teleconsulta a la brevedad.\n\nGracias por confiar en nosotros. 💙`;
       await eliminarSesion(telefono);
     } else {

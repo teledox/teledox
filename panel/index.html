@@ -65,7 +65,6 @@ body { background: #f5f5f0; min-height: 100vh; }
 .badge-red { background: #fee2e2; color: #dc2626; }
 .badge-blue { background: #dbeafe; color: #2563eb; }
 .badge-gray { background: #f3f4f6; color: #6b7280; }
-.badge-purple { background: #f3e8ff; color: #7c3aed; }
 .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; border: 1px solid #e0e0e0; background: white; color: #333; transition: all 0.15s; font-weight: 500; }
 .btn:hover { background: #f5f5f0; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -76,9 +75,7 @@ body { background: #f5f5f0; min-height: 100vh; }
 .btn-danger { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
-.form-label { font-size: 12px; color: #555; margin-bottom: 4px; display: block; font-weight: 500; }
 .form-control { width: 100%; padding: 9px 11px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #1a1a1a; outline: none; background: white; }
 .form-control:focus { border-color: #2563eb; }
 textarea.form-control { resize: vertical; min-height: 80px; }
@@ -124,17 +121,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .alert-new.show { display: block; animation: slideIn 0.3s ease; }
 .upload-area { border: 2px dashed #e0e0e0; border-radius: 8px; padding: 1.5rem; text-align: center; color: #aaa; font-size: 13px; cursor: pointer; transition: all 0.15s; }
 .upload-area:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
-.chart-bar { display: flex; align-items: flex-end; gap: 8px; height: 120px; padding: 0 0 8px; }
-.bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-.bar { background: #2563eb; border-radius: 4px 4px 0 0; width: 100%; transition: height 0.3s; min-height: 2px; }
-.bar-label { font-size: 10px; color: #aaa; }
-@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 .divider { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
+@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">MediLyft</div>
@@ -152,7 +144,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
-<!-- APP -->
 <div class="app" id="appWrap">
   <div class="sidebar">
     <div class="sidebar-logo">
@@ -180,7 +171,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <div class="content">
 
-      <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="stats-grid" id="statsGrid"></div>
         <div class="two-col">
@@ -199,13 +189,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div id="recentNotifs"></div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Consultas últimos 7 días</span></div>
-          <div class="chart-bar" id="weekChart"></div>
-        </div>
       </div>
 
-      <!-- PACIENTES -->
       <div class="page" id="page-pacientes">
         <div class="search-wrap">
           <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -223,13 +208,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- DETALLE PACIENTE -->
       <div class="page" id="page-paciente-detalle">
-        <button class="btn btn-sm" onclick="showPage('pacientes')" style="margin-bottom:1rem">← Volver a pacientes</button>
+        <button class="btn btn-sm" onclick="showPage('pacientes')" style="margin-bottom:1rem">← Volver</button>
         <div class="patient-header" id="patientHeader"></div>
         <div class="tab-bar">
           <div class="tab active" onclick="switchTab(this,'tab-datos')">Datos personales</div>
-          <div class="tab" onclick="switchTab(this,'tab-consultas')">Historial de consultas</div>
+          <div class="tab" onclick="switchTab(this,'tab-consultas')">Consultas</div>
           <div class="tab" onclick="switchTab(this,'tab-cronicas')">Enfermedades crónicas</div>
           <div class="tab" onclick="switchTab(this,'tab-seguimiento')">Seguimiento</div>
         </div>
@@ -237,8 +221,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="tab-content" id="tab-consultas"><div id="patConsultas"></div></div>
         <div class="tab-content" id="tab-cronicas">
           <div class="card">
-            <div class="card-header"><span class="card-title">Enfermedades crónicas</span><button class="btn btn-sm btn-primary" onclick="showAddCronica()">+ Agregar</button></div>
-            <div id="cronicasList" class="empty-state">Sin enfermedades crónicas registradas.</div>
+            <div class="card-header"><span class="card-title">Enfermedades crónicas</span><button class="btn btn-sm btn-primary">+ Agregar</button></div>
+            <div class="empty-state">Sin enfermedades crónicas registradas.</div>
           </div>
         </div>
         <div class="tab-content" id="tab-seguimiento">
@@ -249,39 +233,69 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- CONSULTAS -->
       <div class="page" id="page-consultas">
         <div class="card">
           <div class="card-header">
             <span class="card-title">Todas las consultas</span>
-            <div style="display:flex;gap:8px">
-              <select class="form-control" style="width:150px;padding:5px 8px;font-size:12px" id="filterEstado" onchange="loadConsultas()">
-                <option value="">Todos los estados</option>
-                <option value="pendiente">Pendientes</option>
-                <option value="completada">Completadas</option>
-              </select>
-            </div>
+            <select class="form-control" style="width:150px;padding:5px 8px;font-size:12px" id="filterEstado" onchange="loadConsultas()">
+              <option value="">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="completada">Completadas</option>
+              <option value="confirmada">Confirmadas</option>
+            </select>
           </div>
           <table class="table">
-            <thead><tr><th>Paciente</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th></th></tr></thead>
+            <thead><tr><th>Paciente</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody id="consultasBody"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- OPERADOR -->
+      <div class="page" id="page-receta">
+        <button class="btn btn-sm" onclick="showPage('consultas')" style="margin-bottom:1rem">← Volver a consultas</button>
+        <div class="patient-header" id="recetaPacienteHeader"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
+            <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
+            <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
+            <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div>
+            <div id="medicamentosLista"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Seguimiento automático por WhatsApp</span></div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
+            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
+              <input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" />
+              <span>Activar recordatorios automáticos al paciente por WhatsApp</span>
+            </label>
+          </div>
+          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">
+            El bot enviará recordatorios según la frecuencia de cada medicamento. Al finalizar preguntará al paciente cómo se siente y registrará el resultado en su historial para los KPIs.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" onclick="showPage('consultas')">Cancelar</button>
+          <button class="btn btn-primary" onclick="guardarReceta()">💊 Emitir receta y activar seguimiento</button>
+        </div>
+      </div>
+
       <div class="page" id="page-operador">
         <div class="stats-grid">
           <div class="stat-card stat-warning"><div class="stat-label">Sin atender</div><div class="stat-value" id="op-pending">—</div></div>
           <div class="stat-card stat-danger"><div class="stat-label">Urgentes</div><div class="stat-value" id="op-urgent">—</div></div>
           <div class="stat-card stat-success"><div class="stat-label">Atendidas hoy</div><div class="stat-value" id="op-done">—</div></div>
-          <div class="stat-card"><div class="stat-label">Total notificaciones</div><div class="stat-value" id="op-total">—</div></div>
+          <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="op-total">—</div></div>
         </div>
         <div class="card">
           <div class="card-header">
             <span class="card-title">Centro de notificaciones</span>
             <div style="display:flex;gap:8px">
-              <button class="btn btn-sm" onclick="marcarTodasLeidas()">✓ Marcar todas leídas</button>
+              <button class="btn btn-sm" onclick="marcarTodasLeidas()">✓ Marcar leídas</button>
               <button class="btn btn-sm" onclick="loadNotificaciones()">↻ Actualizar</button>
             </div>
           </div>
@@ -292,7 +306,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- USUARIOS -->
       <div class="page" id="page-usuarios">
         <div class="card">
           <div class="card-header">
@@ -305,12 +318,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           </table>
         </div>
         <div class="card" id="addUserForm" style="display:none">
-          <div class="card-header"><span class="card-title">Agregar nuevo usuario</span><button class="btn btn-sm" onclick="document.getElementById('addUserForm').style.display='none'">✕ Cerrar</button></div>
+          <div class="card-header"><span class="card-title">Agregar nuevo usuario</span><button class="btn btn-sm" onclick="document.getElementById('addUserForm').style.display='none'">✕</button></div>
           <div class="two-col">
             <div class="form-group"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="newNombre" /></div>
             <div class="form-group"><label class="form-label">Apellidos *</label><input type="text" class="form-control" id="newApellidos" /></div>
             <div class="form-group"><label class="form-label">Correo *</label><input type="email" class="form-control" id="newCorreo" /></div>
-            <div class="form-group"><label class="form-label">Contraseña temporal *</label><input type="text" class="form-control" id="newPass" /></div>
+            <div class="form-group"><label class="form-label">Contraseña *</label><input type="text" class="form-control" id="newPass" /></div>
             <div class="form-group"><label class="form-label">Rol *</label>
               <select class="form-control" id="newRol">
                 <option value="medico">Médico</option>
@@ -325,7 +338,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- PERFIL MÉDICO -->
       <div class="page" id="page-perfil">
         <div class="card">
           <div class="card-header"><span class="card-title">Mi perfil</span></div>
@@ -335,21 +347,17 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="card-header"><span class="card-title">Firma digital y sello</span></div>
           <div class="two-col">
             <div>
-              <p style="font-size:13px;color:#888;margin-bottom:1rem">Suba su firma digital en formato PNG con fondo transparente.</p>
-              <div class="upload-area" onclick="document.getElementById('firmaInput').click()">
-                <div id="firmaPreview">📝 Clic para subir firma digital</div>
-              </div>
+              <p style="font-size:13px;color:#888;margin-bottom:1rem">Firma digital en PNG con fondo transparente.</p>
+              <div class="upload-area" onclick="document.getElementById('firmaInput').click()"><div id="firmaPreview">📝 Clic para subir firma digital</div></div>
               <input type="file" id="firmaInput" accept="image/*" style="display:none" onchange="previewFirma(this,'firmaPreview','firma')" />
             </div>
             <div>
-              <p style="font-size:13px;color:#888;margin-bottom:1rem">Suba su sello médico en formato PNG.</p>
-              <div class="upload-area" onclick="document.getElementById('selloInput').click()">
-                <div id="selloPreview">🔵 Clic para subir sello médico</div>
-              </div>
+              <p style="font-size:13px;color:#888;margin-bottom:1rem">Sello médico en PNG.</p>
+              <div class="upload-area" onclick="document.getElementById('selloInput').click()"><div id="selloPreview">🔵 Clic para subir sello médico</div></div>
               <input type="file" id="selloInput" accept="image/*" style="display:none" onchange="previewFirma(this,'selloPreview','sello')" />
             </div>
           </div>
-          <hr class="divider">
+          <div class="divider"></div>
           <button class="btn btn-primary" onclick="saveFirma()">Guardar firma y sello</button>
         </div>
         <div class="card">
@@ -362,7 +370,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-      <!-- MÉTRICAS -->
       <div class="page" id="page-metricas">
         <div class="stats-grid" id="metricStats"></div>
         <div class="two-col">
@@ -375,9 +382,12 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div id="kpiContent"></div>
           </div>
         </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div>
+          <div id="seguimientoStats"></div>
+        </div>
       </div>
 
-      <!-- EMPRESAS -->
       <div class="page" id="page-empresas">
         <div class="card">
           <div class="card-header">
@@ -402,7 +412,6 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     </div>
   </div>
 
-  <!-- NOTIF PANEL -->
   <div class="notif-panel" id="notifPanel">
     <div class="notif-header">
       Notificaciones
@@ -412,28 +421,20 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
-<!-- POPUP AGENDAR -->
 <div class="popup-overlay" id="popupAgendar">
   <div class="popup-box">
     <div class="popup-title">📅 Agendar teleconsulta</div>
     <div id="popupPacienteInfo" style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:13px"></div>
-    <div class="form-group"><label class="form-label">Médico asignado</label>
-      <select class="form-control" id="medicoAsignado"></select>
-    </div>
-    <div class="form-group"><label class="form-label">Fecha y hora confirmada</label>
-      <input type="datetime-local" class="form-control" id="fechaConfirmada" />
-    </div>
-    <div class="form-group"><label class="form-label">Notas del operador</label>
-      <textarea class="form-control" id="notasOperador" placeholder="Notas adicionales..."></textarea>
-    </div>
+    <div class="form-group"><label class="form-label">Médico asignado</label><select class="form-control" id="medicoAsignado"></select></div>
+    <div class="form-group"><label class="form-label">Fecha y hora confirmada</label><input type="datetime-local" class="form-control" id="fechaConfirmada" /></div>
+    <div class="form-group"><label class="form-label">Notas del operador</label><textarea class="form-control" id="notasOperador" placeholder="Notas adicionales..."></textarea></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
       <button class="btn" onclick="closePopup()">Cancelar</button>
-      <button class="btn btn-primary" onclick="confirmarAgendamiento()">✓ Confirmar y notificar paciente</button>
+      <button class="btn btn-primary" onclick="confirmarAgendamiento()">✓ Confirmar y notificar</button>
     </div>
   </div>
 </div>
 
-<!-- ALERT TOAST -->
 <div class="alert-new" id="toastAlert"></div>
 
 <script>
@@ -446,6 +447,9 @@ let lastNotifCount = 0;
 let currentConsultaId = null;
 let currentPacienteId = null;
 let firmaData = { firma: null, sello: null };
+let medicamentosData = [];
+let recetaConsultaId = null;
+let recetaPacienteId = null;
 
 async function supa(method, table, body, query='') {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
@@ -457,33 +461,20 @@ async function supa(method, table, body, query='') {
   return r.json();
 }
 
-function saveSession(user) {
-  localStorage.setItem('medilyft_user', JSON.stringify(user));
-}
-
-function getSession() {
-  try { return JSON.parse(localStorage.getItem('medilyft_user')); } catch { return null; }
-}
-
-function clearSession() {
-  localStorage.removeItem('medilyft_user');
-}
+function saveSession(user) { localStorage.setItem('medilyft_user', JSON.stringify(user)); }
+function getSession() { try { return JSON.parse(localStorage.getItem('medilyft_user')); } catch { return null; } }
+function clearSession() { localStorage.removeItem('medilyft_user'); }
 
 async function doLogin() {
   const email = document.getElementById('loginEmail').value.trim();
   const pass = document.getElementById('loginPass').value.trim();
   const btn = document.getElementById('loginBtn');
   if (!email || !pass) return;
-  btn.disabled = true;
-  btn.textContent = 'Verificando...';
+  btn.disabled = true; btn.textContent = 'Verificando...';
   document.getElementById('loginError').style.display = 'none';
   const users = await supa('GET','usuarios',null,`?correo=eq.${encodeURIComponent(email)}&password_hash=eq.${encodeURIComponent(pass)}&activo=eq.true`);
-  btn.disabled = false;
-  btn.textContent = 'Ingresar';
-  if (!users || users.length === 0) {
-    document.getElementById('loginError').style.display = 'block';
-    return;
-  }
+  btn.disabled = false; btn.textContent = 'Ingresar';
+  if (!users || users.length === 0) { document.getElementById('loginError').style.display = 'block'; return; }
   currentUser = users[0];
   saveSession(currentUser);
   initApp();
@@ -493,16 +484,13 @@ function initApp() {
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('appWrap').style.display = 'flex';
   document.getElementById('sidebarRole').textContent = currentUser.rol.charAt(0).toUpperCase() + currentUser.rol.slice(1);
-  document.getElementById('topAvatar').textContent = ((currentUser.nombre||'?')[0] + (currentUser.apellidos||'?')[0]).toUpperCase();
+  document.getElementById('topAvatar').textContent = ((currentUser.nombre||'?')[0]+(currentUser.apellidos||'?')[0]).toUpperCase();
   document.getElementById('userInfo').textContent = currentUser.nombre + ' ' + currentUser.apellidos;
-  buildNav();
-  loadDashboard();
-  startNotifPolling();
+  buildNav(); loadDashboard(); startNotifPolling();
 }
 
 function doLogout() {
-  currentUser = null;
-  clearSession();
+  currentUser = null; clearSession();
   if (notifInterval) clearInterval(notifInterval);
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('appWrap').style.display = 'none';
@@ -525,16 +513,12 @@ function buildNav() {
   const rol = currentUser.rol;
   const menus = {
     admin: [
-      { label: 'Principal', items: [{ id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'}]},
-      { label: 'Operación', items: [{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'empresas',label:'Empresas B2B',icon:'briefcase'}]},
-      { label: 'Admin', items: [{id:'usuarios',label:'Usuarios',icon:'user-check'},{id:'metricas',label:'Métricas KPI',icon:'bar-chart'},{id:'perfil',label:'Mi perfil',icon:'user'}]}
+      { label:'Principal', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'}]},
+      { label:'Operación', items:[{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'empresas',label:'Empresas B2B',icon:'briefcase'}]},
+      { label:'Admin', items:[{id:'usuarios',label:'Usuarios',icon:'user-check'},{id:'metricas',label:'Métricas KPI',icon:'bar-chart'},{id:'perfil',label:'Mi perfil',icon:'user'}]}
     ],
-    medico: [
-      { label: 'Clínico', items: [{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'},{id:'perfil',label:'Mi perfil',icon:'user'}]}
-    ],
-    operador: [
-      { label: 'Operación', items: [{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'pacientes',label:'Pacientes',icon:'users'}]}
-    ]
+    medico: [{ label:'Clínico', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'},{id:'perfil',label:'Mi perfil',icon:'user'}]}],
+    operador: [{ label:'Operación', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'pacientes',label:'Pacientes',icon:'users'}]}]
   };
   let html = '';
   (menus[rol]||menus.operador).forEach(s => {
@@ -545,13 +529,13 @@ function buildNav() {
 }
 
 function showPage(id, el) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const page = document.getElementById('page-' + id);
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
   if (page) page.classList.add('active');
   if (el) el.classList.add('active');
   else { const ni = document.querySelector(`[data-page="${id}"]`); if(ni) ni.classList.add('active'); }
-  const titles = { dashboard:'Dashboard', pacientes:'Pacientes', consultas:'Consultas', operador:'Centro de alertas', usuarios:'Usuarios', metricas:'Métricas KPI', empresas:'Empresas B2B', 'paciente-detalle':'Detalle del paciente', perfil:'Mi perfil' };
+  const titles = {dashboard:'Dashboard',pacientes:'Pacientes',consultas:'Consultas',operador:'Centro de alertas',usuarios:'Usuarios',metricas:'Métricas KPI',empresas:'Empresas B2B','paciente-detalle':'Detalle del paciente',perfil:'Mi perfil',receta:'Emitir receta'};
   document.getElementById('pageTitle').textContent = titles[id]||id;
   if (id==='pacientes') loadPacientes();
   if (id==='consultas') loadConsultas();
@@ -575,12 +559,11 @@ async function loadDashboard() {
     <div class="stat-card stat-warning"><div class="stat-label">Consultas pendientes</div><div class="stat-value">${pendientes.length}</div><div class="stat-sub">Por atender</div></div>
     <div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div>
     <div class="stat-card"><div class="stat-label">Consultas hoy</div><div class="stat-value">${hoyCount}</div></div>
-    <div class="stat-card stat-danger"><div class="stat-label">Alertas sin leer</div><div class="stat-value">${(notifs||[]).length}</div><div class="stat-sub">Requieren atención</div></div>
+    <div class="stat-card stat-danger"><div class="stat-label">Alertas sin leer</div><div class="stat-value">${(notifs||[]).length}</div></div>
   `;
   document.getElementById('pendCount').textContent = pendientes.length;
-  document.getElementById('pendBody').innerHTML = pendientes.slice(0,5).map(c => {
-    const p = c.pacientes||{};
-    const n = c.nivel_sintomas;
+  document.getElementById('pendBody').innerHTML = pendientes.slice(0,5).map(c=>{
+    const p=c.pacientes||{}; const n=c.nivel_sintomas;
     return `<tr><td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${p.clientes_b2b?.nombre_empresa||''}</span></td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td><td>${n===3?'<span class="badge badge-red">Grave</span>':n===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button></td></tr>`;
   }).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:1.5rem">Sin consultas pendientes</td></tr>';
   document.getElementById('recentNotifs').innerHTML = (notifs||[]).map(n=>`
@@ -590,27 +573,6 @@ async function loadDashboard() {
       <div style="font-size:12px;color:#888">${n.mensaje}</div>
     </div>
   `).join('')||'<div class="empty-state" style="padding:1.5rem">Sin alertas</div>';
-  buildWeekChart(consultas||[]);
-}
-
-function buildWeekChart(consultas) {
-  const days = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
-  const counts = Array(7).fill(0);
-  const now = new Date();
-  consultas.forEach(c => {
-    const d = new Date(c.created_at);
-    const diff = Math.floor((now - d) / 86400000);
-    if (diff < 7) counts[6-diff]++;
-  });
-  const max = Math.max(...counts, 1);
-  const labels = Array.from({length:7},(_,i)=>{const d=new Date(now);d.setDate(d.getDate()-6+i);return days[d.getDay()]});
-  document.getElementById('weekChart').innerHTML = counts.map((c,i)=>`
-    <div class="bar-col">
-      <span style="font-size:10px;color:#888">${c}</span>
-      <div class="bar" style="height:${Math.max(c/max*90,2)}px"></div>
-      <span class="bar-label">${labels[i]}</span>
-    </div>
-  `).join('');
 }
 
 async function loadPacientes() {
@@ -629,43 +591,38 @@ function renderPacientes(list) {
       <td>${p.telefono||'—'}</td>
       <td>${p.lugar_residencia||'—'}</td>
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.correo||'—'}</td>
-      <td><button class="btn btn-sm" onclick="showPacienteDetalle('${p.id}')">Ver detalle</button></td>
+      <td><button class="btn btn-sm" onclick="showPacienteDetalle('${p.id}')">Ver</button></td>
     </tr>
   `).join('')||'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:2rem">Sin pacientes</td></tr>';
 }
 
 function filterPacientes() {
   const q = document.getElementById('searchPac').value.toLowerCase();
-  renderPacientes(pacientesData.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.apellidos||'').toLowerCase().includes(q)||(p.cedula||'').includes(q)||(p.correo||'').toLowerCase().includes(q)));
+  renderPacientes(pacientesData.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.apellidos||'').toLowerCase().includes(q)||(p.cedula||'').includes(q)));
 }
 
 async function showPacienteDetalle(id) {
   currentPacienteId = id;
-  const p = pacientesData.find(x=>x.id===id)||(await supa('GET','pacientes',null,`?id=eq.${id}&select=*,clientes_b2b(*)`))||[];
-  const pac = Array.isArray(p)?p[0]:p;
+  const pac = pacientesData.find(x=>x.id===id)||(await supa('GET','pacientes',null,`?id=eq.${id}&select=*,clientes_b2b(*)`)||[])[0];
   if (!pac) return;
   const init = ((pac.nombre||'?')[0]+(pac.apellidos||'?')[0]).toUpperCase();
   document.getElementById('patientHeader').innerHTML = `
     <div class="patient-avatar-lg">${init}</div>
-    <div style="flex:1">
-      <div class="patient-name">${pac.nombre||''} ${pac.apellidos||''}</div>
-      <div class="patient-meta">Cédula: ${pac.cedula||'—'} · ${pac.clientes_b2b?.nombre_empresa||'—'} · ${pac.clientes_b2b?.nombre_seguro||'—'}</div>
-    </div>
+    <div style="flex:1"><div class="patient-name">${pac.nombre||''} ${pac.apellidos||''}</div>
+    <div class="patient-meta">Cédula: ${pac.cedula||'—'} · ${pac.clientes_b2b?.nombre_empresa||'—'}</div></div>
   `;
   document.getElementById('detailGrid').innerHTML = [
-    ['Edad',pac.edad||'—'],['Fecha de nacimiento',pac.fecha_nacimiento||'—'],
-    ['Correo',pac.correo||'—'],['Teléfono',pac.telefono||'—'],
-    ['Residencia',pac.lugar_residencia||'—'],['Empresa',pac.clientes_b2b?.nombre_empresa||'—'],
-    ['Seguro',pac.clientes_b2b?.nombre_seguro||'—'],['Registro',new Date(pac.created_at).toLocaleDateString('es-EC')]
+    ['Edad',pac.edad||'—'],['Nacimiento',pac.fecha_nacimiento||'—'],['Correo',pac.correo||'—'],
+    ['Teléfono',pac.telefono||'—'],['Residencia',pac.lugar_residencia||'—'],['Empresa',pac.clientes_b2b?.nombre_empresa||'—']
   ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
   const consultas = await supa('GET','consultas',null,`?paciente_id=eq.${id}&order=created_at.desc`)||[];
   document.getElementById('patConsultas').innerHTML = consultas.length?`
-    <table class="table"><thead><tr><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th></tr></thead>
-    <tbody>${consultas.map(c=>`<tr><td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td><td>${c.sintomas_descripcion||'—'}</td><td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><span class="badge badge-gray">${c.estado}</span></td></tr>`).join('')}</tbody></table>`
-    :'<div class="empty-state">Sin consultas registradas</div>';
-  const seguimientos = await supa('GET','seguimientos',null,`?paciente_id=eq.${id}&activo=eq.true`)||[];
+    <table class="table"><thead><tr><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th></tr></thead>
+    <tbody>${consultas.map(c=>`<tr><td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td><td>${c.sintomas_descripcion||'—'}</td><td>${c.diagnostico||'—'}</td><td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><span class="badge badge-gray">${c.estado}</span></td></tr>`).join('')}</tbody></table>`
+    :'<div class="empty-state">Sin consultas</div>';
+  const seguimientos = await supa('GET','recordatorios',null,`?paciente_id=eq.${id}&activo=eq.true`)||[];
   document.getElementById('seguimientoList').innerHTML = seguimientos.length?
-    seguimientos.map(s=>`<div class="detail-item" style="margin-bottom:8px"><div class="detail-label">Medicamento</div><div class="detail-value">${s.medicamento||'—'}</div><div style="font-size:12px;color:#888;margin-top:4px">Cada ${s.frecuencia_horas}h · ${s.duracion_dias} días · Inicio: ${new Date(s.fecha_inicio).toLocaleDateString('es-EC')}</div></div>`).join('')
+    seguimientos.map(s=>`<div class="detail-item" style="margin-bottom:8px"><div class="detail-label">Medicamento</div><div class="detail-value">${s.medicamento||'—'}</div><div style="font-size:12px;color:#888;margin-top:4px">Cada ${s.frecuencia_horas}h · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div></div>`).join('')
     :'<div class="empty-state">Sin seguimientos activos</div>';
   showPage('paciente-detalle');
   document.querySelectorAll('#page-paciente-detalle .tab').forEach(t=>t.classList.remove('active'));
@@ -689,21 +646,21 @@ async function loadConsultas() {
     <tr>
       <td><strong>${c.pacientes?.nombre||'—'} ${c.pacientes?.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${c.pacientes?.cedula||''}</span></td>
       <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
-      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td>
       <td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td>
       <td><span class="badge badge-gray">${c.estado}</span></td>
-      <td>
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
         ${c.estado==='pendiente'?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>`:''}
-        <button class="btn btn-sm" onclick="marcarConsultaCompletada('${c.id}')">✓ Completar</button>
+        <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">💊 Receta</button>
+        ${c.estado!=='completada'?`<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓</button>`:''}
       </td>
     </tr>
   `).join('')||'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
 }
 
-async function marcarConsultaCompletada(id) {
+async function marcarCompletada(id) {
   await supa('PATCH','consultas',{estado:'completada'},`?id=eq.${id}`);
-  loadConsultas();
-  showToast('✓ Consulta marcada como completada');
+  loadConsultas(); showToast('✓ Consulta completada');
 }
 
 async function loadNotificaciones() {
@@ -719,19 +676,19 @@ async function loadNotificaciones() {
   updateNotifBadge(sinLeer.length);
   document.getElementById('notifBody').innerHTML = notifs.map(n=>`
     <tr style="${n.leida?'':'background:#fffbeb'}">
-      <td><span style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva consulta'}</span></td>
+      <td><span style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva'}</span></td>
       <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
       <td style="white-space:nowrap;font-size:12px;color:#888">${new Date(n.created_at).toLocaleString('es-EC')}</td>
       <td>${n.leida?'<span class="badge badge-gray">Leída</span>':'<span class="badge badge-blue">Nueva</span>'}</td>
       <td style="display:flex;gap:4px">
         ${n.consulta_id&&!n.leida?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>`:''}
-        ${!n.leida?`<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓ Leída</button>`:''}
+        ${!n.leida?`<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓</button>`:''}
       </td>
     </tr>
   `).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin notificaciones</td></tr>';
   document.getElementById('notifList').innerHTML = notifs.slice(0,8).map(n=>`
     <div class="notif-item ${n.leida?'':'unread'}" onclick="marcarLeida('${n.id}')">
-      <div class="notif-tipo ${n.tipo==='urgente'?'notif-urgente':'notif-nueva'}">${n.tipo==='urgente'?'⚠️ URGENTE':'📅 NUEVA CONSULTA'}</div>
+      <div class="notif-tipo ${n.tipo==='urgente'?'notif-urgente':'notif-nueva'}">${n.tipo==='urgente'?'⚠️ URGENTE':'📅 NUEVA'}</div>
       <div class="notif-titulo">${n.titulo}</div>
       <div class="notif-msg">${n.mensaje}</div>
       <div class="notif-time">${new Date(n.created_at).toLocaleString('es-EC')}</div>
@@ -739,16 +696,8 @@ async function loadNotificaciones() {
   `).join('')||'<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
 }
 
-async function marcarLeida(id) {
-  await supa('PATCH','notificaciones',{leida:true},`?id=eq.${id}`);
-  loadNotificaciones();
-}
-
-async function marcarTodasLeidas() {
-  await supa('PATCH','notificaciones',{leida:true},'?leida=eq.false');
-  loadNotificaciones();
-  showToast('✓ Todas las notificaciones marcadas como leídas');
-}
+async function marcarLeida(id) { await supa('PATCH','notificaciones',{leida:true},`?id=eq.${id}`); loadNotificaciones(); }
+async function marcarTodasLeidas() { await supa('PATCH','notificaciones',{leida:true},'?leida=eq.false'); loadNotificaciones(); showToast('✓ Todas marcadas como leídas'); }
 
 function updateNotifBadge(count) {
   const badge = document.getElementById('notifCount');
@@ -769,28 +718,22 @@ function startNotifPolling() {
     updateNotifBadge(count);
     if (count > lastNotifCount && lastNotifCount >= 0) {
       const latest = (notifs||[])[0];
-      if (latest) showToast(`🔔 ${latest.titulo}\n${latest.mensaje}`);
+      if (latest) showToast(`🔔 ${latest.titulo}`);
     }
     lastNotifCount = count;
   }, 10000);
 }
 
 async function openAgendar(consultaId, pacienteId) {
-  currentConsultaId = consultaId;
-  currentPacienteId = pacienteId;
+  currentConsultaId = consultaId; currentPacienteId = pacienteId;
   const [pac, medicos] = await Promise.all([
     supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
     supa('GET','usuarios',null,'?rol=eq.medico&activo=eq.true')
   ]);
   const p = (pac||[])[0]||{};
-  document.getElementById('popupPacienteInfo').innerHTML = `
-    <strong>${p.nombre||''} ${p.apellidos||''}</strong> · Cédula: ${p.cedula||'—'}<br>
-    Empresa: ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}<br>
-    Correo: ${p.correo||'—'}
-  `;
-  document.getElementById('medicoAsignado').innerHTML = (medicos||[]).map(m=>`<option value="${m.id}">${m.nombre} ${m.apellidos} — ${m.especialidad||'Medicina General'}</option>`).join('')||'<option>Sin médicos disponibles</option>';
-  const now = new Date();
-  now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById('popupPacienteInfo').innerHTML = `<strong>${p.nombre||''} ${p.apellidos||''}</strong> · Cédula: ${p.cedula||'—'}<br>Empresa: ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}`;
+  document.getElementById('medicoAsignado').innerHTML = (medicos||[]).map(m=>`<option value="${m.id}">${m.nombre} ${m.apellidos} — ${m.especialidad||'Medicina General'}</option>`).join('')||'<option>Sin médicos</option>';
+  const now = new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('fechaConfirmada').value = now.toISOString().slice(0,16);
   document.getElementById('popupAgendar').classList.add('open');
 }
@@ -800,21 +743,103 @@ async function confirmarAgendamiento() {
   const fecha = document.getElementById('fechaConfirmada').value;
   const notas = document.getElementById('notasOperador').value;
   if (!fecha) { alert('Seleccione fecha y hora'); return; }
-  await supa('PATCH','consultas',{ estado:'confirmada', medico_asignado: medicoId, updated_at: new Date().toISOString() },`?id=eq.${currentConsultaId}`);
-  await supa('POST','notificaciones',{
-    tipo:'confirmacion',
-    titulo:'✅ Consulta confirmada',
-    mensaje:`Su teleconsulta fue confirmada para ${new Date(fecha).toLocaleString('es-EC')}. ${notas||''}`,
-    paciente_id: currentPacienteId,
-    consulta_id: currentConsultaId
-  });
-  closePopup();
-  showToast('✓ Consulta agendada y paciente notificado');
-  loadDashboard();
+  await supa('PATCH','consultas',{estado:'confirmada',medico_id:medicoId,updated_at:new Date().toISOString()},`?id=eq.${currentConsultaId}`);
+  await supa('POST','notificaciones',{tipo:'confirmacion',titulo:'✅ Consulta confirmada',mensaje:`Su teleconsulta fue confirmada para ${new Date(fecha).toLocaleString('es-EC')}. ${notas||''}`,paciente_id:currentPacienteId,consulta_id:currentConsultaId});
+  closePopup(); showToast('✓ Consulta agendada'); loadDashboard();
 }
 
-function closePopup() {
-  document.getElementById('popupAgendar').classList.remove('open');
+function closePopup() { document.getElementById('popupAgendar').classList.remove('open'); }
+
+async function openReceta(consultaId, pacienteId) {
+  recetaConsultaId = consultaId; recetaPacienteId = pacienteId;
+  medicamentosData = [];
+  document.getElementById('recetaDiagnostico').value='';
+  document.getElementById('recetaNotas').value='';
+  document.getElementById('recetaIndicaciones').value='';
+  document.getElementById('medicamentosLista').innerHTML='';
+  const pac = await supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`);
+  const p = (pac||[])[0]||{};
+  const init = ((p.nombre||'?')[0]+(p.apellidos||'?')[0]).toUpperCase();
+  document.getElementById('recetaPacienteHeader').innerHTML = `
+    <div class="patient-avatar-lg">${init}</div>
+    <div><div class="patient-name">${p.nombre||''} ${p.apellidos||''}</div>
+    <div class="patient-meta">Cédula: ${p.cedula||'—'} · ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}</div></div>
+  `;
+  showPage('receta');
+}
+
+function agregarMedicamento() {
+  const id = Date.now();
+  medicamentosData.push({id,nombre:'',dosis:'',frecuencia_horas:8,dias:5});
+  renderMedicamentos();
+}
+
+function renderMedicamentos() {
+  document.getElementById('medicamentosLista').innerHTML = medicamentosData.map((m,i)=>`
+    <div style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:8px;border:1px solid #eee">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:13px;font-weight:600;color:#555">Medicamento ${i+1}</span>
+        <button class="btn btn-sm btn-danger" onclick="quitarMedicamento(${m.id})">✕</button>
+      </div>
+      <div class="two-col" style="gap:8px">
+        <div class="form-group" style="margin:0"><label class="form-label">Medicamento *</label><input type="text" class="form-control" value="${m.nombre}" onchange="updateMed(${m.id},'nombre',this.value)" placeholder="Ej: Paracetamol 500mg" /></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Dosis</label><input type="text" class="form-control" value="${m.dosis}" onchange="updateMed(${m.id},'dosis',this.value)" placeholder="Ej: 1 tableta" /></div>
+        <div class="form-group" style="margin:0"><label class="form-label">Frecuencia</label>
+          <select class="form-control" onchange="updateMed(${m.id},'frecuencia_horas',parseInt(this.value))">
+            <option value="4" ${m.frecuencia_horas===4?'selected':''}>Cada 4 horas</option>
+            <option value="6" ${m.frecuencia_horas===6?'selected':''}>Cada 6 horas</option>
+            <option value="8" ${m.frecuencia_horas===8?'selected':''}>Cada 8 horas</option>
+            <option value="12" ${m.frecuencia_horas===12?'selected':''}>Cada 12 horas</option>
+            <option value="24" ${m.frecuencia_horas===24?'selected':''}>Una vez al día</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0"><label class="form-label">Duración (días) *</label><input type="number" class="form-control" value="${m.dias}" min="1" max="90" onchange="updateMed(${m.id},'dias',parseInt(this.value))" /></div>
+      </div>
+    </div>
+  `).join('')||'<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Agregue al menos un medicamento</div>';
+}
+
+function updateMed(id,campo,valor) { const m=medicamentosData.find(x=>x.id===id); if(m) m[campo]=valor; }
+function quitarMedicamento(id) { medicamentosData=medicamentosData.filter(x=>x.id!==id); renderMedicamentos(); }
+
+async function guardarReceta() {
+  if (medicamentosData.length===0) { alert('Agregue al menos un medicamento'); return; }
+  if (medicamentosData.filter(m=>!m.nombre||!m.dias).length>0) { alert('Complete nombre y duración de todos los medicamentos'); return; }
+  const diagnostico = document.getElementById('recetaDiagnostico').value;
+  if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
+  const activar = document.getElementById('activarSeguimiento').checked;
+  const ahora = new Date();
+  const recetaRes = await supa('POST','recetas',{
+    consulta_id:recetaConsultaId, paciente_id:recetaPacienteId, medico_id:currentUser.id,
+    medicamentos:medicamentosData, diagnostico,
+    indicaciones:document.getElementById('recetaIndicaciones').value,
+    seguimiento_activo:activar,
+    fecha_inicio:ahora.toISOString(),
+    fecha_fin:new Date(ahora.getTime()+Math.max(...medicamentosData.map(m=>m.dias))*86400000).toISOString()
+  });
+  const receta_id = (recetaRes||[])[0]?.id;
+  await supa('PATCH','consultas',{diagnostico,notas_medico:document.getElementById('recetaNotas').value,estado:'completada',medico_id:currentUser.id},`?id=eq.${recetaConsultaId}`);
+  const pacData = await supa('GET','pacientes',null,`?id=eq.${recetaPacienteId}`);
+  const pac = (pacData||[])[0]||{};
+  const telRaw = pac.telefono||'';
+  const telefono = telRaw ? `whatsapp:+593${telRaw.replace(/^0/,'')}` : null;
+  if (activar && receta_id && telefono) {
+    for (const med of medicamentosData) {
+      const fechaFin = new Date(ahora.getTime()+med.dias*86400000);
+      await supa('POST','recordatorios',{
+        receta_id, paciente_id:recetaPacienteId, telefono,
+        medicamento:med.nombre, dosis:med.dosis||'',
+        frecuencia_horas:med.frecuencia_horas,
+        fecha_proximo:new Date(ahora.getTime()+med.frecuencia_horas*3600000).toISOString(),
+        fecha_fin:fechaFin.toISOString(),
+        activo:true, tipo:'medicamento'
+      });
+    }
+    showToast(`✓ Receta emitida y ${medicamentosData.length} recordatorio(s) activados`);
+  } else {
+    showToast('✓ Receta emitida exitosamente');
+  }
+  showPage('consultas'); loadConsultas();
 }
 
 async function loadUsuarios() {
@@ -826,7 +851,7 @@ async function loadUsuarios() {
       <td>${u.rol==='admin'?'<span class="rol-badge rol-admin">Admin</span>':u.rol==='medico'?'<span class="rol-badge rol-medico">Médico</span>':'<span class="rol-badge rol-operador">Operador</span>'}</td>
       <td>${u.especialidad||'—'}</td>
       <td>${u.numero_registro||'—'}</td>
-      <td>${u.firma_digital?'<span class="badge badge-green">✓ Subida</span>':'<span class="badge badge-gray">Pendiente</span>'}</td>
+      <td>${u.firma_digital?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">—</span>'}</td>
       <td>${u.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td>
       <td><button class="btn btn-sm ${u.activo?'btn-danger':''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo?'Desactivar':'Activar'}</button></td>
     </tr>
@@ -834,149 +859,109 @@ async function loadUsuarios() {
 }
 
 async function saveUser() {
-  const data = { nombre:document.getElementById('newNombre').value, apellidos:document.getElementById('newApellidos').value, correo:document.getElementById('newCorreo').value, password_hash:document.getElementById('newPass').value, rol:document.getElementById('newRol').value, especialidad:document.getElementById('newEsp').value||null, numero_registro:document.getElementById('newReg').value||null };
+  const data={nombre:document.getElementById('newNombre').value,apellidos:document.getElementById('newApellidos').value,correo:document.getElementById('newCorreo').value,password_hash:document.getElementById('newPass').value,rol:document.getElementById('newRol').value,especialidad:document.getElementById('newEsp').value||null,numero_registro:document.getElementById('newReg').value||null};
   if (!data.nombre||!data.correo||!data.password_hash) { alert('Complete los campos obligatorios'); return; }
   await supa('POST','usuarios',data);
-  document.getElementById('addUserForm').style.display = 'none';
-  loadUsuarios();
-  showToast('✓ Usuario creado exitosamente');
+  document.getElementById('addUserForm').style.display='none';
+  loadUsuarios(); showToast('✓ Usuario creado');
 }
 
-async function toggleUser(id, activo) {
-  await supa('PATCH','usuarios',{activo:!activo},`?id=eq.${id}`);
-  loadUsuarios();
-}
+async function toggleUser(id,activo) { await supa('PATCH','usuarios',{activo:!activo},`?id=eq.${id}`); loadUsuarios(); }
 
 async function loadPerfil() {
   if (!currentUser) return;
-  document.getElementById('perfilContent').innerHTML = `
-    <div class="detail-grid">
-      ${[['Nombre',currentUser.nombre+' '+currentUser.apellidos],['Correo',currentUser.correo],['Rol',currentUser.rol],['Especialidad',currentUser.especialidad||'—'],['Reg. MSP',currentUser.numero_registro||'—']].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}
-    </div>
-  `;
-  if (currentUser.firma_digital) {
-    document.getElementById('firmaPreview').innerHTML = `<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
-  }
-  if (currentUser.sello) {
-    document.getElementById('selloPreview').innerHTML = `<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
-  }
+  document.getElementById('perfilContent').innerHTML = `<div class="detail-grid">${[['Nombre',currentUser.nombre+' '+currentUser.apellidos],['Correo',currentUser.correo],['Rol',currentUser.rol],['Especialidad',currentUser.especialidad||'—'],['Reg. MSP',currentUser.numero_registro||'—']].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}</div>`;
+  if (currentUser.firma_digital) document.getElementById('firmaPreview').innerHTML=`<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
+  if (currentUser.sello) document.getElementById('selloPreview').innerHTML=`<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
 }
 
-function previewFirma(input, previewId, type) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    firmaData[type] = e.target.result;
-    document.getElementById(previewId).innerHTML = `<img src="${e.target.result}" style="max-height:80px;max-width:100%" />`;
-  };
+function previewFirma(input,previewId,type) {
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{ firmaData[type]=e.target.result; document.getElementById(previewId).innerHTML=`<img src="${e.target.result}" style="max-height:80px;max-width:100%" />`; };
   reader.readAsDataURL(file);
 }
 
 async function saveFirma() {
-  const update = {};
-  if (firmaData.firma) update.firma_digital = firmaData.firma;
-  if (firmaData.sello) update.sello = firmaData.sello;
-  if (Object.keys(update).length === 0) { alert('Suba al menos una imagen'); return; }
+  const update={};
+  if (firmaData.firma) update.firma_digital=firmaData.firma;
+  if (firmaData.sello) update.sello=firmaData.sello;
+  if (Object.keys(update).length===0) { alert('Suba al menos una imagen'); return; }
   await supa('PATCH','usuarios',update,`?id=eq.${currentUser.id}`);
-  currentUser = {...currentUser,...update};
-  saveSession(currentUser);
-  showToast('✓ Firma y sello guardados correctamente');
+  currentUser={...currentUser,...update}; saveSession(currentUser);
+  showToast('✓ Firma y sello guardados');
 }
 
 async function changePassword() {
-  const np = document.getElementById('newPassChange').value;
-  const cp = document.getElementById('confirmPassChange').value;
+  const np=document.getElementById('newPassChange').value;
+  const cp=document.getElementById('confirmPassChange').value;
   if (!np||np!==cp) { alert('Las contraseñas no coinciden'); return; }
   await supa('PATCH','usuarios',{password_hash:np},`?id=eq.${currentUser.id}`);
-  currentUser.password_hash = np;
-  saveSession(currentUser);
+  currentUser.password_hash=np; saveSession(currentUser);
   document.getElementById('newPassChange').value='';
   document.getElementById('confirmPassChange').value='';
   showToast('✓ Contraseña actualizada');
 }
 
 async function loadMetricas() {
-  const [consultas, pacientes] = await Promise.all([
+  const [consultas, pacientes, recetas, respuestas] = await Promise.all([
     supa('GET','consultas',null,'?select=id,nivel_sintomas,estado,created_at'),
-    supa('GET','pacientes',null,'?select=count')
+    supa('GET','pacientes',null,'?select=count'),
+    supa('GET','recetas',null,'?select=id,seguimiento_activo'),
+    supa('GET','seguimiento_respuestas',null,'?select=se_siente_mejor,respuesta')
   ]);
-  const all = consultas||[];
-  const total = all.length;
-  const graves = all.filter(c=>c.nivel_sintomas===3).length;
-  const medios = all.filter(c=>c.nivel_sintomas===2).length;
-  const leves = all.filter(c=>c.nivel_sintomas===1).length;
-  const completadas = all.filter(c=>c.estado==='completada').length;
-  const tasa = total>0?Math.round(completadas/total*100):0;
-  document.getElementById('metricStats').innerHTML = `
+  const all=consultas||[];
+  const total=all.length;
+  const graves=all.filter(c=>c.nivel_sintomas===3).length;
+  const medios=all.filter(c=>c.nivel_sintomas===2).length;
+  const leves=all.filter(c=>c.nivel_sintomas===1).length;
+  const completadas=all.filter(c=>c.estado==='completada').length;
+  const exitosos=(respuestas||[]).filter(r=>r.se_siente_mejor===true).length;
+  const tasa=total>0?Math.round(completadas/total*100):0;
+  document.getElementById('metricStats').innerHTML=`
     <div class="stat-card"><div class="stat-label">Total consultas</div><div class="stat-value">${total}</div></div>
-    <div class="stat-card stat-success"><div class="stat-label">Completadas</div><div class="stat-value">${completadas}</div><div class="stat-sub">Tasa: ${tasa}%</div></div>
+    <div class="stat-card stat-success"><div class="stat-label">Casos exitosos</div><div class="stat-value">${exitosos}</div><div class="stat-sub">Pacientes curados</div></div>
     <div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div>
     <div class="stat-card stat-danger"><div class="stat-label">Emergencias</div><div class="stat-value">${graves}</div></div>
   `;
-  const barH = 80;
-  document.getElementById('nivelChart').innerHTML = `
-    <div style="display:flex;gap:1rem;align-items:flex-end;height:${barH+40}px;padding:0 1rem">
-      ${[['Leves',leves,'#16a34a'],['Medios',medios,'#ca8a04'],['Graves',graves,'#dc2626']].map(([l,v,c])=>`
-        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
-          <span style="font-size:13px;font-weight:600;color:${c}">${v}</span>
-          <div style="width:100%;height:${total>0?Math.round(v/total*barH):2}px;background:${c};border-radius:4px 4px 0 0;min-height:2px"></div>
-          <span style="font-size:12px;color:#888">${l}</span>
-          <span style="font-size:11px;color:#aaa">${total>0?Math.round(v/total*100):0}%</span>
-        </div>
-      `).join('')}
-    </div>
-  `;
-  document.getElementById('kpiContent').innerHTML = [
-    ['Tasa de resolución', `${tasa}%`, tasa>=70?'#16a34a':'#ca8a04'],
-    ['Consultas leves', `${total>0?Math.round(leves/total*100):0}%`, '#2563eb'],
-    ['Emergencias detectadas', graves, '#dc2626'],
-    ['Pacientes atendidos', total, '#1a1a1a']
-  ].map(([l,v,c])=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5">
-      <span style="font-size:13px;color:#555">${l}</span>
-      <span style="font-size:16px;font-weight:600;color:${c}">${v}</span>
-    </div>
-  `).join('');
+  const barH=80;
+  document.getElementById('nivelChart').innerHTML=`<div style="display:flex;gap:1rem;align-items:flex-end;height:${barH+40}px;padding:0 1rem">${[['Leves',leves,'#16a34a'],['Medios',medios,'#ca8a04'],['Graves',graves,'#dc2626']].map(([l,v,c])=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:13px;font-weight:600;color:${c}">${v}</span><div style="width:100%;height:${total>0?Math.round(v/total*barH):2}px;background:${c};border-radius:4px 4px 0 0;min-height:2px"></div><span style="font-size:12px;color:#888">${l}</span><span style="font-size:11px;color:#aaa">${total>0?Math.round(v/total*100):0}%</span></div>`).join('')}</div>`;
+  document.getElementById('kpiContent').innerHTML=[
+    ['Tasa de resolución',`${tasa}%`,tasa>=70?'#16a34a':'#ca8a04'],
+    ['Tratamientos exitosos',exitosos,'#16a34a'],
+    ['Recetas con seguimiento',(recetas||[]).filter(r=>r.seguimiento_activo).length,'#2563eb'],
+    ['Total emergencias',graves,'#dc2626']
+  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="font-size:13px;color:#555">${l}</span><span style="font-size:16px;font-weight:600;color:${c}">${v}</span></div>`).join('');
+  const sinMejora=(respuestas||[]).filter(r=>r.se_siente_mejor===false).length;
+  document.getElementById('seguimientoStats').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0.5rem 0">${[['Seguimientos exitosos',exitosos,'#16a34a'],['Sin mejoría',sinMejora,'#dc2626'],['Recetas activas',(recetas||[]).length,'#2563eb']].map(([l,v,c])=>`<div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px"><div style="font-size:24px;font-weight:600;color:${c}">${v}</div><div style="font-size:12px;color:#888;margin-top:4px">${l}</div></div>`).join('')}</div>`;
 }
 
 async function loadEmpresas() {
-  const empresas = await supa('GET','clientes_b2b',null,'?select=*')||[];
-  const pacientes = await supa('GET','pacientes',null,'?select=cliente_b2b_id')||[];
-  const counts = {};
-  pacientes.forEach(p=>{ if(p.cliente_b2b_id) counts[p.cliente_b2b_id]=(counts[p.cliente_b2b_id]||0)+1; });
-  document.getElementById('empresasBody').innerHTML = empresas.map(e=>`
-    <tr>
-      <td><strong>${e.nombre_empresa}</strong></td>
-      <td>${e.nombre_seguro||'—'}</td>
-      <td>${counts[e.id]||0}</td>
-      <td>${e.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td>
-      <td><button class="btn btn-sm">Editar</button></td>
-    </tr>
-  `).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
+  const [empresas,pacientes]=await Promise.all([supa('GET','clientes_b2b',null,'?select=*'),supa('GET','pacientes',null,'?select=cliente_b2b_id')]);
+  const counts={};
+  (pacientes||[]).forEach(p=>{ if(p.cliente_b2b_id) counts[p.cliente_b2b_id]=(counts[p.cliente_b2b_id]||0)+1; });
+  document.getElementById('empresasBody').innerHTML=(empresas||[]).map(e=>`<tr><td><strong>${e.nombre_empresa}</strong></td><td>${e.nombre_seguro||'—'}</td><td>${counts[e.id]||0}</td><td>${e.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td><td><button class="btn btn-sm">Editar</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
 }
 
 async function saveEmpresa() {
-  const data = { nombre_empresa: document.getElementById('empNombre').value, nombre_seguro: document.getElementById('empSeguro').value||null };
-  if (!data.nombre_empresa) { alert('Ingrese el nombre de la empresa'); return; }
+  const data={nombre_empresa:document.getElementById('empNombre').value,nombre_seguro:document.getElementById('empSeguro').value||null};
+  if (!data.nombre_empresa) { alert('Ingrese el nombre'); return; }
   await supa('POST','clientes_b2b',data);
   document.getElementById('addEmpresaForm').style.display='none';
   document.getElementById('empNombre').value='';
   document.getElementById('empSeguro').value='';
-  loadEmpresas();
-  showToast('✓ Empresa agregada exitosamente');
+  loadEmpresas(); showToast('✓ Empresa agregada');
 }
 
 function showToast(msg) {
-  const t = document.getElementById('toastAlert');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), 3500);
+  const t=document.getElementById('toastAlert');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3500);
 }
 
-document.addEventListener('click', e => {
-  const panel = document.getElementById('notifPanel');
-  const btn = document.getElementById('notifBtn');
+document.addEventListener('click',e=>{
+  const panel=document.getElementById('notifPanel');
+  const btn=document.getElementById('notifBtn');
   if (panel.classList.contains('open')&&!panel.contains(e.target)&&!btn.contains(e.target)) panel.classList.remove('open');
   if (document.getElementById('popupAgendar').classList.contains('open')&&e.target===document.getElementById('popupAgendar')) closePopup();
 });
@@ -984,11 +969,7 @@ document.addEventListener('click', e => {
 document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 
-// Auto-login si hay sesión guardada
-window.addEventListener('load', () => {
-  const saved = getSession();
-  if (saved) { currentUser = saved; initApp(); }
-});
+window.addEventListener('load',()=>{ const saved=getSession(); if(saved){currentUser=saved;initApp();} });
 </script>
 </body>
 </html>

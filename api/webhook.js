@@ -121,4 +121,239 @@ module.exports = async function handler(req, res) {
       if (tomo) {
         respuestaBot = `✅ ¡Perfecto! Registro guardado.\n\nSiga tomando su medicamento según las indicaciones del médico. 💊\n\nSi presenta algún efecto adverso o malestar escríbanos *hola*.`;
       } else {
-        respuestaBot = `⚠️ Recuerde que es
+        respuestaBot = `⚠️ Recuerde que es importante seguir el tratamiento completo para recuperarse.\n\nIntente tomar *${recordatorio.medicamento}* lo antes posible.\n\nSi no puede tomar el medicamento por algún motivo escríbanos *hola*.`;
+        await alertarTelegram(`⚠️ <b>Incumplimiento de tratamiento</b>\nPaciente: ${paciente.nombre} ${paciente.apellidos||''}\nMedicamento: ${recordatorio.medicamento}\nTeléfono: ${telefono}`);
+      }
+
+    } else if (recordatorio?.tipo === 'fin_tratamiento') {
+      await supabaseQuery('PATCH', 'seguimiento_respuestas', { respuesta: mensaje }, `?id=eq.${r.id}`);
+
+      if (mensaje === '1') {
+        await supabaseQuery('PATCH', 'seguimiento_respuestas', { se_siente_mejor: true, respuesta: 'curado' }, `?id=eq.${r.id}`);
+        respuestaBot = `🎉 ¡Excelente noticia! Nos alegra mucho que se sienta mejor.\n\nSu caso ha sido registrado como *exitoso* en nuestro sistema.\n\nRecuerde que en MediLyft siempre estamos disponibles 24/7. Si necesita atención en el futuro escriba *hola*. 💙`;
+        await alertarTelegram(`✅ <b>Tratamiento exitoso</b>\nPaciente: ${paciente.nombre} ${paciente.apellidos||''}\nMedicamento: ${recordatorio.medicamento}`);
+
+      } else if (mensaje === '2') {
+        await supabaseQuery('PATCH', 'seguimiento_respuestas', { se_siente_mejor: false, respuesta: 'mejora_parcial' }, `?id=eq.${r.id}`);
+        respuestaBot = `👨‍⚕️ Entendemos que aún tiene algunos síntomas.\n\nLe recomendamos agendar una consulta de seguimiento con su médico.\n\n¿Desea agendar una teleconsulta ahora?\n\nResponda *Sí* o *No*`;
+        await guardarSesion(telefono, 98, { receta_id: r.receta_id, paciente_id: paciente.id });
+
+      } else if (mensaje === '3') {
+        await supabaseQuery('PATCH', 'seguimiento_respuestas', { se_siente_mejor: false, respuesta: 'sin_mejoria' }, `?id=eq.${r.id}`);
+        respuestaBot = `😟 Lamentamos escuchar eso. Es importante que sea evaluado por un médico.\n\nVamos a agendar una consulta de seguimiento urgente.\n\n¿Desea agendar una teleconsulta ahora?\n\nResponda *Sí* o *No*`;
+        await guardarSesion(telefono, 98, { receta_id: r.receta_id, paciente_id: paciente.id });
+        await alertarTelegram(`🔴 <b>Sin mejoría — requiere atención</b>\nPaciente: ${paciente.nombre} ${paciente.apellidos||''}\nMedicamento: ${recordatorio.medicamento}\nTeléfono: ${telefono}`);
+      } else {
+        respuestaBot = `Por favor responda con:\n1️⃣ Me siento mejor\n2️⃣ Mejoré pero aún tengo síntomas\n3️⃣ No mejoré o me siento peor`;
+      }
+
+      twiml.message(respuestaBot);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
+    }
+
+    twiml.message(respuestaBot);
+    res.setHeader('Content-Type', 'text/xml');
+    return res.status(200).send(twiml.toString());
+  }
+
+  let sesion = await obtenerSesion(telefono);
+  if (!sesion) sesion = { paso: 0, datos: {} };
+
+  let respuesta = '';
+  let paso = sesion.paso;
+  let datos = sesion.datos || {};
+
+  // Paso 98 — reagendar consulta después de seguimiento
+  if (paso === 98) {
+    if (mensaje.toLowerCase() === 'sí' || mensaje.toLowerCase() === 'si') {
+      const pacienteData = await supabaseQuery('GET', 'pacientes', null, `?id=eq.${datos.paciente_id}&select=*,clientes_b2b(*)`);
+      const p = (pacienteData||[])[0]||{};
+      datos.cedula = p.cedula;
+      datos.paciente_id = p.id;
+      datos.nombre_paciente = p.nombre;
+      datos.empresa = p.clientes_b2b?.nombre_empresa||'su empresa';
+      datos.seguro = p.clientes_b2b?.nombre_seguro||'su seguro';
+      datos.sintomas = 'Seguimiento de tratamiento — consulta de control';
+      respuesta = `Perfecto. Por favor indíquenos sus síntomas actuales para la consulta de seguimiento:`;
+      paso = 3;
+    } else {
+      respuesta = `Entendido. Si en algún momento necesita atención escriba *hola*.\n\nEstamos disponibles 24/7. 💙`;
+      await eliminarSesion(telefono);
+      twiml.message(respuesta);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
+    }
+    await guardarSesion(telefono, paso, datos);
+    twiml.message(respuesta);
+    res.setHeader('Content-Type', 'text/xml');
+    return res.status(200).send(twiml.toString());
+  }
+
+  if (paso === 99) {
+    respuesta = `Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nSi necesita una nueva consulta escriba *hola*.`;
+    twiml.message(respuesta);
+    res.setHeader('Content-Type', 'text/xml');
+    return res.status(200).send(twiml.toString());
+  }
+
+  if (paso === 0) {
+    respuesta = `¡Hola, ${nombreWhatsApp}! 👋 Bienvenido a *MediLyft*.\n\nEstamos listos para ayudarte.\n\nPor favor indícanos tu número de *cédula de identidad*:`;
+    paso = 1;
+
+  } else if (paso === 1) {
+    const paciente = await buscarPaciente(mensaje);
+    if (paciente) {
+      datos.cedula = mensaje;
+      datos.paciente_id = paciente.id;
+      datos.nombre_paciente = paciente.nombre;
+      datos.empresa = paciente.clientes_b2b?.nombre_empresa || 'su empresa';
+      datos.seguro = paciente.clientes_b2b?.nombre_seguro || 'su seguro';
+      respuesta = `✅ Hemos identificado que pertenece a *${datos.empresa}* con cobertura de *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?\n\nResponda *Sí* o *No*`;
+      paso = 2;
+    } else {
+      respuesta = `No encontramos la cédula *${mensaje}* en nuestro sistema.\n\nVerifique el número e inténtelo nuevamente:`;
+    }
+
+  } else if (paso === 2) {
+    if (mensaje.toLowerCase() === 'sí' || mensaje.toLowerCase() === 'si') {
+      respuesta = `Gracias por su autorización. ✅\n\n¿Cuál es el motivo de su consulta?\n\nDescríbanos sus síntomas con detalle:`;
+      paso = 3;
+    } else {
+      respuesta = `Sin su autorización no es posible continuar.\n\nSi cambia de opinión escríbanos *hola*. 👋`;
+      await eliminarSesion(telefono);
+      twiml.message(respuesta);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
+    }
+
+  } else if (paso === 3) {
+    const nivel = clasificarSintomas(mensaje);
+    datos.sintomas = mensaje;
+    datos.nivel = nivel;
+
+    if (nivel === 3) {
+      respuesta = `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*\n\n📞 tel:911\n\nNo espere — su vida puede estar en peligro.`;
+      await alertarTelegram(`🚨 <b>ALERTA GRAVE - EMERGENCIA</b>\nPaciente: ${datos.nombre_paciente||nombreWhatsApp}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+      await eliminarSesion(telefono);
+      twiml.message(respuesta);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
+
+    } else if (nivel === 2) {
+      respuesta = `⚠️ *Atención prioritaria requerida*\n\nSus síntomas necesitan evaluación médica urgente.\n\nHemos notificado a nuestro equipo y le contactarán a la brevedad.\n\nSi los síntomas empeoran *llame al 911 de inmediato*.`;
+      await alertarTelegram(`⚠️ <b>SÍNTOMAS MEDIOS - ATENCIÓN URGENTE</b>\nPaciente: ${datos.nombre_paciente||nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+      const consulta = await supabaseQuery('POST', 'consultas', { paciente_id: datos.paciente_id, nivel_sintomas: 2, sintomas_descripcion: mensaje, estado: 'pendiente' });
+      await crearNotificacion('urgente', '⚠️ Síntomas medios', `Paciente ${datos.nombre_paciente} requiere atención urgente`, datos.paciente_id, consulta?.[0]?.id);
+      await eliminarSesion(telefono);
+      twiml.message(respuesta);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
+
+    } else {
+      respuesta = `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nNecesitamos completar sus datos:\n\n👤 *Nombre y apellidos completos:*`;
+      paso = 4;
+    }
+
+  } else if (paso === 4) {
+    const nombreCompleto = mensaje.trim();
+    datos.nombreCompleto = nombreCompleto;
+    if (tieneApellidos(nombreCompleto)) {
+      const partes = nombreCompleto.split(/\s+/);
+      datos.nombre = partes[0];
+      datos.apellidos = partes.slice(1).join(' ');
+      respuesta = `*Edad:*`;
+      paso = 6;
+    } else {
+      datos.nombre = nombreCompleto;
+      respuesta = `*Apellidos completos:*`;
+      paso = 5;
+    }
+
+  } else if (paso === 5) {
+    datos.apellidos = mensaje;
+    datos.nombreCompleto = `${datos.nombre} ${datos.apellidos}`;
+    respuesta = `*Edad:*`;
+    paso = 6;
+
+  } else if (paso === 6) {
+    datos.edad = mensaje;
+    respuesta = `*Fecha de nacimiento* (ej: 15/03/1990):`;
+    paso = 7;
+
+  } else if (paso === 7) {
+    datos.fecha_nacimiento = mensaje;
+    respuesta = `*Correo electrónico:*`;
+    paso = 8;
+
+  } else if (paso === 8) {
+    datos.correo = mensaje;
+    respuesta = `*Número de teléfono de contacto:*`;
+    paso = 9;
+
+  } else if (paso === 9) {
+    datos.telefono = mensaje;
+    respuesta = `*Lugar de residencia* (ciudad y barrio):`;
+    paso = 10;
+
+  } else if (paso === 10) {
+    datos.lugar_residencia = mensaje;
+    respuesta = `*Horario de preferencia* para la teleconsulta\n(ej: mañana martes a las 10:00 AM):`;
+    paso = 11;
+
+  } else if (paso === 11) {
+    datos.horario = mensaje;
+    respuesta = `Confirme sus datos:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n🕐 *Horario:* ${datos.horario}\n\nResponda *Confirmar* o *Corregir*`;
+    paso = 12;
+
+  } else if (paso === 12) {
+    if (mensaje.toLowerCase() === 'confirmar') {
+      await actualizarPaciente(datos.cedula, {
+        nombre: datos.nombre,
+        apellidos: datos.apellidos,
+        edad: datos.edad,
+        fecha_nacimiento: datos.fecha_nacimiento,
+        correo: datos.correo,
+        telefono: datos.telefono,
+        lugar_residencia: datos.lugar_residencia,
+        updated_at: new Date().toISOString()
+      });
+
+      const consulta = await supabaseQuery('POST', 'consultas', {
+        paciente_id: datos.paciente_id,
+        nivel_sintomas: 1,
+        sintomas_descripcion: datos.sintomas,
+        estado: 'pendiente'
+      });
+
+      const consulta_id = consulta?.[0]?.id;
+
+      await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta', `${datos.nombreCompleto} solicita teleconsulta para ${datos.horario}`, datos.paciente_id, consulta_id);
+
+      await alertarTelegram(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
+
+      respuesta = `🎉 *¡Consulta registrada exitosamente!*\n\nSus datos han sido guardados en nuestro sistema.\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.\n\n¡Gracias por confiar en nosotros! 💙`;
+      await eliminarSesion(telefono);
+      await guardarSesion(telefono, 99, {});
+      twiml.message(respuesta);
+      res.setHeader('Content-Type', 'text/xml');
+      return res.status(200).send(twiml.toString());
+
+    } else {
+      datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
+      respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos:*`;
+      paso = 4;
+    }
+
+  } else {
+    respuesta = `Escriba *hola* para iniciar una nueva consulta. 👋`;
+    await eliminarSesion(telefono);
+    paso = 0;
+    datos = {};
+  }
+
+  await guardarSesion(telefono, paso, datos);
+  twiml.message(respuesta);
+  res.setHeader('Content-Type', 'text/xml');
+  res.status(200).send(twiml.toString());
+};

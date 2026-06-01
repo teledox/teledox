@@ -13,5 +13,19 @@
       "memory": 256,
       "maxDuration": 15
     }
-  }
+  },
+  "builds": [
+    {
+      "src": "api/api/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "index.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/api/(.*)", "dest": "/api/api/$1" },
+    { "src": "/(.*)", "dest": "/$1" }
+  ]
 }

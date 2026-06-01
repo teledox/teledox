@@ -221,8 +221,66 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="tab-content" id="tab-consultas"><div id="patConsultas"></div></div>
         <div class="tab-content" id="tab-cronicas">
           <div class="card">
-            <div class="card-header"><span class="card-title">Enfermedades crónicas</span><button class="btn btn-sm btn-primary">+ Agregar</button></div>
-            <div class="empty-state">Sin enfermedades crónicas registradas.</div>
+            <div class="card-header">
+              <span class="card-title">Enfermedades crónicas registradas</span>
+              <button class="btn btn-sm btn-primary" onclick="mostrarFormCronica()">+ Agregar</button>
+            </div>
+            <div id="cronicasList" class="empty-state">Sin enfermedades crónicas registradas.</div>
+          </div>
+          <div class="card" id="formCronica" style="display:none">
+            <div class="card-header"><span class="card-title">Registrar enfermedad crónica</span><button class="btn btn-sm" onclick="document.getElementById('formCronica').style.display='none'">✕</button></div>
+            <div class="two-col">
+              <div class="form-group">
+                <label class="form-label">Enfermedad *</label>
+                <select class="form-control" id="cronicaEnfermedad" onchange="actualizarFrecuenciaCronica()">
+                  <option value="">Seleccione...</option>
+                  <option value="hipertension">Hipertensión Arterial</option>
+                  <option value="diabetes_tipo1">Diabetes Tipo 1</option>
+                  <option value="diabetes_tipo2">Diabetes Tipo 2</option>
+                  <option value="epoc">EPOC</option>
+                  <option value="asma">Asma</option>
+                  <option value="insuficiencia_cardiaca">Insuficiencia Cardíaca</option>
+                  <option value="enfermedad_renal">Enfermedad Renal Crónica</option>
+                  <option value="tiroides">Trastorno Tiroideo (Hipo/Hipertiroidismo)</option>
+                  <option value="artritis_reumatoide">Artritis Reumatoide</option>
+                  <option value="lupus">Lupus Eritematoso Sistémico</option>
+                  <option value="epilepsia">Epilepsia</option>
+                  <option value="post_acv">Post ACV / Enfermedad Cerebrovascular</option>
+                  <option value="fibrilacion_auricular">Fibrilación Auricular</option>
+                  <option value="depresion">Depresión Crónica</option>
+                  <option value="obesidad">Obesidad / Sobrepeso</option>
+                  <option value="osteoporosis">Osteoporosis</option>
+                  <option value="vih">VIH/SIDA</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Frecuencia de seguimiento (horas)</label>
+                <select class="form-control" id="cronicaFrecuencia">
+                  <option value="8">Cada 8 horas</option>
+                  <option value="12">Cada 12 horas</option>
+                  <option value="24" selected>Cada 24 horas (diario)</option>
+                  <option value="48">Cada 48 horas</option>
+                  <option value="72">Cada 72 horas</option>
+                  <option value="168">Semanal</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Código CIE-10</label>
+                <input type="text" class="form-control" id="cronicaCIE10" placeholder="Ej: I10" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Fecha de inicio</label>
+                <input type="date" class="form-control" id="cronicaFecha" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notas del médico</label>
+              <textarea class="form-control" id="cronicaNotas" placeholder="Observaciones, medicación actual, metas de control..."></textarea>
+            </div>
+            <div style="background:#eff6ff;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:13px;color:#1e40af">
+              <strong>📱 Seguimiento automático activado:</strong> El bot contactará al paciente por WhatsApp según la frecuencia seleccionada para registrar sus valores y detectar alertas.
+            </div>
+            <button class="btn btn-primary" onclick="guardarCronica()">Registrar enfermedad crónica</button>
           </div>
         </div>
         <div class="tab-content" id="tab-seguimiento">
@@ -637,6 +695,7 @@ async function showPacienteDetalle(id) {
   document.querySelectorAll('#page-paciente-detalle .tab-content').forEach(t=>t.classList.remove('active'));
   document.querySelector('#page-paciente-detalle .tab-bar .tab').classList.add('active');
   document.getElementById('tab-datos').classList.add('active');
+  cargarCronicas(id);
 }
 
 function switchTab(el,tabId) {
@@ -981,6 +1040,119 @@ document.addEventListener('click',e=>{
 
 document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+
+// =================== ENFERMEDADES CRÓNICAS ===================
+const FRECUENCIAS_DEFAULT = {
+  'hipertension': 12, 'diabetes_tipo1': 8, 'diabetes_tipo2': 12,
+  'epoc': 24, 'asma': 48, 'insuficiencia_cardiaca': 24,
+  'enfermedad_renal': 48, 'tiroides': 72, 'artritis_reumatoide': 48,
+  'lupus': 48, 'epilepsia': 12, 'post_acv': 24,
+  'fibrilacion_auricular': 24, 'depresion': 48, 'obesidad': 168,
+  'osteoporosis': 48, 'vih': 24
+};
+
+function mostrarFormCronica() {
+  document.getElementById('formCronica').style.display = 'block';
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('cronicaFecha').value = hoy;
+}
+
+function actualizarFrecuenciaCronica() {
+  const enf = document.getElementById('cronicaEnfermedad').value;
+  const freq = FRECUENCIAS_DEFAULT[enf] || 24;
+  document.getElementById('cronicaFrecuencia').value = freq;
+}
+
+async function cargarCronicas(pacienteId) {
+  const data = await supa('GET','enfermedades_cronicas',null,`?paciente_id=eq.${pacienteId}&order=created_at.desc`)||[];
+  const nombres = {
+    'hipertension':'Hipertensión Arterial','diabetes_tipo1':'Diabetes Tipo 1',
+    'diabetes_tipo2':'Diabetes Tipo 2','epoc':'EPOC','asma':'Asma',
+    'insuficiencia_cardiaca':'Insuficiencia Cardíaca','enfermedad_renal':'Enfermedad Renal Crónica',
+    'tiroides':'Trastorno Tiroideo','artritis_reumatoide':'Artritis Reumatoide',
+    'lupus':'Lupus Eritematoso Sistémico','epilepsia':'Epilepsia',
+    'post_acv':'Post ACV','fibrilacion_auricular':'Fibrilación Auricular',
+    'depresion':'Depresión Crónica','obesidad':'Obesidad/Sobrepeso',
+    'osteoporosis':'Osteoporosis','vih':'VIH/SIDA'
+  };
+  if (data.length === 0) {
+    document.getElementById('cronicasList').innerHTML = '<div class="empty-state">Sin enfermedades crónicas registradas.</div>';
+    return;
+  }
+  document.getElementById('cronicasList').innerHTML = data.map(ec => `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #f5f5f5">
+      <div>
+        <div style="font-size:14px;font-weight:600;color:#1a1a1a">${nombres[ec.enfermedad]||ec.enfermedad}</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">
+          ${ec.codigo_cie10?`CIE-10: ${ec.codigo_cie10} · `:''}
+          Seguimiento cada ${ec.frecuencia_horas}h · 
+          Desde: ${ec.fecha_inicio||'—'}
+        </div>
+        ${ec.notas?`<div style="font-size:12px;color:#555;margin-top:4px">${ec.notas}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${ec.activo?'badge-green':'badge-gray'}">${ec.activo?'Activo':'Inactivo'}</span>
+        <button class="btn btn-sm" onclick="verRegistrosCronicos('${ec.id}','${nombres[ec.enfermedad]||ec.enfermedad}')">Ver registros</button>
+        <button class="btn btn-sm ${ec.activo?'btn-danger':''}" onclick="toggleCronica('${ec.id}',${ec.activo})">${ec.activo?'Pausar':'Activar'}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function guardarCronica() {
+  const enf = document.getElementById('cronicaEnfermedad').value;
+  if (!enf) { alert('Seleccione una enfermedad'); return; }
+  const data = {
+    paciente_id: currentPacienteId,
+    enfermedad: enf,
+    codigo_cie10: document.getElementById('cronicaCIE10').value||null,
+    frecuencia_horas: parseInt(document.getElementById('cronicaFrecuencia').value),
+    fecha_inicio: document.getElementById('cronicaFecha').value||null,
+    notas: document.getElementById('cronicaNotas').value||null,
+    medico_id: currentUser.id,
+    activo: true
+  };
+  await supa('POST','enfermedades_cronicas',data);
+  document.getElementById('formCronica').style.display='none';
+  document.getElementById('cronicaEnfermedad').value='';
+  document.getElementById('cronicaNotas').value='';
+  await cargarCronicas(currentPacienteId);
+  showToast('✓ Enfermedad crónica registrada. Seguimiento automático activado.');
+}
+
+async function toggleCronica(id, activo) {
+  await supa('PATCH','enfermedades_cronicas',{activo:!activo},`?id=eq.${id}`);
+  await cargarCronicas(currentPacienteId);
+  showToast(activo ? '⏸ Seguimiento pausado' : '▶ Seguimiento activado');
+}
+
+async function verRegistrosCronicos(enfermedadId, nombre) {
+  const registros = await supa('GET','registros_cronicos',null,`?enfermedad_id=eq.${enfermedadId}&order=created_at.desc&limit=20`)||[];
+  if (registros.length === 0) { alert('Sin registros todavía. El bot comenzará el seguimiento en breve.'); return; }
+  const html = registros.map(r => {
+    const vals = r.valores || {};
+    const nivel = r.nivel_alerta;
+    const color = nivel === 3 ? '#dc2626' : nivel === 2 ? '#ca8a04' : '#16a34a';
+    const icon = nivel === 3 ? '🚨' : nivel === 2 ? '⚠️' : '✅';
+    return `<div style="padding:10px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:12px;color:#888">${new Date(r.created_at).toLocaleString('es-EC')}</div>
+        <div style="font-size:13px;margin-top:4px">${Object.entries(vals).map(([k,v])=>`<strong>${k}:</strong> ${v}`).join(' · ')}</div>
+      </div>
+      <span style="font-size:18px" title="Nivel ${nivel}">${icon}</span>
+    </div>`;
+  }).join('');
+  const popup = document.createElement('div');
+  popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:center;justify-content:center';
+  popup.innerHTML = `<div style="background:white;border-radius:16px;padding:1.5rem;width:560px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <h3 style="font-size:16px;font-weight:600">Registros: ${nombre}</h3>
+      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
+    </div>
+    ${html}
+  </div>`;
+  document.body.appendChild(popup);
+}
 
 window.addEventListener('load',()=>{ const saved=getSession(); if(saved){currentUser=saved;initApp();} });
 

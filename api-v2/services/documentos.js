@@ -32,7 +32,8 @@ async function registrarDocumento(paciente_id, consulta_id, tipo, storage_path) 
     consulta_id,
     tipo,
     storage_path,
-    enviado_paciente: false
+    enviado_paciente: false,
+    created_at: new Date().toISOString()
   });
 }
 

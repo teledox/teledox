@@ -19,7 +19,7 @@ CREATE TABLE documentos (
   tipo             VARCHAR(100), -- 'historia_clinica', 'receta', 'examen', etc.
   storage_path     VARCHAR(500), -- ruta en Supabase Storage
   enviado_paciente BOOLEAN DEFAULT FALSE,
-  generado_en      TIMESTAMPTZ DEFAULT NOW()
+  created_at       TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Índices útiles

@@ -13,6 +13,9 @@ let medicamentosData = [];
 let recetaConsultaId = null;
 let recetaPacienteId = null;
 let cie10Seleccionados = [];
+let plantillaSeleccionada = null;
+let currentPacienteData = null;
+let currentConsultaData = null;
 
 async function supa(method, table, body, query = '') {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {

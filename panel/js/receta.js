@@ -29,8 +29,13 @@ async function openReceta(consultaId, pacienteId) {
   document.getElementById('recetaNotas').value = '';
   document.getElementById('recetaIndicaciones').value = '';
   document.getElementById('medicamentosLista').innerHTML = '';
-  const pac = await supa('GET', 'pacientes', null, `?id=eq.${pacienteId}&select=*,clientes_b2b(*)`);
-  const p = (pac || [])[0] || {};
+  const [pacArr, consultaArr] = await Promise.all([
+    supa('GET', 'pacientes', null, `?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
+    supa('GET', 'consultas', null, `?id=eq.${consultaId}`)
+  ]);
+  currentPacienteData = (pacArr || [])[0] || {};
+  currentConsultaData = (consultaArr || [])[0] || {};
+  const p = currentPacienteData;
   const init = ((p.nombre || '?')[0] + (p.apellidos || '?')[0]).toUpperCase();
   document.getElementById('recetaPacienteHeader').innerHTML = `
     <div class="patient-avatar-lg">${init}</div>

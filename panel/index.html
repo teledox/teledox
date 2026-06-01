@@ -4,129 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MediLyft — Panel</title>
-<style>
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-body { background: #f5f5f0; min-height: 100vh; }
-.login-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-.login-box { background: white; border-radius: 16px; padding: 2.5rem; width: 380px; box-shadow: 0 2px 20px rgba(0,0,0,0.08); }
-.login-logo { font-size: 24px; font-weight: 600; color: #1a1a1a; margin-bottom: 4px; }
-.login-sub { font-size: 13px; color: #888; margin-bottom: 2rem; }
-.form-group { margin-bottom: 1rem; }
-.form-label { font-size: 12px; color: #555; margin-bottom: 4px; display: block; font-weight: 500; }
-.form-input { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.15s; }
-.form-input:focus { border-color: #2563eb; }
-.btn-login { width: 100%; padding: 11px; background: #1a1a1a; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 0.5rem; }
-.btn-login:hover { background: #333; }
-.btn-login:disabled { background: #aaa; cursor: not-allowed; }
-.login-error { color: #dc2626; font-size: 13px; margin-top: 8px; text-align: center; display: none; }
-.app { display: none; flex-direction: row; min-height: 100vh; }
-.sidebar { width: 220px; background: white; border-right: 1px solid #eee; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; }
-.sidebar-logo { padding: 1.25rem 1rem; border-bottom: 1px solid #eee; }
-.sidebar-logo-name { font-size: 17px; font-weight: 600; color: #1a1a1a; }
-.sidebar-logo-role { font-size: 11px; color: #888; margin-top: 2px; }
-.nav-section { font-size: 10px; color: #aaa; padding: 12px 1rem 4px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 1rem; font-size: 13px; color: #555; cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent; }
-.nav-item:hover { background: #f9f9f9; color: #1a1a1a; }
-.nav-item.active { background: #eff6ff; color: #2563eb; border-left-color: #2563eb; font-weight: 500; }
-.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
-.sidebar-footer { margin-top: auto; padding: 1rem; border-top: 1px solid #eee; }
-.btn-logout { width: 100%; padding: 8px; background: none; border: 1px solid #eee; border-radius: 8px; font-size: 13px; color: #888; cursor: pointer; }
-.btn-logout:hover { background: #f5f5f0; }
-.main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
-.topbar { background: white; border-bottom: 1px solid #eee; padding: 0 1.5rem; height: 54px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
-.topbar-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
-.topbar-right { display: flex; align-items: center; gap: 12px; }
-.notif-btn { position: relative; background: none; border: none; cursor: pointer; padding: 6px; border-radius: 8px; }
-.notif-btn:hover { background: #f5f5f0; }
-.notif-badge { position: absolute; top: 2px; right: 2px; background: #dc2626; color: white; font-size: 10px; width: 16px; height: 16px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: #eff6ff; color: #2563eb; font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
-.content { flex: 1; padding: 1.5rem; overflow-y: auto; }
-.page { display: none; }
-.page.active { display: block; }
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
-.stat-card { background: white; border-radius: 12px; padding: 1.25rem; border: 1px solid #eee; }
-.stat-label { font-size: 12px; color: #888; margin-bottom: 6px; font-weight: 500; }
-.stat-value { font-size: 28px; font-weight: 600; color: #1a1a1a; line-height: 1; }
-.stat-sub { font-size: 11px; color: #aaa; margin-top: 4px; }
-.stat-danger .stat-value { color: #dc2626; }
-.stat-success .stat-value { color: #16a34a; }
-.stat-warning .stat-value { color: #ca8a04; }
-.card { background: white; border-radius: 12px; border: 1px solid #eee; padding: 1.25rem; margin-bottom: 1rem; }
-.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
-.card-title { font-size: 14px; font-weight: 600; color: #1a1a1a; }
-.table { width: 100%; border-collapse: collapse; font-size: 13px; }
-.table th { text-align: left; padding: 8px 12px; color: #888; font-weight: 500; border-bottom: 1px solid #f0f0f0; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; }
-.table td { padding: 11px 12px; border-bottom: 1px solid #f9f9f9; color: #333; vertical-align: middle; }
-.table tr:last-child td { border-bottom: none; }
-.table tr:hover td { background: #fafaf9; }
-.badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-.badge-green { background: #dcfce7; color: #16a34a; }
-.badge-yellow { background: #fef9c3; color: #ca8a04; }
-.badge-red { background: #fee2e2; color: #dc2626; }
-.badge-blue { background: #dbeafe; color: #2563eb; }
-.badge-gray { background: #f3f4f6; color: #6b7280; }
-.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; border: 1px solid #e0e0e0; background: white; color: #333; transition: all 0.15s; font-weight: 500; }
-.btn:hover { background: #f5f5f0; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-primary { background: #1a1a1a; color: white; border-color: transparent; }
-.btn-primary:hover { background: #333; }
-.btn-success { background: #dcfce7; color: #16a34a; border-color: #bbf7d0; }
-.btn-warning { background: #fef9c3; color: #ca8a04; border-color: #fde68a; }
-.btn-danger { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.form-group { margin-bottom: 1rem; }
-.form-control { width: 100%; padding: 9px 11px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #1a1a1a; outline: none; background: white; }
-.form-control:focus { border-color: #2563eb; }
-textarea.form-control { resize: vertical; min-height: 80px; }
-.search-wrap { position: relative; margin-bottom: 1rem; }
-.search-wrap input { width: 100%; padding: 9px 11px 9px 36px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; outline: none; background: white; }
-.search-wrap input:focus { border-color: #2563eb; }
-.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: #aaa; }
-.notif-panel { position: fixed; top: 54px; right: 0; width: 340px; background: white; border-left: 1px solid #eee; border-bottom: 1px solid #eee; border-radius: 0 0 0 12px; box-shadow: -4px 4px 20px rgba(0,0,0,0.08); z-index: 100; display: none; max-height: calc(100vh - 54px); overflow-y: auto; }
-.notif-panel.open { display: block; }
-.notif-header { padding: 1rem; border-bottom: 1px solid #eee; font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-.notif-item { padding: 12px 1rem; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background 0.1s; }
-.notif-item:hover { background: #fafaf9; }
-.notif-item.unread { background: #eff6ff; border-left: 3px solid #2563eb; }
-.notif-tipo { font-size: 11px; font-weight: 600; margin-bottom: 3px; }
-.notif-urgente { color: #dc2626; }
-.notif-nueva { color: #2563eb; }
-.notif-titulo { font-size: 13px; color: #1a1a1a; font-weight: 500; }
-.notif-msg { font-size: 12px; color: #888; margin-top: 2px; }
-.notif-time { font-size: 11px; color: #aaa; margin-top: 4px; }
-.patient-header { display: flex; align-items: center; gap: 16px; margin-bottom: 1.5rem; padding: 1.25rem; background: white; border-radius: 12px; border: 1px solid #eee; }
-.patient-avatar-lg { width: 56px; height: 56px; border-radius: 50%; background: #dbeafe; color: #2563eb; font-size: 20px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.patient-name { font-size: 18px; font-weight: 600; color: #1a1a1a; }
-.patient-meta { font-size: 13px; color: #888; margin-top: 3px; }
-.detail-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 1rem; }
-.detail-item { background: #f9f9f9; border-radius: 8px; padding: 10px 12px; }
-.detail-label { font-size: 11px; color: #aaa; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
-.detail-value { font-size: 13px; color: #1a1a1a; font-weight: 500; margin-top: 2px; }
-.tab-bar { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #eee; }
-.tab { padding: 8px 16px; font-size: 13px; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; }
-.tab.active { color: #2563eb; border-bottom-color: #2563eb; }
-.tab-content { display: none; }
-.tab-content.active { display: block; }
-.empty-state { text-align: center; padding: 3rem 1rem; color: #aaa; font-size: 14px; }
-.rol-badge { display: inline-flex; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
-.rol-admin { background: #f3e8ff; color: #7c3aed; }
-.rol-medico { background: #dbeafe; color: #2563eb; }
-.rol-operador { background: #dcfce7; color: #16a34a; }
-.popup-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: none; align-items: center; justify-content: center; }
-.popup-overlay.open { display: flex; }
-.popup-box { background: white; border-radius: 16px; padding: 1.5rem; width: 480px; max-height: 80vh; overflow-y: auto; }
-.popup-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
-.alert-new { position: fixed; bottom: 1.5rem; right: 1.5rem; background: #1a1a1a; color: white; padding: 1rem 1.25rem; border-radius: 12px; font-size: 13px; z-index: 300; display: none; box-shadow: 0 4px 20px rgba(0,0,0,0.2); max-width: 300px; }
-.alert-new.show { display: block; animation: slideIn 0.3s ease; }
-.upload-area { border: 2px dashed #e0e0e0; border-radius: 8px; padding: 1.5rem; text-align: center; color: #aaa; font-size: 13px; cursor: pointer; transition: all 0.15s; }
-.upload-area:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
-.divider { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
-@keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-</style>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
+<!-- LOGIN -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">MediLyft</div>
@@ -144,6 +26,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
+<!-- APP -->
 <div class="app" id="appWrap">
   <div class="sidebar">
     <div class="sidebar-logo">
@@ -171,6 +54,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
     <div class="content">
 
+      <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
         <div class="stats-grid" id="statsGrid"></div>
         <div class="two-col">
@@ -191,6 +75,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- PACIENTES -->
       <div class="page" id="page-pacientes">
         <div class="search-wrap">
           <span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
@@ -208,6 +93,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- DETALLE PACIENTE -->
       <div class="page" id="page-paciente-detalle">
         <button class="btn btn-sm" onclick="showPage('pacientes')" style="margin-bottom:1rem">← Volver</button>
         <div class="patient-header" id="patientHeader"></div>
@@ -216,6 +102,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="tab" onclick="switchTab(this,'tab-consultas')">Consultas</div>
           <div class="tab" onclick="switchTab(this,'tab-cronicas')">Enfermedades crónicas</div>
           <div class="tab" onclick="switchTab(this,'tab-seguimiento')">Seguimiento</div>
+          <div class="tab" onclick="switchTab(this,'tab-documentos');loadDocumentos(currentPacienteId)">Documentos</div>
         </div>
         <div class="tab-content active" id="tab-datos"><div class="detail-grid" id="detailGrid"></div></div>
         <div class="tab-content" id="tab-consultas"><div id="patConsultas"></div></div>
@@ -231,8 +118,39 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div id="seguimientoList" class="empty-state">Sin seguimientos activos.</div>
           </div>
         </div>
+        <div class="tab-content" id="tab-documentos">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Documentos del paciente</span>
+              <button class="btn btn-sm btn-primary" onclick="document.getElementById('uploadDocForm').style.display='block'">+ Subir documento</button>
+            </div>
+            <div id="uploadDocForm" style="display:none;background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:1rem">
+              <div class="two-col" style="margin-bottom:8px">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Tipo de documento</label>
+                  <select class="form-control" id="docTipo">
+                    <option value="receta">Receta médica</option>
+                    <option value="examen">Examen solicitado</option>
+                    <option value="certificado">Certificado médico</option>
+                    <option value="otro">Otro</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Archivo PDF</label>
+                  <input type="file" class="form-control" id="docFile" accept="application/pdf" />
+                </div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-primary btn-sm" onclick="subirDocumento()">Subir</button>
+                <button class="btn btn-sm" onclick="document.getElementById('uploadDocForm').style.display='none'">Cancelar</button>
+              </div>
+            </div>
+            <div id="docsList"></div>
+          </div>
+        </div>
       </div>
 
+      <!-- CONSULTAS -->
       <div class="page" id="page-consultas">
         <div class="card">
           <div class="card-header">
@@ -251,6 +169,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- RECETA -->
       <div class="page" id="page-receta">
         <button class="btn btn-sm" onclick="showPage('consultas')" style="margin-bottom:1rem">← Volver a consultas</button>
         <div class="patient-header" id="recetaPacienteHeader"></div>
@@ -292,6 +211,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- OPERADOR -->
       <div class="page" id="page-operador">
         <div class="stats-grid">
           <div class="stat-card stat-warning"><div class="stat-label">Sin atender</div><div class="stat-value" id="op-pending">—</div></div>
@@ -314,6 +234,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- USUARIOS -->
       <div class="page" id="page-usuarios">
         <div class="card">
           <div class="card-header">
@@ -346,6 +267,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- PERFIL -->
       <div class="page" id="page-perfil">
         <div class="card">
           <div class="card-header"><span class="card-title">Mi perfil</span></div>
@@ -378,6 +300,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- MÉTRICAS -->
       <div class="page" id="page-metricas">
         <div class="stats-grid" id="metricStats"></div>
         <div class="two-col">
@@ -396,6 +319,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
+      <!-- EMPRESAS -->
       <div class="page" id="page-empresas">
         <div class="card">
           <div class="card-header">
@@ -417,9 +341,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         </div>
       </div>
 
-    </div>
-  </div>
+    </div><!-- /content -->
+  </div><!-- /main -->
 
+  <!-- PANEL NOTIFICACIONES -->
   <div class="notif-panel" id="notifPanel">
     <div class="notif-header">
       Notificaciones
@@ -427,8 +352,10 @@ textarea.form-control { resize: vertical; min-height: 80px; }
     </div>
     <div id="notifList"></div>
   </div>
-</div>
 
+</div><!-- /app -->
+
+<!-- POPUP AGENDAR -->
 <div class="popup-overlay" id="popupAgendar">
   <div class="popup-box">
     <div class="popup-title">📅 Agendar teleconsulta</div>
@@ -445,602 +372,35 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
 <div class="alert-new" id="toastAlert"></div>
 
+<!-- SCRIPTS — orden importante: config primero, utils segundo, resto después -->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/nav.js"></script>
+<script src="js/dashboard.js"></script>
+<script src="js/pacientes.js"></script>
+<script src="js/consultas.js"></script>
+<script src="js/notificaciones.js"></script>
+<script src="js/agendamiento.js"></script>
+<script src="js/receta.js"></script>
+<script src="js/documentos.js"></script>
+<script src="js/usuarios.js"></script>
+<script src="js/perfil.js"></script>
+<script src="js/metricas.js"></script>
+<script src="js/empresas.js"></script>
+
 <script>
-const SUPA_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
-const SUPA_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
-let currentUser = null;
-let pacientesData = [];
-let notifInterval = null;
-let lastNotifCount = 0;
-let currentConsultaId = null;
-let currentPacienteId = null;
-let firmaData = { firma: null, sello: null };
-let medicamentosData = [];
-let recetaConsultaId = null;
-let recetaPacienteId = null;
-
-async function supa(method, table, body, query='') {
-  const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
-    method,
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': method==='POST'?'return=representation':'' },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  if (r.status === 204) return null;
-  return r.json();
-}
-
-function saveSession(user) { localStorage.setItem('medilyft_user', JSON.stringify(user)); }
-function getSession() { try { return JSON.parse(localStorage.getItem('medilyft_user')); } catch { return null; } }
-function clearSession() { localStorage.removeItem('medilyft_user'); }
-
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  const btn = document.getElementById('loginBtn');
-  if (!email || !pass) return;
-  btn.disabled = true; btn.textContent = 'Verificando...';
-  document.getElementById('loginError').style.display = 'none';
-  const users = await supa('GET','usuarios',null,`?correo=eq.${encodeURIComponent(email)}&password_hash=eq.${encodeURIComponent(pass)}&activo=eq.true`);
-  btn.disabled = false; btn.textContent = 'Ingresar';
-  if (!users || users.length === 0) { document.getElementById('loginError').style.display = 'block'; return; }
-  currentUser = users[0];
-  saveSession(currentUser);
-  initApp();
-}
-
-function initApp() {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('appWrap').style.display = 'flex';
-  document.getElementById('sidebarRole').textContent = currentUser.rol.charAt(0).toUpperCase() + currentUser.rol.slice(1);
-  document.getElementById('topAvatar').textContent = ((currentUser.nombre||'?')[0]+(currentUser.apellidos||'?')[0]).toUpperCase();
-  document.getElementById('userInfo').textContent = currentUser.nombre + ' ' + currentUser.apellidos;
-  buildNav(); loadDashboard(); startNotifPolling();
-}
-
-function doLogout() {
-  currentUser = null; clearSession();
-  if (notifInterval) clearInterval(notifInterval);
-  document.getElementById('loginWrap').style.display = 'flex';
-  document.getElementById('appWrap').style.display = 'none';
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPass').value = '';
-}
-
-const NAV_ICONS = {
-  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
-  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-  activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-  briefcase: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
-  'user-check': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
-  'bar-chart': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
-};
-
-function buildNav() {
-  const rol = currentUser.rol;
-  const menus = {
-    admin: [
-      { label:'Principal', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'}]},
-      { label:'Operación', items:[{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'empresas',label:'Empresas B2B',icon:'briefcase'}]},
-      { label:'Admin', items:[{id:'usuarios',label:'Usuarios',icon:'user-check'},{id:'metricas',label:'Métricas KPI',icon:'bar-chart'},{id:'perfil',label:'Mi perfil',icon:'user'}]}
-    ],
-    medico: [{ label:'Clínico', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'},{id:'perfil',label:'Mi perfil',icon:'user'}]}],
-    operador: [{ label:'Operación', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'pacientes',label:'Pacientes',icon:'users'}]}]
-  };
-  let html = '';
-  (menus[rol]||menus.operador).forEach(s => {
-    html += `<div class="nav-section">${s.label}</div>`;
-    s.items.forEach(i => { html += `<div class="nav-item" onclick="showPage('${i.id}',this)" data-page="${i.id}">${NAV_ICONS[i.icon]||''}${i.label}</div>`; });
-  });
-  document.getElementById('navMenu').innerHTML = html;
-}
-
-function showPage(id, el) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const page = document.getElementById('page-'+id);
-  if (page) page.classList.add('active');
-  if (el) el.classList.add('active');
-  else { const ni = document.querySelector(`[data-page="${id}"]`); if(ni) ni.classList.add('active'); }
-  const titles = {dashboard:'Dashboard',pacientes:'Pacientes',consultas:'Consultas',operador:'Centro de alertas',usuarios:'Usuarios',metricas:'Métricas KPI',empresas:'Empresas B2B','paciente-detalle':'Detalle del paciente',perfil:'Mi perfil',receta:'Emitir receta'};
-  document.getElementById('pageTitle').textContent = titles[id]||id;
-  if (id==='pacientes') loadPacientes();
-  if (id==='consultas') loadConsultas();
-  if (id==='operador') loadNotificaciones();
-  if (id==='usuarios') loadUsuarios();
-  if (id==='metricas') loadMetricas();
-  if (id==='empresas') loadEmpresas();
-  if (id==='perfil') loadPerfil();
-}
-
-async function loadDashboard() {
-  const [consultas, pacientes, notifs] = await Promise.all([
-    supa('GET','consultas',null,'?select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc'),
-    supa('GET','pacientes',null,'?select=count'),
-    supa('GET','notificaciones',null,'?leida=eq.false&order=created_at.desc&limit=5')
-  ]);
-  const pendientes = (consultas||[]).filter(c=>c.estado==='pendiente');
-  const hoy = new Date().toDateString();
-  const hoyCount = (consultas||[]).filter(c=>new Date(c.created_at).toDateString()===hoy).length;
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card stat-warning"><div class="stat-label">Consultas pendientes</div><div class="stat-value">${pendientes.length}</div><div class="stat-sub">Por atender</div></div>
-    <div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div>
-    <div class="stat-card"><div class="stat-label">Consultas hoy</div><div class="stat-value">${hoyCount}</div></div>
-    <div class="stat-card stat-danger"><div class="stat-label">Alertas sin leer</div><div class="stat-value">${(notifs||[]).length}</div></div>
-  `;
-  document.getElementById('pendCount').textContent = pendientes.length;
-  document.getElementById('pendBody').innerHTML = pendientes.slice(0,5).map(c=>{
-    const p=c.pacientes||{}; const n=c.nivel_sintomas;
-    return `<tr><td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${p.clientes_b2b?.nombre_empresa||''}</span></td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td><td>${n===3?'<span class="badge badge-red">Grave</span>':n===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button></td></tr>`;
-  }).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:1.5rem">Sin consultas pendientes</td></tr>';
-  document.getElementById('recentNotifs').innerHTML = (notifs||[]).map(n=>`
-    <div style="padding:10px 0;border-bottom:1px solid #f5f5f5">
-      <div style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva consulta'}</div>
-      <div style="font-size:13px;color:#333;margin-top:2px">${n.titulo}</div>
-      <div style="font-size:12px;color:#888">${n.mensaje}</div>
-    </div>
-  `).join('')||'<div class="empty-state" style="padding:1.5rem">Sin alertas</div>';
-}
-
-async function loadPacientes() {
-  const data = await supa('GET','pacientes',null,'?select=*,clientes_b2b(nombre_empresa,nombre_seguro)&order=created_at.desc');
-  pacientesData = data||[];
-  document.getElementById('pacCount').textContent = pacientesData.length;
-  renderPacientes(pacientesData);
-}
-
-function renderPacientes(list) {
-  document.getElementById('pacBody').innerHTML = list.map(p=>`
-    <tr>
-      <td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong></td>
-      <td>${p.cedula||'—'}</td>
-      <td>${p.clientes_b2b?.nombre_empresa||'—'}</td>
-      <td>${p.telefono||'—'}</td>
-      <td>${p.lugar_residencia||'—'}</td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.correo||'—'}</td>
-      <td><button class="btn btn-sm" onclick="showPacienteDetalle('${p.id}')">Ver</button></td>
-    </tr>
-  `).join('')||'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:2rem">Sin pacientes</td></tr>';
-}
-
-function filterPacientes() {
-  const q = document.getElementById('searchPac').value.toLowerCase();
-  renderPacientes(pacientesData.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.apellidos||'').toLowerCase().includes(q)||(p.cedula||'').includes(q)));
-}
-
-async function showPacienteDetalle(id) {
-  currentPacienteId = id;
-  const pac = pacientesData.find(x=>x.id===id)||(await supa('GET','pacientes',null,`?id=eq.${id}&select=*,clientes_b2b(*)`)||[])[0];
-  if (!pac) return;
-  const init = ((pac.nombre||'?')[0]+(pac.apellidos||'?')[0]).toUpperCase();
-  document.getElementById('patientHeader').innerHTML = `
-    <div class="patient-avatar-lg">${init}</div>
-    <div style="flex:1"><div class="patient-name">${pac.nombre||''} ${pac.apellidos||''}</div>
-    <div class="patient-meta">Cédula: ${pac.cedula||'—'} · ${pac.clientes_b2b?.nombre_empresa||'—'}</div></div>
-  `;
-  document.getElementById('detailGrid').innerHTML = [
-    ['Edad',pac.edad||'—'],['Nacimiento',pac.fecha_nacimiento||'—'],['Correo',pac.correo||'—'],
-    ['Teléfono',pac.telefono||'—'],['Residencia',pac.lugar_residencia||'—'],['Empresa',pac.clientes_b2b?.nombre_empresa||'—']
-  ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
-  const consultas = await supa('GET','consultas',null,`?paciente_id=eq.${id}&order=created_at.desc`)||[];
-  document.getElementById('patConsultas').innerHTML = consultas.length?`
-    <table class="table"><thead><tr><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th></tr></thead>
-    <tbody>${consultas.map(c=>`<tr><td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td><td>${c.sintomas_descripcion||'—'}</td><td>${c.diagnostico||'—'}</td><td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><span class="badge badge-gray">${c.estado}</span></td></tr>`).join('')}</tbody></table>`
-    :'<div class="empty-state">Sin consultas</div>';
-  const seguimientos = await supa('GET','recordatorios',null,`?paciente_id=eq.${id}&activo=eq.true`)||[];
-  document.getElementById('seguimientoList').innerHTML = seguimientos.length?
-    seguimientos.map(s=>`<div class="detail-item" style="margin-bottom:8px"><div class="detail-label">Medicamento</div><div class="detail-value">${s.medicamento||'—'}</div><div style="font-size:12px;color:#888;margin-top:4px">Cada ${s.frecuencia_horas}h · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div></div>`).join('')
-    :'<div class="empty-state">Sin seguimientos activos</div>';
-  showPage('paciente-detalle');
-  document.querySelectorAll('#page-paciente-detalle .tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('#page-paciente-detalle .tab-content').forEach(t=>t.classList.remove('active'));
-  document.querySelector('#page-paciente-detalle .tab-bar .tab').classList.add('active');
-  document.getElementById('tab-datos').classList.add('active');
-}
-
-function switchTab(el,tabId) {
-  el.closest('.tab-bar').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  el.closest('.page').querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-}
-
-async function loadConsultas() {
-  const estado = document.getElementById('filterEstado')?.value||'';
-  const q = estado?`?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc&estado=eq.${estado}`:'?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc';
-  const consultas = await supa('GET','consultas',null,q)||[];
-  document.getElementById('consultasBody').innerHTML = consultas.map(c=>`
-    <tr>
-      <td><strong>${c.pacientes?.nombre||'—'} ${c.pacientes?.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${c.pacientes?.cedula||''}</span></td>
-      <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td>
-      <td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td>
-      <td><span class="badge badge-gray">${c.estado}</span></td>
-      <td style="display:flex;gap:4px;flex-wrap:wrap">
-        ${c.estado==='pendiente'?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>`:''}
-        <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">💊 Receta</button>
-        ${c.estado!=='completada'?`<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓</button>`:''}
-      </td>
-    </tr>
-  `).join('')||'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
-}
-
-async function marcarCompletada(id) {
-  await supa('PATCH','consultas',{estado:'completada'},`?id=eq.${id}`);
-  loadConsultas(); showToast('✓ Consulta completada');
-}
-
-async function loadNotificaciones() {
-  const notifs = await supa('GET','notificaciones',null,'?order=created_at.desc&limit=100')||[];
-  const sinLeer = notifs.filter(n=>!n.leida);
-  const urgentes = notifs.filter(n=>n.tipo==='urgente'&&!n.leida);
-  const hoy = new Date().toDateString();
-  const atendidas = notifs.filter(n=>n.leida&&new Date(n.created_at).toDateString()===hoy);
-  document.getElementById('op-pending').textContent = sinLeer.length;
-  document.getElementById('op-urgent').textContent = urgentes.length;
-  document.getElementById('op-done').textContent = atendidas.length;
-  document.getElementById('op-total').textContent = notifs.length;
-  updateNotifBadge(sinLeer.length);
-  document.getElementById('notifBody').innerHTML = notifs.map(n=>`
-    <tr style="${n.leida?'':'background:#fffbeb'}">
-      <td><span style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva'}</span></td>
-      <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
-      <td style="white-space:nowrap;font-size:12px;color:#888">${new Date(n.created_at).toLocaleString('es-EC')}</td>
-      <td>${n.leida?'<span class="badge badge-gray">Leída</span>':'<span class="badge badge-blue">Nueva</span>'}</td>
-      <td style="display:flex;gap:4px">
-        ${n.consulta_id&&!n.leida?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>`:''}
-        ${!n.leida?`<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓</button>`:''}
-      </td>
-    </tr>
-  `).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin notificaciones</td></tr>';
-  document.getElementById('notifList').innerHTML = notifs.slice(0,8).map(n=>`
-    <div class="notif-item ${n.leida?'':'unread'}" onclick="marcarLeida('${n.id}')">
-      <div class="notif-tipo ${n.tipo==='urgente'?'notif-urgente':'notif-nueva'}">${n.tipo==='urgente'?'⚠️ URGENTE':'📅 NUEVA'}</div>
-      <div class="notif-titulo">${n.titulo}</div>
-      <div class="notif-msg">${n.mensaje}</div>
-      <div class="notif-time">${new Date(n.created_at).toLocaleString('es-EC')}</div>
-    </div>
-  `).join('')||'<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
-}
-
-async function marcarLeida(id) { await supa('PATCH','notificaciones',{leida:true},`?id=eq.${id}`); loadNotificaciones(); }
-async function marcarTodasLeidas() { await supa('PATCH','notificaciones',{leida:true},'?leida=eq.false'); loadNotificaciones(); showToast('✓ Todas marcadas como leídas'); }
-
-function updateNotifBadge(count) {
-  const badge = document.getElementById('notifCount');
-  badge.textContent = count;
-  badge.style.display = count>0?'flex':'none';
-}
-
-function toggleNotif() {
+// Event listeners globales
+document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
-  panel.classList.toggle('open');
-  if (panel.classList.contains('open')) loadNotificaciones();
-}
-
-function startNotifPolling() {
-  notifInterval = setInterval(async () => {
-    const notifs = await supa('GET','notificaciones',null,'?leida=eq.false');
-    const count = (notifs||[]).length;
-    updateNotifBadge(count);
-    if (count > lastNotifCount && lastNotifCount >= 0) {
-      const latest = (notifs||[])[0];
-      if (latest) showToast(`🔔 ${latest.titulo}`);
-    }
-    lastNotifCount = count;
-  }, 10000);
-}
-
-async function openAgendar(consultaId, pacienteId) {
-  currentConsultaId = consultaId; currentPacienteId = pacienteId;
-  const [pac, medicos] = await Promise.all([
-    supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
-    supa('GET','usuarios',null,'?rol=eq.medico&activo=eq.true')
-  ]);
-  const p = (pac||[])[0]||{};
-  document.getElementById('popupPacienteInfo').innerHTML = `<strong>${p.nombre||''} ${p.apellidos||''}</strong> · Cédula: ${p.cedula||'—'}<br>Empresa: ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}`;
-  document.getElementById('medicoAsignado').innerHTML = (medicos||[]).map(m=>`<option value="${m.id}">${m.nombre} ${m.apellidos} — ${m.especialidad||'Medicina General'}</option>`).join('')||'<option>Sin médicos</option>';
-  const now = new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  document.getElementById('fechaConfirmada').value = now.toISOString().slice(0,16);
-  document.getElementById('popupAgendar').classList.add('open');
-}
-
-async function confirmarAgendamiento() {
-  const medicoId = document.getElementById('medicoAsignado').value;
-  const fecha = document.getElementById('fechaConfirmada').value;
-  const notas = document.getElementById('notasOperador').value;
-  if (!fecha) { alert('Seleccione fecha y hora'); return; }
-  await supa('PATCH','consultas',{estado:'confirmada',medico_id:medicoId,updated_at:new Date().toISOString()},`?id=eq.${currentConsultaId}`);
-  await supa('POST','notificaciones',{tipo:'confirmacion',titulo:'✅ Consulta confirmada',mensaje:`Su teleconsulta fue confirmada para ${new Date(fecha).toLocaleString('es-EC')}. ${notas||''}`,paciente_id:currentPacienteId,consulta_id:currentConsultaId});
-  closePopup(); showToast('✓ Consulta agendada'); loadDashboard();
-}
-
-function closePopup() { document.getElementById('popupAgendar').classList.remove('open'); }
-
-async function openReceta(consultaId, pacienteId) {
-  recetaConsultaId = consultaId; recetaPacienteId = pacienteId;
-  medicamentosData = [];
-  cie10Seleccionados = [];
-  document.getElementById('recetaDiagnostico').value='';
-  document.getElementById('cie10Search').value='';
-  document.getElementById('cie10Dropdown').style.display='none';
-  document.getElementById('cie10Seleccionados').innerHTML='';
-  document.getElementById('recetaNotas').value='';
-  document.getElementById('recetaIndicaciones').value='';
-  document.getElementById('medicamentosLista').innerHTML='';
-  const pac = await supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`);
-  const p = (pac||[])[0]||{};
-  const init = ((p.nombre||'?')[0]+(p.apellidos||'?')[0]).toUpperCase();
-  document.getElementById('recetaPacienteHeader').innerHTML = `
-    <div class="patient-avatar-lg">${init}</div>
-    <div><div class="patient-name">${p.nombre||''} ${p.apellidos||''}</div>
-    <div class="patient-meta">Cédula: ${p.cedula||'—'} · ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}</div></div>
-  `;
-  showPage('receta');
-}
-
-function agregarMedicamento() {
-  const id = Date.now();
-  medicamentosData.push({id,nombre:'',dosis:'',frecuencia_horas:8,dias:5});
-  renderMedicamentos();
-}
-
-function renderMedicamentos() {
-  document.getElementById('medicamentosLista').innerHTML = medicamentosData.map((m,i)=>`
-    <div style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:8px;border:1px solid #eee">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:600;color:#555">Medicamento ${i+1}</span>
-        <button class="btn btn-sm btn-danger" onclick="quitarMedicamento(${m.id})">✕</button>
-      </div>
-      <div class="two-col" style="gap:8px">
-        <div class="form-group" style="margin:0"><label class="form-label">Medicamento *</label><input type="text" class="form-control" value="${m.nombre}" onchange="updateMed(${m.id},'nombre',this.value)" placeholder="Ej: Paracetamol 500mg" /></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Dosis</label><input type="text" class="form-control" value="${m.dosis}" onchange="updateMed(${m.id},'dosis',this.value)" placeholder="Ej: 1 tableta" /></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Frecuencia</label>
-          <select class="form-control" onchange="updateMed(${m.id},'frecuencia_horas',parseInt(this.value))">
-            <option value="4" ${m.frecuencia_horas===4?'selected':''}>Cada 4 horas</option>
-            <option value="6" ${m.frecuencia_horas===6?'selected':''}>Cada 6 horas</option>
-            <option value="8" ${m.frecuencia_horas===8?'selected':''}>Cada 8 horas</option>
-            <option value="12" ${m.frecuencia_horas===12?'selected':''}>Cada 12 horas</option>
-            <option value="24" ${m.frecuencia_horas===24?'selected':''}>Una vez al día</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">Duración (días) *</label><input type="number" class="form-control" value="${m.dias}" min="1" max="90" onchange="updateMed(${m.id},'dias',parseInt(this.value))" /></div>
-      </div>
-    </div>
-  `).join('')||'<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Agregue al menos un medicamento</div>';
-}
-
-function updateMed(id,campo,valor) { const m=medicamentosData.find(x=>x.id===id); if(m) m[campo]=valor; }
-function quitarMedicamento(id) { medicamentosData=medicamentosData.filter(x=>x.id!==id); renderMedicamentos(); }
-
-async function guardarReceta() {
-  if (medicamentosData.length===0) { alert('Agregue al menos un medicamento'); return; }
-  if (medicamentosData.filter(m=>!m.nombre||!m.dias).length>0) { alert('Complete nombre y duración de todos los medicamentos'); return; }
-  const diagnostico = document.getElementById('recetaDiagnostico').value;
-  if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
-  const activar = document.getElementById('activarSeguimiento').checked;
-  const ahora = new Date();
-  const recetaRes = await supa('POST','recetas',{
-    consulta_id:recetaConsultaId, paciente_id:recetaPacienteId, medico_id:currentUser.id,
-    medicamentos:medicamentosData, diagnostico,
-    cie10_codigos: cie10Seleccionados,
-    indicaciones:document.getElementById('recetaIndicaciones').value,
-    seguimiento_activo:activar,
-    fecha_inicio:ahora.toISOString(),
-    fecha_fin:new Date(ahora.getTime()+Math.max(...medicamentosData.map(m=>m.dias))*86400000).toISOString()
-  });
-  const receta_id = (recetaRes||[])[0]?.id;
-  await supa('PATCH','consultas',{diagnostico,notas_medico:document.getElementById('recetaNotas').value,estado:'completada',medico_id:currentUser.id},`?id=eq.${recetaConsultaId}`);
-  const pacData = await supa('GET','pacientes',null,`?id=eq.${recetaPacienteId}`);
-  const pac = (pacData||[])[0]||{};
-  const telRaw = pac.telefono||'';
-  const telefono = telRaw ? `whatsapp:+593${telRaw.replace(/^0/,'')}` : null;
-  if (activar && receta_id && telefono) {
-    for (const med of medicamentosData) {
-      const fechaFin = new Date(ahora.getTime()+med.dias*86400000);
-      await supa('POST','recordatorios',{
-        receta_id, paciente_id:recetaPacienteId, telefono,
-        medicamento:med.nombre, dosis:med.dosis||'',
-        frecuencia_horas:med.frecuencia_horas,
-        fecha_proximo:new Date(ahora.getTime()+med.frecuencia_horas*3600000).toISOString(),
-        fecha_fin:fechaFin.toISOString(),
-        activo:true, tipo:'medicamento'
-      });
-    }
-    showToast(`✓ Receta emitida y ${medicamentosData.length} recordatorio(s) activados`);
-  } else {
-    showToast('✓ Receta emitida exitosamente');
-  }
-  showPage('consultas'); loadConsultas();
-}
-
-async function loadUsuarios() {
-  const users = await supa('GET','usuarios',null,'?order=created_at.desc')||[];
-  document.getElementById('usuariosBody').innerHTML = users.map(u=>`
-    <tr>
-      <td><strong>${u.nombre} ${u.apellidos}</strong></td>
-      <td>${u.correo}</td>
-      <td>${u.rol==='admin'?'<span class="rol-badge rol-admin">Admin</span>':u.rol==='medico'?'<span class="rol-badge rol-medico">Médico</span>':'<span class="rol-badge rol-operador">Operador</span>'}</td>
-      <td>${u.especialidad||'—'}</td>
-      <td>${u.numero_registro||'—'}</td>
-      <td>${u.firma_digital?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">—</span>'}</td>
-      <td>${u.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td>
-      <td><button class="btn btn-sm ${u.activo?'btn-danger':''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo?'Desactivar':'Activar'}</button></td>
-    </tr>
-  `).join('');
-}
-
-async function saveUser() {
-  const data={nombre:document.getElementById('newNombre').value,apellidos:document.getElementById('newApellidos').value,correo:document.getElementById('newCorreo').value,password_hash:document.getElementById('newPass').value,rol:document.getElementById('newRol').value,especialidad:document.getElementById('newEsp').value||null,numero_registro:document.getElementById('newReg').value||null};
-  if (!data.nombre||!data.correo||!data.password_hash) { alert('Complete los campos obligatorios'); return; }
-  await supa('POST','usuarios',data);
-  document.getElementById('addUserForm').style.display='none';
-  loadUsuarios(); showToast('✓ Usuario creado');
-}
-
-async function toggleUser(id,activo) { await supa('PATCH','usuarios',{activo:!activo},`?id=eq.${id}`); loadUsuarios(); }
-
-async function loadPerfil() {
-  if (!currentUser) return;
-  document.getElementById('perfilContent').innerHTML = `<div class="detail-grid">${[['Nombre',currentUser.nombre+' '+currentUser.apellidos],['Correo',currentUser.correo],['Rol',currentUser.rol],['Especialidad',currentUser.especialidad||'—'],['Reg. MSP',currentUser.numero_registro||'—']].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}</div>`;
-  if (currentUser.firma_digital) document.getElementById('firmaPreview').innerHTML=`<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
-  if (currentUser.sello) document.getElementById('selloPreview').innerHTML=`<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
-}
-
-function previewFirma(input,previewId,type) {
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{ firmaData[type]=e.target.result; document.getElementById(previewId).innerHTML=`<img src="${e.target.result}" style="max-height:80px;max-width:100%" />`; };
-  reader.readAsDataURL(file);
-}
-
-async function saveFirma() {
-  const update={};
-  if (firmaData.firma) update.firma_digital=firmaData.firma;
-  if (firmaData.sello) update.sello=firmaData.sello;
-  if (Object.keys(update).length===0) { alert('Suba al menos una imagen'); return; }
-  await supa('PATCH','usuarios',update,`?id=eq.${currentUser.id}`);
-  currentUser={...currentUser,...update}; saveSession(currentUser);
-  showToast('✓ Firma y sello guardados');
-}
-
-async function changePassword() {
-  const np=document.getElementById('newPassChange').value;
-  const cp=document.getElementById('confirmPassChange').value;
-  if (!np||np!==cp) { alert('Las contraseñas no coinciden'); return; }
-  await supa('PATCH','usuarios',{password_hash:np},`?id=eq.${currentUser.id}`);
-  currentUser.password_hash=np; saveSession(currentUser);
-  document.getElementById('newPassChange').value='';
-  document.getElementById('confirmPassChange').value='';
-  showToast('✓ Contraseña actualizada');
-}
-
-async function loadMetricas() {
-  const [consultas, pacientes, recetas, respuestas] = await Promise.all([
-    supa('GET','consultas',null,'?select=id,nivel_sintomas,estado,created_at'),
-    supa('GET','pacientes',null,'?select=count'),
-    supa('GET','recetas',null,'?select=id,seguimiento_activo'),
-    supa('GET','seguimiento_respuestas',null,'?select=se_siente_mejor,respuesta')
-  ]);
-  const all=consultas||[];
-  const total=all.length;
-  const graves=all.filter(c=>c.nivel_sintomas===3).length;
-  const medios=all.filter(c=>c.nivel_sintomas===2).length;
-  const leves=all.filter(c=>c.nivel_sintomas===1).length;
-  const completadas=all.filter(c=>c.estado==='completada').length;
-  const exitosos=(respuestas||[]).filter(r=>r.se_siente_mejor===true).length;
-  const tasa=total>0?Math.round(completadas/total*100):0;
-  document.getElementById('metricStats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total consultas</div><div class="stat-value">${total}</div></div>
-    <div class="stat-card stat-success"><div class="stat-label">Casos exitosos</div><div class="stat-value">${exitosos}</div><div class="stat-sub">Pacientes curados</div></div>
-    <div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div>
-    <div class="stat-card stat-danger"><div class="stat-label">Emergencias</div><div class="stat-value">${graves}</div></div>
-  `;
-  const barH=80;
-  document.getElementById('nivelChart').innerHTML=`<div style="display:flex;gap:1rem;align-items:flex-end;height:${barH+40}px;padding:0 1rem">${[['Leves',leves,'#16a34a'],['Medios',medios,'#ca8a04'],['Graves',graves,'#dc2626']].map(([l,v,c])=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:13px;font-weight:600;color:${c}">${v}</span><div style="width:100%;height:${total>0?Math.round(v/total*barH):2}px;background:${c};border-radius:4px 4px 0 0;min-height:2px"></div><span style="font-size:12px;color:#888">${l}</span><span style="font-size:11px;color:#aaa">${total>0?Math.round(v/total*100):0}%</span></div>`).join('')}</div>`;
-  document.getElementById('kpiContent').innerHTML=[
-    ['Tasa de resolución',`${tasa}%`,tasa>=70?'#16a34a':'#ca8a04'],
-    ['Tratamientos exitosos',exitosos,'#16a34a'],
-    ['Recetas con seguimiento',(recetas||[]).filter(r=>r.seguimiento_activo).length,'#2563eb'],
-    ['Total emergencias',graves,'#dc2626']
-  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="font-size:13px;color:#555">${l}</span><span style="font-size:16px;font-weight:600;color:${c}">${v}</span></div>`).join('');
-  const sinMejora=(respuestas||[]).filter(r=>r.se_siente_mejor===false).length;
-  document.getElementById('seguimientoStats').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0.5rem 0">${[['Seguimientos exitosos',exitosos,'#16a34a'],['Sin mejoría',sinMejora,'#dc2626'],['Recetas activas',(recetas||[]).length,'#2563eb']].map(([l,v,c])=>`<div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px"><div style="font-size:24px;font-weight:600;color:${c}">${v}</div><div style="font-size:12px;color:#888;margin-top:4px">${l}</div></div>`).join('')}</div>`;
-}
-
-async function loadEmpresas() {
-  const [empresas,pacientes]=await Promise.all([supa('GET','clientes_b2b',null,'?select=*'),supa('GET','pacientes',null,'?select=cliente_b2b_id')]);
-  const counts={};
-  (pacientes||[]).forEach(p=>{ if(p.cliente_b2b_id) counts[p.cliente_b2b_id]=(counts[p.cliente_b2b_id]||0)+1; });
-  document.getElementById('empresasBody').innerHTML=(empresas||[]).map(e=>`<tr><td><strong>${e.nombre_empresa}</strong></td><td>${e.nombre_seguro||'—'}</td><td>${counts[e.id]||0}</td><td>${e.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td><td><button class="btn btn-sm">Editar</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
-}
-
-async function saveEmpresa() {
-  const data={nombre_empresa:document.getElementById('empNombre').value,nombre_seguro:document.getElementById('empSeguro').value||null};
-  if (!data.nombre_empresa) { alert('Ingrese el nombre'); return; }
-  await supa('POST','clientes_b2b',data);
-  document.getElementById('addEmpresaForm').style.display='none';
-  document.getElementById('empNombre').value='';
-  document.getElementById('empSeguro').value='';
-  loadEmpresas(); showToast('✓ Empresa agregada');
-}
-
-function showToast(msg) {
-  const t=document.getElementById('toastAlert');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3500);
-}
-
-document.addEventListener('click',e=>{
-  const panel=document.getElementById('notifPanel');
-  const btn=document.getElementById('notifBtn');
-  if (panel.classList.contains('open')&&!panel.contains(e.target)&&!btn.contains(e.target)) panel.classList.remove('open');
-  if (document.getElementById('popupAgendar').classList.contains('open')&&e.target===document.getElementById('popupAgendar')) closePopup();
+  const btn = document.getElementById('notifBtn');
+  if (panel.classList.contains('open') && !panel.contains(e.target) && !btn.contains(e.target)) panel.classList.remove('open');
+  if (document.getElementById('popupAgendar').classList.contains('open') && e.target === document.getElementById('popupAgendar')) closePopup();
 });
-
-document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-
-window.addEventListener('load',()=>{ const saved=getSession(); if(saved){currentUser=saved;initApp();} });
-
-const CIE10 = [
-  {c:'A00',n:'Cólera'},{c:'A01',n:'Fiebre tifoidea y paratifoidea'},{c:'A02',n:'Otras infecciones por Salmonella'},{c:'A03',n:'Shigelosis'},{c:'A04',n:'Otras infecciones intestinales bacterianas'},{c:'A05',n:'Intoxicación alimentaria bacteriana'},{c:'A06',n:'Amebiasis'},{c:'A08',n:'Infecciones intestinales virales'},{c:'A09',n:'Diarrea y gastroenteritis de origen infeccioso'},{c:'A15',n:'Tuberculosis respiratoria'},{c:'A36',n:'Difteria'},{c:'A37',n:'Tos ferina (pertussis)'},{c:'A38',n:'Escarlatina'},{c:'A39',n:'Infección meningocócica'},{c:'A40',n:'Septicemia estreptocócica'},{c:'A41',n:'Septicemia, no especificada'},{c:'A46',n:'Erisipela'},{c:'A49',n:'Infección bacteriana, sin otra especificación'},{c:'A50',n:'Sífilis congénita'},{c:'A51',n:'Sífilis temprana'},{c:'A53',n:'Sífilis'},{c:'A54',n:'Gonococia'},{c:'A56',n:'Infecciones clamidiales de transmisión sexual'},{c:'A57',n:'Chancro blando'},{c:'A59',n:'Tricomoniasis'},{c:'A60',n:'Infección anogenital por herpesvirus'},{c:'A63',n:'Otras enfermedades de transmisión sexual'},{c:'A69',n:'Otras infecciones por espiroquetas'},{c:'A75',n:'Tifus'},{c:'A77',n:'Fiebre manchada'},{c:'A80',n:'Poliomielitis aguda'},{c:'A81',n:'Infecciones del SNC por virus lentos'},{c:'A82',n:'Rabia'},{c:'A83',n:'Encefalitis viral por mosquito'},{c:'A87',n:'Meningitis viral'},{c:'A90',n:'Dengue clásico'},{c:'A91',n:'Dengue hemorrágico'},{c:'A92',n:'Otras fiebres virales por mosquito'},{c:'A96',n:'Fiebre hemorrágica por arenavirus'},{c:'B00',n:'Infección por herpesvirus'},{c:'B01',n:'Varicela'},{c:'B02',n:'Zóster (herpes zóster)'},{c:'B03',n:'Viruela'},{c:'B04',n:'Viruela del simio'},{c:'B05',n:'Sarampión'},{c:'B06',n:'Rubéola'},{c:'B07',n:'Verrugas víricas'},{c:'B08',n:'Otras infecciones virales con lesiones cutáneas'},{c:'B09',n:'Infección viral no especificada con lesiones cutáneas'},{c:'B15',n:'Hepatitis A aguda'},{c:'B16',n:'Hepatitis B aguda'},{c:'B17',n:'Otras hepatitis virales agudas'},{c:'B18',n:'Hepatitis viral crónica'},{c:'B19',n:'Hepatitis viral no especificada'},{c:'B20',n:'VIH con enfermedades infecciosas'},{c:'B24',n:'VIH, no especificado'},{c:'B34',n:'Infección viral de sitio no especificado'},{c:'B35',n:'Dermatofitosis (tinea)'},{c:'B36',n:'Otras micosis superficiales'},{c:'B37',n:'Candidiasis'},{c:'B49',n:'Micosis no especificada'},{c:'B54',n:'Paludismo (malaria) no especificado'},{c:'B65',n:'Esquistosomiasis'},{c:'B76',n:'Anquilostomiasis'},{c:'B82',n:'Parasitosis intestinal no especificada'},{c:'B86',n:'Escabiosis (sarna)'},{c:'B99',n:'Enfermedades infecciosas no especificadas'},
-  {c:'C00',n:'Tumor maligno del labio'},{c:'C15',n:'Tumor maligno del esófago'},{c:'C16',n:'Tumor maligno del estómago'},{c:'C18',n:'Tumor maligno del colon'},{c:'C20',n:'Tumor maligno del recto'},{c:'C25',n:'Tumor maligno del páncreas'},{c:'C34',n:'Tumor maligno del bronquio y pulmón'},{c:'C43',n:'Melanoma maligno de la piel'},{c:'C50',n:'Tumor maligno de la mama'},{c:'C53',n:'Tumor maligno del cuello del útero'},{c:'C54',n:'Tumor maligno del cuerpo del útero'},{c:'C61',n:'Tumor maligno de la próstata'},{c:'C67',n:'Tumor maligno de la vejiga urinaria'},{c:'C71',n:'Tumor maligno del encéfalo'},{c:'C80',n:'Tumor maligno de sitio no especificado'},{c:'C91',n:'Leucemia linfoide'},{c:'C92',n:'Leucemia mieloide'},
-  {c:'D50',n:'Anemia por deficiencia de hierro'},{c:'D51',n:'Anemia por deficiencia de vitamina B12'},{c:'D52',n:'Anemia por deficiencia de folato'},{c:'D64',n:'Otras anemias'},{c:'D69',n:'Púrpura y otras afecciones hemorrágicas'},
-  {c:'E01',n:'Trastornos tiroideos relacionados con yodo'},{c:'E03',n:'Hipotiroidismo'},{c:'E04',n:'Bocio no tóxico'},{c:'E05',n:'Tirotoxicosis (hipertiroidismo)'},{c:'E06',n:'Tiroiditis'},{c:'E10',n:'Diabetes mellitus tipo 1'},{c:'E11',n:'Diabetes mellitus tipo 2'},{c:'E14',n:'Diabetes mellitus no especificada'},{c:'E16',n:'Hipoglucemia'},{c:'E27',n:'Otros trastornos de la glándula suprarrenal'},{c:'E40',n:'Kwashiorkor'},{c:'E41',n:'Marasmo nutricional'},{c:'E44',n:'Desnutrición proteicocalórica moderada y leve'},{c:'E46',n:'Desnutrición proteicocalórica no especificada'},{c:'E55',n:'Deficiencia de vitamina D'},{c:'E58',n:'Deficiencia dietética de calcio'},{c:'E63',n:'Otras deficiencias nutricionales'},{c:'E66',n:'Obesidad'},{c:'E78',n:'Trastornos del metabolismo de lipoproteínas'},{c:'E83',n:'Trastornos del metabolismo de minerales'},
-  {c:'F00',n:'Demencia en la enfermedad de Alzheimer'},{c:'F10',n:'Trastornos mentales por alcohol'},{c:'F20',n:'Esquizofrenia'},{c:'F31',n:'Trastorno bipolar'},{c:'F32',n:'Episodio depresivo'},{c:'F33',n:'Trastorno depresivo recurrente'},{c:'F40',n:'Trastornos fóbicos de ansiedad'},{c:'F41',n:'Trastornos de ansiedad'},{c:'F43',n:'Reacción al estrés grave y trastornos de adaptación'},{c:'F44',n:'Trastornos disociativos'},{c:'F45',n:'Trastornos somatomorfos'},{c:'F51',n:'Trastornos del sueño no orgánicos'},{c:'F90',n:'TDAH'},{c:'F99',n:'Trastorno mental no especificado'},
-  {c:'G00',n:'Meningitis bacteriana'},{c:'G03',n:'Meningitis de otras causas'},{c:'G20',n:'Enfermedad de Parkinson'},{c:'G30',n:'Enfermedad de Alzheimer'},{c:'G35',n:'Esclerosis múltiple'},{c:'G40',n:'Epilepsia'},{c:'G43',n:'Migraña'},{c:'G44',n:'Otros síndromes de cefalea'},{c:'G45',n:'Ataques isquémicos cerebrales transitorios'},{c:'G47',n:'Trastornos del sueño'},{c:'G54',n:'Trastornos de raíces y plexos nerviosos'},{c:'G62',n:'Otras polineuropatías'},{c:'G89',n:'Dolor no clasificado en otra parte'},
-  {c:'H00',n:'Orzuelo y chalazión'},{c:'H01',n:'Inflamación del párpado'},{c:'H10',n:'Conjuntivitis'},{c:'H11',n:'Otros trastornos de la conjuntiva'},{c:'H16',n:'Queratitis'},{c:'H25',n:'Catarata senil'},{c:'H26',n:'Otras cataratas'},{c:'H35',n:'Otros trastornos de la retina'},{c:'H40',n:'Glaucoma'},{c:'H52',n:'Trastornos de la acomodación y de la refracción'},{c:'H60',n:'Otitis externa'},{c:'H65',n:'Otitis media no supurativa'},{c:'H66',n:'Otitis media supurativa'},{c:'H72',n:'Perforación del tímpano'},{c:'H81',n:'Trastornos de la función vestibular'},{c:'H83',n:'Otros trastornos del oído interno'},
-  {c:'I10',n:'Hipertensión esencial (primaria)'},{c:'I11',n:'Cardiopatía hipertensiva'},{c:'I15',n:'Hipertensión secundaria'},{c:'I20',n:'Angina de pecho'},{c:'I21',n:'Infarto agudo de miocardio'},{c:'I25',n:'Cardiopatía isquémica crónica'},{c:'I26',n:'Embolia pulmonar'},{c:'I33',n:'Endocarditis aguda y subaguda'},{c:'I42',n:'Cardiomiopatía'},{c:'I44',n:'Bloqueo auriculoventricular'},{c:'I48',n:'Fibrilación y flutter auricular'},{c:'I49',n:'Otras arritmias cardíacas'},{c:'I50',n:'Insuficiencia cardíaca'},{c:'I63',n:'Infarto cerebral'},{c:'I64',n:'Accidente vascular encefálico'},{c:'I67',n:'Otras enfermedades cerebrovasculares'},{c:'I70',n:'Aterosclerosis'},{c:'I80',n:'Flebitis y tromboflebitis'},{c:'I83',n:'Várices de las extremidades inferiores'},{c:'I84',n:'Hemorroides'},
-  {c:'J00',n:'Rinofaringitis aguda (resfriado común)'},{c:'J01',n:'Sinusitis aguda'},{c:'J02',n:'Faringitis aguda'},{c:'J03',n:'Amigdalitis aguda'},{c:'J04',n:'Laringitis y traqueitis agudas'},{c:'J05',n:'Laringitis obstructiva aguda y epiglotitis'},{c:'J06',n:'Infecciones agudas de las vías respiratorias superiores'},{c:'J09',n:'Influenza por virus identificado'},{c:'J10',n:'Influenza (gripe)'},{c:'J11',n:'Influenza virus no identificado'},{c:'J12',n:'Neumonía viral'},{c:'J13',n:'Neumonía por Streptococcus pneumoniae'},{c:'J14',n:'Neumonía por Haemophilus influenzae'},{c:'J15',n:'Neumonía bacteriana'},{c:'J18',n:'Neumonía no especificada'},{c:'J20',n:'Bronquitis aguda'},{c:'J21',n:'Bronquiolitis aguda'},{c:'J22',n:'Infección aguda de las vías respiratorias inferiores'},{c:'J30',n:'Rinitis alérgica y vasomotora'},{c:'J31',n:'Rinitis crónica, nasofaringitis y faringitis'},{c:'J32',n:'Sinusitis crónica'},{c:'J35',n:'Enfermedades crónicas de amígdalas y adenoides'},{c:'J38',n:'Enfermedades de las cuerdas vocales y laringe'},{c:'J40',n:'Bronquitis no especificada'},{c:'J41',n:'Bronquitis crónica simple y mucopurulenta'},{c:'J42',n:'Bronquitis crónica no especificada'},{c:'J43',n:'Enfisema'},{c:'J44',n:'EPOC (enfermedad pulmonar obstructiva crónica)'},{c:'J45',n:'Asma'},{c:'J46',n:'Estado asmático'},{c:'J47',n:'Bronquiectasia'},
-  {c:'K00',n:'Trastornos del desarrollo de los dientes'},{c:'K02',n:'Caries dental'},{c:'K04',n:'Enfermedades de la pulpa y tejidos periapicales'},{c:'K05',n:'Gingivitis y enfermedades periodontales'},{c:'K08',n:'Otros trastornos de los dientes'},{c:'K20',n:'Esofagitis'},{c:'K21',n:'Enfermedad por reflujo gastroesofágico'},{c:'K25',n:'Úlcera gástrica'},{c:'K26',n:'Úlcera duodenal'},{c:'K27',n:'Úlcera péptica'},{c:'K29',n:'Gastritis y duodenitis'},{c:'K30',n:'Dispepsia'},{c:'K35',n:'Apendicitis aguda'},{c:'K37',n:'Apendicitis no especificada'},{c:'K40',n:'Hernia inguinal'},{c:'K41',n:'Hernia femoral'},{c:'K44',n:'Hernia diafragmática'},{c:'K51',n:'Colitis ulcerativa'},{c:'K52',n:'Gastroenteritis y colitis no infecciosa'},{c:'K57',n:'Enfermedad diverticular del intestino'},{c:'K58',n:'Síndrome del colon irritable'},{c:'K59',n:'Otros trastornos funcionales del intestino'},{c:'K62',n:'Otras enfermedades del ano y recto'},{c:'K70',n:'Enfermedad hepática alcohólica'},{c:'K74',n:'Fibrosis y cirrosis del hígado'},{c:'K80',n:'Colelitiasis (cálculos biliares)'},{c:'K81',n:'Colecistitis'},{c:'K85',n:'Pancreatitis aguda'},{c:'K86',n:'Otras enfermedades del páncreas'},
-  {c:'L01',n:'Impétigo'},{c:'L02',n:'Absceso cutáneo, forúnculo y ántrax'},{c:'L03',n:'Celulitis'},{c:'L04',n:'Linfadenitis aguda'},{c:'L08',n:'Otras infecciones locales de la piel'},{c:'L20',n:'Dermatitis atópica'},{c:'L21',n:'Dermatitis seborreica'},{c:'L22',n:'Dermatitis del pañal'},{c:'L23',n:'Dermatitis alérgica de contacto'},{c:'L25',n:'Dermatitis de contacto no especificada'},{c:'L27',n:'Dermatitis por sustancias ingeridas'},{c:'L29',n:'Prurito'},{c:'L30',n:'Otras dermatitis'},{c:'L40',n:'Psoriasis'},{c:'L50',n:'Urticaria'},{c:'L57',n:'Cambios en la piel por exposición crónica a radiación'},{c:'L60',n:'Trastornos de las uñas'},{c:'L70',n:'Acné'},{c:'L71',n:'Rosácea'},{c:'L72',n:'Quistes foliculares de la piel'},{c:'L80',n:'Vitíligo'},{c:'L98',n:'Otros trastornos de la piel'},
-  {c:'M00',n:'Artritis piógena'},{c:'M05',n:'Artritis reumatoide seropositiva'},{c:'M06',n:'Otras artritis reumatoides'},{c:'M10',n:'Gota'},{c:'M13',n:'Otras artritis'},{c:'M15',n:'Poliartrosis'},{c:'M16',n:'Coxartrosis (artritis de cadera)'},{c:'M17',n:'Gonartrosis (artritis de rodilla)'},{c:'M19',n:'Otras artrosis'},{c:'M25',n:'Otros trastornos articulares'},{c:'M32',n:'Lupus eritematoso sistémico'},{c:'M40',n:'Cifosis y lordosis'},{c:'M41',n:'Escoliosis'},{c:'M42',n:'Osteocondritis espinal'},{c:'M47',n:'Espondiloartrosis'},{c:'M48',n:'Otras espondilopatías'},{c:'M50',n:'Trastornos de disco cervical'},{c:'M51',n:'Otros trastornos de disco intervertebral'},{c:'M54',n:'Dorsalgia (dolor de espalda)'},{c:'M60',n:'Miositis'},{c:'M65',n:'Sinovitis y tenosinovitis'},{c:'M70',n:'Trastornos de tejidos blandos por uso excesivo'},{c:'M75',n:'Lesiones del hombro'},{c:'M79',n:'Otros trastornos de tejidos blandos'},{c:'M80',n:'Osteoporosis con fractura'},{c:'M81',n:'Osteoporosis sin fractura'},
-  {c:'N00',n:'Síndrome nefrítico agudo'},{c:'N03',n:'Síndrome nefrítico crónico'},{c:'N10',n:'Nefritis tubulointersticial aguda'},{c:'N17',n:'Insuficiencia renal aguda'},{c:'N18',n:'Insuficiencia renal crónica'},{c:'N20',n:'Cálculos del riñón y uréter'},{c:'N21',n:'Cálculos del tracto urinario inferior'},{c:'N23',n:'Cólico renal no especificado'},{c:'N28',n:'Otros trastornos del riñón'},{c:'N30',n:'Cistitis'},{c:'N34',n:'Uretritis'},{c:'N39',n:'Otras enfermedades del sistema urinario'},{c:'N40',n:'Hiperplasia de la próstata'},{c:'N41',n:'Enfermedades inflamatorias de la próstata'},{c:'N43',n:'Hidrocele y espermatocele'},{c:'N45',n:'Orquitis y epididimitis'},{c:'N50',n:'Otros trastornos de los órganos genitales masculinos'},{c:'N70',n:'Salpingitis y ooforitis'},{c:'N71',n:'Enfermedad inflamatoria del útero'},{c:'N72',n:'Enfermedad inflamatoria del cuello del útero'},{c:'N73',n:'Otras enfermedades inflamatorias pélvicas femeninas'},{c:'N76',n:'Otras inflamaciones de la vagina y vulva'},{c:'N80',n:'Endometriosis'},{c:'N83',n:'Trastornos no inflamatorios del ovario'},{c:'N91',n:'Menstruación ausente, escasa o rara'},{c:'N92',n:'Menstruación excesiva, frecuente e irregular'},{c:'N94',n:'Dolor y otras afecciones relacionadas con órganos genitales femeninos'},{c:'N95',n:'Trastornos menopáusicos'},
-  {c:'O00',n:'Embarazo ectópico'},{c:'O20',n:'Hemorragia precoz del embarazo'},{c:'O21',n:'Vómitos excesivos del embarazo'},{c:'O24',n:'Diabetes mellitus en el embarazo'},{c:'O26',n:'Atención por otras afecciones en el embarazo'},{c:'O42',n:'Rotura prematura de membranas'},{c:'O80',n:'Parto único espontáneo'},
-  {c:'P00',n:'Feto y recién nacido afectados por condiciones maternas'},{c:'P07',n:'Trastornos relacionados con duración corta de gestación'},{c:'P22',n:'Dificultad respiratoria del recién nacido'},{c:'P36',n:'Sepsis bacteriana del recién nacido'},{c:'P59',n:'Ictericia neonatal'},
-  {c:'Q00',n:'Anencefalia'},{c:'Q20',n:'Malformaciones congénitas de las cámaras cardíacas'},{c:'Q35',n:'Fisura del paladar'},{c:'Q36',n:'Labio leporino'},{c:'Q65',n:'Deformidades congénitas de la cadera'},
-  {c:'R00',n:'Anomalías del latido cardíaco'},{c:'R01',n:'Soplos cardíacos'},{c:'R02',n:'Gangrena no clasificada'},{c:'R03',n:'Hallazgos anormales de presión arterial'},{c:'R04',n:'Hemorragia de las vías respiratorias'},{c:'R05',n:'Tos'},{c:'R06',n:'Anomalías de la respiración'},{c:'R07',n:'Dolor de garganta y pecho'},{c:'R09',n:'Otros síntomas relacionados con aparatos circulatorio y respiratorio'},{c:'R10',n:'Dolor abdominal y pélvico'},{c:'R11',n:'Náuseas y vómitos'},{c:'R12',n:'Pirosis (acidez)'},{c:'R13',n:'Disfagia'},{c:'R14',n:'Flatulencia y afecciones relacionadas'},{c:'R15',n:'Incontinencia fecal'},{c:'R17',n:'Ictericia no especificada'},{c:'R19',n:'Otros síntomas del aparato digestivo'},{c:'R20',n:'Trastornos de la sensibilidad de la piel'},{c:'R21',n:'Erupción cutánea y otras erupciones no especificadas'},{c:'R22',n:'Tumefacción localizada de piel y tejido subcutáneo'},{c:'R23',n:'Otros cambios en la piel'},{c:'R25',n:'Movimientos involuntarios anormales'},{c:'R29',n:'Otros síntomas del sistema nervioso'},{c:'R30',n:'Dolor asociado con la micción'},{c:'R31',n:'Hematuria'},{c:'R32',n:'Incontinencia urinaria'},{c:'R33',n:'Retención urinaria'},{c:'R35',n:'Poliuria'},{c:'R39',n:'Otros síntomas urinarios'},{c:'R41',n:'Otros síntomas de la función cognitiva y conciencia'},{c:'R42',n:'Vértigo'},{c:'R43',n:'Trastornos del olfato y gusto'},{c:'R44',n:'Otros síntomas generales'},{c:'R45',n:'Síntomas emocionales'},{c:'R50',n:'Fiebre de otro origen y de origen desconocido'},{c:'R51',n:'Cefalea (dolor de cabeza)'},{c:'R52',n:'Dolor no especificado'},{c:'R53',n:'Malestar y fatiga'},{c:'R55',n:'Síncope y colapso'},{c:'R56',n:'Convulsiones no especificadas'},{c:'R57',n:'Choque'},{c:'R60',n:'Edema no especificado'},{c:'R63',n:'Síntomas relacionados con ingesta de alimentos'},{c:'R65',n:'Síndrome de respuesta inflamatoria sistémica'},{c:'R68',n:'Otros síntomas generales'},{c:'R69',n:'Causas de morbilidad no especificadas'},
-  {c:'S00',n:'Traumatismo superficial de la cabeza'},{c:'S06',n:'Traumatismo intracraneal'},{c:'S09',n:'Otros traumatismos de la cabeza'},{c:'S10',n:'Traumatismo superficial del cuello'},{c:'S20',n:'Traumatismo superficial del tórax'},{c:'S30',n:'Traumatismo superficial del abdomen'},{c:'S40',n:'Traumatismo superficial del hombro y brazo'},{c:'S50',n:'Traumatismo superficial del codo y antebrazo'},{c:'S60',n:'Traumatismo superficial de la muñeca y mano'},{c:'S70',n:'Traumatismo superficial de la cadera y muslo'},{c:'S80',n:'Traumatismo superficial de la rodilla y pierna'},{c:'S90',n:'Traumatismo superficial del tobillo y pie'},
-  {c:'T14',n:'Traumatismo de región no especificada del cuerpo'},{c:'T36',n:'Intoxicación por antibióticos sistémicos'},{c:'T39',n:'Intoxicación por analgésicos'},{c:'T40',n:'Intoxicación por narcóticos y psicodislépticos'},{c:'T45',n:'Intoxicación por agentes hematológicos'},{c:'T50',n:'Intoxicación por diuréticos y medicamentos'},{c:'T58',n:'Efectos tóxicos del monóxido de carbono'},{c:'T60',n:'Efectos tóxicos de pesticidas'},{c:'T63',n:'Efectos tóxicos de animales'},{c:'T65',n:'Efectos tóxicos de otras sustancias'},
-  {c:'U07',n:'COVID-19'},{c:'U09',n:'Afección post-COVID-19'},
-  {c:'Z00',n:'Examen general'},{c:'Z03',n:'Observación por enfermedades sospechosas'},{c:'Z10',n:'Examen rutinario de salud'},{c:'Z11',n:'Examen de detección de enfermedades infecciosas'},{c:'Z20',n:'Contacto con enfermedades infecciosas'},{c:'Z23',n:'Necesidad de inmunización'},{c:'Z30',n:'Anticoncepción'},{c:'Z34',n:'Supervisión del embarazo normal'},{c:'Z38',n:'Recién nacido vivo'},{c:'Z51',n:'Otras atenciones médicas'},{c:'Z71',n:'Consulta por razones dietéticas'},{c:'Z76',n:'Contacto con los servicios de salud en otras circunstancias'}
-];
-
-let cie10Seleccionados = [];
-
-function buscarCIE10() {
-  const q = document.getElementById('cie10Search').value.trim().toLowerCase();
-  const dd = document.getElementById('cie10Dropdown');
-  if (!q || q.length < 2) { dd.style.display='none'; return; }
-  const res = CIE10.filter(x => x.c.toLowerCase().includes(q) || x.n.toLowerCase().includes(q)).slice(0,10);
-  if (res.length === 0) { dd.style.display='none'; return; }
-  dd.innerHTML = res.map(x=>`<div onclick="agregarCIE10('${x.c}','${x.n.replace(/'/g,"\\'")}','${x.c} — ${x.n.replace(/'/g,"\\'")}'); " style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f5f5f5;hover:background:#f9f9f9"><strong style="color:#2563eb">${x.c}</strong> — ${x.n}</div>`).join('');
-  dd.style.display='block';
-}
-
-function agregarCIE10(codigo, nombre, label) {
-  if (cie10Seleccionados.find(x=>x.c===codigo)) { document.getElementById('cie10Search').value=''; document.getElementById('cie10Dropdown').style.display='none'; return; }
-  cie10Seleccionados.push({c:codigo,n:nombre});
-  renderCIE10();
-  document.getElementById('cie10Search').value='';
-  document.getElementById('cie10Dropdown').style.display='none';
-}
-
-function quitarCIE10(codigo) {
-  cie10Seleccionados = cie10Seleccionados.filter(x=>x.c!==codigo);
-  renderCIE10();
-}
-
-function renderCIE10() {
-  document.getElementById('cie10Seleccionados').innerHTML = cie10Seleccionados.map(x=>`
-    <span style="display:inline-flex;align-items:center;gap:6px;background:#dbeafe;color:#1e40af;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500">
-      <strong>${x.c}</strong> — ${x.n}
-      <span onclick="quitarCIE10('${x.c}')" style="cursor:pointer;font-size:14px;line-height:1;color:#1e40af">✕</span>
-    </span>
-  `).join('');
-}
+document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+window.addEventListener('load', () => { const saved = getSession(); if (saved) { currentUser = saved; initApp(); } });
 </script>
+
 </body>
 </html>

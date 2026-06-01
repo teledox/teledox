@@ -1,5 +1,9 @@
 {
   "version": 2,
+  "routes": [
+    { "src": "/panel/(.*)", "dest": "/panel/$1" },
+    { "src": "/panel", "dest": "/panel/index.html" }
+  ],
   "functions": {
     "api-v2/api/webhook.js": {
       "memory": 128,

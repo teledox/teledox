@@ -75,7 +75,6 @@ body { background: #f5f5f0; min-height: 100vh; }
 .btn-danger { background: #fee2e2; color: #dc2626; border-color: #fecaca; }
 .btn-sm { padding: 5px 10px; font-size: 12px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-.form-group { margin-bottom: 1rem; }
 .form-control { width: 100%; padding: 9px 11px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; color: #1a1a1a; outline: none; background: white; }
 .form-control:focus { border-color: #2563eb; }
 textarea.form-control { resize: vertical; min-height: 80px; }
@@ -123,6 +122,77 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .upload-area:hover { border-color: #2563eb; color: #2563eb; background: #eff6ff; }
 .divider { border: none; border-top: 1px solid #eee; margin: 1rem 0; }
 @keyframes slideIn { from { transform: translateX(100px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+/* PLANTILLAS SELECTOR */
+.plantillas-selector { background: white; border-radius: 12px; border: 1px solid #eee; padding: 1.25rem; margin-bottom: 1rem; }
+.plantillas-selector-title { font-size: 14px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; }
+.plantillas-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.plantilla-card { border: 2px solid #eee; border-radius: 10px; padding: 14px; cursor: pointer; transition: all 0.15s; text-align: center; position: relative; }
+.plantilla-card:hover { border-color: #2563eb; background: #eff6ff; }
+.plantilla-card.selected { border-color: #2563eb; background: #eff6ff; }
+.plantilla-card.selected::after { content: '✓'; position: absolute; top: 8px; right: 10px; font-size: 12px; color: #2563eb; font-weight: 700; }
+.plantilla-icon { font-size: 24px; margin-bottom: 6px; }
+.plantilla-name { font-size: 12px; font-weight: 600; color: #333; }
+.plantilla-desc { font-size: 11px; color: #888; margin-top: 3px; }
+.plantillas-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+/* MODALES PLANTILLAS */
+.plantilla-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: flex-start; justify-content: center; overflow-y: auto; padding: 2rem 1rem; }
+.plantilla-modal-overlay.open { display: flex; }
+.plantilla-modal { background: white; border-radius: 16px; width: 720px; max-width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.plantilla-modal-topbar { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-bottom: 1px solid #eee; }
+.plantilla-modal-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
+.plantilla-modal-body { padding: 1.5rem; }
+/* HOJA IMPRESION */
+.doc-sheet { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #1a1a1a; background: white; }
+.doc-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #006d9b; padding-bottom: 10px; margin-bottom: 12px; }
+.doc-logo-area { display: flex; align-items: center; gap: 10px; }
+.doc-logo-box { width: 50px; height: 50px; border: 2px solid #006d9b; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #006d9b; text-align: center; }
+.doc-org-name { font-size: 14px; font-weight: 700; color: #006d9b; }
+.doc-org-sub { font-size: 10px; color: #555; }
+.doc-title { font-size: 13px; font-weight: 700; text-align: right; color: #1a1a1a; text-transform: uppercase; letter-spacing: 0.05em; }
+.doc-section { margin-bottom: 12px; }
+.doc-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: white; background: #006d9b; padding: 4px 8px; border-radius: 3px; margin-bottom: 8px; }
+.doc-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
+.doc-lbl { font-size: 10px; color: #555; white-space: nowrap; min-width: 160px; }
+.doc-val { font-size: 10px; font-weight: 600; color: #1a1a1a; border-bottom: 1px solid #ccc; flex: 1; padding-bottom: 1px; min-height: 14px; }
+.doc-val-edit { font-size: 10px; color: #1a1a1a; border-bottom: 1px solid #ccc; flex: 1; padding: 2px 4px; outline: none; background: #fffef0; min-height: 14px; }
+.doc-val-edit:focus { background: #fef9c3; border-bottom-color: #2563eb; }
+.doc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+.doc-textarea { width: 100%; border: 1px solid #ccc; border-radius: 4px; padding: 6px; font-size: 10px; min-height: 70px; resize: vertical; outline: none; font-family: Arial, sans-serif; }
+.doc-textarea:focus { border-color: #2563eb; background: #fef9c3; }
+.doc-firma-area { display: flex; justify-content: center; align-items: flex-end; gap: 40px; margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; }
+.doc-firma-box { text-align: center; }
+.doc-firma-img { height: 56px; max-width: 160px; object-fit: contain; display: block; margin: 0 auto 4px; }
+.doc-firma-line { border-top: 1px solid #1a1a1a; width: 180px; padding-top: 4px; font-size: 10px; color: #333; text-align: center; }
+.doc-sello-img { height: 56px; max-width: 80px; object-fit: contain; display: block; margin: 0 auto; }
+/* RECETA */
+.receta-num { font-size: 11px; font-weight: 700; color: #006d9b; text-align: right; margin-bottom: 4px; }
+.receta-med-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.receta-med-table th { background: #f0f6ff; font-size: 10px; font-weight: 600; padding: 5px 8px; text-align: left; border: 1px solid #dde3f0; color: #2563eb; }
+.receta-med-table td { font-size: 10px; padding: 5px 8px; border: 1px solid #e8ecf5; vertical-align: top; }
+.receta-med-table input, .receta-med-table textarea { width: 100%; border: none; outline: none; font-size: 10px; background: transparent; resize: none; font-family: Arial, sans-serif; }
+.receta-alergias { display: flex; align-items: center; gap: 8px; font-size: 10px; margin-bottom: 6px; }
+/* LABORATORIO */
+.lab-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid #006d9b; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+.lab-col { border-right: 1px solid #006d9b; }
+.lab-col:last-child { border-right: none; }
+.lab-col-title { background: #006d9b; color: white; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 5px 8px; text-align: center; letter-spacing: 0.04em; }
+.lab-items { padding: 6px 8px; }
+.lab-item { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 9.5px; color: #333; }
+.lab-item input[type=checkbox] { width: 12px; height: 12px; cursor: pointer; flex-shrink: 0; accent-color: #006d9b; }
+/* CERTIFICADO */
+.cert-check-row { display: flex; align-items: center; gap: 20px; margin-bottom: 6px; font-size: 10px; }
+.cert-check-item { display: flex; align-items: center; gap: 5px; cursor: pointer; }
+.cert-check-item input { width: 13px; height: 13px; cursor: pointer; accent-color: #006d9b; }
+.cert-dias-row { display: grid; grid-template-columns: auto 1fr 1fr; gap: 8px; align-items: baseline; margin-bottom: 5px; }
+.cert-dias-num { border: 1px solid #ccc; border-radius: 3px; width: 40px; text-align: center; padding: 2px 4px; font-size: 10px; font-weight: 700; outline: none; }
+.cert-dias-letra { border-bottom: 1px solid #ccc; font-size: 10px; padding: 2px 0; outline: none; width: 100%; background: transparent; }
+/* PRINT */
+@media print {
+  body > *:not(#printRoot) { display: none !important; }
+  #printRoot { display: block !important; }
+  .doc-sheet { padding: 10mm; }
+  @page { margin: 10mm; size: A4; }
+}
 </style>
 </head>
 <body>
@@ -175,14 +245,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="stats-grid" id="statsGrid"></div>
         <div class="two-col">
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">Consultas pendientes</span>
-              <span class="badge badge-yellow" id="pendCount">0</span>
-            </div>
-            <table class="table">
-              <thead><tr><th>Paciente</th><th>Síntomas</th><th>Nivel</th><th></th></tr></thead>
-              <tbody id="pendBody"></tbody>
-            </table>
+            <div class="card-header"><span class="card-title">Consultas pendientes</span><span class="badge badge-yellow" id="pendCount">0</span></div>
+            <table class="table"><thead><tr><th>Paciente</th><th>Síntomas</th><th>Nivel</th><th></th></tr></thead><tbody id="pendBody"></tbody></table>
           </div>
           <div class="card">
             <div class="card-header"><span class="card-title">Alertas recientes</span></div>
@@ -197,14 +261,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <input type="text" placeholder="Buscar por nombre, cédula o empresa..." id="searchPac" oninput="filterPacientes()" />
         </div>
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Todos los pacientes</span>
-            <span class="badge badge-blue" id="pacCount">0</span>
-          </div>
-          <table class="table">
-            <thead><tr><th>Nombre completo</th><th>Cédula</th><th>Empresa</th><th>Teléfono</th><th>Residencia</th><th>Correo</th><th></th></tr></thead>
-            <tbody id="pacBody"></tbody>
-          </table>
+          <div class="card-header"><span class="card-title">Todos los pacientes</span><span class="badge badge-blue" id="pacCount">0</span></div>
+          <table class="table"><thead><tr><th>Nombre completo</th><th>Cédula</th><th>Empresa</th><th>Teléfono</th><th>Residencia</th><th>Correo</th><th></th></tr></thead><tbody id="pacBody"></tbody></table>
         </div>
       </div>
 
@@ -221,17 +279,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
         <div class="tab-content" id="tab-consultas"><div id="patConsultas"></div></div>
         <div class="tab-content" id="tab-cronicas">
           <div class="card">
-            <div class="card-header">
-              <span class="card-title">Enfermedades crónicas registradas</span>
-              <button class="btn btn-sm btn-primary" onclick="mostrarFormCronica()">+ Agregar</button>
-            </div>
+            <div class="card-header"><span class="card-title">Enfermedades crónicas registradas</span><button class="btn btn-sm btn-primary" onclick="mostrarFormCronica()">+ Agregar</button></div>
             <div id="cronicasList" class="empty-state">Sin enfermedades crónicas registradas.</div>
           </div>
           <div class="card" id="formCronica" style="display:none">
             <div class="card-header"><span class="card-title">Registrar enfermedad crónica</span><button class="btn btn-sm" onclick="document.getElementById('formCronica').style.display='none'">✕</button></div>
             <div class="two-col">
-              <div class="form-group">
-                <label class="form-label">Enfermedad *</label>
+              <div class="form-group"><label class="form-label">Enfermedad *</label>
                 <select class="form-control" id="cronicaEnfermedad" onchange="actualizarFrecuenciaCronica()">
                   <option value="">Seleccione...</option>
                   <option value="hipertension">Hipertensión Arterial</option>
@@ -241,11 +295,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                   <option value="asma">Asma</option>
                   <option value="insuficiencia_cardiaca">Insuficiencia Cardíaca</option>
                   <option value="enfermedad_renal">Enfermedad Renal Crónica</option>
-                  <option value="tiroides">Trastorno Tiroideo (Hipo/Hipertiroidismo)</option>
+                  <option value="tiroides">Trastorno Tiroideo</option>
                   <option value="artritis_reumatoide">Artritis Reumatoide</option>
                   <option value="lupus">Lupus Eritematoso Sistémico</option>
                   <option value="epilepsia">Epilepsia</option>
-                  <option value="post_acv">Post ACV / Enfermedad Cerebrovascular</option>
+                  <option value="post_acv">Post ACV</option>
                   <option value="fibrilacion_auricular">Fibrilación Auricular</option>
                   <option value="depresion">Depresión Crónica</option>
                   <option value="obesidad">Obesidad / Sobrepeso</option>
@@ -253,41 +307,23 @@ textarea.form-control { resize: vertical; min-height: 80px; }
                   <option value="vih">VIH/SIDA</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Frecuencia de seguimiento (horas)</label>
+              <div class="form-group"><label class="form-label">Frecuencia de seguimiento (horas)</label>
                 <select class="form-control" id="cronicaFrecuencia">
-                  <option value="8">Cada 8 horas</option>
-                  <option value="12">Cada 12 horas</option>
-                  <option value="24" selected>Cada 24 horas (diario)</option>
-                  <option value="48">Cada 48 horas</option>
-                  <option value="72">Cada 72 horas</option>
-                  <option value="168">Semanal</option>
+                  <option value="8">Cada 8 horas</option><option value="12">Cada 12 horas</option>
+                  <option value="24" selected>Cada 24 horas</option><option value="48">Cada 48 horas</option>
+                  <option value="72">Cada 72 horas</option><option value="168">Semanal</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label">Código CIE-10</label>
-                <input type="text" class="form-control" id="cronicaCIE10" placeholder="Ej: I10" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Fecha de inicio</label>
-                <input type="date" class="form-control" id="cronicaFecha" />
-              </div>
+              <div class="form-group"><label class="form-label">Código CIE-10</label><input type="text" class="form-control" id="cronicaCIE10" placeholder="Ej: I10" /></div>
+              <div class="form-group"><label class="form-label">Fecha de inicio</label><input type="date" class="form-control" id="cronicaFecha" /></div>
             </div>
-            <div class="form-group">
-              <label class="form-label">Notas del médico</label>
-              <textarea class="form-control" id="cronicaNotas" placeholder="Observaciones, medicación actual, metas de control..."></textarea>
-            </div>
-            <div style="background:#eff6ff;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:13px;color:#1e40af">
-              <strong>📱 Seguimiento automático activado:</strong> El bot contactará al paciente por WhatsApp según la frecuencia seleccionada para registrar sus valores y detectar alertas.
-            </div>
+            <div class="form-group"><label class="form-label">Notas del médico</label><textarea class="form-control" id="cronicaNotas" placeholder="Observaciones..."></textarea></div>
+            <div style="background:#eff6ff;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:13px;color:#1e40af"><strong>📱 Seguimiento automático activado:</strong> El bot contactará al paciente por WhatsApp según la frecuencia seleccionada.</div>
             <button class="btn btn-primary" onclick="guardarCronica()">Registrar enfermedad crónica</button>
           </div>
         </div>
         <div class="tab-content" id="tab-seguimiento">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Seguimientos activos</span></div>
-            <div id="seguimientoList" class="empty-state">Sin seguimientos activos.</div>
-          </div>
+          <div class="card"><div class="card-header"><span class="card-title">Seguimientos activos</span></div><div id="seguimientoList" class="empty-state">Sin seguimientos activos.</div></div>
         </div>
       </div>
 
@@ -296,16 +332,11 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="card-header">
             <span class="card-title">Todas las consultas</span>
             <select class="form-control" style="width:150px;padding:5px 8px;font-size:12px" id="filterEstado" onchange="loadConsultas()">
-              <option value="">Todos</option>
-              <option value="pendiente">Pendientes</option>
-              <option value="completada">Completadas</option>
-              <option value="confirmada">Confirmadas</option>
+              <option value="">Todos</option><option value="pendiente">Pendientes</option>
+              <option value="completada">Completadas</option><option value="confirmada">Confirmadas</option>
             </select>
           </div>
-          <table class="table">
-            <thead><tr><th>Paciente</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody id="consultasBody"></tbody>
-          </table>
+          <table class="table"><thead><tr><th>Paciente</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="consultasBody"></tbody></table>
         </div>
       </div>
 
@@ -319,13 +350,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div class="form-group">
               <label class="form-label">Códigos CIE-10</label>
               <div style="position:relative">
-                <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre... (Ej: J00, gripe, diabetes)" oninput="buscarCIE10()" autocomplete="off" />
+                <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre..." oninput="buscarCIE10()" autocomplete="off" />
                 <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
               </div>
               <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
             </div>
             <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
-            <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
+            <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación..."></textarea></div>
           </div>
           <div class="card">
             <div class="card-header"><span class="card-title">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div>
@@ -340,10 +371,33 @@ textarea.form-control { resize: vertical; min-height: 80px; }
               <span>Activar recordatorios automáticos al paciente por WhatsApp</span>
             </label>
           </div>
-          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">
-            El bot enviará recordatorios según la frecuencia de cada medicamento. Al finalizar preguntará al paciente cómo se siente y registrará el resultado en su historial para los KPIs.
+          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">El bot enviará recordatorios según la frecuencia de cada medicamento.</div>
+        </div>
+
+        <div class="plantillas-selector">
+          <div class="plantillas-selector-title">📋 Plantillas clínicas — seleccione la que necesita</div>
+          <div class="plantillas-grid">
+            <div class="plantilla-card" id="pc-receta" onclick="togglePlantilla('receta')">
+              <div class="plantilla-icon">💊</div>
+              <div class="plantilla-name">Receta Médica</div>
+              <div class="plantilla-desc">Medicamentos + diagnóstico + firma</div>
+            </div>
+            <div class="plantilla-card" id="pc-certificado" onclick="togglePlantilla('certificado')">
+              <div class="plantilla-icon">📄</div>
+              <div class="plantilla-name">Certificado Médico</div>
+              <div class="plantilla-desc">Reposo + días + diagnóstico</div>
+            </div>
+            <div class="plantilla-card" id="pc-laboratorio" onclick="togglePlantilla('laboratorio')">
+              <div class="plantilla-icon">🔬</div>
+              <div class="plantilla-name">Pedido de Laboratorio</div>
+              <div class="plantilla-desc">Exámenes + marcadores</div>
+            </div>
+          </div>
+          <div class="plantillas-actions">
+            <button class="btn btn-primary" onclick="abrirPlantillaSeleccionada()" id="btnAbrirPlantilla" style="display:none">👁 Ver y completar plantilla</button>
           </div>
         </div>
+
         <div style="display:flex;gap:8px;justify-content:flex-end">
           <button class="btn" onclick="showPage('consultas')">Cancelar</button>
           <button class="btn btn-primary" onclick="guardarReceta()">💊 Emitir receta y activar seguimiento</button>
@@ -358,30 +412,20 @@ textarea.form-control { resize: vertical; min-height: 80px; }
           <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="op-total">—</div></div>
         </div>
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Centro de notificaciones</span>
+          <div class="card-header"><span class="card-title">Centro de notificaciones</span>
             <div style="display:flex;gap:8px">
               <button class="btn btn-sm" onclick="marcarTodasLeidas()">✓ Marcar leídas</button>
               <button class="btn btn-sm" onclick="loadNotificaciones()">↻ Actualizar</button>
             </div>
           </div>
-          <table class="table">
-            <thead><tr><th>Tipo</th><th>Paciente / Mensaje</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody id="notifBody"></tbody>
-          </table>
+          <table class="table"><thead><tr><th>Tipo</th><th>Paciente / Mensaje</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="notifBody"></tbody></table>
         </div>
       </div>
 
       <div class="page" id="page-usuarios">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Usuarios del sistema</span>
-            <button class="btn btn-sm btn-primary" onclick="document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button>
-          </div>
-          <table class="table">
-            <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Especialidad</th><th>Reg. MSP</th><th>Firma</th><th>Estado</th><th></th></tr></thead>
-            <tbody id="usuariosBody"></tbody>
-          </table>
+          <div class="card-header"><span class="card-title">Usuarios del sistema</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button></div>
+          <table class="table"><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Especialidad</th><th>Reg. MSP</th><th>Firma</th><th>Estado</th><th></th></tr></thead><tbody id="usuariosBody"></tbody></table>
         </div>
         <div class="card" id="addUserForm" style="display:none">
           <div class="card-header"><span class="card-title">Agregar nuevo usuario</span><button class="btn btn-sm" onclick="document.getElementById('addUserForm').style.display='none'">✕</button></div>
@@ -391,13 +435,9 @@ textarea.form-control { resize: vertical; min-height: 80px; }
             <div class="form-group"><label class="form-label">Correo *</label><input type="email" class="form-control" id="newCorreo" /></div>
             <div class="form-group"><label class="form-label">Contraseña *</label><input type="text" class="form-control" id="newPass" /></div>
             <div class="form-group"><label class="form-label">Rol *</label>
-              <select class="form-control" id="newRol">
-                <option value="medico">Médico</option>
-                <option value="operador">Operador</option>
-                <option value="admin">Administrador</option>
-              </select>
+              <select class="form-control" id="newRol"><option value="medico">Médico</option><option value="operador">Operador</option><option value="admin">Administrador</option></select>
             </div>
-            <div class="form-group"><label class="form-label">Especialidad</label><input type="text" class="form-control" id="newEsp" placeholder="Ej: Medicina General" /></div>
+            <div class="form-group"><label class="form-label">Especialidad</label><input type="text" class="form-control" id="newEsp" /></div>
             <div class="form-group"><label class="form-label">Número de registro MSP</label><input type="text" class="form-control" id="newReg" /></div>
           </div>
           <button class="btn btn-primary" onclick="saveUser()">Guardar usuario</button>
@@ -405,10 +445,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       </div>
 
       <div class="page" id="page-perfil">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Mi perfil</span></div>
-          <div id="perfilContent"></div>
-        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Mi perfil</span></div><div id="perfilContent"></div></div>
         <div class="card">
           <div class="card-header"><span class="card-title">Firma digital y sello</span></div>
           <div class="two-col">
@@ -439,31 +476,16 @@ textarea.form-control { resize: vertical; min-height: 80px; }
       <div class="page" id="page-metricas">
         <div class="stats-grid" id="metricStats"></div>
         <div class="two-col">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Distribución por nivel</span></div>
-            <div id="nivelChart" style="padding:1rem 0"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">KPIs principales</span></div>
-            <div id="kpiContent"></div>
-          </div>
+          <div class="card"><div class="card-header"><span class="card-title">Distribución por nivel</span></div><div id="nivelChart" style="padding:1rem 0"></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">KPIs principales</span></div><div id="kpiContent"></div></div>
         </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div>
-          <div id="seguimientoStats"></div>
-        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div><div id="seguimientoStats"></div></div>
       </div>
 
       <div class="page" id="page-empresas">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Clientes corporativos B2B</span>
-            <button class="btn btn-sm btn-primary" onclick="document.getElementById('addEmpresaForm').style.display='block'">+ Agregar empresa</button>
-          </div>
-          <table class="table">
-            <thead><tr><th>Empresa</th><th>Seguro</th><th>Pacientes</th><th>Estado</th><th></th></tr></thead>
-            <tbody id="empresasBody"></tbody>
-          </table>
+          <div class="card-header"><span class="card-title">Clientes corporativos B2B</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addEmpresaForm').style.display='block'">+ Agregar empresa</button></div>
+          <table class="table"><thead><tr><th>Empresa</th><th>Seguro</th><th>Pacientes</th><th>Estado</th><th></th></tr></thead><tbody id="empresasBody"></tbody></table>
         </div>
         <div class="card" id="addEmpresaForm" style="display:none">
           <div class="card-header"><span class="card-title">Nueva empresa</span><button class="btn btn-sm" onclick="document.getElementById('addEmpresaForm').style.display='none'">✕</button></div>
@@ -479,10 +501,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   </div>
 
   <div class="notif-panel" id="notifPanel">
-    <div class="notif-header">
-      Notificaciones
-      <button class="btn btn-sm" onclick="marcarTodasLeidas()" style="font-size:11px">Marcar leídas</button>
-    </div>
+    <div class="notif-header">Notificaciones<button class="btn btn-sm" onclick="marcarTodasLeidas()" style="font-size:11px">Marcar leídas</button></div>
     <div id="notifList"></div>
   </div>
 </div>
@@ -501,195 +520,576 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   </div>
 </div>
 
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">MediLyft</div>
+    <div class="login-sub">Panel médico — acceso restringido</div>
+    <div class="form-group"><label class="form-label">Correo electrónico</label><input type="email" class="form-input" id="loginEmail" placeholder="correo@ejemplo.com" /></div>
+    <div class="form-group"><label class="form-label">Contraseña</label><input type="password" class="form-input" id="loginPass" placeholder="••••••••" /></div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="loginError">Correo o contraseña incorrectos</div>
+  </div>
+</div>
+
+<div class="app" id="appWrap">
+  <div class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-name">MediLyft</div><div class="sidebar-logo-role" id="sidebarRole">—</div></div>
+    <div id="navMenu"></div>
+    <div class="sidebar-footer">
+      <div style="font-size:12px;color:#aaa;margin-bottom:8px;text-align:center" id="userInfo"></div>
+      <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="pageTitle">Dashboard</span>
+      <div class="topbar-right">
+        <button class="notif-btn" onclick="toggleNotif()" id="notifBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-badge" id="notifCount" style="display:none">0</span>
+        </button>
+        <div class="avatar" id="topAvatar">—</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="statsGrid"></div>
+        <div class="two-col">
+          <div class="card"><div class="card-header"><span class="card-title">Consultas pendientes</span><span class="badge badge-yellow" id="pendCount">0</span></div><table class="table"><thead><tr><th>Paciente</th><th>Síntomas</th><th>Nivel</th><th></th></tr></thead><tbody id="pendBody"></tbody></table></div>
+          <div class="card"><div class="card-header"><span class="card-title">Alertas recientes</span></div><div id="recentNotifs"></div></div>
+        </div>
+      </div>
+      <div class="page" id="page-pacientes">
+        <div class="search-wrap"><span class="search-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><input type="text" placeholder="Buscar por nombre, cédula o empresa..." id="searchPac" oninput="filterPacientes()" /></div>
+        <div class="card"><div class="card-header"><span class="card-title">Todos los pacientes</span><span class="badge badge-blue" id="pacCount">0</span></div><table class="table"><thead><tr><th>Nombre completo</th><th>Cédula</th><th>Empresa</th><th>Teléfono</th><th>Residencia</th><th>Correo</th><th></th></tr></thead><tbody id="pacBody"></tbody></table></div>
+      </div>
+      <div class="page" id="page-paciente-detalle">
+        <button class="btn btn-sm" onclick="showPage('pacientes')" style="margin-bottom:1rem">← Volver</button>
+        <div class="patient-header" id="patientHeader"></div>
+        <div class="tab-bar">
+          <div class="tab active" onclick="switchTab(this,'tab-datos')">Datos personales</div>
+          <div class="tab" onclick="switchTab(this,'tab-consultas')">Consultas</div>
+          <div class="tab" onclick="switchTab(this,'tab-cronicas')">Enfermedades crónicas</div>
+          <div class="tab" onclick="switchTab(this,'tab-seguimiento')">Seguimiento</div>
+        </div>
+        <div class="tab-content active" id="tab-datos"><div class="detail-grid" id="detailGrid"></div></div>
+        <div class="tab-content" id="tab-consultas"><div id="patConsultas"></div></div>
+        <div class="tab-content" id="tab-cronicas">
+          <div class="card"><div class="card-header"><span class="card-title">Enfermedades crónicas</span><button class="btn btn-sm btn-primary" onclick="mostrarFormCronica()">+ Agregar</button></div><div id="cronicasList" class="empty-state">Sin enfermedades crónicas.</div></div>
+          <div class="card" id="formCronica" style="display:none">
+            <div class="card-header"><span class="card-title">Registrar enfermedad crónica</span><button class="btn btn-sm" onclick="document.getElementById('formCronica').style.display='none'">✕</button></div>
+            <div class="two-col">
+              <div class="form-group"><label class="form-label">Enfermedad *</label><select class="form-control" id="cronicaEnfermedad" onchange="actualizarFrecuenciaCronica()"><option value="">Seleccione...</option><option value="hipertension">Hipertensión Arterial</option><option value="diabetes_tipo1">Diabetes Tipo 1</option><option value="diabetes_tipo2">Diabetes Tipo 2</option><option value="epoc">EPOC</option><option value="asma">Asma</option><option value="insuficiencia_cardiaca">Insuficiencia Cardíaca</option><option value="enfermedad_renal">Enfermedad Renal Crónica</option><option value="tiroides">Trastorno Tiroideo</option><option value="artritis_reumatoide">Artritis Reumatoide</option><option value="lupus">Lupus</option><option value="epilepsia">Epilepsia</option><option value="post_acv">Post ACV</option><option value="fibrilacion_auricular">Fibrilación Auricular</option><option value="depresion">Depresión Crónica</option><option value="obesidad">Obesidad</option><option value="osteoporosis">Osteoporosis</option><option value="vih">VIH/SIDA</option></select></div>
+              <div class="form-group"><label class="form-label">Frecuencia (horas)</label><select class="form-control" id="cronicaFrecuencia"><option value="8">Cada 8h</option><option value="12">Cada 12h</option><option value="24" selected>Diario</option><option value="48">Cada 48h</option><option value="72">Cada 72h</option><option value="168">Semanal</option></select></div>
+              <div class="form-group"><label class="form-label">CIE-10</label><input type="text" class="form-control" id="cronicaCIE10" placeholder="Ej: I10" /></div>
+              <div class="form-group"><label class="form-label">Fecha inicio</label><input type="date" class="form-control" id="cronicaFecha" /></div>
+            </div>
+            <div class="form-group"><label class="form-label">Notas</label><textarea class="form-control" id="cronicaNotas"></textarea></div>
+            <div style="background:#eff6ff;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:13px;color:#1e40af"><strong>📱 Seguimiento automático activado.</strong></div>
+            <button class="btn btn-primary" onclick="guardarCronica()">Registrar</button>
+          </div>
+        </div>
+        <div class="tab-content" id="tab-seguimiento"><div class="card"><div class="card-header"><span class="card-title">Seguimientos activos</span></div><div id="seguimientoList" class="empty-state">Sin seguimientos.</div></div></div>
+      </div>
+      <div class="page" id="page-consultas">
+        <div class="card">
+          <div class="card-header"><span class="card-title">Todas las consultas</span><select class="form-control" style="width:150px;padding:5px 8px;font-size:12px" id="filterEstado" onchange="loadConsultas()"><option value="">Todos</option><option value="pendiente">Pendientes</option><option value="completada">Completadas</option><option value="confirmada">Confirmadas</option></select></div>
+          <table class="table"><thead><tr><th>Paciente</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="consultasBody"></tbody></table>
+        </div>
+      </div>
+      <div class="page" id="page-receta">
+        <button class="btn btn-sm" onclick="showPage('consultas')" style="margin-bottom:1rem">← Volver a consultas</button>
+        <div class="patient-header" id="recetaPacienteHeader"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
+            <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
+            <div class="form-group"><label class="form-label">Códigos CIE-10</label><div style="position:relative"><input type="text" class="form-control" id="cie10Search" placeholder="Buscar código o nombre..." oninput="buscarCIE10()" autocomplete="off" /><div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div></div><div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div></div>
+            <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
+            <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación..."></textarea></div>
+          </div>
+          <div class="card"><div class="card-header"><span class="card-title">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div><div id="medicamentosLista"></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Seguimiento automático por WhatsApp</span></div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;margin-bottom:1rem"><input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" /><span>Activar recordatorios automáticos al paciente por WhatsApp</span></label>
+          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">El bot enviará recordatorios y registrará seguimiento en KPIs.</div>
+        </div>
+        <div class="plantillas-selector">
+          <div class="plantillas-selector-title">📋 Plantillas clínicas — seleccione la que necesita</div>
+          <div class="plantillas-grid">
+            <div class="plantilla-card" id="pc-receta" onclick="togglePlantilla('receta')"><div class="plantilla-icon">💊</div><div class="plantilla-name">Receta Médica</div><div class="plantilla-desc">Medicamentos + diagnóstico + firma</div></div>
+            <div class="plantilla-card" id="pc-certificado" onclick="togglePlantilla('certificado')"><div class="plantilla-icon">📄</div><div class="plantilla-name">Certificado Médico</div><div class="plantilla-desc">Reposo + días + diagnóstico</div></div>
+            <div class="plantilla-card" id="pc-laboratorio" onclick="togglePlantilla('laboratorio')"><div class="plantilla-icon">🔬</div><div class="plantilla-name">Pedido de Laboratorio</div><div class="plantilla-desc">Exámenes + marcadores</div></div>
+          </div>
+          <div class="plantillas-actions"><button class="btn btn-primary" onclick="abrirPlantillaSeleccionada()" id="btnAbrirPlantilla" style="display:none">👁 Ver y completar plantilla</button></div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn" onclick="showPage('consultas')">Cancelar</button>
+          <button class="btn btn-primary" onclick="guardarReceta()">💊 Emitir receta y activar seguimiento</button>
+        </div>
+      </div>
+      <div class="page" id="page-operador">
+        <div class="stats-grid"><div class="stat-card stat-warning"><div class="stat-label">Sin atender</div><div class="stat-value" id="op-pending">—</div></div><div class="stat-card stat-danger"><div class="stat-label">Urgentes</div><div class="stat-value" id="op-urgent">—</div></div><div class="stat-card stat-success"><div class="stat-label">Atendidas hoy</div><div class="stat-value" id="op-done">—</div></div><div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="op-total">—</div></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Centro de notificaciones</span><div style="display:flex;gap:8px"><button class="btn btn-sm" onclick="marcarTodasLeidas()">✓ Marcar leídas</button><button class="btn btn-sm" onclick="loadNotificaciones()">↻ Actualizar</button></div></div><table class="table"><thead><tr><th>Tipo</th><th>Paciente / Mensaje</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="notifBody"></tbody></table></div>
+      </div>
+      <div class="page" id="page-usuarios">
+        <div class="card"><div class="card-header"><span class="card-title">Usuarios del sistema</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button></div><table class="table"><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Especialidad</th><th>Reg. MSP</th><th>Firma</th><th>Estado</th><th></th></tr></thead><tbody id="usuariosBody"></tbody></table></div>
+        <div class="card" id="addUserForm" style="display:none"><div class="card-header"><span class="card-title">Agregar nuevo usuario</span><button class="btn btn-sm" onclick="document.getElementById('addUserForm').style.display='none'">✕</button></div><div class="two-col"><div class="form-group"><label class="form-label">Nombre *</label><input type="text" class="form-control" id="newNombre" /></div><div class="form-group"><label class="form-label">Apellidos *</label><input type="text" class="form-control" id="newApellidos" /></div><div class="form-group"><label class="form-label">Correo *</label><input type="email" class="form-control" id="newCorreo" /></div><div class="form-group"><label class="form-label">Contraseña *</label><input type="text" class="form-control" id="newPass" /></div><div class="form-group"><label class="form-label">Rol *</label><select class="form-control" id="newRol"><option value="medico">Médico</option><option value="operador">Operador</option><option value="admin">Administrador</option></select></div><div class="form-group"><label class="form-label">Especialidad</label><input type="text" class="form-control" id="newEsp" /></div><div class="form-group"><label class="form-label">Reg. MSP</label><input type="text" class="form-control" id="newReg" /></div></div><button class="btn btn-primary" onclick="saveUser()">Guardar usuario</button></div>
+      </div>
+      <div class="page" id="page-perfil">
+        <div class="card"><div class="card-header"><span class="card-title">Mi perfil</span></div><div id="perfilContent"></div></div>
+        <div class="card"><div class="card-header"><span class="card-title">Firma digital y sello</span></div><div class="two-col"><div><p style="font-size:13px;color:#888;margin-bottom:1rem">Firma digital PNG con fondo transparente.</p><div class="upload-area" onclick="document.getElementById('firmaInput').click()"><div id="firmaPreview">📝 Clic para subir firma digital</div></div><input type="file" id="firmaInput" accept="image/*" style="display:none" onchange="previewFirma(this,'firmaPreview','firma')" /></div><div><p style="font-size:13px;color:#888;margin-bottom:1rem">Sello médico PNG.</p><div class="upload-area" onclick="document.getElementById('selloInput').click()"><div id="selloPreview">🔵 Clic para subir sello médico</div></div><input type="file" id="selloInput" accept="image/*" style="display:none" onchange="previewFirma(this,'selloPreview','sello')" /></div></div><div class="divider"></div><button class="btn btn-primary" onclick="saveFirma()">Guardar firma y sello</button></div>
+        <div class="card"><div class="card-header"><span class="card-title">Cambiar contraseña</span></div><div style="max-width:400px"><div class="form-group"><label class="form-label">Nueva contraseña</label><input type="password" class="form-control" id="newPassChange" /></div><div class="form-group"><label class="form-label">Confirmar contraseña</label><input type="password" class="form-control" id="confirmPassChange" /></div><button class="btn btn-primary" onclick="changePassword()">Actualizar contraseña</button></div></div>
+      </div>
+      <div class="page" id="page-metricas"><div class="stats-grid" id="metricStats"></div><div class="two-col"><div class="card"><div class="card-header"><span class="card-title">Distribución por nivel</span></div><div id="nivelChart" style="padding:1rem 0"></div></div><div class="card"><div class="card-header"><span class="card-title">KPIs principales</span></div><div id="kpiContent"></div></div></div><div class="card"><div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div><div id="seguimientoStats"></div></div></div>
+      <div class="page" id="page-empresas">
+        <div class="card"><div class="card-header"><span class="card-title">Clientes corporativos B2B</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addEmpresaForm').style.display='block'">+ Agregar empresa</button></div><table class="table"><thead><tr><th>Empresa</th><th>Seguro</th><th>Pacientes</th><th>Estado</th><th></th></tr></thead><tbody id="empresasBody"></tbody></table></div>
+        <div class="card" id="addEmpresaForm" style="display:none"><div class="card-header"><span class="card-title">Nueva empresa</span><button class="btn btn-sm" onclick="document.getElementById('addEmpresaForm').style.display='none'">✕</button></div><div class="two-col"><div class="form-group"><label class="form-label">Nombre empresa *</label><input type="text" class="form-control" id="empNombre" /></div><div class="form-group"><label class="form-label">Nombre seguro</label><input type="text" class="form-control" id="empSeguro" /></div></div><button class="btn btn-primary" onclick="saveEmpresa()">Guardar empresa</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="notif-panel" id="notifPanel"><div class="notif-header">Notificaciones<button class="btn btn-sm" onclick="marcarTodasLeidas()" style="font-size:11px">Marcar leídas</button></div><div id="notifList"></div></div>
+</div>
+
+<div class="popup-overlay" id="popupAgendar"><div class="popup-box"><div class="popup-title">📅 Agendar teleconsulta</div><div id="popupPacienteInfo" style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:1rem;font-size:13px"></div><div class="form-group"><label class="form-label">Médico asignado</label><select class="form-control" id="medicoAsignado"></select></div><div class="form-group"><label class="form-label">Fecha y hora</label><input type="datetime-local" class="form-control" id="fechaConfirmada" /></div><div class="form-group"><label class="form-label">Notas del operador</label><textarea class="form-control" id="notasOperador" placeholder="Notas adicionales..."></textarea></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem"><button class="btn" onclick="closePopup()">Cancelar</button><button class="btn btn-primary" onclick="confirmarAgendamiento()">✓ Confirmar y notificar</button></div></div></div>
+
+<!-- MODAL RECETA MÉDICA -->
+<div class="plantilla-modal-overlay" id="modalReceta">
+  <div class="plantilla-modal">
+    <div class="plantilla-modal-topbar">
+      <span class="plantilla-modal-title">💊 Receta Médica — Vital Club</span>
+      <div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div>
+    </div>
+    <div class="plantilla-modal-body">
+      <div class="doc-sheet" id="docReceta">
+        <div class="doc-header">
+          <div class="doc-logo-area"><div class="doc-logo-box">VITAL<br>CLUB</div><div><div class="doc-org-name">VITAL CLUB</div><div class="doc-org-sub">CENTROS MÉDICOS</div><div class="doc-org-sub">9 de agosto entre Carchi y Av. Cacha, Calderón</div><div class="doc-org-sub">Tel: 02-202-3600 · WhatsApp: 098-300-1000</div></div></div>
+          <div><div class="doc-title">Receta Médica</div><div class="receta-num">RECETA No. <span id="rec-numero">____</span></div><div style="font-size:10px;color:#888;text-align:right" id="rec-fecha-header"></div></div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Datos del Paciente</div>
+          <div class="doc-grid2">
+            <div class="doc-row"><span class="doc-lbl">Apellidos y nombres:</span><span class="doc-val" id="rec-paciente"></span></div>
+            <div class="doc-row"><span class="doc-lbl">Cédula:</span><span class="doc-val" id="rec-cedula"></span></div>
+            <div class="doc-row"><span class="doc-lbl">Edad:</span><span class="doc-val" id="rec-edad"></span></div>
+            <div class="doc-row"><span class="doc-lbl">Sexo (M/F):</span><span class="doc-val" id="rec-sexo"></span></div>
+            <div class="doc-row"><span class="doc-lbl">Nº historia clínica:</span><span class="doc-val" id="rec-hc"></span></div>
+            <div class="doc-row"><span class="doc-lbl">Nº atención:</span><span class="doc-val" id="rec-atencion"></span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;font-size:10px;margin:6px 0">
+            <strong>ALERGIAS:</strong>
+            <label><input type="checkbox" id="rec-alergia-si"> SÍ</label>
+            <label><input type="checkbox" id="rec-alergia-no" checked> NO</label>
+            <span>Especificar:</span><input type="text" id="rec-alergia-desc" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:10px;flex:1;background:transparent;min-width:120px" />
+          </div>
+          <div class="doc-grid2">
+            <div class="doc-row"><span class="doc-lbl">Peso:</span><input class="doc-val-edit" id="rec-peso" placeholder="kg" /></div>
+            <div class="doc-row"><span class="doc-lbl">Talla:</span><input class="doc-val-edit" id="rec-talla" placeholder="cm" /></div>
+          </div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Diagnóstico</div>
+          <div class="doc-row"><span class="doc-lbl">Diagnóstico principal:</span><span class="doc-val" id="rec-diagnostico"></span></div>
+          <div class="doc-row" style="margin-top:4px"><span class="doc-lbl">Código(s) CIE-10:</span><span class="doc-val" id="rec-cie10"></span></div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Medicamentos Prescritos</div>
+          <table class="receta-med-table">
+            <thead><tr><th style="width:35%">Medicamento / Presentación</th><th style="width:20%">Dosis</th><th style="width:20%">Frecuencia</th><th style="width:12%">Duración</th><th style="width:13%">Cantidad</th></tr></thead>
+            <tbody id="rec-meds-body"></tbody>
+          </table>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">Medidas No Farmacológicas / Indicaciones Generales</div>
+          <textarea class="doc-textarea" id="rec-indicaciones" placeholder="Reposo, hidratación, control en X días..."></textarea>
+        </div>
+        <div class="doc-firma-area">
+          <div class="doc-firma-box"><div id="rec-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px">Sin firma</div><div class="doc-firma-line" id="rec-nombre-medico">NOMBRE DEL MÉDICO</div><div style="font-size:9px;color:#888;text-align:center" id="rec-reg-medico"></div><div style="font-size:9px;color:#888;text-align:center" id="rec-esp-medico"></div></div>
+          <div class="doc-firma-box"><div id="rec-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px">Sin sello</div><div style="font-size:9px;color:#888;text-align:center;margin-top:4px">Sello médico</div></div>
+        </div>
+        <div style="text-align:center;font-size:9px;color:#888;margin-top:12px;border-top:1px solid #eee;padding-top:8px">Teléfono: 02-202-3600 · WhatsApp: 098-300-1000 · www.vitalclub.com.ec · QUITO — ECUADOR</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CERTIFICADO MÉDICO -->
+<div class="plantilla-modal-overlay" id="modalCertificado">
+  <div class="plantilla-modal">
+    <div class="plantilla-modal-topbar">
+      <span class="plantilla-modal-title">📄 Certificado Médico — Vital Club</span>
+      <div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div>
+    </div>
+    <div class="plantilla-modal-body">
+      <div class="doc-sheet" id="docCertificado">
+        <div class="doc-header">
+          <div class="doc-logo-area"><div class="doc-logo-box">VITAL<br>CLUB</div><div><div class="doc-org-name">VITAL CLUB</div><div class="doc-org-sub">CENTROS MÉDICOS</div><div class="doc-org-sub">9 de agosto entre Carchi y Av. Cacha, Calderón</div></div></div>
+          <div class="doc-title">Certificado Médico</div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">A) Datos del Establecimiento de Salud</div>
+          <div class="doc-row"><span class="doc-lbl">Nombre del establecimiento:</span><span class="doc-val">VITAL CLUB</span></div>
+          <div class="doc-row"><span class="doc-lbl">Correo del médico:</span><span class="doc-val" id="cert-correo-medico"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Teléfono del emisor:</span><input class="doc-val-edit" id="cert-tel-emisor" value="02-202-3600" /></div>
+          <div class="doc-row"><span class="doc-lbl">Dirección:</span><span class="doc-val">9 DE AGOSTO ENTRE CACHA Y CARCHI, QUITO CALDERÓN PICHINCHA</span></div>
+          <div class="doc-row"><span class="doc-lbl">Lugar y fecha de emisión:</span><span class="doc-val" id="cert-lugar-fecha"></span></div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">B) Datos del Paciente</div>
+          <div class="doc-row"><span class="doc-lbl">Apellidos y nombres:</span><span class="doc-val" id="cert-paciente"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Dirección domiciliaria:</span><span class="doc-val" id="cert-direccion"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Número de teléfono:</span><span class="doc-val" id="cert-telefono"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Institución/empresa de trabajo:</span><span class="doc-val" id="cert-empresa"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Puesto de trabajo:</span><input class="doc-val-edit" id="cert-puesto" placeholder="Cargo o puesto..." /></div>
+          <div class="doc-row"><span class="doc-lbl">Número de identificación:</span><span class="doc-val" id="cert-cedula"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Número de historia clínica:</span><span class="doc-val" id="cert-hc"></span></div>
+        </div>
+        <div class="doc-section">
+          <div class="doc-section-title">C) Motivo de Aislamiento/Enfermedad</div>
+          <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="cert-diagnostico"></span></div>
+          <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><span class="doc-val" id="cert-cie10"></span></div>
+          <div class="cert-check-row" style="margin-top:8px"><span style="font-weight:600">Presenta Síntomas:</span><label class="cert-check-item"><input type="checkbox" id="cert-sint-si" checked> SÍ</label><label class="cert-check-item"><input type="checkbox" id="cert-sint-no"> NO</label></div>
+          <div class="cert-check-row"><span style="font-weight:600">Tipo:</span><label class="cert-check-item"><input type="checkbox" id="cert-tipo-enf" checked> Enfermedad</label><label class="cert-check-item"><input type="checkbox" id="cert-tipo-ais"> Aislamiento/Teletrabajo</label></div>
+          <div class="doc-row" style="margin-top:4px"><span class="doc-lbl">Tipo de Contingencia:</span><select class="doc-val-edit" id="cert-contingencia" style="padding:2px 4px"><option>ENFERMEDAD GENERAL</option><option>ACCIDENTE DE TRABAJO</option><option>ENFERMEDAD PROFESIONAL</option><option>MATERNIDAD</option></select></div>
+          <div style="margin-top:8px"><div style="font-size:10px;font-weight:600;margin-bottom:4px">Descripción de la enfermedad:</div><textarea class="doc-textarea" id="cert-descripcion" placeholder="Descripción clínica detallada..."></textarea></div>
+          <div style="margin-top:10px">
+            <div style="font-size:10px;font-weight:600;margin-bottom:6px;color:#006d9b">Días concedidos:</div>
+            <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Total de días:</span><input type="number" class="cert-dias-num" id="cert-dias-num" min="1" max="365" value="1" oninput="actualizarDiasLetra()" /><input type="text" class="cert-dias-letra" id="cert-dias-letra" placeholder="UNO" /></div>
+            <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Desde:</span><input type="date" class="doc-val-edit" id="cert-desde" style="max-width:130px" oninput="actualizarHastaFecha()" /><input type="text" class="cert-dias-letra" id="cert-desde-letra" readonly placeholder="fecha en letra" /></div>
+            <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Hasta:</span><input type="date" class="doc-val-edit" id="cert-hasta" style="max-width:130px" /><input type="text" class="cert-dias-letra" id="cert-hasta-letra" readonly placeholder="fecha en letra" /></div>
+          </div>
+        </div>
+        <div class="doc-firma-area">
+          <div class="doc-firma-box"><div id="cert-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px">Sin firma</div><div class="doc-firma-line" id="cert-nombre-medico">NOMBRE DEL MÉDICO</div><div style="font-size:9px;color:#888;text-align:center" id="cert-reg-medico"></div><div style="font-size:9px;color:#888;text-align:center" id="cert-esp-medico"></div></div>
+        </div>
+        <div style="text-align:center;font-size:9px;color:#888;margin-top:12px;border-top:1px solid #eee;padding-top:8px">Teléfono: 02-202-3600 · WhatsApp: 098-300-1000 · www.vitalclub.com.ec</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PEDIDO DE LABORATORIO -->
+<div class="plantilla-modal-overlay" id="modalLaboratorio">
+  <div class="plantilla-modal" style="width:780px">
+    <div class="plantilla-modal-topbar">
+      <span class="plantilla-modal-title">🔬 Solicitud de Estudios de Laboratorio — Vital Club</span>
+      <div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div>
+    </div>
+    <div class="plantilla-modal-body">
+      <div class="doc-sheet" id="docLaboratorio">
+        <div class="doc-header">
+          <div class="doc-logo-area"><div class="doc-logo-box">VITAL<br>CLUB</div><div><div class="doc-org-name">VITAL CLUB</div><div class="doc-org-sub">CENTROS MÉDICOS · 9 de agosto entre Carchi y Av. Cacha, Calderón</div></div></div>
+          <div class="doc-title">Solicitud de Estudios<br>de Laboratorio</div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px;margin-bottom:8px;padding:8px;background:#f0f6ff;border-radius:6px">
+          <div class="doc-row"><span class="doc-lbl" style="min-width:60px">Paciente:</span><span class="doc-val" id="lab-paciente"></span></div>
+          <div class="doc-row"><span class="doc-lbl" style="min-width:35px">Edad:</span><span class="doc-val" id="lab-edad"></span></div>
+          <div class="doc-row"><span class="doc-lbl" style="min-width:30px">C.I.:</span><span class="doc-val" id="lab-cedula"></span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:8px;margin-bottom:10px;padding:0 4px">
+          <div class="doc-row"><span class="doc-lbl" style="min-width:80px">Diagnóstico:</span><span class="doc-val" id="lab-diagnostico"></span></div>
+          <div class="doc-row"><span class="doc-lbl" style="min-width:40px">Fecha:</span><span class="doc-val" id="lab-fecha"></span></div>
+        </div>
+        <div class="lab-grid">
+          <div class="lab-col">
+            <div class="lab-col-title">Hematología / Oncológicos</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hemograma completo</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hemoglobina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hematocrito</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Frotis de sangre periférica</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Reticulocitos</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> V. Eritrosedimentación VSG</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Grupo sanguíneo y RH</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Prueba Coombs directa</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Prueba Coombs indirecta</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hierro sérico</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Ferritina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Transferrina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Vitamina B12</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Ácido fólico</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Coagulación</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> T. de Protrombina TP</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> T. Parcial Tromboplastina TTP</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Tiempo de coagulación</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Tiempo de sangría</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Recuento de plaquetas</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Fibrinógeno</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Dímero D</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Serología y Reactantes</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Antiestreptolisina ASTO</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> PCR Ultrasensible</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Procalcitonina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Factor Reumatoideo FR</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Anti-CCP</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> V.D.R.L.</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> F.T.A. Abs</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Aglutinaciones febriles</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Strep-A</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Marcadores Tumorales</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> PSA Total</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> PSA Libre</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> CEA</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> AFP</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> CA-125</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> CA-19-9</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> CA-15-3</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Electrolitos</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Sodio</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Potasio</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Calcio</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cloro</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Fósforo</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Magnesio</label>
+            </div>
+          </div>
+          <div class="lab-col">
+            <div class="lab-col-title">Química Sanguínea</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Glucosa en ayunas</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Glucosa postprandial 2h</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hemoglobina glicosilada HbA1c</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Colesterol total</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> HDL Colesterol</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> LDL Colesterol</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> VLDL Colesterol</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Triglicéridos</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Urea</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> BUN</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Creatinina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Ácido úrico</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Albúmina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Bilirrubina total</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Bilirrubina directa</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Amilasa</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Lipasa</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Fosfatasa alcalina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Gamma GT</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> GOT / GPT</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Proteína total</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> LDH</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Endócrinos</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> TSH</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> T3 Total</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> T4 Total</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> T3 Libre FT3</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> T4 Libre FT4</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> LH / FSH</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Estradiol</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Progesterona</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Prolactina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Testosterona</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Insulina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cortisol AM / PM</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> PTH</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Vitamina D (25 OH)</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> β-HCG Cuantitativa</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Microbiología</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cultivo secreción faríngea</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cultivo exudado uretral</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cultivo secreción vaginal</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cultivo de herida</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hemocultivo</label>
+              <label class="lab-item" style="align-items:flex-start"><input type="checkbox" class="lab-check" style="margin-top:2px"> BAAR en: <input type="text" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:9.5px;width:90px;background:transparent;margin-left:4px" /></label>
+            </div>
+          </div>
+          <div class="lab-col">
+            <div class="lab-col-title">Uroánálisis</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> EMO</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Gram de gota fresca</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Cultivo y antibiograma</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Microalbuminuria</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Creatinina en orina</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Proteínas en orina 24h</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Prueba de embarazo</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Coprológico</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Coproparasitario</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Copro seriado</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Coprocultivo</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Sangre oculta</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Rotavirus</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Helicobacter pylori</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Inmunología</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hepatitis A IgM</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hepatitis B HBsAg</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hepatitis B Anti-HBs</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hepatitis B Anti-HBc</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Hepatitis C IgM</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Herpes 1 IgM/IgG</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Herpes 2 IgM/IgG</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Dengue IgM/IgG</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Rubeola</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Citomegalovirus IgM/IgG</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> Toxoplasma IgM/IgG</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> STORCH</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> VIH (4ta generación)</label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> VIH Western-Blot</label>
+            </div>
+            <div class="lab-col-title" style="background:#1a6e8e">Otros</div>
+            <div class="lab-items">
+              <label class="lab-item"><input type="checkbox" class="lab-check"> <input type="text" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:9.5px;flex:1;background:transparent" placeholder="Especificar..." /></label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> <input type="text" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:9.5px;flex:1;background:transparent" placeholder="Especificar..." /></label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> <input type="text" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:9.5px;flex:1;background:transparent" placeholder="Especificar..." /></label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> <input type="text" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:9.5px;flex:1;background:transparent" placeholder="Especificar..." /></label>
+              <label class="lab-item"><input type="checkbox" class="lab-check"> <input type="text" style="border:none;border-bottom:1px solid #ccc;outline:none;font-size:9.5px;flex:1;background:transparent" placeholder="Especificar..." /></label>
+            </div>
+          </div>
+        </div>
+        <div class="doc-firma-area" style="margin-top:16px">
+          <div class="doc-firma-box"><div id="lab-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px">Sin firma</div><div class="doc-firma-line" id="lab-nombre-medico">NOMBRE DEL MÉDICO</div><div style="font-size:9px;color:#888;text-align:center" id="lab-reg-medico"></div></div>
+          <div class="doc-firma-box"><div id="lab-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center;color:#ccc;font-size:11px">Sin sello</div></div>
+        </div>
+        <div style="text-align:center;font-size:9px;color:#888;margin-top:10px;border-top:1px solid #eee;padding-top:8px;display:flex;justify-content:space-around"><span>Teléfono: 02-202-3600</span><span>WhatsApp: 098-300-1000</span><span>www.vitalclub.com.ec</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="alert-new" id="toastAlert"></div>
+<div id="printRoot" style="display:none"></div>
 
 <script>
-const SUPA_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
-const SUPA_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
-let currentUser = null;
-let pacientesData = [];
-let notifInterval = null;
-let lastNotifCount = 0;
-let currentConsultaId = null;
-let currentPacienteId = null;
-let firmaData = { firma: null, sello: null };
-let medicamentosData = [];
-let recetaConsultaId = null;
-let recetaPacienteId = null;
+const SUPA_URL='https://kcoopkkvbkgrnkpksiuh.supabase.co';
+const SUPA_KEY='sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
+let currentUser=null,pacientesData=[],notifInterval=null,lastNotifCount=0;
+let currentConsultaId=null,currentPacienteId=null;
+let firmaData={firma:null,sello:null},medicamentosData=[],recetaConsultaId=null,recetaPacienteId=null;
+let plantillaSeleccionada=null,currentPacienteData=null,currentConsultaData=null;
+let cie10Seleccionados=[];
 
-async function supa(method, table, body, query='') {
-  const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
-    method,
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json', 'Prefer': method==='POST'?'return=representation':'' },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  if (r.status === 204) return null;
-  return r.json();
+async function supa(method,table,body,query=''){
+  const r=await fetch(`${SUPA_URL}/rest/v1/${table}${query}`,{method,headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json','Prefer':method==='POST'?'return=representation':''},body:body?JSON.stringify(body):undefined});
+  if(r.status===204)return null;return r.json();
+}
+function saveSession(u){localStorage.setItem('medilyft_user',JSON.stringify(u));}
+function getSession(){try{return JSON.parse(localStorage.getItem('medilyft_user'));}catch{return null;}}
+function clearSession(){localStorage.removeItem('medilyft_user');}
+
+async function doLogin(){
+  const email=document.getElementById('loginEmail').value.trim(),pass=document.getElementById('loginPass').value.trim(),btn=document.getElementById('loginBtn');
+  if(!email||!pass)return;
+  btn.disabled=true;btn.textContent='Verificando...';
+  document.getElementById('loginError').style.display='none';
+  const users=await supa('GET','usuarios',null,`?correo=eq.${encodeURIComponent(email)}&password_hash=eq.${encodeURIComponent(pass)}&activo=eq.true`);
+  btn.disabled=false;btn.textContent='Ingresar';
+  if(!users||users.length===0){document.getElementById('loginError').style.display='block';return;}
+  currentUser=users[0];saveSession(currentUser);initApp();
 }
 
-function saveSession(user) { localStorage.setItem('medilyft_user', JSON.stringify(user)); }
-function getSession() { try { return JSON.parse(localStorage.getItem('medilyft_user')); } catch { return null; } }
-function clearSession() { localStorage.removeItem('medilyft_user'); }
-
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  const btn = document.getElementById('loginBtn');
-  if (!email || !pass) return;
-  btn.disabled = true; btn.textContent = 'Verificando...';
-  document.getElementById('loginError').style.display = 'none';
-  const users = await supa('GET','usuarios',null,`?correo=eq.${encodeURIComponent(email)}&password_hash=eq.${encodeURIComponent(pass)}&activo=eq.true`);
-  btn.disabled = false; btn.textContent = 'Ingresar';
-  if (!users || users.length === 0) { document.getElementById('loginError').style.display = 'block'; return; }
-  currentUser = users[0];
-  saveSession(currentUser);
-  initApp();
+function initApp(){
+  document.getElementById('loginWrap').style.display='none';
+  document.getElementById('appWrap').style.display='flex';
+  document.getElementById('sidebarRole').textContent=currentUser.rol.charAt(0).toUpperCase()+currentUser.rol.slice(1);
+  document.getElementById('topAvatar').textContent=((currentUser.nombre||'?')[0]+(currentUser.apellidos||'?')[0]).toUpperCase();
+  document.getElementById('userInfo').textContent=currentUser.nombre+' '+currentUser.apellidos;
+  buildNav();loadDashboard();startNotifPolling();
 }
 
-function initApp() {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('appWrap').style.display = 'flex';
-  document.getElementById('sidebarRole').textContent = currentUser.rol.charAt(0).toUpperCase() + currentUser.rol.slice(1);
-  document.getElementById('topAvatar').textContent = ((currentUser.nombre||'?')[0]+(currentUser.apellidos||'?')[0]).toUpperCase();
-  document.getElementById('userInfo').textContent = currentUser.nombre + ' ' + currentUser.apellidos;
-  buildNav(); loadDashboard(); startNotifPolling();
+function doLogout(){
+  currentUser=null;clearSession();
+  if(notifInterval)clearInterval(notifInterval);
+  document.getElementById('loginWrap').style.display='flex';
+  document.getElementById('appWrap').style.display='none';
+  document.getElementById('loginEmail').value='';
+  document.getElementById('loginPass').value='';
 }
 
-function doLogout() {
-  currentUser = null; clearSession();
-  if (notifInterval) clearInterval(notifInterval);
-  document.getElementById('loginWrap').style.display = 'flex';
-  document.getElementById('appWrap').style.display = 'none';
-  document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPass').value = '';
-}
-
-const NAV_ICONS = {
-  grid: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
-  users: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
-  activity: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
-  bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
-  briefcase: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
-  'user-check': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
-  'bar-chart': '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
-  user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
+const NAV_ICONS={
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>',
+  users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  activity:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  bell:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+  briefcase:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>',
+  'user-check':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg>',
+  'bar-chart':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+  user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>'
 };
 
-function buildNav() {
-  const rol = currentUser.rol;
-  const menus = {
-    admin: [
-      { label:'Principal', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'}]},
-      { label:'Operación', items:[{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'empresas',label:'Empresas B2B',icon:'briefcase'}]},
-      { label:'Admin', items:[{id:'usuarios',label:'Usuarios',icon:'user-check'},{id:'metricas',label:'Métricas KPI',icon:'bar-chart'},{id:'perfil',label:'Mi perfil',icon:'user'}]}
-    ],
-    medico: [{ label:'Clínico', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'},{id:'perfil',label:'Mi perfil',icon:'user'}]}],
-    operador: [{ label:'Operación', items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'pacientes',label:'Pacientes',icon:'users'}]}]
+function buildNav(){
+  const rol=currentUser.rol;
+  const menus={
+    admin:[{label:'Principal',items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'}]},{label:'Operación',items:[{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'empresas',label:'Empresas B2B',icon:'briefcase'}]},{label:'Admin',items:[{id:'usuarios',label:'Usuarios',icon:'user-check'},{id:'metricas',label:'Métricas KPI',icon:'bar-chart'},{id:'perfil',label:'Mi perfil',icon:'user'}]}],
+    medico:[{label:'Clínico',items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'pacientes',label:'Pacientes',icon:'users'},{id:'consultas',label:'Consultas',icon:'activity'},{id:'perfil',label:'Mi perfil',icon:'user'}]}],
+    operador:[{label:'Operación',items:[{id:'dashboard',label:'Dashboard',icon:'grid'},{id:'operador',label:'Centro de alertas',icon:'bell'},{id:'pacientes',label:'Pacientes',icon:'users'}]}]
   };
-  let html = '';
-  (menus[rol]||menus.operador).forEach(s => {
-    html += `<div class="nav-section">${s.label}</div>`;
-    s.items.forEach(i => { html += `<div class="nav-item" onclick="showPage('${i.id}',this)" data-page="${i.id}">${NAV_ICONS[i.icon]||''}${i.label}</div>`; });
+  let html='';
+  (menus[rol]||menus.operador).forEach(s=>{
+    html+=`<div class="nav-section">${s.label}</div>`;
+    s.items.forEach(i=>{html+=`<div class="nav-item" onclick="showPage('${i.id}',this)" data-page="${i.id}">${NAV_ICONS[i.icon]||''}${i.label}</div>`;});
   });
-  document.getElementById('navMenu').innerHTML = html;
+  document.getElementById('navMenu').innerHTML=html;
 }
 
-function showPage(id, el) {
+function showPage(id,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const page = document.getElementById('page-'+id);
-  if (page) page.classList.add('active');
-  if (el) el.classList.add('active');
-  else { const ni = document.querySelector(`[data-page="${id}"]`); if(ni) ni.classList.add('active'); }
-  const titles = {dashboard:'Dashboard',pacientes:'Pacientes',consultas:'Consultas',operador:'Centro de alertas',usuarios:'Usuarios',metricas:'Métricas KPI',empresas:'Empresas B2B','paciente-detalle':'Detalle del paciente',perfil:'Mi perfil',receta:'Emitir receta'};
-  document.getElementById('pageTitle').textContent = titles[id]||id;
-  if (id==='pacientes') loadPacientes();
-  if (id==='consultas') loadConsultas();
-  if (id==='operador') loadNotificaciones();
-  if (id==='usuarios') loadUsuarios();
-  if (id==='metricas') loadMetricas();
-  if (id==='empresas') loadEmpresas();
-  if (id==='perfil') loadPerfil();
+  const page=document.getElementById('page-'+id);
+  if(page)page.classList.add('active');
+  if(el)el.classList.add('active');
+  else{const ni=document.querySelector(`[data-page="${id}"]`);if(ni)ni.classList.add('active');}
+  const titles={dashboard:'Dashboard',pacientes:'Pacientes',consultas:'Consultas',operador:'Centro de alertas',usuarios:'Usuarios',metricas:'Métricas KPI',empresas:'Empresas B2B','paciente-detalle':'Detalle del paciente',perfil:'Mi perfil',receta:'Emitir receta'};
+  document.getElementById('pageTitle').textContent=titles[id]||id;
+  if(id==='pacientes')loadPacientes();
+  if(id==='consultas')loadConsultas();
+  if(id==='operador')loadNotificaciones();
+  if(id==='usuarios')loadUsuarios();
+  if(id==='metricas')loadMetricas();
+  if(id==='empresas')loadEmpresas();
+  if(id==='perfil')loadPerfil();
 }
 
-async function loadDashboard() {
-  const [consultas, pacientes, notifs] = await Promise.all([
-    supa('GET','consultas',null,'?select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc'),
-    supa('GET','pacientes',null,'?select=count'),
-    supa('GET','notificaciones',null,'?leida=eq.false&order=created_at.desc&limit=5')
-  ]);
-  const pendientes = (consultas||[]).filter(c=>c.estado==='pendiente');
-  const hoy = new Date().toDateString();
-  const hoyCount = (consultas||[]).filter(c=>new Date(c.created_at).toDateString()===hoy).length;
-  document.getElementById('statsGrid').innerHTML = `
-    <div class="stat-card stat-warning"><div class="stat-label">Consultas pendientes</div><div class="stat-value">${pendientes.length}</div><div class="stat-sub">Por atender</div></div>
-    <div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div>
-    <div class="stat-card"><div class="stat-label">Consultas hoy</div><div class="stat-value">${hoyCount}</div></div>
-    <div class="stat-card stat-danger"><div class="stat-label">Alertas sin leer</div><div class="stat-value">${(notifs||[]).length}</div></div>
-  `;
-  document.getElementById('pendCount').textContent = pendientes.length;
-  document.getElementById('pendBody').innerHTML = pendientes.slice(0,5).map(c=>{
-    const p=c.pacientes||{}; const n=c.nivel_sintomas;
-    return `<tr><td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${p.clientes_b2b?.nombre_empresa||''}</span></td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td><td>${n===3?'<span class="badge badge-red">Grave</span>':n===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button></td></tr>`;
-  }).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:1.5rem">Sin consultas pendientes</td></tr>';
-  document.getElementById('recentNotifs').innerHTML = (notifs||[]).map(n=>`
-    <div style="padding:10px 0;border-bottom:1px solid #f5f5f5">
-      <div style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva consulta'}</div>
-      <div style="font-size:13px;color:#333;margin-top:2px">${n.titulo}</div>
-      <div style="font-size:12px;color:#888">${n.mensaje}</div>
-    </div>
-  `).join('')||'<div class="empty-state" style="padding:1.5rem">Sin alertas</div>';
+async function loadDashboard(){
+  const[consultas,pacientes,notifs]=await Promise.all([supa('GET','consultas',null,'?select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc'),supa('GET','pacientes',null,'?select=count'),supa('GET','notificaciones',null,'?leida=eq.false&order=created_at.desc&limit=5')]);
+  const pendientes=(consultas||[]).filter(c=>c.estado==='pendiente');
+  const hoy=new Date().toDateString();
+  const hoyCount=(consultas||[]).filter(c=>new Date(c.created_at).toDateString()===hoy).length;
+  document.getElementById('statsGrid').innerHTML=`<div class="stat-card stat-warning"><div class="stat-label">Consultas pendientes</div><div class="stat-value">${pendientes.length}</div><div class="stat-sub">Por atender</div></div><div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div><div class="stat-card"><div class="stat-label">Consultas hoy</div><div class="stat-value">${hoyCount}</div></div><div class="stat-card stat-danger"><div class="stat-label">Alertas sin leer</div><div class="stat-value">${(notifs||[]).length}</div></div>`;
+  document.getElementById('pendCount').textContent=pendientes.length;
+  document.getElementById('pendBody').innerHTML=pendientes.slice(0,5).map(c=>{const p=c.pacientes||{};const n=c.nivel_sintomas;return`<tr><td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${p.clientes_b2b?.nombre_empresa||''}</span></td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td><td>${n===3?'<span class="badge badge-red">Grave</span>':n===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button></td></tr>`;}).join('')||'<tr><td colspan="4" style="text-align:center;color:#aaa;padding:1.5rem">Sin consultas pendientes</td></tr>';
+  document.getElementById('recentNotifs').innerHTML=(notifs||[]).map(n=>`<div style="padding:10px 0;border-bottom:1px solid #f5f5f5"><div style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva consulta'}</div><div style="font-size:13px;color:#333;margin-top:2px">${n.titulo}</div><div style="font-size:12px;color:#888">${n.mensaje}</div></div>`).join('')||'<div class="empty-state" style="padding:1.5rem">Sin alertas</div>';
 }
 
-async function loadPacientes() {
-  const data = await supa('GET','pacientes',null,'?select=*,clientes_b2b(nombre_empresa,nombre_seguro)&order=created_at.desc');
-  pacientesData = data||[];
-  document.getElementById('pacCount').textContent = pacientesData.length;
-  renderPacientes(pacientesData);
+async function loadPacientes(){
+  const data=await supa('GET','pacientes',null,'?select=*,clientes_b2b(nombre_empresa,nombre_seguro)&order=created_at.desc');
+  pacientesData=data||[];document.getElementById('pacCount').textContent=pacientesData.length;renderPacientes(pacientesData);
 }
-
-function renderPacientes(list) {
-  document.getElementById('pacBody').innerHTML = list.map(p=>`
-    <tr>
-      <td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong></td>
-      <td>${p.cedula||'—'}</td>
-      <td>${p.clientes_b2b?.nombre_empresa||'—'}</td>
-      <td>${p.telefono||'—'}</td>
-      <td>${p.lugar_residencia||'—'}</td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.correo||'—'}</td>
-      <td><button class="btn btn-sm" onclick="showPacienteDetalle('${p.id}')">Ver</button></td>
-    </tr>
-  `).join('')||'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:2rem">Sin pacientes</td></tr>';
+function renderPacientes(list){
+  document.getElementById('pacBody').innerHTML=list.map(p=>`<tr><td><strong>${p.nombre||'—'} ${p.apellidos||''}</strong></td><td>${p.cedula||'—'}</td><td>${p.clientes_b2b?.nombre_empresa||'—'}</td><td>${p.telefono||'—'}</td><td>${p.lugar_residencia||'—'}</td><td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.correo||'—'}</td><td><button class="btn btn-sm" onclick="showPacienteDetalle('${p.id}')">Ver</button></td></tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:#aaa;padding:2rem">Sin pacientes</td></tr>';
 }
-
-function filterPacientes() {
-  const q = document.getElementById('searchPac').value.toLowerCase();
+function filterPacientes(){
+  const q=document.getElementById('searchPac').value.toLowerCase();
   renderPacientes(pacientesData.filter(p=>(p.nombre||'').toLowerCase().includes(q)||(p.apellidos||'').toLowerCase().includes(q)||(p.cedula||'').includes(q)));
 }
 
-async function showPacienteDetalle(id) {
-  currentPacienteId = id;
-  const pac = pacientesData.find(x=>x.id===id)||(await supa('GET','pacientes',null,`?id=eq.${id}&select=*,clientes_b2b(*)`)||[])[0];
-  if (!pac) return;
-  const init = ((pac.nombre||'?')[0]+(pac.apellidos||'?')[0]).toUpperCase();
-  document.getElementById('patientHeader').innerHTML = `
-    <div class="patient-avatar-lg">${init}</div>
-    <div style="flex:1"><div class="patient-name">${pac.nombre||''} ${pac.apellidos||''}</div>
-    <div class="patient-meta">Cédula: ${pac.cedula||'—'} · ${pac.clientes_b2b?.nombre_empresa||'—'}</div></div>
-  `;
-  document.getElementById('detailGrid').innerHTML = [
-    ['Edad',pac.edad||'—'],['Nacimiento',pac.fecha_nacimiento||'—'],['Correo',pac.correo||'—'],
-    ['Teléfono',pac.telefono||'—'],['Residencia',pac.lugar_residencia||'—'],['Empresa',pac.clientes_b2b?.nombre_empresa||'—']
-  ].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
-  const consultas = await supa('GET','consultas',null,`?paciente_id=eq.${id}&order=created_at.desc`)||[];
-  document.getElementById('patConsultas').innerHTML = consultas.length?`
-    <table class="table"><thead><tr><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th></tr></thead>
-    <tbody>${consultas.map(c=>`<tr><td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td><td>${c.sintomas_descripcion||'—'}</td><td>${c.diagnostico||'—'}</td><td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><span class="badge badge-gray">${c.estado}</span></td></tr>`).join('')}</tbody></table>`
-    :'<div class="empty-state">Sin consultas</div>';
-  const seguimientos = await supa('GET','recordatorios',null,`?paciente_id=eq.${id}&activo=eq.true`)||[];
-  document.getElementById('seguimientoList').innerHTML = seguimientos.length?
-    seguimientos.map(s=>`<div class="detail-item" style="margin-bottom:8px"><div class="detail-label">Medicamento</div><div class="detail-value">${s.medicamento||'—'}</div><div style="font-size:12px;color:#888;margin-top:4px">Cada ${s.frecuencia_horas}h · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div></div>`).join('')
-    :'<div class="empty-state">Sin seguimientos activos</div>';
+async function showPacienteDetalle(id){
+  currentPacienteId=id;
+  const pac=pacientesData.find(x=>x.id===id)||(await supa('GET','pacientes',null,`?id=eq.${id}&select=*,clientes_b2b(*)`)||[])[0];
+  if(!pac)return;
+  const init=((pac.nombre||'?')[0]+(pac.apellidos||'?')[0]).toUpperCase();
+  document.getElementById('patientHeader').innerHTML=`<div class="patient-avatar-lg">${init}</div><div style="flex:1"><div class="patient-name">${pac.nombre||''} ${pac.apellidos||''}</div><div class="patient-meta">Cédula: ${pac.cedula||'—'} · ${pac.clientes_b2b?.nombre_empresa||'—'}</div></div>`;
+  document.getElementById('detailGrid').innerHTML=[['Edad',pac.edad||'—'],['Nacimiento',pac.fecha_nacimiento||'—'],['Correo',pac.correo||'—'],['Teléfono',pac.telefono||'—'],['Residencia',pac.lugar_residencia||'—'],['Empresa',pac.clientes_b2b?.nombre_empresa||'—']].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
+  const consultas=await supa('GET','consultas',null,`?paciente_id=eq.${id}&order=created_at.desc`)||[];
+  document.getElementById('patConsultas').innerHTML=consultas.length?`<table class="table"><thead><tr><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th></tr></thead><tbody>${consultas.map(c=>`<tr><td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td><td>${c.sintomas_descripcion||'—'}</td><td>${c.diagnostico||'—'}</td><td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><span class="badge badge-gray">${c.estado}</span></td></tr>`).join('')}</tbody></table>`:'<div class="empty-state">Sin consultas</div>';
+  const seguimientos=await supa('GET','recordatorios',null,`?paciente_id=eq.${id}&activo=eq.true`)||[];
+  document.getElementById('seguimientoList').innerHTML=seguimientos.length?seguimientos.map(s=>`<div class="detail-item" style="margin-bottom:8px"><div class="detail-label">Medicamento</div><div class="detail-value">${s.medicamento||'—'}</div><div style="font-size:12px;color:#888;margin-top:4px">Cada ${s.frecuencia_horas}h · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div></div>`).join(''):'<div class="empty-state">Sin seguimientos activos</div>';
   showPage('paciente-detalle');
   document.querySelectorAll('#page-paciente-detalle .tab').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('#page-paciente-detalle .tab-content').forEach(t=>t.classList.remove('active'));
@@ -698,521 +1098,311 @@ async function showPacienteDetalle(id) {
   cargarCronicas(id);
 }
 
-function switchTab(el,tabId) {
-  el.closest('.tab-bar').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-  el.closest('.page').querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
+function switchTab(el,tabId){
+  el.closest('.tab-bar').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');
+  el.closest('.page').querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.getElementById(tabId).classList.add('active');
 }
 
-async function loadConsultas() {
-  const estado = document.getElementById('filterEstado')?.value||'';
-  const q = estado?`?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc&estado=eq.${estado}`:'?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc';
-  const consultas = await supa('GET','consultas',null,q)||[];
-  document.getElementById('consultasBody').innerHTML = consultas.map(c=>`
-    <tr>
-      <td><strong>${c.pacientes?.nombre||'—'} ${c.pacientes?.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${c.pacientes?.cedula||''}</span></td>
-      <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td>
-      <td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td>
-      <td><span class="badge badge-gray">${c.estado}</span></td>
-      <td style="display:flex;gap:4px;flex-wrap:wrap">
-        ${c.estado==='pendiente'?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>`:''}
-        <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">💊 Receta</button>
-        ${c.estado!=='completada'?`<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓</button>`:''}
-      </td>
-    </tr>
-  `).join('')||'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
+async function loadConsultas(){
+  const estado=document.getElementById('filterEstado')?.value||'';
+  const q=estado?`?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc&estado=eq.${estado}`:'?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc';
+  const consultas=await supa('GET','consultas',null,q)||[];
+  document.getElementById('consultasBody').innerHTML=consultas.map(c=>`<tr><td><strong>${c.pacientes?.nombre||'—'} ${c.pacientes?.apellidos||''}</strong><br><span style="font-size:11px;color:#aaa">${c.pacientes?.cedula||''}</span></td><td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion||'—'}</td><td>${c.nivel_sintomas===3?'<span class="badge badge-red">Grave</span>':c.nivel_sintomas===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td><td><span class="badge badge-gray">${c.estado}</span></td><td style="display:flex;gap:4px;flex-wrap:wrap">${c.estado==='pendiente'?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>`:''}<button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">💊 Receta</button>${c.estado!=='completada'?`<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓</button>`:''}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
 }
 
-async function marcarCompletada(id) {
-  await supa('PATCH','consultas',{estado:'completada'},`?id=eq.${id}`);
-  loadConsultas(); showToast('✓ Consulta completada');
-}
+async function marcarCompletada(id){await supa('PATCH','consultas',{estado:'completada'},`?id=eq.${id}`);loadConsultas();showToast('✓ Consulta completada');}
 
-async function loadNotificaciones() {
-  const notifs = await supa('GET','notificaciones',null,'?order=created_at.desc&limit=100')||[];
-  const sinLeer = notifs.filter(n=>!n.leida);
-  const urgentes = notifs.filter(n=>n.tipo==='urgente'&&!n.leida);
-  const hoy = new Date().toDateString();
-  const atendidas = notifs.filter(n=>n.leida&&new Date(n.created_at).toDateString()===hoy);
-  document.getElementById('op-pending').textContent = sinLeer.length;
-  document.getElementById('op-urgent').textContent = urgentes.length;
-  document.getElementById('op-done').textContent = atendidas.length;
-  document.getElementById('op-total').textContent = notifs.length;
+async function loadNotificaciones(){
+  const notifs=await supa('GET','notificaciones',null,'?order=created_at.desc&limit=100')||[];
+  const sinLeer=notifs.filter(n=>!n.leida),urgentes=notifs.filter(n=>n.tipo==='urgente'&&!n.leida);
+  const hoy=new Date().toDateString(),atendidas=notifs.filter(n=>n.leida&&new Date(n.created_at).toDateString()===hoy);
+  document.getElementById('op-pending').textContent=sinLeer.length;
+  document.getElementById('op-urgent').textContent=urgentes.length;
+  document.getElementById('op-done').textContent=atendidas.length;
+  document.getElementById('op-total').textContent=notifs.length;
   updateNotifBadge(sinLeer.length);
-  document.getElementById('notifBody').innerHTML = notifs.map(n=>`
-    <tr style="${n.leida?'':'background:#fffbeb'}">
-      <td><span style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva'}</span></td>
-      <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
-      <td style="white-space:nowrap;font-size:12px;color:#888">${new Date(n.created_at).toLocaleString('es-EC')}</td>
-      <td>${n.leida?'<span class="badge badge-gray">Leída</span>':'<span class="badge badge-blue">Nueva</span>'}</td>
-      <td style="display:flex;gap:4px">
-        ${n.consulta_id&&!n.leida?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>`:''}
-        ${!n.leida?`<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓</button>`:''}
-      </td>
-    </tr>
-  `).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin notificaciones</td></tr>';
-  document.getElementById('notifList').innerHTML = notifs.slice(0,8).map(n=>`
-    <div class="notif-item ${n.leida?'':'unread'}" onclick="marcarLeida('${n.id}')">
-      <div class="notif-tipo ${n.tipo==='urgente'?'notif-urgente':'notif-nueva'}">${n.tipo==='urgente'?'⚠️ URGENTE':'📅 NUEVA'}</div>
-      <div class="notif-titulo">${n.titulo}</div>
-      <div class="notif-msg">${n.mensaje}</div>
-      <div class="notif-time">${new Date(n.created_at).toLocaleString('es-EC')}</div>
-    </div>
-  `).join('')||'<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
+  document.getElementById('notifBody').innerHTML=notifs.map(n=>`<tr style="${n.leida?'':'background:#fffbeb'}"><td><span style="font-size:12px;font-weight:600;color:${n.tipo==='urgente'?'#dc2626':'#2563eb'}">${n.tipo==='urgente'?'⚠️ Urgente':'📅 Nueva'}</span></td><td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td><td style="white-space:nowrap;font-size:12px;color:#888">${new Date(n.created_at).toLocaleString('es-EC')}</td><td>${n.leida?'<span class="badge badge-gray">Leída</span>':'<span class="badge badge-blue">Nueva</span>'}</td><td style="display:flex;gap:4px">${n.consulta_id&&!n.leida?`<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>`:''} ${!n.leida?`<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓</button>`:''}</td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin notificaciones</td></tr>';
+  document.getElementById('notifList').innerHTML=notifs.slice(0,8).map(n=>`<div class="notif-item ${n.leida?'':'unread'}" onclick="marcarLeida('${n.id}')"><div class="notif-tipo ${n.tipo==='urgente'?'notif-urgente':'notif-nueva'}">${n.tipo==='urgente'?'⚠️ URGENTE':'📅 NUEVA'}</div><div class="notif-titulo">${n.titulo}</div><div class="notif-msg">${n.mensaje}</div><div class="notif-time">${new Date(n.created_at).toLocaleString('es-EC')}</div></div>`).join('')||'<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
 }
 
-async function marcarLeida(id) { await supa('PATCH','notificaciones',{leida:true},`?id=eq.${id}`); loadNotificaciones(); }
-async function marcarTodasLeidas() { await supa('PATCH','notificaciones',{leida:true},'?leida=eq.false'); loadNotificaciones(); showToast('✓ Todas marcadas como leídas'); }
+async function marcarLeida(id){await supa('PATCH','notificaciones',{leida:true},`?id=eq.${id}`);loadNotificaciones();}
+async function marcarTodasLeidas(){await supa('PATCH','notificaciones',{leida:true},'?leida=eq.false');loadNotificaciones();showToast('✓ Todas marcadas como leídas');}
+function updateNotifBadge(c){const b=document.getElementById('notifCount');b.textContent=c;b.style.display=c>0?'flex':'none';}
+function toggleNotif(){const p=document.getElementById('notifPanel');p.classList.toggle('open');if(p.classList.contains('open'))loadNotificaciones();}
+function startNotifPolling(){notifInterval=setInterval(async()=>{const n=await supa('GET','notificaciones',null,'?leida=eq.false');const c=(n||[]).length;updateNotifBadge(c);if(c>lastNotifCount&&lastNotifCount>=0){const l=(n||[])[0];if(l)showToast(`🔔 ${l.titulo}`);}lastNotifCount=c;},10000);}
 
-function updateNotifBadge(count) {
-  const badge = document.getElementById('notifCount');
-  badge.textContent = count;
-  badge.style.display = count>0?'flex':'none';
-}
-
-function toggleNotif() {
-  const panel = document.getElementById('notifPanel');
-  panel.classList.toggle('open');
-  if (panel.classList.contains('open')) loadNotificaciones();
-}
-
-function startNotifPolling() {
-  notifInterval = setInterval(async () => {
-    const notifs = await supa('GET','notificaciones',null,'?leida=eq.false');
-    const count = (notifs||[]).length;
-    updateNotifBadge(count);
-    if (count > lastNotifCount && lastNotifCount >= 0) {
-      const latest = (notifs||[])[0];
-      if (latest) showToast(`🔔 ${latest.titulo}`);
-    }
-    lastNotifCount = count;
-  }, 10000);
-}
-
-async function openAgendar(consultaId, pacienteId) {
-  currentConsultaId = consultaId; currentPacienteId = pacienteId;
-  const [pac, medicos] = await Promise.all([
-    supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
-    supa('GET','usuarios',null,'?rol=eq.medico&activo=eq.true')
-  ]);
-  const p = (pac||[])[0]||{};
-  document.getElementById('popupPacienteInfo').innerHTML = `<strong>${p.nombre||''} ${p.apellidos||''}</strong> · Cédula: ${p.cedula||'—'}<br>Empresa: ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}`;
-  document.getElementById('medicoAsignado').innerHTML = (medicos||[]).map(m=>`<option value="${m.id}">${m.nombre} ${m.apellidos} — ${m.especialidad||'Medicina General'}</option>`).join('')||'<option>Sin médicos</option>';
-  const now = new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
-  document.getElementById('fechaConfirmada').value = now.toISOString().slice(0,16);
+async function openAgendar(consultaId,pacienteId){
+  currentConsultaId=consultaId;currentPacienteId=pacienteId;
+  const[pac,medicos]=await Promise.all([supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),supa('GET','usuarios',null,'?rol=eq.medico&activo=eq.true')]);
+  const p=(pac||[])[0]||{};
+  document.getElementById('popupPacienteInfo').innerHTML=`<strong>${p.nombre||''} ${p.apellidos||''}</strong> · Cédula: ${p.cedula||'—'}<br>Empresa: ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}`;
+  document.getElementById('medicoAsignado').innerHTML=(medicos||[]).map(m=>`<option value="${m.id}">${m.nombre} ${m.apellidos} — ${m.especialidad||'Medicina General'}</option>`).join('')||'<option>Sin médicos</option>';
+  const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById('fechaConfirmada').value=now.toISOString().slice(0,16);
   document.getElementById('popupAgendar').classList.add('open');
 }
 
-async function confirmarAgendamiento() {
-  const medicoId = document.getElementById('medicoAsignado').value;
-  const fecha = document.getElementById('fechaConfirmada').value;
-  const notas = document.getElementById('notasOperador').value;
-  if (!fecha) { alert('Seleccione fecha y hora'); return; }
+async function confirmarAgendamiento(){
+  const medicoId=document.getElementById('medicoAsignado').value,fecha=document.getElementById('fechaConfirmada').value,notas=document.getElementById('notasOperador').value;
+  if(!fecha){alert('Seleccione fecha y hora');return;}
   await supa('PATCH','consultas',{estado:'confirmada',medico_id:medicoId,updated_at:new Date().toISOString()},`?id=eq.${currentConsultaId}`);
   await supa('POST','notificaciones',{tipo:'confirmacion',titulo:'✅ Consulta confirmada',mensaje:`Su teleconsulta fue confirmada para ${new Date(fecha).toLocaleString('es-EC')}. ${notas||''}`,paciente_id:currentPacienteId,consulta_id:currentConsultaId});
-  closePopup(); showToast('✓ Consulta agendada'); loadDashboard();
+  closePopup();showToast('✓ Consulta agendada');loadDashboard();
 }
+function closePopup(){document.getElementById('popupAgendar').classList.remove('open');}
 
-function closePopup() { document.getElementById('popupAgendar').classList.remove('open'); }
-
-async function openReceta(consultaId, pacienteId) {
-  recetaConsultaId = consultaId; recetaPacienteId = pacienteId;
-  medicamentosData = [];
-  cie10Seleccionados = [];
-  document.getElementById('recetaDiagnostico').value='';
-  document.getElementById('cie10Search').value='';
-  document.getElementById('cie10Dropdown').style.display='none';
-  document.getElementById('cie10Seleccionados').innerHTML='';
-  document.getElementById('recetaNotas').value='';
-  document.getElementById('recetaIndicaciones').value='';
-  document.getElementById('medicamentosLista').innerHTML='';
-  const pac = await supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`);
-  const p = (pac||[])[0]||{};
-  const init = ((p.nombre||'?')[0]+(p.apellidos||'?')[0]).toUpperCase();
-  document.getElementById('recetaPacienteHeader').innerHTML = `
-    <div class="patient-avatar-lg">${init}</div>
-    <div><div class="patient-name">${p.nombre||''} ${p.apellidos||''}</div>
-    <div class="patient-meta">Cédula: ${p.cedula||'—'} · ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}</div></div>
-  `;
+async function openReceta(consultaId,pacienteId){
+  recetaConsultaId=consultaId;recetaPacienteId=pacienteId;medicamentosData=[];cie10Seleccionados=[];
+  plantillaSeleccionada=null;
+  document.querySelectorAll('.plantilla-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('btnAbrirPlantilla').style.display='none';
+  document.getElementById('recetaDiagnostico').value='';document.getElementById('cie10Search').value='';
+  document.getElementById('cie10Dropdown').style.display='none';document.getElementById('cie10Seleccionados').innerHTML='';
+  document.getElementById('recetaNotas').value='';document.getElementById('recetaIndicaciones').value='';document.getElementById('medicamentosLista').innerHTML='';
+  const[pacArr,consultaArr]=await Promise.all([supa('GET','pacientes',null,`?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),supa('GET','consultas',null,`?id=eq.${consultaId}`)]);
+  currentPacienteData=(pacArr||[])[0]||{};currentConsultaData=(consultaArr||[])[0]||{};
+  const p=currentPacienteData;const init=((p.nombre||'?')[0]+(p.apellidos||'?')[0]).toUpperCase();
+  document.getElementById('recetaPacienteHeader').innerHTML=`<div class="patient-avatar-lg">${init}</div><div><div class="patient-name">${p.nombre||''} ${p.apellidos||''}</div><div class="patient-meta">Cédula: ${p.cedula||'—'} · ${p.clientes_b2b?.nombre_empresa||'—'} · Tel: ${p.telefono||'—'}</div></div>`;
   showPage('receta');
 }
 
-function agregarMedicamento() {
-  const id = Date.now();
-  medicamentosData.push({id,nombre:'',dosis:'',frecuencia_horas:8,dias:5});
-  renderMedicamentos();
+function agregarMedicamento(){const id=Date.now();medicamentosData.push({id,nombre:'',dosis:'',frecuencia_horas:8,dias:5});renderMedicamentos();}
+function renderMedicamentos(){
+  document.getElementById('medicamentosLista').innerHTML=medicamentosData.map((m,i)=>`<div style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:8px;border:1px solid #eee"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:13px;font-weight:600;color:#555">Medicamento ${i+1}</span><button class="btn btn-sm btn-danger" onclick="quitarMedicamento(${m.id})">✕</button></div><div class="two-col" style="gap:8px"><div class="form-group" style="margin:0"><label class="form-label">Medicamento *</label><input type="text" class="form-control" value="${m.nombre}" onchange="updateMed(${m.id},'nombre',this.value)" placeholder="Ej: Paracetamol 500mg" /></div><div class="form-group" style="margin:0"><label class="form-label">Dosis</label><input type="text" class="form-control" value="${m.dosis}" onchange="updateMed(${m.id},'dosis',this.value)" placeholder="Ej: 1 tableta" /></div><div class="form-group" style="margin:0"><label class="form-label">Frecuencia</label><select class="form-control" onchange="updateMed(${m.id},'frecuencia_horas',parseInt(this.value))"><option value="4" ${m.frecuencia_horas===4?'selected':''}>Cada 4 horas</option><option value="6" ${m.frecuencia_horas===6?'selected':''}>Cada 6 horas</option><option value="8" ${m.frecuencia_horas===8?'selected':''}>Cada 8 horas</option><option value="12" ${m.frecuencia_horas===12?'selected':''}>Cada 12 horas</option><option value="24" ${m.frecuencia_horas===24?'selected':''}>Una vez al día</option></select></div><div class="form-group" style="margin:0"><label class="form-label">Duración (días) *</label><input type="number" class="form-control" value="${m.dias}" min="1" max="90" onchange="updateMed(${m.id},'dias',parseInt(this.value))" /></div></div></div>`).join('')||'<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Agregue al menos un medicamento</div>';
 }
+function updateMed(id,campo,valor){const m=medicamentosData.find(x=>x.id===id);if(m)m[campo]=valor;}
+function quitarMedicamento(id){medicamentosData=medicamentosData.filter(x=>x.id!==id);renderMedicamentos();}
 
-function renderMedicamentos() {
-  document.getElementById('medicamentosLista').innerHTML = medicamentosData.map((m,i)=>`
-    <div style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:8px;border:1px solid #eee">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:600;color:#555">Medicamento ${i+1}</span>
-        <button class="btn btn-sm btn-danger" onclick="quitarMedicamento(${m.id})">✕</button>
-      </div>
-      <div class="two-col" style="gap:8px">
-        <div class="form-group" style="margin:0"><label class="form-label">Medicamento *</label><input type="text" class="form-control" value="${m.nombre}" onchange="updateMed(${m.id},'nombre',this.value)" placeholder="Ej: Paracetamol 500mg" /></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Dosis</label><input type="text" class="form-control" value="${m.dosis}" onchange="updateMed(${m.id},'dosis',this.value)" placeholder="Ej: 1 tableta" /></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Frecuencia</label>
-          <select class="form-control" onchange="updateMed(${m.id},'frecuencia_horas',parseInt(this.value))">
-            <option value="4" ${m.frecuencia_horas===4?'selected':''}>Cada 4 horas</option>
-            <option value="6" ${m.frecuencia_horas===6?'selected':''}>Cada 6 horas</option>
-            <option value="8" ${m.frecuencia_horas===8?'selected':''}>Cada 8 horas</option>
-            <option value="12" ${m.frecuencia_horas===12?'selected':''}>Cada 12 horas</option>
-            <option value="24" ${m.frecuencia_horas===24?'selected':''}>Una vez al día</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">Duración (días) *</label><input type="number" class="form-control" value="${m.dias}" min="1" max="90" onchange="updateMed(${m.id},'dias',parseInt(this.value))" /></div>
-      </div>
-    </div>
-  `).join('')||'<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Agregue al menos un medicamento</div>';
-}
-
-function updateMed(id,campo,valor) { const m=medicamentosData.find(x=>x.id===id); if(m) m[campo]=valor; }
-function quitarMedicamento(id) { medicamentosData=medicamentosData.filter(x=>x.id!==id); renderMedicamentos(); }
-
-async function guardarReceta() {
-  if (medicamentosData.length===0) { alert('Agregue al menos un medicamento'); return; }
-  if (medicamentosData.filter(m=>!m.nombre||!m.dias).length>0) { alert('Complete nombre y duración de todos los medicamentos'); return; }
-  const diagnostico = document.getElementById('recetaDiagnostico').value;
-  if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
-  const activar = document.getElementById('activarSeguimiento').checked;
-  const ahora = new Date();
-  const recetaRes = await supa('POST','recetas',{
-    consulta_id:recetaConsultaId, paciente_id:recetaPacienteId, medico_id:currentUser.id,
-    medicamentos:medicamentosData, diagnostico,
-    cie10_codigos: cie10Seleccionados,
-    indicaciones:document.getElementById('recetaIndicaciones').value,
-    seguimiento_activo:activar,
-    fecha_inicio:ahora.toISOString(),
-    fecha_fin:new Date(ahora.getTime()+Math.max(...medicamentosData.map(m=>m.dias))*86400000).toISOString()
-  });
-  const receta_id = (recetaRes||[])[0]?.id;
+async function guardarReceta(){
+  if(medicamentosData.length===0){alert('Agregue al menos un medicamento');return;}
+  if(medicamentosData.filter(m=>!m.nombre||!m.dias).length>0){alert('Complete nombre y duración de todos los medicamentos');return;}
+  const diagnostico=document.getElementById('recetaDiagnostico').value;
+  if(!diagnostico){alert('Ingrese el diagnóstico');return;}
+  const activar=document.getElementById('activarSeguimiento').checked,ahora=new Date();
+  const recetaRes=await supa('POST','recetas',{consulta_id:recetaConsultaId,paciente_id:recetaPacienteId,medico_id:currentUser.id,medicamentos:medicamentosData,diagnostico,cie10_codigos:cie10Seleccionados,indicaciones:document.getElementById('recetaIndicaciones').value,seguimiento_activo:activar,fecha_inicio:ahora.toISOString(),fecha_fin:new Date(ahora.getTime()+Math.max(...medicamentosData.map(m=>m.dias))*86400000).toISOString()});
+  const receta_id=(recetaRes||[])[0]?.id;
   await supa('PATCH','consultas',{diagnostico,notas_medico:document.getElementById('recetaNotas').value,estado:'completada',medico_id:currentUser.id},`?id=eq.${recetaConsultaId}`);
-  const pacData = await supa('GET','pacientes',null,`?id=eq.${recetaPacienteId}`);
-  const pac = (pacData||[])[0]||{};
-  const telRaw = pac.telefono||'';
-  const telefono = telRaw ? `whatsapp:+593${telRaw.replace(/^0/,'')}` : null;
-  if (activar && receta_id && telefono) {
-    for (const med of medicamentosData) {
-      const fechaFin = new Date(ahora.getTime()+med.dias*86400000);
-      await supa('POST','recordatorios',{
-        receta_id, paciente_id:recetaPacienteId, telefono,
-        medicamento:med.nombre, dosis:med.dosis||'',
-        frecuencia_horas:med.frecuencia_horas,
-        fecha_proximo:new Date(ahora.getTime()+med.frecuencia_horas*3600000).toISOString(),
-        fecha_fin:fechaFin.toISOString(),
-        activo:true, tipo:'medicamento'
-      });
-    }
+  const pac=currentPacienteData,telRaw=pac.telefono||'',telefono=telRaw?`whatsapp:+593${telRaw.replace(/^0/,'')}`:null;
+  if(activar&&receta_id&&telefono){
+    for(const med of medicamentosData){await supa('POST','recordatorios',{receta_id,paciente_id:recetaPacienteId,telefono,medicamento:med.nombre,dosis:med.dosis||'',frecuencia_horas:med.frecuencia_horas,fecha_proximo:new Date(ahora.getTime()+med.frecuencia_horas*3600000).toISOString(),fecha_fin:new Date(ahora.getTime()+med.dias*86400000).toISOString(),activo:true,tipo:'medicamento'});}
     showToast(`✓ Receta emitida y ${medicamentosData.length} recordatorio(s) activados`);
-  } else {
-    showToast('✓ Receta emitida exitosamente');
-  }
-  showPage('consultas'); loadConsultas();
+  }else{showToast('✓ Receta emitida exitosamente');}
+  showPage('consultas');loadConsultas();
 }
 
-async function loadUsuarios() {
-  const users = await supa('GET','usuarios',null,'?order=created_at.desc')||[];
-  document.getElementById('usuariosBody').innerHTML = users.map(u=>`
-    <tr>
-      <td><strong>${u.nombre} ${u.apellidos}</strong></td>
-      <td>${u.correo}</td>
-      <td>${u.rol==='admin'?'<span class="rol-badge rol-admin">Admin</span>':u.rol==='medico'?'<span class="rol-badge rol-medico">Médico</span>':'<span class="rol-badge rol-operador">Operador</span>'}</td>
-      <td>${u.especialidad||'—'}</td>
-      <td>${u.numero_registro||'—'}</td>
-      <td>${u.firma_digital?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">—</span>'}</td>
-      <td>${u.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td>
-      <td><button class="btn btn-sm ${u.activo?'btn-danger':''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo?'Desactivar':'Activar'}</button></td>
-    </tr>
-  `).join('');
+async function loadUsuarios(){
+  const users=await supa('GET','usuarios',null,'?order=created_at.desc')||[];
+  document.getElementById('usuariosBody').innerHTML=users.map(u=>`<tr><td><strong>${u.nombre} ${u.apellidos}</strong></td><td>${u.correo}</td><td>${u.rol==='admin'?'<span class="rol-badge rol-admin">Admin</span>':u.rol==='medico'?'<span class="rol-badge rol-medico">Médico</span>':'<span class="rol-badge rol-operador">Operador</span>'}</td><td>${u.especialidad||'—'}</td><td>${u.numero_registro||'—'}</td><td>${u.firma_digital?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">—</span>'}</td><td>${u.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td><td><button class="btn btn-sm ${u.activo?'btn-danger':''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo?'Desactivar':'Activar'}</button></td></tr>`).join('');
 }
-
-async function saveUser() {
+async function saveUser(){
   const data={nombre:document.getElementById('newNombre').value,apellidos:document.getElementById('newApellidos').value,correo:document.getElementById('newCorreo').value,password_hash:document.getElementById('newPass').value,rol:document.getElementById('newRol').value,especialidad:document.getElementById('newEsp').value||null,numero_registro:document.getElementById('newReg').value||null};
-  if (!data.nombre||!data.correo||!data.password_hash) { alert('Complete los campos obligatorios'); return; }
-  await supa('POST','usuarios',data);
-  document.getElementById('addUserForm').style.display='none';
-  loadUsuarios(); showToast('✓ Usuario creado');
+  if(!data.nombre||!data.correo||!data.password_hash){alert('Complete los campos obligatorios');return;}
+  await supa('POST','usuarios',data);document.getElementById('addUserForm').style.display='none';loadUsuarios();showToast('✓ Usuario creado');
+}
+async function toggleUser(id,activo){await supa('PATCH','usuarios',{activo:!activo},`?id=eq.${id}`);loadUsuarios();}
+
+async function loadPerfil(){
+  if(!currentUser)return;
+  document.getElementById('perfilContent').innerHTML=`<div class="detail-grid">${[['Nombre',currentUser.nombre+' '+currentUser.apellidos],['Correo',currentUser.correo],['Rol',currentUser.rol],['Especialidad',currentUser.especialidad||'—'],['Reg. MSP',currentUser.numero_registro||'—']].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}</div>`;
+  if(currentUser.firma_digital)document.getElementById('firmaPreview').innerHTML=`<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
+  if(currentUser.sello)document.getElementById('selloPreview').innerHTML=`<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
+}
+function previewFirma(input,previewId,type){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{firmaData[type]=e.target.result;document.getElementById(previewId).innerHTML=`<img src="${e.target.result}" style="max-height:80px;max-width:100%" />`;};reader.readAsDataURL(file);}
+async function saveFirma(){
+  const update={};if(firmaData.firma)update.firma_digital=firmaData.firma;if(firmaData.sello)update.sello=firmaData.sello;
+  if(Object.keys(update).length===0){alert('Suba al menos una imagen');return;}
+  await supa('PATCH','usuarios',update,`?id=eq.${currentUser.id}`);currentUser={...currentUser,...update};saveSession(currentUser);showToast('✓ Firma y sello guardados');
+}
+async function changePassword(){
+  const np=document.getElementById('newPassChange').value,cp=document.getElementById('confirmPassChange').value;
+  if(!np||np!==cp){alert('Las contraseñas no coinciden');return;}
+  await supa('PATCH','usuarios',{password_hash:np},`?id=eq.${currentUser.id}`);currentUser.password_hash=np;saveSession(currentUser);
+  document.getElementById('newPassChange').value='';document.getElementById('confirmPassChange').value='';showToast('✓ Contraseña actualizada');
 }
 
-async function toggleUser(id,activo) { await supa('PATCH','usuarios',{activo:!activo},`?id=eq.${id}`); loadUsuarios(); }
-
-async function loadPerfil() {
-  if (!currentUser) return;
-  document.getElementById('perfilContent').innerHTML = `<div class="detail-grid">${[['Nombre',currentUser.nombre+' '+currentUser.apellidos],['Correo',currentUser.correo],['Rol',currentUser.rol],['Especialidad',currentUser.especialidad||'—'],['Reg. MSP',currentUser.numero_registro||'—']].map(([l,v])=>`<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('')}</div>`;
-  if (currentUser.firma_digital) document.getElementById('firmaPreview').innerHTML=`<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
-  if (currentUser.sello) document.getElementById('selloPreview').innerHTML=`<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
-}
-
-function previewFirma(input,previewId,type) {
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{ firmaData[type]=e.target.result; document.getElementById(previewId).innerHTML=`<img src="${e.target.result}" style="max-height:80px;max-width:100%" />`; };
-  reader.readAsDataURL(file);
-}
-
-async function saveFirma() {
-  const update={};
-  if (firmaData.firma) update.firma_digital=firmaData.firma;
-  if (firmaData.sello) update.sello=firmaData.sello;
-  if (Object.keys(update).length===0) { alert('Suba al menos una imagen'); return; }
-  await supa('PATCH','usuarios',update,`?id=eq.${currentUser.id}`);
-  currentUser={...currentUser,...update}; saveSession(currentUser);
-  showToast('✓ Firma y sello guardados');
-}
-
-async function changePassword() {
-  const np=document.getElementById('newPassChange').value;
-  const cp=document.getElementById('confirmPassChange').value;
-  if (!np||np!==cp) { alert('Las contraseñas no coinciden'); return; }
-  await supa('PATCH','usuarios',{password_hash:np},`?id=eq.${currentUser.id}`);
-  currentUser.password_hash=np; saveSession(currentUser);
-  document.getElementById('newPassChange').value='';
-  document.getElementById('confirmPassChange').value='';
-  showToast('✓ Contraseña actualizada');
-}
-
-async function loadMetricas() {
-  const [consultas, pacientes, recetas, respuestas] = await Promise.all([
-    supa('GET','consultas',null,'?select=id,nivel_sintomas,estado,created_at'),
-    supa('GET','pacientes',null,'?select=count'),
-    supa('GET','recetas',null,'?select=id,seguimiento_activo'),
-    supa('GET','seguimiento_respuestas',null,'?select=se_siente_mejor,respuesta')
-  ]);
-  const all=consultas||[];
-  const total=all.length;
-  const graves=all.filter(c=>c.nivel_sintomas===3).length;
-  const medios=all.filter(c=>c.nivel_sintomas===2).length;
-  const leves=all.filter(c=>c.nivel_sintomas===1).length;
-  const completadas=all.filter(c=>c.estado==='completada').length;
-  const exitosos=(respuestas||[]).filter(r=>r.se_siente_mejor===true).length;
-  const tasa=total>0?Math.round(completadas/total*100):0;
-  document.getElementById('metricStats').innerHTML=`
-    <div class="stat-card"><div class="stat-label">Total consultas</div><div class="stat-value">${total}</div></div>
-    <div class="stat-card stat-success"><div class="stat-label">Casos exitosos</div><div class="stat-value">${exitosos}</div><div class="stat-sub">Pacientes curados</div></div>
-    <div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div>
-    <div class="stat-card stat-danger"><div class="stat-label">Emergencias</div><div class="stat-value">${graves}</div></div>
-  `;
-  const barH=80;
-  document.getElementById('nivelChart').innerHTML=`<div style="display:flex;gap:1rem;align-items:flex-end;height:${barH+40}px;padding:0 1rem">${[['Leves',leves,'#16a34a'],['Medios',medios,'#ca8a04'],['Graves',graves,'#dc2626']].map(([l,v,c])=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:13px;font-weight:600;color:${c}">${v}</span><div style="width:100%;height:${total>0?Math.round(v/total*barH):2}px;background:${c};border-radius:4px 4px 0 0;min-height:2px"></div><span style="font-size:12px;color:#888">${l}</span><span style="font-size:11px;color:#aaa">${total>0?Math.round(v/total*100):0}%</span></div>`).join('')}</div>`;
-  document.getElementById('kpiContent').innerHTML=[
-    ['Tasa de resolución',`${tasa}%`,tasa>=70?'#16a34a':'#ca8a04'],
-    ['Tratamientos exitosos',exitosos,'#16a34a'],
-    ['Recetas con seguimiento',(recetas||[]).filter(r=>r.seguimiento_activo).length,'#2563eb'],
-    ['Total emergencias',graves,'#dc2626']
-  ].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="font-size:13px;color:#555">${l}</span><span style="font-size:16px;font-weight:600;color:${c}">${v}</span></div>`).join('');
+async function loadMetricas(){
+  const[consultas,pacientes,recetas,respuestas]=await Promise.all([supa('GET','consultas',null,'?select=id,nivel_sintomas,estado,created_at'),supa('GET','pacientes',null,'?select=count'),supa('GET','recetas',null,'?select=id,seguimiento_activo'),supa('GET','seguimiento_respuestas',null,'?select=se_siente_mejor,respuesta')]);
+  const all=consultas||[],total=all.length,graves=all.filter(c=>c.nivel_sintomas===3).length,medios=all.filter(c=>c.nivel_sintomas===2).length,leves=all.filter(c=>c.nivel_sintomas===1).length,completadas=all.filter(c=>c.estado==='completada').length,exitosos=(respuestas||[]).filter(r=>r.se_siente_mejor===true).length,tasa=total>0?Math.round(completadas/total*100):0;
+  document.getElementById('metricStats').innerHTML=`<div class="stat-card"><div class="stat-label">Total consultas</div><div class="stat-value">${total}</div></div><div class="stat-card stat-success"><div class="stat-label">Casos exitosos</div><div class="stat-value">${exitosos}</div></div><div class="stat-card"><div class="stat-label">Total pacientes</div><div class="stat-value">${pacientes?.[0]?.count||0}</div></div><div class="stat-card stat-danger"><div class="stat-label">Emergencias</div><div class="stat-value">${graves}</div></div>`;
+  const barH=80;document.getElementById('nivelChart').innerHTML=`<div style="display:flex;gap:1rem;align-items:flex-end;height:${barH+40}px;padding:0 1rem">${[['Leves',leves,'#16a34a'],['Medios',medios,'#ca8a04'],['Graves',graves,'#dc2626']].map(([l,v,c])=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px"><span style="font-size:13px;font-weight:600;color:${c}">${v}</span><div style="width:100%;height:${total>0?Math.round(v/total*barH):2}px;background:${c};border-radius:4px 4px 0 0;min-height:2px"></div><span style="font-size:12px;color:#888">${l}</span></div>`).join('')}</div>`;
+  document.getElementById('kpiContent').innerHTML=[['Tasa de resolución',`${tasa}%`,tasa>=70?'#16a34a':'#ca8a04'],['Tratamientos exitosos',exitosos,'#16a34a'],['Recetas con seguimiento',(recetas||[]).filter(r=>r.seguimiento_activo).length,'#2563eb'],['Total emergencias',graves,'#dc2626']].map(([l,v,c])=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5"><span style="font-size:13px;color:#555">${l}</span><span style="font-size:16px;font-weight:600;color:${c}">${v}</span></div>`).join('');
   const sinMejora=(respuestas||[]).filter(r=>r.se_siente_mejor===false).length;
   document.getElementById('seguimientoStats').innerHTML=`<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0.5rem 0">${[['Seguimientos exitosos',exitosos,'#16a34a'],['Sin mejoría',sinMejora,'#dc2626'],['Recetas activas',(recetas||[]).length,'#2563eb']].map(([l,v,c])=>`<div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px"><div style="font-size:24px;font-weight:600;color:${c}">${v}</div><div style="font-size:12px;color:#888;margin-top:4px">${l}</div></div>`).join('')}</div>`;
 }
 
-async function loadEmpresas() {
-  const [empresas,pacientes]=await Promise.all([supa('GET','clientes_b2b',null,'?select=*'),supa('GET','pacientes',null,'?select=cliente_b2b_id')]);
-  const counts={};
-  (pacientes||[]).forEach(p=>{ if(p.cliente_b2b_id) counts[p.cliente_b2b_id]=(counts[p.cliente_b2b_id]||0)+1; });
+async function loadEmpresas(){
+  const[empresas,pacientes]=await Promise.all([supa('GET','clientes_b2b',null,'?select=*'),supa('GET','pacientes',null,'?select=cliente_b2b_id')]);
+  const counts={};(pacientes||[]).forEach(p=>{if(p.cliente_b2b_id)counts[p.cliente_b2b_id]=(counts[p.cliente_b2b_id]||0)+1;});
   document.getElementById('empresasBody').innerHTML=(empresas||[]).map(e=>`<tr><td><strong>${e.nombre_empresa}</strong></td><td>${e.nombre_seguro||'—'}</td><td>${counts[e.id]||0}</td><td>${e.activo?'<span class="badge badge-green">Activo</span>':'<span class="badge badge-red">Inactivo</span>'}</td><td><button class="btn btn-sm">Editar</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
 }
-
-async function saveEmpresa() {
+async function saveEmpresa(){
   const data={nombre_empresa:document.getElementById('empNombre').value,nombre_seguro:document.getElementById('empSeguro').value||null};
-  if (!data.nombre_empresa) { alert('Ingrese el nombre'); return; }
-  await supa('POST','clientes_b2b',data);
-  document.getElementById('addEmpresaForm').style.display='none';
-  document.getElementById('empNombre').value='';
-  document.getElementById('empSeguro').value='';
-  loadEmpresas(); showToast('✓ Empresa agregada');
+  if(!data.nombre_empresa){alert('Ingrese el nombre');return;}
+  await supa('POST','clientes_b2b',data);document.getElementById('addEmpresaForm').style.display='none';document.getElementById('empNombre').value='';document.getElementById('empSeguro').value='';
+  loadEmpresas();showToast('✓ Empresa agregada');
 }
 
-function showToast(msg) {
-  const t=document.getElementById('toastAlert');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3500);
-}
+function showToast(msg){const t=document.getElementById('toastAlert');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
 
 document.addEventListener('click',e=>{
-  const panel=document.getElementById('notifPanel');
-  const btn=document.getElementById('notifBtn');
-  if (panel.classList.contains('open')&&!panel.contains(e.target)&&!btn.contains(e.target)) panel.classList.remove('open');
-  if (document.getElementById('popupAgendar').classList.contains('open')&&e.target===document.getElementById('popupAgendar')) closePopup();
+  const panel=document.getElementById('notifPanel'),btn=document.getElementById('notifBtn');
+  if(panel.classList.contains('open')&&!panel.contains(e.target)&&!btn.contains(e.target))panel.classList.remove('open');
+  if(document.getElementById('popupAgendar').classList.contains('open')&&e.target===document.getElementById('popupAgendar'))closePopup();
 });
+document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
-document.getElementById('loginEmail').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
-document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+// ENFERMEDADES CRÓNICAS
+const FRECUENCIAS_DEFAULT={'hipertension':12,'diabetes_tipo1':8,'diabetes_tipo2':12,'epoc':24,'asma':48,'insuficiencia_cardiaca':24,'enfermedad_renal':48,'tiroides':72,'artritis_reumatoide':48,'lupus':48,'epilepsia':12,'post_acv':24,'fibrilacion_auricular':24,'depresion':48,'obesidad':168,'osteoporosis':48,'vih':24};
+function mostrarFormCronica(){document.getElementById('formCronica').style.display='block';document.getElementById('cronicaFecha').value=new Date().toISOString().split('T')[0];}
+function actualizarFrecuenciaCronica(){const enf=document.getElementById('cronicaEnfermedad').value;document.getElementById('cronicaFrecuencia').value=FRECUENCIAS_DEFAULT[enf]||24;}
 
-// =================== ENFERMEDADES CRÓNICAS ===================
-const FRECUENCIAS_DEFAULT = {
-  'hipertension': 12, 'diabetes_tipo1': 8, 'diabetes_tipo2': 12,
-  'epoc': 24, 'asma': 48, 'insuficiencia_cardiaca': 24,
-  'enfermedad_renal': 48, 'tiroides': 72, 'artritis_reumatoide': 48,
-  'lupus': 48, 'epilepsia': 12, 'post_acv': 24,
-  'fibrilacion_auricular': 24, 'depresion': 48, 'obesidad': 168,
-  'osteoporosis': 48, 'vih': 24
-};
-
-function mostrarFormCronica() {
-  document.getElementById('formCronica').style.display = 'block';
-  const hoy = new Date().toISOString().split('T')[0];
-  document.getElementById('cronicaFecha').value = hoy;
+async function cargarCronicas(pacienteId){
+  const data=await supa('GET','enfermedades_cronicas',null,`?paciente_id=eq.${pacienteId}&order=created_at.desc`)||[];
+  const nombres={'hipertension':'Hipertensión Arterial','diabetes_tipo1':'Diabetes Tipo 1','diabetes_tipo2':'Diabetes Tipo 2','epoc':'EPOC','asma':'Asma','insuficiencia_cardiaca':'Insuficiencia Cardíaca','enfermedad_renal':'Enfermedad Renal Crónica','tiroides':'Trastorno Tiroideo','artritis_reumatoide':'Artritis Reumatoide','lupus':'Lupus Eritematoso Sistémico','epilepsia':'Epilepsia','post_acv':'Post ACV','fibrilacion_auricular':'Fibrilación Auricular','depresion':'Depresión Crónica','obesidad':'Obesidad/Sobrepeso','osteoporosis':'Osteoporosis','vih':'VIH/SIDA'};
+  if(data.length===0){document.getElementById('cronicasList').innerHTML='<div class="empty-state">Sin enfermedades crónicas registradas.</div>';return;}
+  document.getElementById('cronicasList').innerHTML=data.map(ec=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #f5f5f5"><div><div style="font-size:14px;font-weight:600;color:#1a1a1a">${nombres[ec.enfermedad]||ec.enfermedad}</div><div style="font-size:12px;color:#888;margin-top:2px">${ec.codigo_cie10?`CIE-10: ${ec.codigo_cie10} · `:''}Seguimiento cada ${ec.frecuencia_horas}h · Desde: ${ec.fecha_inicio||'—'}</div>${ec.notas?`<div style="font-size:12px;color:#555;margin-top:4px">${ec.notas}</div>`:''}</div><div style="display:flex;align-items:center;gap:8px"><span class="badge ${ec.activo?'badge-green':'badge-gray'}">${ec.activo?'Activo':'Inactivo'}</span><button class="btn btn-sm" onclick="verRegistrosCronicos('${ec.id}','${nombres[ec.enfermedad]||ec.enfermedad}')">Ver registros</button><button class="btn btn-sm ${ec.activo?'btn-danger':''}" onclick="toggleCronica('${ec.id}',${ec.activo})">${ec.activo?'Pausar':'Activar'}</button></div></div>`).join('');
 }
-
-function actualizarFrecuenciaCronica() {
-  const enf = document.getElementById('cronicaEnfermedad').value;
-  const freq = FRECUENCIAS_DEFAULT[enf] || 24;
-  document.getElementById('cronicaFrecuencia').value = freq;
+async function guardarCronica(){
+  const enf=document.getElementById('cronicaEnfermedad').value;if(!enf){alert('Seleccione una enfermedad');return;}
+  await supa('POST','enfermedades_cronicas',{paciente_id:currentPacienteId,enfermedad:enf,codigo_cie10:document.getElementById('cronicaCIE10').value||null,frecuencia_horas:parseInt(document.getElementById('cronicaFrecuencia').value),fecha_inicio:document.getElementById('cronicaFecha').value||null,notas:document.getElementById('cronicaNotas').value||null,medico_id:currentUser.id,activo:true});
+  document.getElementById('formCronica').style.display='none';document.getElementById('cronicaEnfermedad').value='';document.getElementById('cronicaNotas').value='';
+  await cargarCronicas(currentPacienteId);showToast('✓ Enfermedad crónica registrada. Seguimiento automático activado.');
 }
-
-async function cargarCronicas(pacienteId) {
-  const data = await supa('GET','enfermedades_cronicas',null,`?paciente_id=eq.${pacienteId}&order=created_at.desc`)||[];
-  const nombres = {
-    'hipertension':'Hipertensión Arterial','diabetes_tipo1':'Diabetes Tipo 1',
-    'diabetes_tipo2':'Diabetes Tipo 2','epoc':'EPOC','asma':'Asma',
-    'insuficiencia_cardiaca':'Insuficiencia Cardíaca','enfermedad_renal':'Enfermedad Renal Crónica',
-    'tiroides':'Trastorno Tiroideo','artritis_reumatoide':'Artritis Reumatoide',
-    'lupus':'Lupus Eritematoso Sistémico','epilepsia':'Epilepsia',
-    'post_acv':'Post ACV','fibrilacion_auricular':'Fibrilación Auricular',
-    'depresion':'Depresión Crónica','obesidad':'Obesidad/Sobrepeso',
-    'osteoporosis':'Osteoporosis','vih':'VIH/SIDA'
-  };
-  if (data.length === 0) {
-    document.getElementById('cronicasList').innerHTML = '<div class="empty-state">Sin enfermedades crónicas registradas.</div>';
-    return;
-  }
-  document.getElementById('cronicasList').innerHTML = data.map(ec => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #f5f5f5">
-      <div>
-        <div style="font-size:14px;font-weight:600;color:#1a1a1a">${nombres[ec.enfermedad]||ec.enfermedad}</div>
-        <div style="font-size:12px;color:#888;margin-top:2px">
-          ${ec.codigo_cie10?`CIE-10: ${ec.codigo_cie10} · `:''}
-          Seguimiento cada ${ec.frecuencia_horas}h · 
-          Desde: ${ec.fecha_inicio||'—'}
-        </div>
-        ${ec.notas?`<div style="font-size:12px;color:#555;margin-top:4px">${ec.notas}</div>`:''}
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="badge ${ec.activo?'badge-green':'badge-gray'}">${ec.activo?'Activo':'Inactivo'}</span>
-        <button class="btn btn-sm" onclick="verRegistrosCronicos('${ec.id}','${nombres[ec.enfermedad]||ec.enfermedad}')">Ver registros</button>
-        <button class="btn btn-sm ${ec.activo?'btn-danger':''}" onclick="toggleCronica('${ec.id}',${ec.activo})">${ec.activo?'Pausar':'Activar'}</button>
-      </div>
-    </div>
-  `).join('');
-}
-
-async function guardarCronica() {
-  const enf = document.getElementById('cronicaEnfermedad').value;
-  if (!enf) { alert('Seleccione una enfermedad'); return; }
-  const data = {
-    paciente_id: currentPacienteId,
-    enfermedad: enf,
-    codigo_cie10: document.getElementById('cronicaCIE10').value||null,
-    frecuencia_horas: parseInt(document.getElementById('cronicaFrecuencia').value),
-    fecha_inicio: document.getElementById('cronicaFecha').value||null,
-    notas: document.getElementById('cronicaNotas').value||null,
-    medico_id: currentUser.id,
-    activo: true
-  };
-  await supa('POST','enfermedades_cronicas',data);
-  document.getElementById('formCronica').style.display='none';
-  document.getElementById('cronicaEnfermedad').value='';
-  document.getElementById('cronicaNotas').value='';
-  await cargarCronicas(currentPacienteId);
-  showToast('✓ Enfermedad crónica registrada. Seguimiento automático activado.');
-}
-
-async function toggleCronica(id, activo) {
-  await supa('PATCH','enfermedades_cronicas',{activo:!activo},`?id=eq.${id}`);
-  await cargarCronicas(currentPacienteId);
-  showToast(activo ? '⏸ Seguimiento pausado' : '▶ Seguimiento activado');
-}
-
-async function verRegistrosCronicos(enfermedadId, nombre) {
-  const registros = await supa('GET','registros_cronicos',null,`?enfermedad_id=eq.${enfermedadId}&order=created_at.desc&limit=20`)||[];
-  if (registros.length === 0) { alert('Sin registros todavía. El bot comenzará el seguimiento en breve.'); return; }
-  const html = registros.map(r => {
-    const vals = r.valores || {};
-    const nivel = r.nivel_alerta;
-    const color = nivel === 3 ? '#dc2626' : nivel === 2 ? '#ca8a04' : '#16a34a';
-    const icon = nivel === 3 ? '🚨' : nivel === 2 ? '⚠️' : '✅';
-    return `<div style="padding:10px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <div style="font-size:12px;color:#888">${new Date(r.created_at).toLocaleString('es-EC')}</div>
-        <div style="font-size:13px;margin-top:4px">${Object.entries(vals).map(([k,v])=>`<strong>${k}:</strong> ${v}`).join(' · ')}</div>
-      </div>
-      <span style="font-size:18px" title="Nivel ${nivel}">${icon}</span>
-    </div>`;
-  }).join('');
-  const popup = document.createElement('div');
-  popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:center;justify-content:center';
-  popup.innerHTML = `<div style="background:white;border-radius:16px;padding:1.5rem;width:560px;max-height:80vh;overflow-y:auto">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <h3 style="font-size:16px;font-weight:600">Registros: ${nombre}</h3>
-      <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
-    </div>
-    ${html}
-  </div>`;
+async function toggleCronica(id,activo){await supa('PATCH','enfermedades_cronicas',{activo:!activo},`?id=eq.${id}`);await cargarCronicas(currentPacienteId);showToast(activo?'⏸ Seguimiento pausado':'▶ Seguimiento activado');}
+async function verRegistrosCronicos(enfermedadId,nombre){
+  const registros=await supa('GET','registros_cronicos',null,`?enfermedad_id=eq.${enfermedadId}&order=created_at.desc&limit=20`)||[];
+  if(registros.length===0){alert('Sin registros todavía.');return;}
+  const html=registros.map(r=>{const vals=r.valores||{};const icon=r.nivel_alerta===3?'🚨':r.nivel_alerta===2?'⚠️':'✅';return`<div style="padding:10px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:12px;color:#888">${new Date(r.created_at).toLocaleString('es-EC')}</div><div style="font-size:13px;margin-top:4px">${Object.entries(vals).map(([k,v])=>`<strong>${k}:</strong> ${v}`).join(' · ')}</div></div><span style="font-size:18px">${icon}</span></div>`;}).join('');
+  const popup=document.createElement('div');popup.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:center;justify-content:center';
+  popup.innerHTML=`<div style="background:white;border-radius:16px;padding:1.5rem;width:560px;max-height:80vh;overflow-y:auto"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem"><h3 style="font-size:16px;font-weight:600">Registros: ${nombre}</h3><button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button></div>${html}</div>`;
   document.body.appendChild(popup);
 }
 
-window.addEventListener('load',()=>{ const saved=getSession(); if(saved){currentUser=saved;initApp();} });
+window.addEventListener('load',()=>{const saved=getSession();if(saved){currentUser=saved;initApp();}});
 
-const CIE10 = [
-  {c:'A00',n:'Cólera'},{c:'A01',n:'Fiebre tifoidea y paratifoidea'},{c:'A02',n:'Otras infecciones por Salmonella'},{c:'A03',n:'Shigelosis'},{c:'A04',n:'Otras infecciones intestinales bacterianas'},{c:'A05',n:'Intoxicación alimentaria bacteriana'},{c:'A06',n:'Amebiasis'},{c:'A08',n:'Infecciones intestinales virales'},{c:'A09',n:'Diarrea y gastroenteritis de origen infeccioso'},{c:'A15',n:'Tuberculosis respiratoria'},{c:'A36',n:'Difteria'},{c:'A37',n:'Tos ferina (pertussis)'},{c:'A38',n:'Escarlatina'},{c:'A39',n:'Infección meningocócica'},{c:'A40',n:'Septicemia estreptocócica'},{c:'A41',n:'Septicemia, no especificada'},{c:'A46',n:'Erisipela'},{c:'A49',n:'Infección bacteriana, sin otra especificación'},{c:'A50',n:'Sífilis congénita'},{c:'A51',n:'Sífilis temprana'},{c:'A53',n:'Sífilis'},{c:'A54',n:'Gonococia'},{c:'A56',n:'Infecciones clamidiales de transmisión sexual'},{c:'A57',n:'Chancro blando'},{c:'A59',n:'Tricomoniasis'},{c:'A60',n:'Infección anogenital por herpesvirus'},{c:'A63',n:'Otras enfermedades de transmisión sexual'},{c:'A69',n:'Otras infecciones por espiroquetas'},{c:'A75',n:'Tifus'},{c:'A77',n:'Fiebre manchada'},{c:'A80',n:'Poliomielitis aguda'},{c:'A81',n:'Infecciones del SNC por virus lentos'},{c:'A82',n:'Rabia'},{c:'A83',n:'Encefalitis viral por mosquito'},{c:'A87',n:'Meningitis viral'},{c:'A90',n:'Dengue clásico'},{c:'A91',n:'Dengue hemorrágico'},{c:'A92',n:'Otras fiebres virales por mosquito'},{c:'A96',n:'Fiebre hemorrágica por arenavirus'},{c:'B00',n:'Infección por herpesvirus'},{c:'B01',n:'Varicela'},{c:'B02',n:'Zóster (herpes zóster)'},{c:'B03',n:'Viruela'},{c:'B04',n:'Viruela del simio'},{c:'B05',n:'Sarampión'},{c:'B06',n:'Rubéola'},{c:'B07',n:'Verrugas víricas'},{c:'B08',n:'Otras infecciones virales con lesiones cutáneas'},{c:'B09',n:'Infección viral no especificada con lesiones cutáneas'},{c:'B15',n:'Hepatitis A aguda'},{c:'B16',n:'Hepatitis B aguda'},{c:'B17',n:'Otras hepatitis virales agudas'},{c:'B18',n:'Hepatitis viral crónica'},{c:'B19',n:'Hepatitis viral no especificada'},{c:'B20',n:'VIH con enfermedades infecciosas'},{c:'B24',n:'VIH, no especificado'},{c:'B34',n:'Infección viral de sitio no especificado'},{c:'B35',n:'Dermatofitosis (tinea)'},{c:'B36',n:'Otras micosis superficiales'},{c:'B37',n:'Candidiasis'},{c:'B49',n:'Micosis no especificada'},{c:'B54',n:'Paludismo (malaria) no especificado'},{c:'B65',n:'Esquistosomiasis'},{c:'B76',n:'Anquilostomiasis'},{c:'B82',n:'Parasitosis intestinal no especificada'},{c:'B86',n:'Escabiosis (sarna)'},{c:'B99',n:'Enfermedades infecciosas no especificadas'},
-  {c:'C00',n:'Tumor maligno del labio'},{c:'C15',n:'Tumor maligno del esófago'},{c:'C16',n:'Tumor maligno del estómago'},{c:'C18',n:'Tumor maligno del colon'},{c:'C20',n:'Tumor maligno del recto'},{c:'C25',n:'Tumor maligno del páncreas'},{c:'C34',n:'Tumor maligno del bronquio y pulmón'},{c:'C43',n:'Melanoma maligno de la piel'},{c:'C50',n:'Tumor maligno de la mama'},{c:'C53',n:'Tumor maligno del cuello del útero'},{c:'C54',n:'Tumor maligno del cuerpo del útero'},{c:'C61',n:'Tumor maligno de la próstata'},{c:'C67',n:'Tumor maligno de la vejiga urinaria'},{c:'C71',n:'Tumor maligno del encéfalo'},{c:'C80',n:'Tumor maligno de sitio no especificado'},{c:'C91',n:'Leucemia linfoide'},{c:'C92',n:'Leucemia mieloide'},
-  {c:'D50',n:'Anemia por deficiencia de hierro'},{c:'D51',n:'Anemia por deficiencia de vitamina B12'},{c:'D52',n:'Anemia por deficiencia de folato'},{c:'D64',n:'Otras anemias'},{c:'D69',n:'Púrpura y otras afecciones hemorrágicas'},
-  {c:'E01',n:'Trastornos tiroideos relacionados con yodo'},{c:'E03',n:'Hipotiroidismo'},{c:'E04',n:'Bocio no tóxico'},{c:'E05',n:'Tirotoxicosis (hipertiroidismo)'},{c:'E06',n:'Tiroiditis'},{c:'E10',n:'Diabetes mellitus tipo 1'},{c:'E11',n:'Diabetes mellitus tipo 2'},{c:'E14',n:'Diabetes mellitus no especificada'},{c:'E16',n:'Hipoglucemia'},{c:'E27',n:'Otros trastornos de la glándula suprarrenal'},{c:'E40',n:'Kwashiorkor'},{c:'E41',n:'Marasmo nutricional'},{c:'E44',n:'Desnutrición proteicocalórica moderada y leve'},{c:'E46',n:'Desnutrición proteicocalórica no especificada'},{c:'E55',n:'Deficiencia de vitamina D'},{c:'E58',n:'Deficiencia dietética de calcio'},{c:'E63',n:'Otras deficiencias nutricionales'},{c:'E66',n:'Obesidad'},{c:'E78',n:'Trastornos del metabolismo de lipoproteínas'},{c:'E83',n:'Trastornos del metabolismo de minerales'},
-  {c:'F00',n:'Demencia en la enfermedad de Alzheimer'},{c:'F10',n:'Trastornos mentales por alcohol'},{c:'F20',n:'Esquizofrenia'},{c:'F31',n:'Trastorno bipolar'},{c:'F32',n:'Episodio depresivo'},{c:'F33',n:'Trastorno depresivo recurrente'},{c:'F40',n:'Trastornos fóbicos de ansiedad'},{c:'F41',n:'Trastornos de ansiedad'},{c:'F43',n:'Reacción al estrés grave y trastornos de adaptación'},{c:'F44',n:'Trastornos disociativos'},{c:'F45',n:'Trastornos somatomorfos'},{c:'F51',n:'Trastornos del sueño no orgánicos'},{c:'F90',n:'TDAH'},{c:'F99',n:'Trastorno mental no especificado'},
-  {c:'G00',n:'Meningitis bacteriana'},{c:'G03',n:'Meningitis de otras causas'},{c:'G20',n:'Enfermedad de Parkinson'},{c:'G30',n:'Enfermedad de Alzheimer'},{c:'G35',n:'Esclerosis múltiple'},{c:'G40',n:'Epilepsia'},{c:'G43',n:'Migraña'},{c:'G44',n:'Otros síndromes de cefalea'},{c:'G45',n:'Ataques isquémicos cerebrales transitorios'},{c:'G47',n:'Trastornos del sueño'},{c:'G54',n:'Trastornos de raíces y plexos nerviosos'},{c:'G62',n:'Otras polineuropatías'},{c:'G89',n:'Dolor no clasificado en otra parte'},
-  {c:'H00',n:'Orzuelo y chalazión'},{c:'H01',n:'Inflamación del párpado'},{c:'H10',n:'Conjuntivitis'},{c:'H11',n:'Otros trastornos de la conjuntiva'},{c:'H16',n:'Queratitis'},{c:'H25',n:'Catarata senil'},{c:'H26',n:'Otras cataratas'},{c:'H35',n:'Otros trastornos de la retina'},{c:'H40',n:'Glaucoma'},{c:'H52',n:'Trastornos de la acomodación y de la refracción'},{c:'H60',n:'Otitis externa'},{c:'H65',n:'Otitis media no supurativa'},{c:'H66',n:'Otitis media supurativa'},{c:'H72',n:'Perforación del tímpano'},{c:'H81',n:'Trastornos de la función vestibular'},{c:'H83',n:'Otros trastornos del oído interno'},
-  {c:'I10',n:'Hipertensión esencial (primaria)'},{c:'I11',n:'Cardiopatía hipertensiva'},{c:'I15',n:'Hipertensión secundaria'},{c:'I20',n:'Angina de pecho'},{c:'I21',n:'Infarto agudo de miocardio'},{c:'I25',n:'Cardiopatía isquémica crónica'},{c:'I26',n:'Embolia pulmonar'},{c:'I33',n:'Endocarditis aguda y subaguda'},{c:'I42',n:'Cardiomiopatía'},{c:'I44',n:'Bloqueo auriculoventricular'},{c:'I48',n:'Fibrilación y flutter auricular'},{c:'I49',n:'Otras arritmias cardíacas'},{c:'I50',n:'Insuficiencia cardíaca'},{c:'I63',n:'Infarto cerebral'},{c:'I64',n:'Accidente vascular encefálico'},{c:'I67',n:'Otras enfermedades cerebrovasculares'},{c:'I70',n:'Aterosclerosis'},{c:'I80',n:'Flebitis y tromboflebitis'},{c:'I83',n:'Várices de las extremidades inferiores'},{c:'I84',n:'Hemorroides'},
-  {c:'J00',n:'Rinofaringitis aguda (resfriado común)'},{c:'J01',n:'Sinusitis aguda'},{c:'J02',n:'Faringitis aguda'},{c:'J03',n:'Amigdalitis aguda'},{c:'J04',n:'Laringitis y traqueitis agudas'},{c:'J05',n:'Laringitis obstructiva aguda y epiglotitis'},{c:'J06',n:'Infecciones agudas de las vías respiratorias superiores'},{c:'J09',n:'Influenza por virus identificado'},{c:'J10',n:'Influenza (gripe)'},{c:'J11',n:'Influenza virus no identificado'},{c:'J12',n:'Neumonía viral'},{c:'J13',n:'Neumonía por Streptococcus pneumoniae'},{c:'J14',n:'Neumonía por Haemophilus influenzae'},{c:'J15',n:'Neumonía bacteriana'},{c:'J18',n:'Neumonía no especificada'},{c:'J20',n:'Bronquitis aguda'},{c:'J21',n:'Bronquiolitis aguda'},{c:'J22',n:'Infección aguda de las vías respiratorias inferiores'},{c:'J30',n:'Rinitis alérgica y vasomotora'},{c:'J31',n:'Rinitis crónica, nasofaringitis y faringitis'},{c:'J32',n:'Sinusitis crónica'},{c:'J35',n:'Enfermedades crónicas de amígdalas y adenoides'},{c:'J38',n:'Enfermedades de las cuerdas vocales y laringe'},{c:'J40',n:'Bronquitis no especificada'},{c:'J41',n:'Bronquitis crónica simple y mucopurulenta'},{c:'J42',n:'Bronquitis crónica no especificada'},{c:'J43',n:'Enfisema'},{c:'J44',n:'EPOC (enfermedad pulmonar obstructiva crónica)'},{c:'J45',n:'Asma'},{c:'J46',n:'Estado asmático'},{c:'J47',n:'Bronquiectasia'},
-  {c:'K00',n:'Trastornos del desarrollo de los dientes'},{c:'K02',n:'Caries dental'},{c:'K04',n:'Enfermedades de la pulpa y tejidos periapicales'},{c:'K05',n:'Gingivitis y enfermedades periodontales'},{c:'K08',n:'Otros trastornos de los dientes'},{c:'K20',n:'Esofagitis'},{c:'K21',n:'Enfermedad por reflujo gastroesofágico'},{c:'K25',n:'Úlcera gástrica'},{c:'K26',n:'Úlcera duodenal'},{c:'K27',n:'Úlcera péptica'},{c:'K29',n:'Gastritis y duodenitis'},{c:'K30',n:'Dispepsia'},{c:'K35',n:'Apendicitis aguda'},{c:'K37',n:'Apendicitis no especificada'},{c:'K40',n:'Hernia inguinal'},{c:'K41',n:'Hernia femoral'},{c:'K44',n:'Hernia diafragmática'},{c:'K51',n:'Colitis ulcerativa'},{c:'K52',n:'Gastroenteritis y colitis no infecciosa'},{c:'K57',n:'Enfermedad diverticular del intestino'},{c:'K58',n:'Síndrome del colon irritable'},{c:'K59',n:'Otros trastornos funcionales del intestino'},{c:'K62',n:'Otras enfermedades del ano y recto'},{c:'K70',n:'Enfermedad hepática alcohólica'},{c:'K74',n:'Fibrosis y cirrosis del hígado'},{c:'K80',n:'Colelitiasis (cálculos biliares)'},{c:'K81',n:'Colecistitis'},{c:'K85',n:'Pancreatitis aguda'},{c:'K86',n:'Otras enfermedades del páncreas'},
-  {c:'L01',n:'Impétigo'},{c:'L02',n:'Absceso cutáneo, forúnculo y ántrax'},{c:'L03',n:'Celulitis'},{c:'L04',n:'Linfadenitis aguda'},{c:'L08',n:'Otras infecciones locales de la piel'},{c:'L20',n:'Dermatitis atópica'},{c:'L21',n:'Dermatitis seborreica'},{c:'L22',n:'Dermatitis del pañal'},{c:'L23',n:'Dermatitis alérgica de contacto'},{c:'L25',n:'Dermatitis de contacto no especificada'},{c:'L27',n:'Dermatitis por sustancias ingeridas'},{c:'L29',n:'Prurito'},{c:'L30',n:'Otras dermatitis'},{c:'L40',n:'Psoriasis'},{c:'L50',n:'Urticaria'},{c:'L57',n:'Cambios en la piel por exposición crónica a radiación'},{c:'L60',n:'Trastornos de las uñas'},{c:'L70',n:'Acné'},{c:'L71',n:'Rosácea'},{c:'L72',n:'Quistes foliculares de la piel'},{c:'L80',n:'Vitíligo'},{c:'L98',n:'Otros trastornos de la piel'},
-  {c:'M00',n:'Artritis piógena'},{c:'M05',n:'Artritis reumatoide seropositiva'},{c:'M06',n:'Otras artritis reumatoides'},{c:'M10',n:'Gota'},{c:'M13',n:'Otras artritis'},{c:'M15',n:'Poliartrosis'},{c:'M16',n:'Coxartrosis (artritis de cadera)'},{c:'M17',n:'Gonartrosis (artritis de rodilla)'},{c:'M19',n:'Otras artrosis'},{c:'M25',n:'Otros trastornos articulares'},{c:'M32',n:'Lupus eritematoso sistémico'},{c:'M40',n:'Cifosis y lordosis'},{c:'M41',n:'Escoliosis'},{c:'M42',n:'Osteocondritis espinal'},{c:'M47',n:'Espondiloartrosis'},{c:'M48',n:'Otras espondilopatías'},{c:'M50',n:'Trastornos de disco cervical'},{c:'M51',n:'Otros trastornos de disco intervertebral'},{c:'M54',n:'Dorsalgia (dolor de espalda)'},{c:'M60',n:'Miositis'},{c:'M65',n:'Sinovitis y tenosinovitis'},{c:'M70',n:'Trastornos de tejidos blandos por uso excesivo'},{c:'M75',n:'Lesiones del hombro'},{c:'M79',n:'Otros trastornos de tejidos blandos'},{c:'M80',n:'Osteoporosis con fractura'},{c:'M81',n:'Osteoporosis sin fractura'},
-  {c:'N00',n:'Síndrome nefrítico agudo'},{c:'N03',n:'Síndrome nefrítico crónico'},{c:'N10',n:'Nefritis tubulointersticial aguda'},{c:'N17',n:'Insuficiencia renal aguda'},{c:'N18',n:'Insuficiencia renal crónica'},{c:'N20',n:'Cálculos del riñón y uréter'},{c:'N21',n:'Cálculos del tracto urinario inferior'},{c:'N23',n:'Cólico renal no especificado'},{c:'N28',n:'Otros trastornos del riñón'},{c:'N30',n:'Cistitis'},{c:'N34',n:'Uretritis'},{c:'N39',n:'Otras enfermedades del sistema urinario'},{c:'N40',n:'Hiperplasia de la próstata'},{c:'N41',n:'Enfermedades inflamatorias de la próstata'},{c:'N43',n:'Hidrocele y espermatocele'},{c:'N45',n:'Orquitis y epididimitis'},{c:'N50',n:'Otros trastornos de los órganos genitales masculinos'},{c:'N70',n:'Salpingitis y ooforitis'},{c:'N71',n:'Enfermedad inflamatoria del útero'},{c:'N72',n:'Enfermedad inflamatoria del cuello del útero'},{c:'N73',n:'Otras enfermedades inflamatorias pélvicas femeninas'},{c:'N76',n:'Otras inflamaciones de la vagina y vulva'},{c:'N80',n:'Endometriosis'},{c:'N83',n:'Trastornos no inflamatorios del ovario'},{c:'N91',n:'Menstruación ausente, escasa o rara'},{c:'N92',n:'Menstruación excesiva, frecuente e irregular'},{c:'N94',n:'Dolor y otras afecciones relacionadas con órganos genitales femeninos'},{c:'N95',n:'Trastornos menopáusicos'},
-  {c:'O00',n:'Embarazo ectópico'},{c:'O20',n:'Hemorragia precoz del embarazo'},{c:'O21',n:'Vómitos excesivos del embarazo'},{c:'O24',n:'Diabetes mellitus en el embarazo'},{c:'O26',n:'Atención por otras afecciones en el embarazo'},{c:'O42',n:'Rotura prematura de membranas'},{c:'O80',n:'Parto único espontáneo'},
-  {c:'P00',n:'Feto y recién nacido afectados por condiciones maternas'},{c:'P07',n:'Trastornos relacionados con duración corta de gestación'},{c:'P22',n:'Dificultad respiratoria del recién nacido'},{c:'P36',n:'Sepsis bacteriana del recién nacido'},{c:'P59',n:'Ictericia neonatal'},
-  {c:'Q00',n:'Anencefalia'},{c:'Q20',n:'Malformaciones congénitas de las cámaras cardíacas'},{c:'Q35',n:'Fisura del paladar'},{c:'Q36',n:'Labio leporino'},{c:'Q65',n:'Deformidades congénitas de la cadera'},
-  {c:'R00',n:'Anomalías del latido cardíaco'},{c:'R01',n:'Soplos cardíacos'},{c:'R02',n:'Gangrena no clasificada'},{c:'R03',n:'Hallazgos anormales de presión arterial'},{c:'R04',n:'Hemorragia de las vías respiratorias'},{c:'R05',n:'Tos'},{c:'R06',n:'Anomalías de la respiración'},{c:'R07',n:'Dolor de garganta y pecho'},{c:'R09',n:'Otros síntomas relacionados con aparatos circulatorio y respiratorio'},{c:'R10',n:'Dolor abdominal y pélvico'},{c:'R11',n:'Náuseas y vómitos'},{c:'R12',n:'Pirosis (acidez)'},{c:'R13',n:'Disfagia'},{c:'R14',n:'Flatulencia y afecciones relacionadas'},{c:'R15',n:'Incontinencia fecal'},{c:'R17',n:'Ictericia no especificada'},{c:'R19',n:'Otros síntomas del aparato digestivo'},{c:'R20',n:'Trastornos de la sensibilidad de la piel'},{c:'R21',n:'Erupción cutánea y otras erupciones no especificadas'},{c:'R22',n:'Tumefacción localizada de piel y tejido subcutáneo'},{c:'R23',n:'Otros cambios en la piel'},{c:'R25',n:'Movimientos involuntarios anormales'},{c:'R29',n:'Otros síntomas del sistema nervioso'},{c:'R30',n:'Dolor asociado con la micción'},{c:'R31',n:'Hematuria'},{c:'R32',n:'Incontinencia urinaria'},{c:'R33',n:'Retención urinaria'},{c:'R35',n:'Poliuria'},{c:'R39',n:'Otros síntomas urinarios'},{c:'R41',n:'Otros síntomas de la función cognitiva y conciencia'},{c:'R42',n:'Vértigo'},{c:'R43',n:'Trastornos del olfato y gusto'},{c:'R44',n:'Otros síntomas generales'},{c:'R45',n:'Síntomas emocionales'},{c:'R50',n:'Fiebre de otro origen y de origen desconocido'},{c:'R51',n:'Cefalea (dolor de cabeza)'},{c:'R52',n:'Dolor no especificado'},{c:'R53',n:'Malestar y fatiga'},{c:'R55',n:'Síncope y colapso'},{c:'R56',n:'Convulsiones no especificadas'},{c:'R57',n:'Choque'},{c:'R60',n:'Edema no especificado'},{c:'R63',n:'Síntomas relacionados con ingesta de alimentos'},{c:'R65',n:'Síndrome de respuesta inflamatoria sistémica'},{c:'R68',n:'Otros síntomas generales'},{c:'R69',n:'Causas de morbilidad no especificadas'},
-  {c:'S00',n:'Traumatismo superficial de la cabeza'},{c:'S06',n:'Traumatismo intracraneal'},{c:'S09',n:'Otros traumatismos de la cabeza'},{c:'S10',n:'Traumatismo superficial del cuello'},{c:'S20',n:'Traumatismo superficial del tórax'},{c:'S30',n:'Traumatismo superficial del abdomen'},{c:'S40',n:'Traumatismo superficial del hombro y brazo'},{c:'S50',n:'Traumatismo superficial del codo y antebrazo'},{c:'S60',n:'Traumatismo superficial de la muñeca y mano'},{c:'S70',n:'Traumatismo superficial de la cadera y muslo'},{c:'S80',n:'Traumatismo superficial de la rodilla y pierna'},{c:'S90',n:'Traumatismo superficial del tobillo y pie'},
-  {c:'T14',n:'Traumatismo de región no especificada del cuerpo'},{c:'T36',n:'Intoxicación por antibióticos sistémicos'},{c:'T39',n:'Intoxicación por analgésicos'},{c:'T40',n:'Intoxicación por narcóticos y psicodislépticos'},{c:'T45',n:'Intoxicación por agentes hematológicos'},{c:'T50',n:'Intoxicación por diuréticos y medicamentos'},{c:'T58',n:'Efectos tóxicos del monóxido de carbono'},{c:'T60',n:'Efectos tóxicos de pesticidas'},{c:'T63',n:'Efectos tóxicos de animales'},{c:'T65',n:'Efectos tóxicos de otras sustancias'},
-  {c:'U07',n:'COVID-19'},{c:'U09',n:'Afección post-COVID-19'},
-  {c:'Z00',n:'Examen general'},{c:'Z03',n:'Observación por enfermedades sospechosas'},{c:'Z10',n:'Examen rutinario de salud'},{c:'Z11',n:'Examen de detección de enfermedades infecciosas'},{c:'Z20',n:'Contacto con enfermedades infecciosas'},{c:'Z23',n:'Necesidad de inmunización'},{c:'Z30',n:'Anticoncepción'},{c:'Z34',n:'Supervisión del embarazo normal'},{c:'Z38',n:'Recién nacido vivo'},{c:'Z51',n:'Otras atenciones médicas'},{c:'Z71',n:'Consulta por razones dietéticas'},{c:'Z76',n:'Contacto con los servicios de salud en otras circunstancias'}
-];
+// CIE-10
+const CIE10=[{c:'A09',n:'Diarrea y gastroenteritis'},{c:'A15',n:'Tuberculosis respiratoria'},{c:'A90',n:'Dengue clásico'},{c:'A91',n:'Dengue hemorrágico'},{c:'B00',n:'Infección por herpesvirus'},{c:'B01',n:'Varicela'},{c:'B02',n:'Herpes zóster'},{c:'B37',n:'Candidiasis'},{c:'C16',n:'Tumor maligno del estómago'},{c:'C34',n:'Tumor maligno del pulmón'},{c:'C50',n:'Tumor maligno de la mama'},{c:'C53',n:'Tumor maligno del cuello del útero'},{c:'C61',n:'Tumor maligno de la próstata'},{c:'D50',n:'Anemia por deficiencia de hierro'},{c:'D64',n:'Otras anemias'},{c:'E03',n:'Hipotiroidismo'},{c:'E05',n:'Hipertiroidismo'},{c:'E10',n:'Diabetes mellitus tipo 1'},{c:'E11',n:'Diabetes mellitus tipo 2'},{c:'E66',n:'Obesidad'},{c:'E78',n:'Dislipidemia'},{c:'F32',n:'Episodio depresivo'},{c:'F41',n:'Trastornos de ansiedad'},{c:'G20',n:'Enfermedad de Parkinson'},{c:'G30',n:'Enfermedad de Alzheimer'},{c:'G35',n:'Esclerosis múltiple'},{c:'G40',n:'Epilepsia'},{c:'G43',n:'Migraña'},{c:'H10',n:'Conjuntivitis'},{c:'H65',n:'Otitis media'},{c:'H66',n:'Otitis media supurativa'},{c:'I10',n:'Hipertensión esencial (primaria)'},{c:'I20',n:'Angina de pecho'},{c:'I21',n:'Infarto agudo de miocardio'},{c:'I25',n:'Cardiopatía isquémica crónica'},{c:'I48',n:'Fibrilación auricular'},{c:'I50',n:'Insuficiencia cardíaca'},{c:'I63',n:'Infarto cerebral'},{c:'I64',n:'Accidente vascular encefálico'},{c:'J00',n:'Rinofaringitis aguda (resfriado común)'},{c:'J01',n:'Sinusitis aguda'},{c:'J02',n:'Faringitis aguda'},{c:'J03',n:'Amigdalitis aguda'},{c:'J06',n:'Infección aguda vías respiratorias superiores'},{c:'J10',n:'Influenza (gripe)'},{c:'J11',n:'Influenza virus no identificado'},{c:'J18',n:'Neumonía no especificada'},{c:'J20',n:'Bronquitis aguda'},{c:'J30',n:'Rinitis alérgica'},{c:'J44',n:'EPOC'},{c:'J45',n:'Asma'},{c:'K21',n:'Reflujo gastroesofágico'},{c:'K25',n:'Úlcera gástrica'},{c:'K29',n:'Gastritis y duodenitis'},{c:'K30',n:'Dispepsia'},{c:'K35',n:'Apendicitis aguda'},{c:'K51',n:'Colitis ulcerativa'},{c:'K58',n:'Síndrome del colon irritable'},{c:'K80',n:'Colelitiasis'},{c:'L02',n:'Absceso cutáneo'},{c:'L03',n:'Celulitis'},{c:'L20',n:'Dermatitis atópica'},{c:'L50',n:'Urticaria'},{c:'L70',n:'Acné'},{c:'M05',n:'Artritis reumatoide'},{c:'M10',n:'Gota'},{c:'M17',n:'Gonartrosis'},{c:'M32',n:'Lupus eritematoso sistémico'},{c:'M54',n:'Dorsalgia (dolor de espalda)'},{c:'M81',n:'Osteoporosis'},{c:'N18',n:'Insuficiencia renal crónica'},{c:'N23',n:'Cólico renal'},{c:'N30',n:'Cistitis'},{c:'N39',n:'Otras enfermedades urinarias'},{c:'N40',n:'Hiperplasia de la próstata'},{c:'N80',n:'Endometriosis'},{c:'N92',n:'Menstruación irregular'},{c:'R05',n:'Tos'},{c:'R07',n:'Dolor de garganta y pecho'},{c:'R10',n:'Dolor abdominal y pélvico'},{c:'R11',n:'Náuseas y vómitos'},{c:'R50',n:'Fiebre'},{c:'R51',n:'Cefalea (dolor de cabeza)'},{c:'R53',n:'Malestar y fatiga'},{c:'R60',n:'Edema'},{c:'U07',n:'COVID-19'},{c:'U09',n:'Afección post-COVID-19'},{c:'Z00',n:'Examen general'},{c:'Z10',n:'Examen rutinario de salud'},{c:'Z34',n:'Supervisión del embarazo'}];
 
-let cie10Seleccionados = [];
-
-function buscarCIE10() {
-  const q = document.getElementById('cie10Search').value.trim().toLowerCase();
-  const dd = document.getElementById('cie10Dropdown');
-  if (!q || q.length < 2) { dd.style.display='none'; return; }
-  const res = CIE10.filter(x => x.c.toLowerCase().includes(q) || x.n.toLowerCase().includes(q)).slice(0,10);
-  if (res.length === 0) { dd.style.display='none'; return; }
-  dd.innerHTML = res.map(x=>`<div onclick="agregarCIE10('${x.c}','${x.n.replace(/'/g,"\\'")}','${x.c} — ${x.n.replace(/'/g,"\\'")}'); " style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f5f5f5;hover:background:#f9f9f9"><strong style="color:#2563eb">${x.c}</strong> — ${x.n}</div>`).join('');
+function buscarCIE10(){
+  const q=document.getElementById('cie10Search').value.trim().toLowerCase(),dd=document.getElementById('cie10Dropdown');
+  if(!q||q.length<2){dd.style.display='none';return;}
+  const res=CIE10.filter(x=>x.c.toLowerCase().includes(q)||x.n.toLowerCase().includes(q)).slice(0,10);
+  if(res.length===0){dd.style.display='none';return;}
+  dd.innerHTML=res.map(x=>`<div onclick="agregarCIE10('${x.c}','${x.n.replace(/'/g,"\\'")}')" style="padding:8px 12px;cursor:pointer;font-size:13px;border-bottom:1px solid #f5f5f5"><strong style="color:#2563eb">${x.c}</strong> — ${x.n}</div>`).join('');
   dd.style.display='block';
 }
+function agregarCIE10(codigo,nombre){
+  if(cie10Seleccionados.find(x=>x.c===codigo)){document.getElementById('cie10Search').value='';document.getElementById('cie10Dropdown').style.display='none';return;}
+  cie10Seleccionados.push({c:codigo,n:nombre});renderCIE10();document.getElementById('cie10Search').value='';document.getElementById('cie10Dropdown').style.display='none';
+}
+function quitarCIE10(codigo){cie10Seleccionados=cie10Seleccionados.filter(x=>x.c!==codigo);renderCIE10();}
+function renderCIE10(){document.getElementById('cie10Seleccionados').innerHTML=cie10Seleccionados.map(x=>`<span style="display:inline-flex;align-items:center;gap:6px;background:#dbeafe;color:#1e40af;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500"><strong>${x.c}</strong> — ${x.n}<span onclick="quitarCIE10('${x.c}')" style="cursor:pointer;font-size:14px;line-height:1">✕</span></span>`).join('');}
 
-function agregarCIE10(codigo, nombre, label) {
-  if (cie10Seleccionados.find(x=>x.c===codigo)) { document.getElementById('cie10Search').value=''; document.getElementById('cie10Dropdown').style.display='none'; return; }
-  cie10Seleccionados.push({c:codigo,n:nombre});
-  renderCIE10();
-  document.getElementById('cie10Search').value='';
-  document.getElementById('cie10Dropdown').style.display='none';
+// PLANTILLAS CLÍNICAS
+function togglePlantilla(tipo){
+  plantillaSeleccionada=(plantillaSeleccionada===tipo)?null:tipo;
+  document.querySelectorAll('.plantilla-card').forEach(c=>c.classList.remove('selected'));
+  if(plantillaSeleccionada){document.getElementById('pc-'+plantillaSeleccionada).classList.add('selected');document.getElementById('btnAbrirPlantilla').style.display='inline-flex';}
+  else document.getElementById('btnAbrirPlantilla').style.display='none';
+}
+function abrirPlantillaSeleccionada(){
+  if(!plantillaSeleccionada)return;
+  if(plantillaSeleccionada==='receta')abrirPlantillaReceta();
+  else if(plantillaSeleccionada==='certificado')abrirPlantillaCertificado();
+  else if(plantillaSeleccionada==='laboratorio')abrirPlantillaLaboratorio();
 }
 
-function quitarCIE10(codigo) {
-  cie10Seleccionados = cie10Seleccionados.filter(x=>x.c!==codigo);
-  renderCIE10();
+function poblarDatosMedico(prefijo){
+  const m=currentUser||{},nombre=`${m.nombre||''} ${m.apellidos||''}`.toUpperCase().trim(),reg=m.numero_registro||'',esp=m.especialidad||'MEDICINA GENERAL';
+  const setEl=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
+  setEl(`${prefijo}-nombre-medico`,nombre||'NOMBRE DEL MÉDICO');
+  setEl(`${prefijo}-reg-medico`,reg?`Reg. MSP: ${reg}`:'');
+  setEl(`${prefijo}-esp-medico`,esp);
+  const firmaEl=document.getElementById(`${prefijo}-firma-container`);
+  if(firmaEl){if(m.firma_digital)firmaEl.innerHTML=`<img src="${m.firma_digital}" style="height:56px;max-width:160px;object-fit:contain" />`;else firmaEl.innerHTML='<span style="color:#ccc;font-size:11px">Sin firma</span>';}
+  const selloEl=document.getElementById(`${prefijo}-sello-container`);
+  if(selloEl){if(m.sello)selloEl.innerHTML=`<img src="${m.sello}" style="height:56px;max-width:80px;object-fit:contain" />`;else selloEl.innerHTML='<span style="color:#ccc;font-size:11px">Sin sello</span>';}
+  if(prefijo==='cert'){const ce=document.getElementById('cert-correo-medico');if(ce)ce.textContent=m.correo||'';}
 }
 
-function renderCIE10() {
-  document.getElementById('cie10Seleccionados').innerHTML = cie10Seleccionados.map(x=>`
-    <span style="display:inline-flex;align-items:center;gap:6px;background:#dbeafe;color:#1e40af;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500">
-      <strong>${x.c}</strong> — ${x.n}
-      <span onclick="quitarCIE10('${x.c}')" style="cursor:pointer;font-size:14px;line-height:1;color:#1e40af">✕</span>
-    </span>
-  `).join('');
+function abrirPlantillaReceta(){
+  const p=currentPacienteData||{},c=currentConsultaData||{};
+  document.getElementById('rec-numero').textContent=Date.now().toString().slice(-6);
+  document.getElementById('rec-fecha-header').textContent=new Date().toLocaleDateString('es-EC',{day:'numeric',month:'long',year:'numeric'});
+  document.getElementById('rec-paciente').textContent=`${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim()||'—';
+  document.getElementById('rec-cedula').textContent=p.cedula||'—';
+  document.getElementById('rec-edad').textContent=p.edad?`${p.edad} años`:'—';
+  document.getElementById('rec-sexo').textContent=p.sexo||'—';
+  document.getElementById('rec-hc').textContent=p.cedula||'—';
+  document.getElementById('rec-atencion').textContent=recetaConsultaId?recetaConsultaId.slice(-8).toUpperCase():'—';
+  const diag=(document.getElementById('recetaDiagnostico').value||c.diagnostico||'—').toUpperCase();
+  document.getElementById('rec-diagnostico').textContent=diag;
+  document.getElementById('rec-cie10').textContent=cie10Seleccionados.map(x=>x.c).join(', ')||'—';
+  const freqLabel={4:'Cada 4h',6:'Cada 6h',8:'Cada 8h',12:'Cada 12h',24:'Una vez al día'};
+  document.getElementById('rec-meds-body').innerHTML=medicamentosData.length>0?medicamentosData.map(m=>`<tr><td><input value="${m.nombre||''}" placeholder="Medicamento..." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="${m.dosis||''}" placeholder="Dosis..." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="${freqLabel[m.frecuencia_horas]||''}" placeholder="Frecuencia..." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="${m.dias||''}" placeholder="días" style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="" placeholder="cant." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td></tr>`).join(''):`<tr><td colspan="5" style="text-align:center;color:#aaa;padding:8px;font-style:italic">Sin medicamentos agregados</td></tr>`;
+  document.getElementById('rec-indicaciones').value=document.getElementById('recetaIndicaciones').value||'';
+  poblarDatosMedico('rec');
+  document.getElementById('modalReceta').classList.add('open');
 }
+
+function abrirPlantillaCertificado(){
+  const p=currentPacienteData||{},c=currentConsultaData||{},hoy=new Date();
+  document.getElementById('cert-lugar-fecha').textContent=`VITAL CLUB; ${hoy.toLocaleDateString('es-EC')}`;
+  document.getElementById('cert-paciente').textContent=`${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim()||'—';
+  document.getElementById('cert-direccion').textContent=(p.lugar_residencia||'—').toUpperCase();
+  document.getElementById('cert-telefono').textContent=p.telefono||'—';
+  document.getElementById('cert-empresa').textContent=(p.clientes_b2b?.nombre_empresa||'—').toUpperCase();
+  document.getElementById('cert-cedula').textContent=p.cedula||'—';
+  document.getElementById('cert-hc').textContent=p.cedula||'—';
+  document.getElementById('cert-diagnostico').textContent=(document.getElementById('recetaDiagnostico').value||c.diagnostico||'—').toUpperCase();
+  document.getElementById('cert-cie10').textContent=cie10Seleccionados.map(x=>x.c).join(', ')||'—';
+  document.getElementById('cert-descripcion').value=c.sintomas_descripcion||'';
+  const fechaHoy=hoy.toISOString().split('T')[0];
+  document.getElementById('cert-desde').value=fechaHoy;document.getElementById('cert-hasta').value=fechaHoy;
+  actualizarDiasLetra();actualizarHastaFecha();
+  poblarDatosMedico('cert');
+  document.getElementById('modalCertificado').classList.add('open');
+}
+
+function abrirPlantillaLaboratorio(){
+  const p=currentPacienteData||{},c=currentConsultaData||{};
+  document.getElementById('lab-paciente').textContent=`${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim()||'—';
+  document.getElementById('lab-edad').textContent=p.edad?`${p.edad} años`:'—';
+  document.getElementById('lab-cedula').textContent=p.cedula||'—';
+  document.getElementById('lab-diagnostico').textContent=(document.getElementById('recetaDiagnostico').value||c.diagnostico||'—').toUpperCase();
+  document.getElementById('lab-fecha').textContent=new Date().toLocaleDateString('es-EC');
+  document.querySelectorAll('#docLaboratorio .lab-check').forEach(cb=>cb.checked=false);
+  poblarDatosMedico('lab');
+  document.getElementById('modalLaboratorio').classList.add('open');
+}
+
+function cerrarModal(id){document.getElementById(id).classList.remove('open');}
+
+['modalReceta','modalCertificado','modalLaboratorio'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+});
+
+function imprimirPlantilla(tipo){
+  const docIds={receta:'docReceta',certificado:'docCertificado',laboratorio:'docLaboratorio'};
+  const docEl=document.getElementById(docIds[tipo]);if(!docEl)return;
+  const printRoot=document.getElementById('printRoot');printRoot.innerHTML='';
+  const clone=docEl.cloneNode(true);clone.style.padding='0';printRoot.appendChild(clone);
+  window.print();setTimeout(()=>{printRoot.innerHTML='';},1000);
+}
+
+// UTILIDADES CERTIFICADO
+const NUMEROS_LETRA=['CERO','UNO','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE','DIEZ','ONCE','DOCE','TRECE','CATORCE','QUINCE','DIECISÉIS','DIECISIETE','DIECIOCHO','DIECINUEVE','VEINTE','VEINTIUNO','VEINTIDÓS','VEINTITRÉS','VEINTICUATRO','VEINTICINCO','VEINTISÉIS','VEINTISIETE','VEINTIOCHO','VEINTINUEVE','TREINTA'];
+const MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+function numALetra(n){if(n>=0&&n<=30)return NUMEROS_LETRA[n];if(n<100){const dec=['','','VEINTI','TREINTA','CUARENTA','CINCUENTA','SESENTA','SETENTA','OCHENTA','NOVENTA'],uni=['','UNO','DOS','TRES','CUATRO','CINCO','SEIS','SIETE','OCHO','NUEVE'],d=Math.floor(n/10),u=n%10;return u===0?dec[d]:`${dec[d]} Y ${uni[u]}`;}return n.toString();}
+function fechaALetra(s){if(!s)return'';const[y,m,d]=s.split('-').map(Number);return`${numALetra(d).toLowerCase()} de ${MESES[m-1]} de dos mil ${numALetra(y-2000).toLowerCase()}`;}
+function actualizarDiasLetra(){const n=parseInt(document.getElementById('cert-dias-num').value)||1;document.getElementById('cert-dias-letra').value=numALetra(n);actualizarHastaFecha();}
+function actualizarHastaFecha(){
+  const desde=document.getElementById('cert-desde').value,dias=parseInt(document.getElementById('cert-dias-num').value)||1;
+  document.getElementById('cert-desde-letra').value=fechaALetra(desde);
+  if(desde){const d=new Date(desde+'T12:00:00');d.setDate(d.getDate()+dias-1);const hasta=d.toISOString().split('T')[0];document.getElementById('cert-hasta').value=hasta;document.getElementById('cert-hasta-letra').value=fechaALetra(hasta);}
+}
+document.getElementById('cert-hasta').addEventListener('input',function(){document.getElementById('cert-hasta-letra').value=fechaALetra(this.value);});
 </script>
 </body>
 </html>

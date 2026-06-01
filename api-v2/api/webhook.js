@@ -4,6 +4,7 @@ const { buscarRespuestaPendiente } = require('../services/seguimiento');
 const { procesarRespuestaSeguimiento } = require('../flows/flujo-seguimiento');
 const { procesarPaso } = require('../flows/flujo-consulta');
 const { procesarReagendamiento } = require('../flows/flujo-reagendar');
+const { procesarCronica } = require('../flows/flujo-cronicas');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -46,6 +47,12 @@ module.exports = async function handler(req, res) {
   if (!sesion) sesion = { paso: 0, datos: {} };
   let { paso, datos } = sesion;
   datos = datos || {};
+
+  // Paso 200+ — enfermedades crónicas
+  if (paso >= 200) {
+    const result = await procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp);
+    return responder(result.respuesta);
+  }
 
   // Paso 98 — reagendar post seguimiento
   if (paso === 98) {

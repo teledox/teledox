@@ -5,6 +5,7 @@ const { procesarRespuestaSeguimiento } = require('../flows/flujo-seguimiento');
 const { procesarPaso } = require('../flows/flujo-consulta');
 const { procesarReagendamiento } = require('../flows/flujo-reagendar');
 const { procesarCronica } = require('../flows/flujo-cronicas');
+const { procesarAntecedentes } = require('../flows/flujo-antecedentes');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
@@ -47,6 +48,13 @@ module.exports = async function handler(req, res) {
   if (!sesion) sesion = { paso: 0, datos: {} };
   let { paso, datos } = sesion;
   datos = datos || {};
+
+  // Pasos 13-17 — antecedentes médicos + generación historia clínica
+  if (paso >= 13 && paso <= 17) {
+    const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
+    if (!result.terminar) await guardar(telefono, result.paso, result.datos);
+    return responder(result.respuesta);
+  }
 
   // Paso 200+ — enfermedades crónicas
   if (paso >= 200) {

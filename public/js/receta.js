@@ -267,7 +267,12 @@ async function _enviarDocumentosInterno(diagnostico) {
   }
 
   showToast('✓ Documentos enviados y consulta completada');
-  showPage('consultas'); loadConsultas();
+  const btn = document.querySelector('[onclick="enviarDocumentos()"]');
+  if (btn) {
+    btn.textContent = '✓ Documentos enviados';
+    btn.disabled = true;
+    btn.style.background = '#16a34a';
+  }
 }
 
 function buscarCIE10() {

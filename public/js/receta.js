@@ -26,6 +26,7 @@ function mostrarPDFEnIframe(pdfBytes, iframeId) {
   if (iframe._prevUrl) URL.revokeObjectURL(iframe._prevUrl);
   iframe._prevUrl = URL.createObjectURL(blob);
   iframe.src = iframe._prevUrl;
+  iframe.style.display = 'block';
 }
 
 async function cargarPreviewDesdeStorage(storagePath, iframeId) {
@@ -35,7 +36,11 @@ async function cargarPreviewDesdeStorage(storagePath, iframeId) {
     body: JSON.stringify({ expiresIn: 3600 })
   });
   const data = await res.json();
-  if (data.signedURL) document.getElementById(iframeId).src = `${SUPA_URL}/storage/v1${data.signedURL}`;
+  if (data.signedURL) {
+    const iframe = document.getElementById(iframeId);
+    iframe.src = `${SUPA_URL}/storage/v1${data.signedURL}`;
+    iframe.style.display = 'block';
+  }
 }
 
 async function mostrarPlantilla(tipo) {
@@ -59,16 +64,17 @@ async function openReceta(consultaId, pacienteId) {
   medicamentosData = [];
   cie10Seleccionados = [];
 
-  // Reset todos los campos
+  // Reset campos y PDFs generados
+  pdfGenerados = { receta: null, certificado: null, pedido: null };
   ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones',
-   'certDiagnostico','certDias','certObservaciones',
-   'pedidoDiagnostico','pedidoExamenes','pedidoObservaciones'
+   'certDias','certObservaciones','pedidoExamenes','pedidoObservaciones'
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cie10Dropdown').style.display = 'none';
   document.getElementById('cie10Seleccionados').innerHTML = '';
   document.getElementById('medicamentosLista').innerHTML = '';
   ['previewReceta','previewCertificado','previewPedido'].forEach(id => {
-    const f = document.getElementById(id); if (f) f.src = '';
+    const f = document.getElementById(id);
+    if (f) { f.src = ''; f.style.display = 'none'; }
   });
 
   // Cargar paciente y médico
@@ -147,37 +153,97 @@ function renderMedicamentos() {
 function updateMed(id, campo, valor) { const m = medicamentosData.find(x => x.id === id); if (m) m[campo] = valor; }
 function quitarMedicamento(id) { medicamentosData = medicamentosData.filter(x => x.id !== id); renderMedicamentos(); }
 
-async function guardarReceta() {
-  if (medicamentosData.length === 0) { alert('Agregue al menos un medicamento'); return; }
-  if (medicamentosData.some(m => !m.nombre || !m.dias)) { alert('Complete nombre y duración de todos los medicamentos'); return; }
+// PDFs generados localmente (antes de enviar)
+let pdfGenerados = { receta: null, certificado: null, pedido: null };
+
+async function generarDocumento(tipo) {
+  const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
+  if (!diagnostico) { alert('Ingrese el diagnóstico antes de generar'); return; }
+  try {
+    showToast('⏳ Generando...');
+    let pdfBytes;
+    if (tipo === 'receta') {
+      if (!medicamentosData.length) { alert('Agregue al menos un medicamento para la receta'); return; }
+      pdfBytes = await generarRecetaPDF({
+        paciente: _pacData, medico: _medicoData, diagnostico,
+        cie10: cie10Seleccionados, medicamentos: medicamentosData,
+        indicaciones: document.getElementById('recetaIndicaciones').value
+      });
+    } else if (tipo === 'certificado') {
+      pdfBytes = await generarCertificadoPDF({
+        paciente: _pacData, medico: _medicoData, diagnostico,
+        diasReposo: parseInt(document.getElementById('certDias').value) || 0,
+        observaciones: document.getElementById('certObservaciones').value.trim()
+      });
+    } else if (tipo === 'pedido') {
+      const examenes = document.getElementById('pedidoExamenes').value.trim();
+      if (!examenes) { alert('Ingrese los exámenes solicitados'); return; }
+      pdfBytes = await generarPedidoPDF({
+        paciente: _pacData, medico: _medicoData, diagnostico,
+        examenes, observaciones: document.getElementById('pedidoObservaciones').value.trim()
+      });
+    }
+    pdfGenerados[tipo] = pdfBytes;
+    mostrarPDFEnIframe(pdfBytes, tipo === 'pedido' ? 'previewPedido' : tipo === 'certificado' ? 'previewCertificado' : 'previewReceta');
+    showToast('✓ Documento generado — revisa el preview');
+  } catch (e) {
+    console.error('Error generando documento:', e);
+    showToast('Error al generar el documento');
+  }
+}
+
+async function enviarDocumentos() {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
+  const hayDocs = Object.values(pdfGenerados).some(b => b !== null);
+  if (!hayDocs) { alert('Genere al menos un documento antes de enviar'); return; }
 
-  showToast('⏳ Guardando receta...');
+  showToast('⏳ Guardando y enviando documentos...');
   const activar = document.getElementById('activarSeguimiento').checked;
   const ahora = new Date();
-  const payload = {
-    consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
-    medicamentos: medicamentosData, diagnostico,
-    cie10_codigos: cie10Seleccionados,
-    indicaciones: document.getElementById('recetaIndicaciones').value,
-    seguimiento_activo: activar,
-    fecha_inicio: ahora.toISOString(),
-    fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
-  };
 
-  // Upsert receta (actualiza si ya existe para esta consulta)
-  const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
-  let receta_id;
-  if (existing?.length > 0) {
-    receta_id = existing[0].id;
-    await supa('PATCH', 'recetas', payload, `?id=eq.${receta_id}`);
-  } else {
-    const res = await supa('POST', 'recetas', payload);
-    receta_id = (res || [])[0]?.id;
-    // Solo activa recordatorios la primera vez
-    const telefono = _pacData.telefono ? `whatsapp:+593${_pacData.telefono.replace(/^0/, '')}` : null;
-    if (activar && receta_id && telefono) {
+  // Guardar/actualizar receta en BD si tiene medicamentos
+  let receta_id = null;
+  if (medicamentosData.length > 0) {
+    const payload = {
+      consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
+      medicamentos: medicamentosData, diagnostico,
+      cie10_codigos: cie10Seleccionados,
+      indicaciones: document.getElementById('recetaIndicaciones').value,
+      seguimiento_activo: activar,
+      fecha_inicio: ahora.toISOString(),
+      fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
+    };
+    const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
+    if (existing?.length > 0) {
+      receta_id = existing[0].id;
+      await supa('PATCH', 'recetas', payload, `?id=eq.${receta_id}`);
+    } else {
+      const res = await supa('POST', 'recetas', payload);
+      receta_id = (res || [])[0]?.id;
+    }
+  }
+
+  // Subir PDFs generados y marcar como enviados
+  const tipoMap = { receta: 'receta', certificado: 'certificado', pedido: 'pedido_laboratorio' };
+  for (const [key, pdfBytes] of Object.entries(pdfGenerados)) {
+    if (!pdfBytes) continue;
+    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, tipoMap[key], pdfBytes, true);
+  }
+
+  // Actualizar consulta
+  await supa('PATCH', 'consultas', {
+    diagnostico,
+    notas_medico: document.getElementById('recetaNotas').value,
+    estado: 'completada',
+    medico_id: currentUser.id
+  }, `?id=eq.${recetaConsultaId}`);
+
+  // Activar recordatorios (solo si hay receta con medicamentos y es primera vez)
+  const telefono = _pacData.telefono ? `whatsapp:+593${_pacData.telefono.replace(/^0/, '')}` : null;
+  if (activar && receta_id && telefono && medicamentosData.length > 0) {
+    const yaExisten = await supa('GET', 'recordatorios', null, `?receta_id=eq.${receta_id}&limit=1`);
+    if (!yaExisten?.length) {
       for (const med of medicamentosData) {
         await supa('POST', 'recordatorios', {
           receta_id, paciente_id: recetaPacienteId, telefono,
@@ -191,62 +257,8 @@ async function guardarReceta() {
     }
   }
 
-  await supa('PATCH', 'consultas', {
-    diagnostico,
-    notas_medico: document.getElementById('recetaNotas').value,
-    estado: 'completada',
-    medico_id: currentUser.id
-  }, `?id=eq.${recetaConsultaId}`);
-
-  // Generar PDF y mostrar inline
-  try {
-    showToast('⏳ Generando PDF...');
-    const pdfBytes = await generarRecetaPDF({
-      paciente: _pacData, medico: _medicoData, diagnostico,
-      cie10: cie10Seleccionados, medicamentos: medicamentosData,
-      indicaciones: document.getElementById('recetaIndicaciones').value
-    });
-    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, 'receta', pdfBytes);
-    mostrarPDFEnIframe(pdfBytes, 'previewReceta');
-    showToast('✓ Receta guardada — PDF actualizado');
-  } catch (e) {
-    console.error('Error PDF receta:', e);
-    showToast('✓ Receta guardada');
-  }
-}
-
-async function guardarCertificado() {
-  const diagnostico = document.getElementById('certDiagnostico').value.trim();
-  if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
-  const diasReposo = parseInt(document.getElementById('certDias').value) || 0;
-  const observaciones = document.getElementById('certObservaciones').value.trim();
-  try {
-    showToast('⏳ Generando certificado...');
-    const pdfBytes = await generarCertificadoPDF({ paciente: _pacData, medico: _medicoData, diagnostico, diasReposo, observaciones });
-    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, 'certificado', pdfBytes);
-    mostrarPDFEnIframe(pdfBytes, 'previewCertificado');
-    showToast('✓ Certificado generado y guardado');
-  } catch (e) {
-    console.error('Error PDF certificado:', e);
-    showToast('Error generando certificado');
-  }
-}
-
-async function guardarPedido() {
-  const examenes = document.getElementById('pedidoExamenes').value.trim();
-  if (!examenes) { alert('Ingrese los exámenes solicitados'); return; }
-  const diagnostico = document.getElementById('pedidoDiagnostico').value.trim();
-  const observaciones = document.getElementById('pedidoObservaciones').value.trim();
-  try {
-    showToast('⏳ Generando pedido...');
-    const pdfBytes = await generarPedidoPDF({ paciente: _pacData, medico: _medicoData, diagnostico, examenes, observaciones });
-    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, 'pedido_laboratorio', pdfBytes);
-    mostrarPDFEnIframe(pdfBytes, 'previewPedido');
-    showToast('✓ Pedido de laboratorio generado');
-  } catch (e) {
-    console.error('Error PDF pedido:', e);
-    showToast('Error generando pedido');
-  }
+  showToast('✓ Documentos enviados y consulta completada');
+  showPage('consultas'); loadConsultas();
 }
 
 function buscarCIE10() {

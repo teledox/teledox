@@ -145,7 +145,7 @@ async function eliminarDocumento(id) {
   loadDocumentos(currentPacienteId);
 }
 
-async function upsertDocumentoStorage(pacienteId, consultaId, tipo, pdfBytes) {
+async function upsertDocumentoStorage(pacienteId, consultaId, tipo, pdfBytes, enviado = false) {
   const path = `${pacienteId}/${tipo}_${consultaId}.pdf`;
 
   const uploadRes = await fetch(`${SUPA_URL}/storage/v1/object/documentos-pacientes/${path}`, {
@@ -161,8 +161,8 @@ async function upsertDocumentoStorage(pacienteId, consultaId, tipo, pdfBytes) {
   const existing = await supa('GET', 'documentos', null,
     `?paciente_id=eq.${pacienteId}&consulta_id=eq.${consultaId}&tipo=eq.${tipo}`);
   if (existing?.length > 0) {
-    await supa('PATCH', 'documentos', { storage_path: path }, `?id=eq.${existing[0].id}`);
+    await supa('PATCH', 'documentos', { storage_path: path, enviado_paciente: enviado }, `?id=eq.${existing[0].id}`);
   } else {
-    await supa('POST', 'documentos', { paciente_id: pacienteId, consulta_id: consultaId, tipo, storage_path: path, enviado_paciente: false });
+    await supa('POST', 'documentos', { paciente_id: pacienteId, consulta_id: consultaId, tipo, storage_path: path, enviado_paciente: enviado });
   }
 }

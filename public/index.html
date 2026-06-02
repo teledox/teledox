@@ -207,26 +207,20 @@
         <button class="btn btn-sm" onclick="showPage('consultas');loadConsultas()" style="margin-bottom:1rem">← Volver a consultas</button>
         <div class="patient-header" id="recetaPacienteHeader"></div>
 
-        <!-- FORMULARIO (layout original) -->
-        <div class="two-col">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
-            <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
-            <div class="form-group">
-              <label class="form-label">Códigos CIE-10</label>
-              <div style="position:relative">
-                <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre... (Ej: J00, gripe, diabetes)" oninput="buscarCIE10()" autocomplete="off" />
-                <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
-              </div>
-              <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+        <!-- DIAGNÓSTICO -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
+          <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
+          <div class="form-group">
+            <label class="form-label">Códigos CIE-10</label>
+            <div style="position:relative">
+              <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre... (Ej: J00, gripe, diabetes)" oninput="buscarCIE10()" autocomplete="off" />
+              <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
             </div>
-            <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
-            <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
+            <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
           </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div>
-            <div id="medicamentosLista"></div>
-          </div>
+          <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
+          <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
         </div>
 
         <!-- PLANTILLAS CLÍNICAS -->
@@ -246,7 +240,13 @@
               </div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div id="medicamentosResumen" style="font-size:13px;color:#555;min-height:80px"></div>
+              <div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                  <span style="font-size:13px;font-weight:600;color:#374151">Medicamentos prescritos</span>
+                  <button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button>
+                </div>
+                <div id="medicamentosLista"></div>
+              </div>
               <iframe id="previewReceta" style="width:100%;height:620px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
             </div>
           </div>

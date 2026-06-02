@@ -169,45 +169,91 @@
         </div>
       </div>
 
-      <!-- RECETA -->
+      <!-- DOCUMENTOS DE CONSULTA -->
       <div class="page" id="page-receta">
-        <button class="btn btn-sm" onclick="showPage('consultas')" style="margin-bottom:1rem">← Volver a consultas</button>
+        <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1rem">
+          <button class="btn btn-sm" onclick="showPage('consultas');loadConsultas()">← Volver a consultas</button>
+        </div>
         <div class="patient-header" id="recetaPacienteHeader"></div>
-        <div class="two-col">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
-            <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
-            <div class="form-group">
-              <label class="form-label">Códigos CIE-10</label>
-              <div style="position:relative">
-                <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre... (Ej: J00, gripe, diabetes)" oninput="buscarCIE10()" autocomplete="off" />
-                <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
-              </div>
-              <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+
+        <!-- RECETA MÉDICA -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-header">
+            <span class="card-title">💊 Receta Médica</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" onclick="mostrarPlantilla('receta')">Plantilla</button>
+              <button class="btn btn-sm btn-primary" onclick="guardarReceta()">💾 Guardar y generar</button>
             </div>
-            <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
-            <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
           </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div>
-            <div id="medicamentosLista"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+            <div>
+              <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
+              <div class="form-group">
+                <label class="form-label">Códigos CIE-10</label>
+                <div style="position:relative">
+                  <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre..." oninput="buscarCIE10()" autocomplete="off" />
+                  <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+                </div>
+                <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" rows="2" placeholder="Observaciones clínicas..."></textarea></div>
+              <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" rows="2" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <span style="font-size:13px;font-weight:600">Medicamentos prescritos</span>
+                <button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button>
+              </div>
+              <div id="medicamentosLista"></div>
+              <div style="display:flex;align-items:center;gap:8px;margin-top:1rem;padding:0.75rem;background:#f9f9f9;border-radius:8px">
+                <input type="checkbox" id="activarSeguimiento" checked style="width:16px;height:16px;cursor:pointer" />
+                <label for="activarSeguimiento" style="font-size:13px;cursor:pointer">Activar recordatorios WhatsApp al paciente</label>
+              </div>
+            </div>
+            <div>
+              <iframe id="previewReceta" style="width:100%;height:700px;border:1px solid #e5e7eb;border-radius:8px;background:#f3f4f6"></iframe>
+            </div>
           </div>
         </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Seguimiento automático por WhatsApp</span></div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-              <input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" />
-              <span>Activar recordatorios automáticos al paciente por WhatsApp</span>
-            </label>
+
+        <!-- CERTIFICADO MÉDICO -->
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-header">
+            <span class="card-title">📄 Certificado Médico</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" onclick="mostrarPlantilla('certificado')">Plantilla</button>
+              <button class="btn btn-sm btn-primary" onclick="guardarCertificado()">💾 Guardar y generar</button>
+            </div>
           </div>
-          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">
-            El bot enviará recordatorios según la frecuencia de cada medicamento. Al finalizar preguntará al paciente cómo se siente y registrará el resultado en su historial para los KPIs.
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+            <div>
+              <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="certDiagnostico" placeholder="Ej: Faringitis aguda" /></div>
+              <div class="form-group"><label class="form-label">Días de reposo</label><input type="number" class="form-control" id="certDias" min="0" max="90" placeholder="0 = sin reposo" /></div>
+              <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-control" id="certObservaciones" rows="5" placeholder="Indicaciones adicionales..."></textarea></div>
+            </div>
+            <div>
+              <iframe id="previewCertificado" style="width:100%;height:500px;border:1px solid #e5e7eb;border-radius:8px;background:#f3f4f6"></iframe>
+            </div>
           </div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn" onclick="showPage('consultas')">Cancelar</button>
-          <button class="btn btn-primary" onclick="guardarReceta()">💊 Emitir receta y activar seguimiento</button>
+
+        <!-- PEDIDO DE LABORATORIO -->
+        <div class="card" style="margin-bottom:2rem">
+          <div class="card-header">
+            <span class="card-title">🔬 Pedido de Laboratorio</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" onclick="mostrarPlantilla('pedido')">Plantilla</button>
+              <button class="btn btn-sm btn-primary" onclick="guardarPedido()">💾 Guardar y generar</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start">
+            <div>
+              <div class="form-group"><label class="form-label">Diagnóstico / Indicación</label><input type="text" class="form-control" id="pedidoDiagnostico" placeholder="Ej: Control metabólico, sospecha de infección" /></div>
+              <div class="form-group"><label class="form-label">Exámenes solicitados *</label><textarea class="form-control" id="pedidoExamenes" rows="8" placeholder="Biometría hemática completa&#10;Glucosa basal&#10;Creatinina&#10;Urea&#10;..."></textarea></div>
+              <div class="form-group"><label class="form-label">Observaciones</label><textarea class="form-control" id="pedidoObservaciones" rows="3" placeholder="Ayuno de 8h, preparación especial, etc."></textarea></div>
+            </div>
+            <div>
+              <iframe id="previewPedido" style="width:100%;height:600px;border:1px solid #e5e7eb;border-radius:8px;background:#f3f4f6"></iframe>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -370,9 +416,11 @@
   </div>
 </div>
 
+
 <div class="alert-new" id="toastAlert"></div>
 
 <!-- SCRIPTS — orden importante: config primero, utils segundo, resto después -->
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="js/config.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/auth.js"></script>
@@ -382,6 +430,7 @@
 <script src="js/consultas.js"></script>
 <script src="js/notificaciones.js"></script>
 <script src="js/agendamiento.js"></script>
+<script src="js/generarPDF.js"></script>
 <script src="js/receta.js"></script>
 <script src="js/documentos.js"></script>
 <script src="js/usuarios.js"></script>

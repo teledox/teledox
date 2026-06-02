@@ -245,7 +245,10 @@
                 <button class="btn btn-sm btn-primary" onclick="generarDocumento('receta')">Generar</button>
               </div>
             </div>
-            <iframe id="previewReceta" style="width:100%;height:650px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
+              <div id="medicamentosResumen" style="font-size:13px;color:#555;min-height:80px"></div>
+              <iframe id="previewReceta" style="width:100%;height:620px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
+            </div>
           </div>
 
           <!-- 📄 Certificado -->
@@ -260,11 +263,13 @@
                 <button class="btn btn-sm btn-primary" onclick="generarDocumento('certificado')">Generar</button>
               </div>
             </div>
-            <div class="two-col" style="gap:8px;margin-bottom:0.75rem">
-              <div class="form-group" style="margin:0"><label class="form-label">Días de reposo</label><input type="number" class="form-control" id="certDias" min="0" max="90" placeholder="0 = sin reposo" /></div>
-              <div class="form-group" style="margin:0"><label class="form-label">Observaciones</label><textarea class="form-control" id="certObservaciones" rows="2" placeholder="Indicaciones adicionales..."></textarea></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
+              <div>
+                <div class="form-group"><label class="form-label">Días de reposo</label><input type="number" class="form-control" id="certDias" min="0" max="90" placeholder="0 = sin reposo" /></div>
+                <div class="form-group" style="margin:0"><label class="form-label">Observaciones</label><textarea class="form-control" id="certObservaciones" rows="5" placeholder="Indicaciones adicionales..."></textarea></div>
+              </div>
+              <iframe id="previewCertificado" style="width:100%;height:500px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
             </div>
-            <iframe id="previewCertificado" style="width:100%;height:500px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
           </div>
 
           <!-- 🔬 Pedido de Lab -->
@@ -279,9 +284,13 @@
                 <button class="btn btn-sm btn-primary" onclick="generarDocumento('pedido')">Generar</button>
               </div>
             </div>
-            <div class="form-group" style="margin-bottom:0.5rem"><label class="form-label">Exámenes solicitados</label><textarea class="form-control" id="pedidoExamenes" rows="5" placeholder="Biometría hemática completa&#10;Glucosa basal&#10;Creatinina&#10;..."></textarea></div>
-            <div class="form-group" style="margin-bottom:0.75rem"><label class="form-label">Instrucciones / Preparación</label><textarea class="form-control" id="pedidoObservaciones" rows="2" placeholder="Ayuno de 8h, etc."></textarea></div>
-            <iframe id="previewPedido" style="width:100%;height:600px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
+              <div>
+                <div class="form-group"><label class="form-label">Exámenes solicitados</label><textarea class="form-control" id="pedidoExamenes" rows="7" placeholder="Biometría hemática completa&#10;Glucosa basal&#10;Creatinina&#10;..."></textarea></div>
+                <div class="form-group" style="margin:0"><label class="form-label">Instrucciones / Preparación</label><textarea class="form-control" id="pedidoObservaciones" rows="3" placeholder="Ayuno de 8h, etc."></textarea></div>
+              </div>
+              <iframe id="previewPedido" style="width:100%;height:580px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
+            </div>
           </div>
         </div>
 

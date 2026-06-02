@@ -126,6 +126,19 @@ function agregarMedicamento() {
 }
 
 function renderMedicamentos() {
+  const resumen = document.getElementById('medicamentosResumen');
+  if (resumen) {
+    resumen.innerHTML = medicamentosData.length
+      ? medicamentosData.map((m, i) => `
+          <div style="padding:8px 10px;border:1px solid #e5e7eb;border-radius:6px;margin-bottom:6px;background:#fafafa">
+            <div style="font-weight:600;color:#1e293b">${i + 1}. ${m.nombre || '—'}</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px">
+              ${[m.dosis, m.frecuencia_horas ? `cada ${m.frecuencia_horas}h` : '', m.dias ? `por ${m.dias} días` : ''].filter(Boolean).join(' · ')}
+            </div>
+          </div>`).join('')
+      : '<div style="color:#aaa;font-size:13px;padding:8px 0">Sin medicamentos aún — agrégalos en el formulario superior</div>';
+  }
+
   document.getElementById('medicamentosLista').innerHTML = medicamentosData.map((m, i) => `
     <div style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:8px;border:1px solid #eee">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">

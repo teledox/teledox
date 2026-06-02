@@ -206,15 +206,13 @@
       <div class="page" id="page-receta">
         <button class="btn btn-sm" onclick="showPage('consultas');loadConsultas()" style="margin-bottom:1rem">← Volver a consultas</button>
         <div class="patient-header" id="recetaPacienteHeader"></div>
-
-        <!-- DIAGNÓSTICO -->
         <div class="card">
           <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
           <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
           <div class="form-group">
             <label class="form-label">Códigos CIE-10</label>
             <div style="position:relative">
-              <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre... (Ej: J00, gripe, diabetes)" oninput="buscarCIE10()" autocomplete="off" />
+              <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre..." oninput="buscarCIE10()" autocomplete="off" />
               <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
             </div>
             <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
@@ -222,90 +220,43 @@
           <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
           <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
         </div>
-
-        <!-- PLANTILLAS CLÍNICAS -->
         <div class="card" style="margin-bottom:1rem">
           <div class="card-header"><span class="card-title">📄 Plantillas clínicas</span></div>
-
-          <!-- 💊 Receta -->
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-              <div>
-                <strong>💊 Receta Médica</strong>
-                <span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span>
-              </div>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-sm" onclick="mostrarPlantilla('receta')">Plantilla</button>
-                <button class="btn btn-sm btn-primary" onclick="generarDocumento('receta')">Generar</button>
-              </div>
+              <div><strong>💊 Receta Médica</strong><span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span></div>
+              <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="mostrarPlantilla('receta')">Plantilla</button><button class="btn btn-sm btn-primary" onclick="generarDocumento('receta')">Generar</button></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div>
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-                  <span style="font-size:13px;font-weight:600;color:#374151">Medicamentos prescritos</span>
-                  <button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button>
-                </div>
-                <div id="medicamentosLista"></div>
-              </div>
+              <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:13px;font-weight:600;color:#374151">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div><div id="medicamentosLista"></div></div>
               <iframe id="previewReceta" style="width:100%;height:620px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
             </div>
           </div>
-
-          <!-- 📄 Certificado -->
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-              <div>
-                <strong>📄 Certificado Médico</strong>
-                <span style="font-size:12px;color:#888;margin-left:8px">Reposo + días + diagnóstico</span>
-              </div>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-sm" onclick="mostrarPlantilla('certificado')">Plantilla</button>
-                <button class="btn btn-sm btn-primary" onclick="generarDocumento('certificado')">Generar</button>
-              </div>
+              <div><strong>📄 Certificado Médico</strong><span style="font-size:12px;color:#888;margin-left:8px">Reposo + días + diagnóstico</span></div>
+              <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="mostrarPlantilla('certificado')">Plantilla</button><button class="btn btn-sm btn-primary" onclick="generarDocumento('certificado')">Generar</button></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div>
-                <div class="form-group"><label class="form-label">Días de reposo</label><input type="number" class="form-control" id="certDias" min="0" max="90" placeholder="0 = sin reposo" /></div>
-                <div class="form-group" style="margin:0"><label class="form-label">Observaciones</label><textarea class="form-control" id="certObservaciones" rows="5" placeholder="Indicaciones adicionales..."></textarea></div>
-              </div>
+              <div><div class="form-group"><label class="form-label">Días de reposo</label><input type="number" class="form-control" id="certDias" min="0" max="90" placeholder="0 = sin reposo" /></div><div class="form-group" style="margin:0"><label class="form-label">Observaciones</label><textarea class="form-control" id="certObservaciones" rows="5" placeholder="Indicaciones adicionales..."></textarea></div></div>
               <iframe id="previewCertificado" style="width:100%;height:500px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
             </div>
           </div>
-
-          <!-- 🔬 Pedido de Lab -->
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-              <div>
-                <strong>🔬 Pedido de Laboratorio</strong>
-                <span style="font-size:12px;color:#888;margin-left:8px">Exámenes + marcadores</span>
-              </div>
-              <div style="display:flex;gap:6px">
-                <button class="btn btn-sm" onclick="mostrarPlantilla('pedido')">Plantilla</button>
-                <button class="btn btn-sm btn-primary" onclick="generarDocumento('pedido')">Generar</button>
-              </div>
+              <div><strong>🔬 Pedido de Laboratorio</strong><span style="font-size:12px;color:#888;margin-left:8px">Exámenes + marcadores</span></div>
+              <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="mostrarPlantilla('pedido')">Plantilla</button><button class="btn btn-sm btn-primary" onclick="generarDocumento('pedido')">Generar</button></div>
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div>
-                <div class="form-group"><label class="form-label">Exámenes solicitados</label><textarea class="form-control" id="pedidoExamenes" rows="7" placeholder="Biometría hemática completa&#10;Glucosa basal&#10;Creatinina&#10;..."></textarea></div>
-                <div class="form-group" style="margin:0"><label class="form-label">Instrucciones / Preparación</label><textarea class="form-control" id="pedidoObservaciones" rows="3" placeholder="Ayuno de 8h, etc."></textarea></div>
-              </div>
+              <div><div class="form-group"><label class="form-label">Exámenes solicitados</label><textarea class="form-control" id="pedidoExamenes" rows="7" placeholder="Biometría hemática completa&#10;Glucosa basal&#10;..."></textarea></div><div class="form-group" style="margin:0"><label class="form-label">Instrucciones</label><textarea class="form-control" id="pedidoObservaciones" rows="3" placeholder="Ayuno de 8h, etc."></textarea></div></div>
               <iframe id="previewPedido" style="width:100%;height:580px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
             </div>
           </div>
         </div>
-
-        <!-- SEGUIMIENTO + ENVIAR -->
         <div class="card">
           <div class="card-header"><span class="card-title">Seguimiento automático por WhatsApp</span></div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem">
-            <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer">
-              <input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" />
-              <span>Activar recordatorios automáticos al paciente por WhatsApp</span>
-            </label>
-          </div>
-          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">
-            El bot enviará recordatorios según la frecuencia de cada medicamento. Al finalizar preguntará al paciente cómo se siente y registrará el resultado en su historial para los KPIs.
-          </div>
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem"><label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" /><span>Activar recordatorios automáticos al paciente por WhatsApp</span></label></div>
+          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">El bot enviará recordatorios según la frecuencia de cada medicamento.</div>
         </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
           <button class="btn" onclick="showPage('consultas');loadConsultas()">Cancelar</button>
@@ -322,31 +273,82 @@
           <div class="stat-card"><div class="stat-label">Total</div><div class="stat-value" id="op-total">—</div></div>
         </div>
         <div class="card">
+          <div class="card-header"><span class="card-title">Centro de notificaciones</span><div style="display:flex;gap:8px"><button class="btn btn-sm" onclick="marcarTodasLeidas()">✓ Marcar leídas</button><button class="btn btn-sm" onclick="loadNotificaciones()">↻ Actualizar</button></div></div>
+          <table class="table"><thead><tr><th>Tipo</th><th>Paciente / Mensaje</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="notifBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- FACTURACIÓN B2C — NUEVO -->
+      <div class="page" id="page-facturacion-b2c">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Consultas del mes</div><div class="stat-value" id="b2c-total-consultas">—</div></div>
+          <div class="stat-card stat-success"><div class="stat-label">Monto total</div><div class="stat-value" id="b2c-monto-total">—</div></div>
+          <div class="stat-card stat-danger"><div class="stat-label">Pendientes</div><div class="stat-value" id="b2c-pendientes">—</div></div>
+          <div class="stat-card"><div class="stat-label">Facturados</div><div class="stat-value" id="b2c-facturados">—</div></div>
+        </div>
+        <div class="card">
           <div class="card-header">
-            <span class="card-title">Centro de notificaciones</span>
-            <div style="display:flex;gap:8px">
-              <button class="btn btn-sm" onclick="marcarTodasLeidas()">✓ Marcar leídas</button>
-              <button class="btn btn-sm" onclick="loadNotificaciones()">↻ Actualizar</button>
+            <span class="card-title">Facturación B2C — Pago directo</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select class="form-control" style="width:130px;padding:5px 8px;font-size:12px" id="filtroMesB2C" onchange="loadFacturacionB2C()">
+                <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <select class="form-control" style="width:90px;padding:5px 8px;font-size:12px" id="filtroAnioB2C" onchange="loadFacturacionB2C()">
+                <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+              </select>
+              <button class="btn btn-sm" onclick="loadFacturacionB2C()">↻ Actualizar</button>
             </div>
           </div>
-          <table class="table">
-            <thead><tr><th>Tipo</th><th>Paciente / Mensaje</th><th>Fecha</th><th>Estado</th><th>Acciones</th></tr></thead>
-            <tbody id="notifBody"></tbody>
-          </table>
+          <div style="overflow-x:auto">
+            <table class="table">
+              <thead><tr><th>Nombre</th><th>Cédula</th><th>Correo</th><th>Dirección</th><th>Fecha</th><th>Monto</th><th>Forma pago</th><th>Estado</th><th>Síntomas</th></tr></thead>
+              <tbody id="b2cBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- PLANILLAJE B2B — NUEVO -->
+      <div class="page" id="page-planillaje-b2b">
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-label">Consultas del mes</div><div class="stat-value" id="b2b-total-consultas">—</div></div>
+          <div class="stat-card stat-danger"><div class="stat-label">Pendientes</div><div class="stat-value" id="b2b-pendientes">—</div></div>
+          <div class="stat-card stat-success"><div class="stat-label">Planillados</div><div class="stat-value" id="b2b-planillados">—</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Planillaje B2B — Por empresa</span>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <select class="form-control" style="width:180px;padding:5px 8px;font-size:12px" id="filtroEmpresaB2B" onchange="loadPlanillajeB2B()"><option value="">Todas las empresas</option></select>
+              <select class="form-control" style="width:130px;padding:5px 8px;font-size:12px" id="filtroMesB2B" onchange="loadPlanillajeB2B()">
+                <option value="1">Enero</option><option value="2">Febrero</option><option value="3">Marzo</option>
+                <option value="4">Abril</option><option value="5">Mayo</option><option value="6">Junio</option>
+                <option value="7">Julio</option><option value="8">Agosto</option><option value="9">Septiembre</option>
+                <option value="10">Octubre</option><option value="11">Noviembre</option><option value="12">Diciembre</option>
+              </select>
+              <select class="form-control" style="width:90px;padding:5px 8px;font-size:12px" id="filtroAnioB2B" onchange="loadPlanillajeB2B()">
+                <option value="2024">2024</option><option value="2025">2025</option><option value="2026">2026</option>
+              </select>
+              <button class="btn btn-sm" onclick="loadPlanillajeB2B()">↻ Actualizar</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="table">
+              <thead><tr><th>Paciente</th><th>Cédula</th><th>Fecha consulta</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Empresa</th></tr></thead>
+              <tbody id="b2bBody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
       <!-- USUARIOS -->
       <div class="page" id="page-usuarios">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Usuarios del sistema</span>
-            <button class="btn btn-sm btn-primary" onclick="document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button>
-          </div>
-          <table class="table">
-            <thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Especialidad</th><th>Reg. MSP</th><th>Firma</th><th>Estado</th><th></th></tr></thead>
-            <tbody id="usuariosBody"></tbody>
-          </table>
+          <div class="card-header"><span class="card-title">Usuarios del sistema</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button></div>
+          <table class="table"><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Especialidad</th><th>Reg. MSP</th><th>Firma</th><th>Estado</th><th></th></tr></thead><tbody id="usuariosBody"></tbody></table>
         </div>
         <div class="card" id="addUserForm" style="display:none">
           <div class="card-header"><span class="card-title">Agregar nuevo usuario</span><button class="btn btn-sm" onclick="document.getElementById('addUserForm').style.display='none'">✕</button></div>
@@ -355,13 +357,7 @@
             <div class="form-group"><label class="form-label">Apellidos *</label><input type="text" class="form-control" id="newApellidos" /></div>
             <div class="form-group"><label class="form-label">Correo *</label><input type="email" class="form-control" id="newCorreo" /></div>
             <div class="form-group"><label class="form-label">Contraseña *</label><input type="text" class="form-control" id="newPass" /></div>
-            <div class="form-group"><label class="form-label">Rol *</label>
-              <select class="form-control" id="newRol">
-                <option value="medico">Médico</option>
-                <option value="operador">Operador</option>
-                <option value="admin">Administrador</option>
-              </select>
-            </div>
+            <div class="form-group"><label class="form-label">Rol *</label><select class="form-control" id="newRol"><option value="medico">Médico</option><option value="operador">Operador</option><option value="admin">Administrador</option></select></div>
             <div class="form-group"><label class="form-label">Especialidad</label><input type="text" class="form-control" id="newEsp" placeholder="Ej: Medicina General" /></div>
             <div class="form-group"><label class="form-label">Número de registro MSP</label><input type="text" class="form-control" id="newReg" /></div>
           </div>
@@ -371,23 +367,12 @@
 
       <!-- PERFIL -->
       <div class="page" id="page-perfil">
-        <div class="card">
-          <div class="card-header"><span class="card-title">Mi perfil</span></div>
-          <div id="perfilContent"></div>
-        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Mi perfil</span></div><div id="perfilContent"></div></div>
         <div class="card">
           <div class="card-header"><span class="card-title">Firma digital y sello</span></div>
           <div class="two-col">
-            <div>
-              <p style="font-size:13px;color:#888;margin-bottom:1rem">Firma digital en PNG con fondo transparente.</p>
-              <div class="upload-area" onclick="document.getElementById('firmaInput').click()"><div id="firmaPreview">📝 Clic para subir firma digital</div></div>
-              <input type="file" id="firmaInput" accept="image/*" style="display:none" onchange="previewFirma(this,'firmaPreview','firma')" />
-            </div>
-            <div>
-              <p style="font-size:13px;color:#888;margin-bottom:1rem">Sello médico en PNG.</p>
-              <div class="upload-area" onclick="document.getElementById('selloInput').click()"><div id="selloPreview">🔵 Clic para subir sello médico</div></div>
-              <input type="file" id="selloInput" accept="image/*" style="display:none" onchange="previewFirma(this,'selloPreview','sello')" />
-            </div>
+            <div><p style="font-size:13px;color:#888;margin-bottom:1rem">Firma digital en PNG con fondo transparente.</p><div class="upload-area" onclick="document.getElementById('firmaInput').click()"><div id="firmaPreview">📝 Clic para subir firma digital</div></div><input type="file" id="firmaInput" accept="image/*" style="display:none" onchange="previewFirma(this,'firmaPreview','firma')" /></div>
+            <div><p style="font-size:13px;color:#888;margin-bottom:1rem">Sello médico en PNG.</p><div class="upload-area" onclick="document.getElementById('selloInput').click()"><div id="selloPreview">🔵 Clic para subir sello médico</div></div><input type="file" id="selloInput" accept="image/*" style="display:none" onchange="previewFirma(this,'selloPreview','sello')" /></div>
           </div>
           <div class="divider"></div>
           <button class="btn btn-primary" onclick="saveFirma()">Guardar firma y sello</button>
@@ -406,32 +391,17 @@
       <div class="page" id="page-metricas">
         <div class="stats-grid" id="metricStats"></div>
         <div class="two-col">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Distribución por nivel</span></div>
-            <div id="nivelChart" style="padding:1rem 0"></div>
-          </div>
-          <div class="card">
-            <div class="card-header"><span class="card-title">KPIs principales</span></div>
-            <div id="kpiContent"></div>
-          </div>
+          <div class="card"><div class="card-header"><span class="card-title">Distribución por nivel</span></div><div id="nivelChart" style="padding:1rem 0"></div></div>
+          <div class="card"><div class="card-header"><span class="card-title">KPIs principales</span></div><div id="kpiContent"></div></div>
         </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div>
-          <div id="seguimientoStats"></div>
-        </div>
+        <div class="card"><div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div><div id="seguimientoStats"></div></div>
       </div>
 
       <!-- EMPRESAS -->
       <div class="page" id="page-empresas">
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Clientes corporativos B2B</span>
-            <button class="btn btn-sm btn-primary" onclick="document.getElementById('addEmpresaForm').style.display='block'">+ Agregar empresa</button>
-          </div>
-          <table class="table">
-            <thead><tr><th>Empresa</th><th>Seguro</th><th>Pacientes</th><th>Estado</th><th></th></tr></thead>
-            <tbody id="empresasBody"></tbody>
-          </table>
+          <div class="card-header"><span class="card-title">Clientes corporativos B2B</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addEmpresaForm').style.display='block'">+ Agregar empresa</button></div>
+          <table class="table"><thead><tr><th>Empresa</th><th>Seguro</th><th>Pacientes</th><th>Estado</th><th></th></tr></thead><tbody id="empresasBody"></tbody></table>
         </div>
         <div class="card" id="addEmpresaForm" style="display:none">
           <div class="card-header"><span class="card-title">Nueva empresa</span><button class="btn btn-sm" onclick="document.getElementById('addEmpresaForm').style.display='none'">✕</button></div>
@@ -446,15 +416,10 @@
     </div><!-- /content -->
   </div><!-- /main -->
 
-  <!-- PANEL NOTIFICACIONES -->
   <div class="notif-panel" id="notifPanel">
-    <div class="notif-header">
-      Notificaciones
-      <button class="btn btn-sm" onclick="marcarTodasLeidas()" style="font-size:11px">Marcar leídas</button>
-    </div>
+    <div class="notif-header">Notificaciones<button class="btn btn-sm" onclick="marcarTodasLeidas()" style="font-size:11px">Marcar leídas</button></div>
     <div id="notifList"></div>
   </div>
-
 </div><!-- /app -->
 
 <!-- POPUP AGENDAR -->
@@ -472,26 +437,16 @@
   </div>
 </div>
 
-
 <div class="alert-new" id="toastAlert"></div>
 <div id="printRoot"></div>
 
 <!-- MODAL RECETA -->
 <div class="plantilla-modal-overlay" id="modalReceta">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar">
-      <span class="plantilla-modal-title">💊 Receta Médica</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button>
-        <button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button>
-      </div>
-    </div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docReceta">
-        <div class="doc-header">
-          <div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div>
-          <div><div class="doc-title">Receta Médica</div><div class="receta-num">N° <span id="rec-numero">—</span></div><div style="font-size:10px;color:#555;text-align:right" id="rec-fecha-header">—</div></div>
-        </div>
+        <div class="doc-header"><div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Receta Médica</div><div class="receta-num">N° <span id="rec-numero">—</span></div><div style="font-size:10px;color:#555;text-align:right" id="rec-fecha-header">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="rec-paciente">—</span></div>
@@ -502,12 +457,8 @@
             <div class="doc-row"><span class="doc-lbl">CIE-10:</span><span class="doc-val" id="rec-cie10">—</span></div>
           </div>
         </div>
-        <div class="doc-section"><div class="doc-section-title">Medicamentos prescritos</div>
-          <table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead><tbody id="rec-meds-body"></tbody></table>
-        </div>
-        <div class="doc-section"><div class="doc-section-title">Indicaciones</div>
-          <textarea class="doc-textarea" id="rec-indicaciones" placeholder="Indicaciones generales..."></textarea>
-        </div>
+        <div class="doc-section"><div class="doc-section-title">Medicamentos prescritos</div><table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead><tbody id="rec-meds-body"></tbody></table></div>
+        <div class="doc-section"><div class="doc-section-title">Indicaciones</div><textarea class="doc-textarea" id="rec-indicaciones" placeholder="Indicaciones generales..."></textarea></div>
         <div class="doc-firma-area">
           <div class="doc-firma-box"><div id="rec-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div><div class="doc-firma-line"><span id="rec-nombre-medico">—</span><br><span id="rec-reg-medico" style="font-size:9px;color:#888"></span><br><span id="rec-esp-medico" style="font-size:9px;color:#888"></span></div></div>
           <div class="doc-firma-box"><div id="rec-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div></div>
@@ -520,19 +471,10 @@
 <!-- MODAL CERTIFICADO -->
 <div class="plantilla-modal-overlay" id="modalCertificado">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar">
-      <span class="plantilla-modal-title">📄 Certificado Médico</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button>
-        <button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button>
-      </div>
-    </div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docCertificado">
-        <div class="doc-header">
-          <div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div>
-          <div><div class="doc-title">Certificado Médico</div><div style="font-size:10px;color:#555;text-align:right" id="cert-lugar-fecha">—</div></div>
-        </div>
+        <div class="doc-header"><div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Certificado Médico</div><div style="font-size:10px;color:#555;text-align:right" id="cert-lugar-fecha">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="cert-paciente">—</span></div>
@@ -543,9 +485,7 @@
             <div class="doc-row"><span class="doc-lbl">CIE-10:</span><span class="doc-val" id="cert-cie10">—</span></div>
           </div>
         </div>
-        <div class="doc-section"><div class="doc-section-title">Descripción</div>
-          <textarea class="doc-textarea" id="cert-descripcion" placeholder="Descripción del caso..."></textarea>
-        </div>
+        <div class="doc-section"><div class="doc-section-title">Descripción</div><textarea class="doc-textarea" id="cert-descripcion" placeholder="Descripción del caso..."></textarea></div>
         <div class="doc-section"><div class="doc-section-title">Reposo médico</div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Total de días:</span><input type="number" class="cert-dias-num" id="cert-dias-num" min="1" max="365" value="1" oninput="actualizarDiasLetra()" /><input type="text" class="cert-dias-letra" id="cert-dias-letra" placeholder="UNO" readonly /></div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Desde:</span><input type="date" class="doc-val-edit" id="cert-desde" style="max-width:130px" oninput="actualizarHastaFecha()" /><input type="text" class="cert-dias-letra" id="cert-desde-letra" readonly placeholder="fecha en letra" /></div>
@@ -563,19 +503,10 @@
 <!-- MODAL LABORATORIO -->
 <div class="plantilla-modal-overlay" id="modalLaboratorio">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar">
-      <span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button>
-        <button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button>
-      </div>
-    </div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docLaboratorio">
-        <div class="doc-header">
-          <div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div>
-          <div><div class="doc-title">Pedido de Laboratorio</div><div style="font-size:10px;color:#555;text-align:right" id="lab-fecha">—</div></div>
-        </div>
+        <div class="doc-header"><div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Pedido de Laboratorio</div><div style="font-size:10px;color:#555;text-align:right" id="lab-fecha">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="lab-paciente">—</span></div>
@@ -586,30 +517,9 @@
         </div>
         <div class="doc-section"><div class="doc-section-title">Exámenes solicitados</div>
           <div class="lab-grid">
-            <div class="lab-col"><div class="lab-col-title">Hematología</div><div class="lab-items">
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Biometría hemática</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Grupo sanguíneo</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Tiempo de coagulación</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> VSG</label>
-            </div></div>
-            <div class="lab-col"><div class="lab-col-title">Química sanguínea</div><div class="lab-items">
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Glucosa</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Urea / BUN</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Creatinina</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Colesterol total</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Triglicéridos</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> HDL / LDL</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Ácido úrico</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> TGO / TGP</label>
-            </div></div>
-            <div class="lab-col"><div class="lab-col-title">Otros</div><div class="lab-items">
-              <label class="lab-item"><input type="checkbox" class="lab-check"> EMO (orina)</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Coproparasitario</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> TSH / T3 / T4</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> HbA1c</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> PCR</label>
-              <label class="lab-item"><input type="checkbox" class="lab-check"> Proteínas totales</label>
-            </div></div>
+            <div class="lab-col"><div class="lab-col-title">Hematología</div><div class="lab-items"><label class="lab-item"><input type="checkbox" class="lab-check"> Biometría hemática</label><label class="lab-item"><input type="checkbox" class="lab-check"> Grupo sanguíneo</label><label class="lab-item"><input type="checkbox" class="lab-check"> Tiempo de coagulación</label><label class="lab-item"><input type="checkbox" class="lab-check"> VSG</label></div></div>
+            <div class="lab-col"><div class="lab-col-title">Química sanguínea</div><div class="lab-items"><label class="lab-item"><input type="checkbox" class="lab-check"> Glucosa</label><label class="lab-item"><input type="checkbox" class="lab-check"> Urea / BUN</label><label class="lab-item"><input type="checkbox" class="lab-check"> Creatinina</label><label class="lab-item"><input type="checkbox" class="lab-check"> Colesterol total</label><label class="lab-item"><input type="checkbox" class="lab-check"> Triglicéridos</label><label class="lab-item"><input type="checkbox" class="lab-check"> HDL / LDL</label><label class="lab-item"><input type="checkbox" class="lab-check"> Ácido úrico</label><label class="lab-item"><input type="checkbox" class="lab-check"> TGO / TGP</label></div></div>
+            <div class="lab-col"><div class="lab-col-title">Otros</div><div class="lab-items"><label class="lab-item"><input type="checkbox" class="lab-check"> EMO (orina)</label><label class="lab-item"><input type="checkbox" class="lab-check"> Coproparasitario</label><label class="lab-item"><input type="checkbox" class="lab-check"> TSH / T3 / T4</label><label class="lab-item"><input type="checkbox" class="lab-check"> HbA1c</label><label class="lab-item"><input type="checkbox" class="lab-check"> PCR</label><label class="lab-item"><input type="checkbox" class="lab-check"> Proteínas totales</label></div></div>
           </div>
           <div style="margin-top:8px"><label class="form-label" style="font-size:10px">Otros exámenes:</label><input type="text" class="form-control" style="font-size:10px" placeholder="Especifique..." /></div>
         </div>
@@ -622,7 +532,7 @@
   </div>
 </div>
 
-<!-- SCRIPTS — orden importante: config primero, utils segundo, resto después -->
+<!-- SCRIPTS -->
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="/public/js/config.js"></script>
 <script src="/public/js/utils.js"></script>
@@ -642,9 +552,9 @@
 <script src="/public/js/empresas.js"></script>
 <script src="/public/js/cronicas-portal.js"></script>
 <script src="/public/js/plantillas.js"></script>
+<script src="/public/js/facturacion.js"></script>
 
 <script>
-// Event listeners globales
 document.addEventListener('click', e => {
   const panel = document.getElementById('notifPanel');
   const btn = document.getElementById('notifBtn');

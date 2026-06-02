@@ -199,6 +199,15 @@ async function enviarDocumentos() {
   if (!hayDocs) { alert('Genere al menos un documento antes de enviar'); return; }
 
   showToast('⏳ Guardando y enviando documentos...');
+  try {
+    await _enviarDocumentosInterno(diagnostico);
+  } catch (e) {
+    console.error('Error al enviar documentos:', e);
+    showToast(`Error: ${e.message}`);
+  }
+}
+
+async function _enviarDocumentosInterno(diagnostico) {
   const activar = document.getElementById('activarSeguimiento').checked;
   const ahora = new Date();
 

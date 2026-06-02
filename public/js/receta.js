@@ -18,31 +18,99 @@ const CIE10 = [
   {c:'Z00',n:'Examen general'},{c:'Z10',n:'Examen rutinario de salud'},{c:'Z23',n:'Necesidad de inmunización'},{c:'Z30',n:'Anticoncepción'},{c:'Z34',n:'Supervisión del embarazo normal'}
 ];
 
+let _pacData = {}, _medicoData = {};
+
+function mostrarPDFEnIframe(pdfBytes, iframeId) {
+  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  const iframe = document.getElementById(iframeId);
+  if (iframe._prevUrl) URL.revokeObjectURL(iframe._prevUrl);
+  iframe._prevUrl = URL.createObjectURL(blob);
+  iframe.src = iframe._prevUrl;
+}
+
+async function cargarPreviewDesdeStorage(storagePath, iframeId) {
+  const res = await fetch(`${SUPA_URL}/storage/v1/object/sign/documentos-pacientes/${storagePath}`, {
+    method: 'POST',
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ expiresIn: 3600 })
+  });
+  const data = await res.json();
+  if (data.signedURL) document.getElementById(iframeId).src = `${SUPA_URL}/storage/v1${data.signedURL}`;
+}
+
+async function mostrarPlantilla(tipo) {
+  try {
+    if (tipo === 'receta') {
+      const bytes = await generarRecetaPDF({ paciente: _pacData, medico: _medicoData, diagnostico: '', cie10: [], medicamentos: [], indicaciones: '' });
+      mostrarPDFEnIframe(bytes, 'previewReceta');
+    } else if (tipo === 'certificado') {
+      const bytes = await generarCertificadoPDF({ paciente: _pacData, medico: _medicoData, diagnostico: '', diasReposo: 0, observaciones: '' });
+      mostrarPDFEnIframe(bytes, 'previewCertificado');
+    } else if (tipo === 'pedido') {
+      const bytes = await generarPedidoPDF({ paciente: _pacData, medico: _medicoData, diagnostico: '', examenes: '', observaciones: '' });
+      mostrarPDFEnIframe(bytes, 'previewPedido');
+    }
+  } catch(e) { console.error('Error plantilla:', e); }
+}
+
 async function openReceta(consultaId, pacienteId) {
-  recetaConsultaId = consultaId; recetaPacienteId = pacienteId;
+  recetaConsultaId = consultaId;
+  recetaPacienteId = pacienteId;
   medicamentosData = [];
   cie10Seleccionados = [];
-  document.getElementById('recetaDiagnostico').value = '';
-  document.getElementById('cie10Search').value = '';
+
+  // Reset todos los campos
+  ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones',
+   'certDiagnostico','certDias','certObservaciones',
+   'pedidoDiagnostico','pedidoExamenes','pedidoObservaciones'
+  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cie10Dropdown').style.display = 'none';
   document.getElementById('cie10Seleccionados').innerHTML = '';
-  document.getElementById('recetaNotas').value = '';
-  document.getElementById('recetaIndicaciones').value = '';
   document.getElementById('medicamentosLista').innerHTML = '';
-  const [pacArr, consultaArr] = await Promise.all([
+  ['previewReceta','previewCertificado','previewPedido'].forEach(id => {
+    const f = document.getElementById(id); if (f) f.src = '';
+  });
+
+  // Cargar paciente y médico
+  const [pacRes, medRes] = await Promise.all([
     supa('GET', 'pacientes', null, `?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
-    supa('GET', 'consultas', null, `?id=eq.${consultaId}`)
+    supa('GET', 'usuarios', null, `?id=eq.${currentUser.id}`)
   ]);
-  currentPacienteData = (pacArr || [])[0] || {};
-  currentConsultaData = (consultaArr || [])[0] || {};
-  const p = currentPacienteData;
-  const init = ((p.nombre || '?')[0] + (p.apellidos || '?')[0]).toUpperCase();
+  _pacData    = (pacRes || [])[0] || {};
+  _medicoData = (medRes || [])[0] || {};
+
+  const init = ((_pacData.nombre || '?')[0] + (_pacData.apellidos || '?')[0]).toUpperCase();
   document.getElementById('recetaPacienteHeader').innerHTML = `
     <div class="patient-avatar-lg">${init}</div>
-    <div><div class="patient-name">${p.nombre || ''} ${p.apellidos || ''}</div>
-    <div class="patient-meta">Cédula: ${p.cedula || '—'} · ${p.clientes_b2b?.nombre_empresa || '—'} · Tel: ${p.telefono || '—'}</div></div>
+    <div><div class="patient-name">${_pacData.nombre || ''} ${_pacData.apellidos || ''}</div>
+    <div class="patient-meta">Cédula: ${_pacData.cedula || '—'} · ${_pacData.clientes_b2b?.nombre_empresa || '—'} · Tel: ${_pacData.telefono || '—'}</div></div>
   `;
   showPage('receta');
+
+  // Cargar datos existentes en segundo plano
+  const [recetaData, docsData] = await Promise.all([
+    supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&order=created_at.desc&limit=1`),
+    supa('GET', 'documentos', null, `?consulta_id=eq.${consultaId}`)
+  ]);
+
+  // Pre-cargar receta si existe
+  const receta = (recetaData || [])[0];
+  if (receta) {
+    document.getElementById('recetaDiagnostico').value = receta.diagnostico || '';
+    document.getElementById('recetaIndicaciones').value = receta.indicaciones || '';
+    medicamentosData = (receta.medicamentos || []).map(m => ({ ...m, id: Date.now() + Math.random() }));
+    cie10Seleccionados = receta.cie10_codigos || [];
+    renderMedicamentos();
+    renderCIE10();
+  }
+
+  // Cargar previews de documentos existentes
+  const iframeMap = { receta: 'previewReceta', certificado: 'previewCertificado', pedido_laboratorio: 'previewPedido' };
+  for (const doc of docsData || []) {
+    if (iframeMap[doc.tipo] && doc.storage_path) {
+      cargarPreviewDesdeStorage(doc.storage_path, iframeMap[doc.tipo]);
+    }
+  }
 }
 
 function agregarMedicamento() {
@@ -81,12 +149,14 @@ function quitarMedicamento(id) { medicamentosData = medicamentosData.filter(x =>
 
 async function guardarReceta() {
   if (medicamentosData.length === 0) { alert('Agregue al menos un medicamento'); return; }
-  if (medicamentosData.filter(m => !m.nombre || !m.dias).length > 0) { alert('Complete nombre y duración de todos los medicamentos'); return; }
-  const diagnostico = document.getElementById('recetaDiagnostico').value;
+  if (medicamentosData.some(m => !m.nombre || !m.dias)) { alert('Complete nombre y duración de todos los medicamentos'); return; }
+  const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
+
+  showToast('⏳ Guardando receta...');
   const activar = document.getElementById('activarSeguimiento').checked;
   const ahora = new Date();
-  const recetaRes = await supa('POST', 'recetas', {
+  const payload = {
     consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
     medicamentos: medicamentosData, diagnostico,
     cie10_codigos: cie10Seleccionados,
@@ -94,30 +164,89 @@ async function guardarReceta() {
     seguimiento_activo: activar,
     fecha_inicio: ahora.toISOString(),
     fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
-  });
-  const receta_id = (recetaRes || [])[0]?.id;
-  await supa('PATCH', 'consultas', { diagnostico, notas_medico: document.getElementById('recetaNotas').value, estado: 'completada', medico_id: currentUser.id }, `?id=eq.${recetaConsultaId}`);
-  const pacData = await supa('GET', 'pacientes', null, `?id=eq.${recetaPacienteId}`);
-  const pac = (pacData || [])[0] || {};
-  const telRaw = pac.telefono || '';
-  const telefono = telRaw ? `whatsapp:+593${telRaw.replace(/^0/, '')}` : null;
-  if (activar && receta_id && telefono) {
-    for (const med of medicamentosData) {
-      const fechaFin = new Date(ahora.getTime() + med.dias * 86400000);
-      await supa('POST', 'recordatorios', {
-        receta_id, paciente_id: recetaPacienteId, telefono,
-        medicamento: med.nombre, dosis: med.dosis || '',
-        frecuencia_horas: med.frecuencia_horas,
-        fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),
-        fecha_fin: fechaFin.toISOString(),
-        activo: true, tipo: 'medicamento'
-      });
-    }
-    showToast(`✓ Receta emitida y ${medicamentosData.length} recordatorio(s) activados`);
+  };
+
+  // Upsert receta (actualiza si ya existe para esta consulta)
+  const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
+  let receta_id;
+  if (existing?.length > 0) {
+    receta_id = existing[0].id;
+    await supa('PATCH', 'recetas', payload, `?id=eq.${receta_id}`);
   } else {
-    showToast('✓ Receta emitida exitosamente');
+    const res = await supa('POST', 'recetas', payload);
+    receta_id = (res || [])[0]?.id;
+    // Solo activa recordatorios la primera vez
+    const telefono = _pacData.telefono ? `whatsapp:+593${_pacData.telefono.replace(/^0/, '')}` : null;
+    if (activar && receta_id && telefono) {
+      for (const med of medicamentosData) {
+        await supa('POST', 'recordatorios', {
+          receta_id, paciente_id: recetaPacienteId, telefono,
+          medicamento: med.nombre, dosis: med.dosis || '',
+          frecuencia_horas: med.frecuencia_horas,
+          fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),
+          fecha_fin: new Date(ahora.getTime() + med.dias * 86400000).toISOString(),
+          activo: true, tipo: 'medicamento'
+        });
+      }
+    }
   }
-  showPage('consultas'); loadConsultas();
+
+  await supa('PATCH', 'consultas', {
+    diagnostico,
+    notas_medico: document.getElementById('recetaNotas').value,
+    estado: 'completada',
+    medico_id: currentUser.id
+  }, `?id=eq.${recetaConsultaId}`);
+
+  // Generar PDF y mostrar inline
+  try {
+    showToast('⏳ Generando PDF...');
+    const pdfBytes = await generarRecetaPDF({
+      paciente: _pacData, medico: _medicoData, diagnostico,
+      cie10: cie10Seleccionados, medicamentos: medicamentosData,
+      indicaciones: document.getElementById('recetaIndicaciones').value
+    });
+    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, 'receta', pdfBytes);
+    mostrarPDFEnIframe(pdfBytes, 'previewReceta');
+    showToast('✓ Receta guardada — PDF actualizado');
+  } catch (e) {
+    console.error('Error PDF receta:', e);
+    showToast('✓ Receta guardada');
+  }
+}
+
+async function guardarCertificado() {
+  const diagnostico = document.getElementById('certDiagnostico').value.trim();
+  if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
+  const diasReposo = parseInt(document.getElementById('certDias').value) || 0;
+  const observaciones = document.getElementById('certObservaciones').value.trim();
+  try {
+    showToast('⏳ Generando certificado...');
+    const pdfBytes = await generarCertificadoPDF({ paciente: _pacData, medico: _medicoData, diagnostico, diasReposo, observaciones });
+    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, 'certificado', pdfBytes);
+    mostrarPDFEnIframe(pdfBytes, 'previewCertificado');
+    showToast('✓ Certificado generado y guardado');
+  } catch (e) {
+    console.error('Error PDF certificado:', e);
+    showToast('Error generando certificado');
+  }
+}
+
+async function guardarPedido() {
+  const examenes = document.getElementById('pedidoExamenes').value.trim();
+  if (!examenes) { alert('Ingrese los exámenes solicitados'); return; }
+  const diagnostico = document.getElementById('pedidoDiagnostico').value.trim();
+  const observaciones = document.getElementById('pedidoObservaciones').value.trim();
+  try {
+    showToast('⏳ Generando pedido...');
+    const pdfBytes = await generarPedidoPDF({ paciente: _pacData, medico: _medicoData, diagnostico, examenes, observaciones });
+    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, 'pedido_laboratorio', pdfBytes);
+    mostrarPDFEnIframe(pdfBytes, 'previewPedido');
+    showToast('✓ Pedido de laboratorio generado');
+  } catch (e) {
+    console.error('Error PDF pedido:', e);
+    showToast('Error generando pedido');
+  }
 }
 
 function buscarCIE10() {

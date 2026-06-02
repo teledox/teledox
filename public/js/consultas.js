@@ -13,8 +13,8 @@ async function loadConsultas() {
       <td><span class="badge badge-gray">${c.estado}</span></td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">
         ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>` : ''}
-        <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">💊 Receta</button>
-        ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓</button>` : ''}
+        <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">📋 Documentos</button>
+        ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓ Completar</button>` : ''}
       </td>
     </tr>
   `).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';

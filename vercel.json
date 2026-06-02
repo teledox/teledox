@@ -1,19 +1,41 @@
 {
   "version": 2,
-  "outputDirectory": "public",
-  "builds": [
+  "functions": {
+    "API/api/webhook.js": {
+      "memory": 128,
+      "maxDuration": 10
+    },
+    "API/api/cron.js": {
+      "memory": 128,
+      "maxDuration": 30
+    },
+    "API/api/compress.js": {
+      "memory": 256,
+      "maxDuration": 15
+    }
+  },
+  "routes": [
     {
-      "src": "api/api/*.js",
-      "use": "@vercel/node"
+      "src": "/api/webhook",
+      "dest": "/API/api/webhook.js"
     },
     {
-      "src": "public/**",
-      "use": "@vercel/static"
+      "src": "/api/cron",
+      "dest": "/API/api/cron.js"
+    },
+    {
+      "src": "/panel",
+      "dest": "/público/índice.html"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/público/índice.html"
     }
   ],
-  "routes": [
-    { "src": "/api/api/(.*)", "dest": "/api/api/$1" },
-    { "src": "/", "dest": "/public/index.html" },
-    { "src": "/(.*)", "dest": "/$1" }
+  "crons": [
+    {
+      "path": "/api/cron",
+      "schedule": "*/15 * * * *"
+    }
   ]
 }

@@ -24,10 +24,6 @@
       "dest": "/API/api/cron.js"
     },
     {
-      "src": "/panel",
-      "dest": "/público/índice.html"
-    },
-    {
       "src": "/(.*)",
       "dest": "/público/índice.html"
     }
@@ -35,7 +31,7 @@
   "crons": [
     {
       "path": "/api/cron",
-      "schedule": "*/15 * * * *"
+      "schedule": "0 8 * * *"
     }
   ]
 }

@@ -1,12 +1,9 @@
 {
   "version": 2,
+  "outputDirectory": "public",
   "functions": {
     "api/webhook.js":  { "maxDuration": 10 },
     "api/cron.js":     { "maxDuration": 30 },
     "api/compress.js": { "maxDuration": 15 }
-  },
-  "rewrites": [
-    { "source": "/",      "destination": "/public/index.html" },
-    { "source": "/(.*)", "destination": "/public/$1" }
-  ]
+  }
 }

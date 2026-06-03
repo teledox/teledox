@@ -8,21 +8,59 @@
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- LOGIN / REGISTRO -->
 <div class="login-wrap" id="loginWrap">
   <div class="login-box">
     <div class="login-logo">MediLyft</div>
-    <div class="login-sub">Panel médico — acceso restringido</div>
-    <div class="form-group">
-      <label class="form-label">Correo electrónico</label>
-      <input type="email" class="form-input" id="loginEmail" placeholder="correo@ejemplo.com" />
+
+    <!-- INICIAR SESIÓN -->
+    <div id="loginView">
+      <div class="login-sub">Panel médico</div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico</label>
+        <input type="email" class="form-input" id="loginEmail" placeholder="correo@ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña</label>
+        <input type="password" class="form-input" id="loginPass" placeholder="••••••••" />
+      </div>
+      <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
+      <div class="login-error" id="loginError">Correo o contraseña incorrectos</div>
+      <div class="login-toggle">¿No tienes cuenta? <a href="#" onclick="showAuthView('register');return false;">Crear cuenta</a></div>
     </div>
-    <div class="form-group">
-      <label class="form-label">Contraseña</label>
-      <input type="password" class="form-input" id="loginPass" placeholder="••••••••" />
+
+    <!-- CREAR CUENTA -->
+    <div id="registerView" style="display:none">
+      <div class="login-sub">Crear cuenta médico</div>
+      <div class="form-group">
+        <label class="form-label">Nombre *</label>
+        <input type="text" class="form-input" id="regNombre" placeholder="Juan" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Apellidos *</label>
+        <input type="text" class="form-input" id="regApellidos" placeholder="Pérez García" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Correo electrónico *</label>
+        <input type="email" class="form-input" id="regEmail" placeholder="correo@ejemplo.com" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contraseña * <span style="font-size:11px;color:#999">(mín. 6 caracteres)</span></label>
+        <input type="password" class="form-input" id="regPass" placeholder="••••••••" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Especialidad</label>
+        <input type="text" class="form-input" id="regEsp" placeholder="Ej: Medicina General" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">N° Registro MSP</label>
+        <input type="text" class="form-input" id="regNumero" placeholder="Ej: 1234567" />
+      </div>
+      <button class="btn-login" id="registerBtn" onclick="doRegister()">Crear cuenta</button>
+      <div class="login-error" id="registerError" style="display:none"></div>
+      <div class="login-toggle">¿Ya tienes cuenta? <a href="#" onclick="showAuthView('login');return false;">Iniciar sesión</a></div>
     </div>
-    <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
-    <div class="login-error" id="loginError">Correo o contraseña incorrectos</div>
+
   </div>
 </div>
 
@@ -533,6 +571,7 @@
 </div>
 
 <!-- SCRIPTS -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/utils.js"></script>
@@ -563,7 +602,13 @@ document.addEventListener('click', e => {
 });
 document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
-window.addEventListener('load', () => { const saved = getSession(); if (saved) { currentUser = saved; initApp(); } });
+window.addEventListener('load', async () => {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  if (session) {
+    const users = await supa('GET', 'usuarios', null, `?correo=eq.${encodeURIComponent(session.user.email)}&activo=eq.true`);
+    if (users && users.length > 0) { currentUser = users[0]; initApp(); }
+  }
+});
 </script>
 
 </body>

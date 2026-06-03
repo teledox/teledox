@@ -15,17 +15,24 @@ async function loadUsuarios() {
 }
 
 async function saveUser() {
-  const data = {
-    nombre: document.getElementById('newNombre').value,
-    apellidos: document.getElementById('newApellidos').value,
-    correo: document.getElementById('newCorreo').value,
-    password_hash: document.getElementById('newPass').value,
-    rol: document.getElementById('newRol').value,
-    especialidad: document.getElementById('newEsp').value || null,
-    numero_registro: document.getElementById('newReg').value || null
-  };
-  if (!data.nombre || !data.correo || !data.password_hash) { alert('Complete los campos obligatorios'); return; }
-  await supa('POST', 'usuarios', data);
+  const nombre = document.getElementById('newNombre').value.trim();
+  const apellidos = document.getElementById('newApellidos').value.trim();
+  const correo = document.getElementById('newCorreo').value.trim();
+  const pass = document.getElementById('newPass').value.trim();
+  const rol = document.getElementById('newRol').value;
+  const especialidad = document.getElementById('newEsp').value.trim() || null;
+  const numero_registro = document.getElementById('newReg').value.trim() || null;
+
+  if (!nombre || !correo || !pass) { alert('Complete los campos obligatorios'); return; }
+
+  const { data, error } = await supabaseClient.auth.signUp({ email: correo, password: pass });
+  if (error) { alert('Error al crear cuenta: ' + error.message); return; }
+
+  await supa('POST', 'usuarios', {
+    id: data.user.id,
+    nombre, apellidos, correo, rol, especialidad, numero_registro, activo: true
+  });
+
   document.getElementById('addUserForm').style.display = 'none';
   loadUsuarios();
   showToast('✓ Usuario creado');

@@ -1,11 +1,11 @@
 const twilio = require('twilio');
-const { obtener, guardar, eliminar } = require('../services/sesiones');
-const { buscarRespuestaPendiente } = require('../services/seguimiento');
-const { procesarRespuestaSeguimiento } = require('../flows/flujo-seguimiento');
-const { procesarPaso } = require('../flows/flujo-consulta');
-const { procesarReagendamiento } = require('../flows/flujo-reagendar');
-const { procesarCronica } = require('../flows/flujo-cronicas');
-const { procesarAntecedentes } = require('../flows/flujo-antecedentes');
+const { obtener, guardar, eliminar } = require('../src/services/sesiones');
+const { buscarRespuestaPendiente } = require('../src/services/seguimiento');
+const { procesarRespuestaSeguimiento } = require('../src/flows/flujo-seguimiento');
+const { procesarPaso } = require('../src/flows/flujo-consulta');
+const { procesarReagendamiento } = require('../src/flows/flujo-reagendar');
+const { procesarCronica } = require('../src/flows/flujo-cronicas');
+const { procesarAntecedentes } = require('../src/flows/flujo-antecedentes');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');

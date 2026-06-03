@@ -1,6 +1,6 @@
-const { query } = require('../services/supabase');
-const { enviar } = require('../services/whatsapp');
-const { alertar } = require('../services/telegram');
+const { query } = require('../src/services/supabase');
+const { enviar } = require('../src/services/whatsapp');
+const { alertar } = require('../src/services/telegram');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {

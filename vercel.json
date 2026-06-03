@@ -1,37 +1,13 @@
 {
   "version": 2,
-  "functions": {
-    "API/api/webhook.js": {
-      "memory": 128,
-      "maxDuration": 10
-    },
-    "API/api/cron.js": {
-      "memory": 128,
-      "maxDuration": 30
-    },
-    "API/api/compress.js": {
-      "memory": 256,
-      "maxDuration": 15
-    }
-  },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/webhook",
-      "dest": "/API/api/webhook.js"
+      "source": "/api/webhook",
+      "destination": "/API/api/webhook.js"
     },
     {
-      "src": "/api/cron",
-      "dest": "/API/api/cron.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/público/índice.html"
-    }
-  ],
-  "crons": [
-    {
-      "path": "/api/cron",
-      "schedule": "0 8 * * *"
+      "source": "/api/cron",
+      "destination": "/API/api/cron.js"
     }
   ]
 }

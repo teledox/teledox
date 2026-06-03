@@ -1,13 +1,13 @@
 {
   "version": 2,
   "functions": {
-    "api/api/webhook.js":  { "memory": 128, "maxDuration": 10 },
-    "api/api/cron.js":     { "memory": 128, "maxDuration": 30 },
-    "api/api/compress.js": { "memory": 256, "maxDuration": 15 }
+    "src/api/webhook.js":  { "maxDuration": 10 },
+    "src/api/cron.js":     { "maxDuration": 30 },
+    "src/api/compress.js": { "maxDuration": 15 }
   },
   "rewrites": [
-    { "source": "/api/webhook",  "destination": "/api/api/webhook" },
-    { "source": "/api/cron",     "destination": "/api/api/cron" },
-    { "source": "/api/compress", "destination": "/api/api/compress" }
+    { "source": "/api/webhook",  "destination": "/src/api/webhook" },
+    { "source": "/api/cron",     "destination": "/src/api/cron" },
+    { "source": "/api/compress", "destination": "/src/api/compress" }
   ]
 }

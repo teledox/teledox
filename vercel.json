@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/api/webhook",
-      "destination": "/API/api/webhook.js"
+      "destination": "/api/api/webhook.js"
     },
     {
       "source": "/api/cron",
-      "destination": "/API/api/cron.js"
+      "destination": "/api/api/cron.js"
     }
   ]
 }

@@ -1,22 +1,22 @@
 {
   "version": 2,
   "functions": {
-    "api/API/webhook.js": {
+    "api/api/webhook.js": {
       "memory": 128,
       "maxDuration": 10
     },
-    "api/API/cron.js": {
+    "api/api/cron.js": {
       "memory": 128,
       "maxDuration": 30
     },
-    "api/API/compress.js": {
+    "api/api/compress.js": {
       "memory": 256,
       "maxDuration": 15
     }
   },
   "crons": [
     {
-      "path": "/api/API/cron",
+      "path": "/api/api/cron",
       "schedule": "*/15 * * * *"
     }
   ]

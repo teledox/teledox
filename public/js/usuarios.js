@@ -25,6 +25,8 @@ async function saveUser() {
   const rol = document.getElementById('newRol').value;
   const especialidad = document.getElementById('newEsp').value.trim() || null;
   const numero_registro = document.getElementById('newReg').value.trim() || null;
+  const cedula = document.getElementById('newCedula').value.trim() || null;
+  const telefono = document.getElementById('newTelefono').value.trim() || null;
 
   if (!nombre || !correo || !pass) { alert('Complete los campos obligatorios'); return; }
 
@@ -33,7 +35,7 @@ async function saveUser() {
 
   await supa('POST', 'usuarios', {
     id: data.user.id,
-    nombre, apellidos, correo, rol, especialidad, numero_registro, activo: true
+    nombre, apellidos, correo, rol, especialidad, numero_registro, cedula, telefono, activo: true
   });
 
   document.getElementById('addUserForm').style.display = 'none';

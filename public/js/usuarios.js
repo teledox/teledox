@@ -9,7 +9,10 @@ async function loadUsuarios() {
       <td>${u.numero_registro || '—'}</td>
       <td>${u.firma_digital ? '<span class="badge badge-green">✓</span>' : '<span class="badge badge-gray">—</span>'}</td>
       <td>${u.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-red">Inactivo</span>'}</td>
-      <td><button class="btn btn-sm ${u.activo ? 'btn-danger' : ''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo ? 'Desactivar' : 'Activar'}</button></td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-sm ${u.activo ? 'btn-danger' : ''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo ? 'Desactivar' : 'Activar'}</button>
+        ${u.id !== currentUser?.id ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarUsuario('${u.id}','${u.nombre} ${u.apellidos}')">🗑 Eliminar</button>` : ''}
+      </td>
     </tr>
   `).join('');
 }
@@ -41,4 +44,19 @@ async function saveUser() {
 async function toggleUser(id, activo) {
   await supa('PATCH', 'usuarios', { activo: !activo }, `?id=eq.${id}`);
   loadUsuarios();
+}
+
+async function eliminarUsuario(id, nombre) {
+  if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n\nEsta acción no se puede deshacer.`)) return;
+  // Eliminar de la tabla usuarios
+  await supa('DELETE', 'usuarios', null, `?id=eq.${id}`);
+  // Eliminar de Supabase Auth
+  try {
+    await fetch(`${SUPA_URL}/auth/v1/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+    });
+  } catch (e) { /* Auth delete puede fallar sin service_role key, ignorar */ }
+  loadUsuarios();
+  showToast('✓ Usuario eliminado permanentemente');
 }

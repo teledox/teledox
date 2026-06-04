@@ -9,7 +9,8 @@ async function loadUsuarios() {
       <td>${u.numero_registro || '—'}</td>
       <td>${u.firma_digital ? '<span class="badge badge-green">✓</span>' : '<span class="badge badge-gray">—</span>'}</td>
       <td>${u.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-red">Inactivo</span>'}</td>
-      <td style="display:flex;gap:6px">
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#fff0f0;color:#FF5A5F;border-color:#FF5A5F" onclick="abrirEditarUsuario('${u.id}')">✏️ Editar</button>
         <button class="btn btn-sm ${u.activo ? 'btn-danger' : ''}" onclick="toggleUser('${u.id}',${u.activo})">${u.activo ? 'Desactivar' : 'Activar'}</button>
         ${u.id !== currentUser?.id ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarUsuario('${u.id}','${u.nombre} ${u.apellidos}')">🗑 Eliminar</button>` : ''}
       </td>
@@ -41,6 +42,52 @@ async function saveUser() {
   document.getElementById('addUserForm').style.display = 'none';
   loadUsuarios();
   showToast('✓ Usuario creado');
+}
+
+async function abrirEditarUsuario(id) {
+  const users = await supa('GET', 'usuarios', null, `?id=eq.${id}`) || [];
+  const u = users[0]; if (!u) return;
+
+  document.getElementById('editUserId').value      = u.id;
+  document.getElementById('editNombre').value       = u.nombre || '';
+  document.getElementById('editApellidos').value    = u.apellidos || '';
+  document.getElementById('editCorreo').value       = u.correo || '';
+  document.getElementById('editRol').value          = u.rol || 'medico';
+  document.getElementById('editEsp').value          = u.especialidad || '';
+  document.getElementById('editRegMSP').value       = u.numero_registro || '';
+  document.getElementById('editCedulaUser').value   = u.cedula || '';
+  document.getElementById('editTelefonoUser').value = u.telefono || '';
+
+  // Cerrar el form de agregar si está abierto y mostrar el de editar
+  document.getElementById('addUserForm').style.display = 'none';
+  const form = document.getElementById('editUserForm');
+  form.style.display = 'block';
+  form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function updateUser() {
+  const id           = document.getElementById('editUserId').value;
+  const nombre       = document.getElementById('editNombre').value.trim();
+  const apellidos    = document.getElementById('editApellidos').value.trim();
+  const rol          = document.getElementById('editRol').value;
+  const especialidad = document.getElementById('editEsp').value.trim() || null;
+  const numero_registro = document.getElementById('editRegMSP').value.trim() || null;
+  const cedula       = document.getElementById('editCedulaUser').value.trim() || null;
+  const telefono     = document.getElementById('editTelefonoUser').value.trim() || null;
+
+  if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
+
+  await supa('PATCH', 'usuarios', { nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono }, `?id=eq.${id}`);
+
+  // Si el usuario editado soy yo, actualizo la sesión local
+  if (id === currentUser?.id) {
+    currentUser = { ...currentUser, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono };
+    if (typeof saveSession === 'function') saveSession(currentUser);
+  }
+
+  document.getElementById('editUserForm').style.display = 'none';
+  loadUsuarios();
+  showToast('✓ Usuario actualizado correctamente');
 }
 
 async function toggleUser(id, activo) {

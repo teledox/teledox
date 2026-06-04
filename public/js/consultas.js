@@ -1,23 +1,70 @@
 async function loadConsultas() {
   const estado = document.getElementById('filterEstado')?.value || '';
   const q = estado
-    ? `?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc&estado=eq.${estado}`
-    : '?select=*,pacientes(nombre,apellidos,cedula)&order=created_at.desc';
+    ? `?select=*,pacientes(nombre,apellidos,cedula),medico:usuarios!consultas_medico_id_fkey(nombre,apellidos)&order=created_at.desc&estado=eq.${estado}`
+    : '?select=*,pacientes(nombre,apellidos,cedula),medico:usuarios!consultas_medico_id_fkey(nombre,apellidos)&order=created_at.desc';
   const consultas = await supa('GET', 'consultas', null, q) || [];
-  document.getElementById('consultasBody').innerHTML = consultas.map(c => `
-    <tr>
-      <td><strong>${c.pacientes?.nombre || '—'} ${c.pacientes?.apellidos || ''}</strong><br><span style="font-size:11px;color:#aaa">${c.pacientes?.cedula || ''}</span></td>
-      <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion || '—'}</td>
-      <td>${c.nivel_sintomas === 3 ? '<span class="badge badge-red">Grave</span>' : c.nivel_sintomas === 2 ? '<span class="badge badge-yellow">Medio</span>' : '<span class="badge badge-green">Leve</span>'}</td>
-      <td><span class="badge badge-gray">${c.estado}</span></td>
-      <td style="display:flex;gap:4px;flex-wrap:wrap">
-        ${c.estado === 'pendiente' ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>` : ''}
-        <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">📋 Documentos</button>
-        ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')">✓ Completar</button>` : ''}
-      </td>
-    </tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
+
+  document.getElementById('consultasBody').innerHTML = consultas.map(c => {
+    const p = c.pacientes || {};
+    const med = c.medico;
+    const sinMedico = !c.medico_id;
+    const puedeAtender = sinMedico && (currentUser.rol === 'medico' || currentUser.rol === 'admin');
+
+    const nivelBadge = c.nivel_sintomas === 3
+      ? '<span class="badge badge-red">🔴 Grave</span>'
+      : c.nivel_sintomas === 2
+        ? '<span class="badge badge-yellow">🟡 Medio</span>'
+        : '<span class="badge badge-green">🟢 Leve</span>';
+
+    const estadoBadge = {
+      completada:  '<span class="badge badge-green">✓ Completada</span>',
+      en_atencion: '<span class="badge badge-blue">🩺 En atención</span>',
+      confirmada:  '<span class="badge badge-blue">📅 Confirmada</span>',
+      pendiente:   '<span class="badge badge-yellow">⏳ Pendiente</span>'
+    }[c.estado] || `<span class="badge badge-gray">${c.estado}</span>`;
+
+    const medicoInfo = med
+      ? `<div style="font-size:11px;color:#16a34a;margin-top:3px">🩺 Dr. ${med.nombre || ''} ${med.apellidos || ''}</div>`
+      : `<div style="font-size:11px;color:#FF5A5F;margin-top:3px">⚠️ Sin médico asignado</div>`;
+
+    return `
+      <tr ${sinMedico && c.estado !== 'completada' ? 'style="background:#fff8f8"' : ''}>
+        <td>
+          <strong>${p.nombre || '—'} ${p.apellidos || ''}</strong>
+          <br><span style="font-size:11px;color:#aaa">${p.cedula || ''}</span>
+          ${medicoInfo}
+        </td>
+        <td style="white-space:nowrap">
+          ${new Date(c.created_at).toLocaleDateString('es-EC',{day:'2-digit',month:'short',year:'numeric'})}
+          <br><span style="font-size:11px;color:#aaa">${new Date(c.created_at).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})}</span>
+        </td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.sintomas_descripcion||'').replace(/"/g,"&quot;")}">${c.sintomas_descripcion || '—'}</td>
+        <td>${nivelBadge}</td>
+        <td>${estadoBadge}</td>
+        <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:170px">
+          ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>` : ''}
+          ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
+          <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">📋 Docs</button>
+          ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')" title="Marcar completada">✓</button>` : ''}
+        </td>
+      </tr>`;
+  }).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
+}
+
+async function atenderConsulta(consultaId) {
+  const existing = await supa('GET', 'consultas', null, `?id=eq.${consultaId}&select=medico_id`);
+  if (existing?.[0]?.medico_id) {
+    showToast('⚠️ Esta consulta ya fue tomada por otro médico');
+    loadConsultas();
+    if (typeof loadDashboard === 'function') loadDashboard();
+    return;
+  }
+  await supa('PATCH', 'consultas', { medico_id: currentUser.id, estado: 'en_atencion' }, `?id=eq.${consultaId}`);
+  showToast('✓ Consulta asignada — eres el médico tratante');
+  loadConsultas();
+  if (typeof loadDashboard === 'function') loadDashboard();
+  if (typeof loadAlertasServicio === 'function') loadAlertasServicio();
 }
 
 async function marcarCompletada(id) {

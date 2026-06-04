@@ -14,6 +14,8 @@ function abrirPlantillaSeleccionada() {
   if (plantillaSeleccionada === 'receta') abrirPlantillaReceta();
   else if (plantillaSeleccionada === 'certificado') abrirPlantillaCertificado();
   else if (plantillaSeleccionada === 'laboratorio') abrirPlantillaLaboratorio();
+  else if (plantillaSeleccionada === 'historia') abrirPlantillaHistoriaClinica();
+  else if (plantillaSeleccionada === 'interconsulta') abrirPlantillaInterconsulta();
 }
 
 function poblarDatosMedico(prefijo) {
@@ -88,7 +90,7 @@ function abrirPlantillaLaboratorio() {
 function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
 
 function imprimirPlantilla(tipo) {
-  const docIds = { receta: 'docReceta', certificado: 'docCertificado', laboratorio: 'docLaboratorio' };
+  const docIds = { receta: 'docReceta', certificado: 'docCertificado', laboratorio: 'docLaboratorio', historiaclinica: 'docHistoriaClinica', interconsulta: 'docInterconsulta' };
   const docEl = document.getElementById(docIds[tipo]); if (!docEl) return;
   const printRoot = document.getElementById('printRoot'); printRoot.innerHTML = '';
   const clone = docEl.cloneNode(true); clone.style.padding = '0'; printRoot.appendChild(clone);
@@ -136,9 +138,103 @@ function actualizarHastaFecha() {
   }
 }
 
+function abrirPlantillaHistoriaClinica() {
+  const p = currentPacienteData || {};
+  const apellidos = (p.apellidos || '').split(' ');
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = val;
+    else el.textContent = val;
+  };
+  set('hc-nombre', `${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim());
+  set('hc-primer-ap', (apellidos[0] || '').toUpperCase());
+  set('hc-segundo-ap', (apellidos[1] || '').toUpperCase());
+  set('hc-cedula', p.cedula || '');
+  set('hc-edad', p.edad || '');
+  set('hc-fecha-nac', p.fecha_nacimiento || '');
+  set('hc-lugar-nac', p.lugar_residencia || '');
+  set('hc-domicilio', p.lugar_residencia || '');
+  set('hc-ocupacion', p.ocupacion || '');
+  set('hc-telefono', p.telefono || '');
+  set('hc-fecha-doc', new Date().toLocaleDateString('es-EC'));
+  if (p.sexo) {
+    const radio = document.querySelector(`input[name="hc-sexo"][value="${p.sexo}"]`);
+    if (radio) radio.checked = true;
+  }
+  // Pre-llenar antecedentes si existen
+  const diag = document.getElementById('recetaDiagnostico')?.value || '';
+  if (diag) set('hc-enfermedad', diag);
+  poblarDatosMedico('hc');
+  document.getElementById('modalHistoriaClinica').classList.add('open');
+}
+
+function abrirPlantillaInterconsulta() {
+  const p = currentPacienteData || {};
+  const c = currentConsultaData || {};
+  const apellidos = (p.apellidos || '').split(' ');
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = val;
+    else el.textContent = val;
+  };
+  set('inter-nombre', `${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim());
+  set('inter-primer-ap', (apellidos[0] || '').toUpperCase());
+  set('inter-segundo-ap', (apellidos[1] || '').toUpperCase());
+  set('inter-cedula', p.cedula || '');
+  set('inter-edad', p.edad || '');
+  set('inter-fecha-nac', p.fecha_nacimiento || '');
+  set('inter-lugar-nac', p.lugar_residencia || '');
+  set('inter-domicilio', p.lugar_residencia || '');
+  set('inter-ocupacion', p.ocupacion || '');
+  set('inter-telefono', p.telefono || '');
+  const hoy = new Date().toLocaleDateString('es-EC');
+  set('inter-fecha', hoy);
+  set('inter-fecha-header', hoy);
+  set('inter-diagnostico', document.getElementById('recetaDiagnostico')?.value || c.diagnostico || '');
+  set('inter-cie10-val', cie10Seleccionados.map(x => x.c).join(', ') || '');
+  const medNomInt = `Dr. ${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim();
+  set('inter-prof-nombre', medNomInt);
+  if (p.sexo) {
+    const radio = document.querySelector(`input[name="inter-sexo"][value="${p.sexo}"]`);
+    if (radio) radio.checked = true;
+  }
+  poblarDatosMedico('inter');
+  document.getElementById('modalInterconsulta').classList.add('open');
+}
+
+async function generarDocumentoDesdeModalHC() {
+  try {
+    showToast('⏳ Generando Historia Clínica...');
+    const pdfBytes = await generarHistoriaClinicaPDF();
+    pdfGenerados.historia = pdfBytes;
+    actualizarCheckboxDocs();
+    cerrarModal('modalHistoriaClinica');
+    showToast('✓ Historia Clínica generada — lista para enviar al paciente');
+  } catch (e) {
+    console.error('Error HC:', e);
+    showToast('Error al generar la Historia Clínica');
+  }
+}
+
+async function generarDocumentoDesdeModalInterconsulta() {
+  try {
+    showToast('⏳ Generando Interconsulta...');
+    const pdfBytes = await generarInterconsultaPDF();
+    pdfGenerados.interconsulta = pdfBytes;
+    actualizarCheckboxDocs();
+    cerrarModal('modalInterconsulta');
+    showToast('✓ Interconsulta generada — lista para enviar al paciente');
+  } catch (e) {
+    console.error('Error Interconsulta:', e);
+    showToast('Error al generar la Interconsulta');
+  }
+}
+
 // Inicializar listeners de modales después de que el DOM cargue
 window.addEventListener('load', () => {
-  ['modalReceta', 'modalCertificado', 'modalLaboratorio'].forEach(id => {
+  ['modalReceta', 'modalCertificado', 'modalLaboratorio', 'modalHistoriaClinica', 'modalInterconsulta'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('click', function (e) { if (e.target === this) this.classList.remove('open'); });
   });

@@ -65,7 +65,8 @@ async function openReceta(consultaId, pacienteId) {
   cie10Seleccionados = [];
 
   // Reset campos y PDFs generados
-  pdfGenerados = { receta: null, certificado: null, pedido: null };
+  pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
+  actualizarCheckboxDocs();
   ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones',
    'certDias','certObservaciones','pedidoExamenes','pedidoObservaciones'
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
@@ -154,7 +155,24 @@ function updateMed(id, campo, valor) { const m = medicamentosData.find(x => x.id
 function quitarMedicamento(id) { medicamentosData = medicamentosData.filter(x => x.id !== id); renderMedicamentos(); }
 
 // PDFs generados localmente (antes de enviar)
-let pdfGenerados = { receta: null, certificado: null, pedido: null };
+let pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
+
+function actualizarCheckboxDocs() {
+  const mapa = {
+    receta: 'receta', certificado: 'certificado', pedido: 'pedido',
+    historia: 'historia', interconsulta: 'interconsulta'
+  };
+  Object.keys(mapa).forEach(tipo => {
+    const chk = document.getElementById(`chk-${tipo}`);
+    const status = document.getElementById(`status-${tipo}`);
+    const generado = pdfGenerados[tipo] !== null;
+    if (chk) { chk.disabled = !generado; chk.checked = generado; }
+    if (status) {
+      status.textContent = generado ? '✓ Generada' : 'No generada';
+      status.className = `doc-check-status ${generado ? 'generado' : 'pendiente'}`;
+    }
+  });
+}
 
 async function generarDocumento(tipo) {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
@@ -184,6 +202,7 @@ async function generarDocumento(tipo) {
       });
     }
     pdfGenerados[tipo] = pdfBytes;
+    actualizarCheckboxDocs();
     mostrarPDFEnIframe(pdfBytes, tipo === 'pedido' ? 'previewPedido' : tipo === 'certificado' ? 'previewCertificado' : 'previewReceta');
     showToast('✓ Documento generado — revisa el preview');
   } catch (e) {
@@ -233,10 +252,12 @@ async function _enviarDocumentosInterno(diagnostico) {
     }
   }
 
-  // Subir PDFs generados y marcar como enviados
-  const tipoMap = { receta: 'receta', certificado: 'certificado', pedido: 'pedido_laboratorio' };
+  // Subir solo los PDFs generados Y seleccionados por el médico
+  const tipoMap = { receta: 'receta', certificado: 'certificado', pedido: 'pedido_laboratorio', historia: 'historia_clinica', interconsulta: 'interconsulta' };
   for (const [key, pdfBytes] of Object.entries(pdfGenerados)) {
     if (!pdfBytes) continue;
+    const chk = document.getElementById(`chk-${key}`);
+    if (chk && !chk.checked) continue; // saltear si no está seleccionado
     await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, tipoMap[key], pdfBytes, true);
   }
 

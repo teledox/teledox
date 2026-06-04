@@ -46,6 +46,7 @@ function buildNav() {
         label: 'Clínico',
         items: [
           { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
+          { id: 'alertas', label: 'Alertas de servicio', icon: 'bell' },
           { id: 'pacientes', label: 'Pacientes', icon: 'users' },
           { id: 'consultas', label: 'Consultas', icon: 'activity' },
           { id: 'perfil', label: 'Mi perfil', icon: 'user' }
@@ -96,7 +97,8 @@ function showPage(id, el) {
     perfil: 'Mi perfil',
     receta: 'Emitir receta',
     'facturacion-b2c': 'Facturación B2C — Pago directo',
-    'planillaje-b2b': 'Planillaje B2B — Por empresa'
+    'planillaje-b2b': 'Planillaje B2B — Por empresa',
+    'alertas': 'Alertas de servicio'
   };
   document.getElementById('pageTitle').textContent = titles[id] || id;
 
@@ -107,6 +109,7 @@ function showPage(id, el) {
   if (id === 'metricas') loadMetricas();
   if (id === 'empresas') loadEmpresas();
   if (id === 'perfil') loadPerfil();
+  if (id === 'alertas') loadAlertasServicio();
   if (id === 'facturacion-b2c') { initFiltrosB2C(); loadFacturacionB2C(); }
   if (id === 'planillaje-b2b') { initFiltrosB2B(); loadPlanillajeB2B(); }
 }

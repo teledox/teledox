@@ -15,8 +15,9 @@ async function loadNotificaciones() {
       <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
       <td style="white-space:nowrap;font-size:12px;color:#888">${new Date(n.created_at).toLocaleString('es-EC')}</td>
       <td>${n.leida ? '<span class="badge badge-gray">Leída</span>' : '<span class="badge badge-blue">Nueva</span>'}</td>
-      <td style="display:flex;gap:4px">
-        ${n.consulta_id && !n.leida ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>` : ''}
+      <td style="display:flex;gap:4px;flex-wrap:wrap">
+        ${n.consulta_id && (currentUser?.rol === 'medico' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${n.consulta_id}');marcarLeida('${n.id}')">🩺 Atender</button>` : ''}
+        ${n.consulta_id && !n.leida && (currentUser?.rol === 'operador' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>` : ''}
         ${!n.leida ? `<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓</button>` : ''}
       </td>
     </tr>
@@ -54,6 +55,13 @@ function startNotifPolling() {
     if (count > lastNotifCount && lastNotifCount >= 0) {
       const latest = (notifs || [])[0];
       if (latest) showToast(`🔔 ${latest.titulo}`);
+      // Refresh alerts banner for médicos
+      if (typeof loadDashboard === 'function' && document.getElementById('page-dashboard')?.classList.contains('active')) {
+        loadDashboard();
+      }
+      if (typeof loadAlertasServicio === 'function' && document.getElementById('page-alertas')?.classList.contains('active')) {
+        loadAlertasServicio();
+      }
     }
     lastNotifCount = count;
   }, 10000);

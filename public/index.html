@@ -92,8 +92,26 @@
 
     <div class="content">
 
+      <!-- ALERTAS DE SERVICIO (para médicos) -->
+      <div class="page" id="page-alertas">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔴 Alertas de servicio — Consultas sin médico asignado</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span class="badge badge-red" id="alertasBadge" style="display:none;font-size:13px">0</span>
+              <button class="btn btn-sm" onclick="loadAlertasServicio()">↻ Actualizar</button>
+            </div>
+          </div>
+          <div style="font-size:13px;color:#888;background:#fff8f8;border-radius:8px;padding:10px 14px;margin-bottom:1rem;border:1px solid #fee2e2">
+            Cuando un paciente envía una consulta por WhatsApp, aparece aquí para que cualquier médico la tome. Haz clic en <strong style="color:#FF5A5F">🩺 Atender</strong> para ser asignado como médico tratante.
+          </div>
+          <div id="alertasServicioList"><div class="empty-state" style="padding:2rem">Cargando alertas...</div></div>
+        </div>
+      </div>
+
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
+        <div id="servicioAlertasBanner" style="display:none"></div>
         <div class="stats-grid" id="statsGrid"></div>
         <div class="two-col">
           <div class="card">
@@ -290,15 +308,67 @@
               <iframe id="previewPedido" style="width:100%;height:580px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
             </div>
           </div>
+
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>📋 Historia Clínica</strong><span style="font-size:12px;color:#888;margin-left:8px">Ficha completa del paciente</span></div>
+              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
+            </div>
+            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo con los datos del paciente pre-cargados. Completa los campos clínicos y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
+          </div>
+
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>🔄 Interconsulta</strong><span style="font-size:12px;color:#888;margin-left:8px">Derivación a especialista</span></div>
+              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaInterconsulta()">📋 Abrir plantilla</button>
+            </div>
+            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Genera la hoja de interconsulta para derivar al paciente a otro servicio o especialista médico.</div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header"><span class="card-title">Seguimiento automático por WhatsApp</span></div>
           <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem"><label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" /><span>Activar recordatorios automáticos al paciente por WhatsApp</span></label></div>
           <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">El bot enviará recordatorios según la frecuencia de cada medicamento.</div>
         </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📤 Seleccionar documentos a enviar al paciente</span>
+            <span style="font-size:12px;color:#888">Solo los documentos generados pueden seleccionarse</span>
+          </div>
+          <div class="doc-seleccion">
+            <div class="doc-check-item">
+              <input type="checkbox" id="chk-receta" disabled>
+              <label class="doc-check-label" for="chk-receta">💊 Receta médica</label>
+              <span class="doc-check-status pendiente" id="status-receta">No generada</span>
+            </div>
+            <div class="doc-check-item">
+              <input type="checkbox" id="chk-certificado" disabled>
+              <label class="doc-check-label" for="chk-certificado">📄 Certificado médico</label>
+              <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
+            </div>
+            <div class="doc-check-item">
+              <input type="checkbox" id="chk-pedido" disabled>
+              <label class="doc-check-label" for="chk-pedido">🔬 Pedido de laboratorio</label>
+              <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
+            </div>
+            <div class="doc-check-item">
+              <input type="checkbox" id="chk-historia" disabled>
+              <label class="doc-check-label" for="chk-historia">📋 Historia clínica</label>
+              <span class="doc-check-status pendiente" id="status-historia">No generada</span>
+            </div>
+            <div class="doc-check-item">
+              <input type="checkbox" id="chk-interconsulta" disabled>
+              <label class="doc-check-label" for="chk-interconsulta">🔄 Interconsulta</label>
+              <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
+            </div>
+          </div>
+          <div style="font-size:12px;color:#888;margin-top:10px;background:#f0fff4;border-radius:8px;padding:10px 14px;border:1px solid #bbf7d0">
+            Los documentos seleccionados llegarán en PDF no editable al WhatsApp del paciente al momento de hacer clic en <strong>Enviar</strong>.
+          </div>
+        </div>
         <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
           <button class="btn" onclick="showPage('consultas');loadConsultas()">Cancelar</button>
-          <button class="btn btn-primary" onclick="enviarDocumentos()">📤 Enviar documentos y activar seguimiento</button>
+          <button class="btn btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="enviarDocumentos()">📤 Enviar documentos y activar seguimiento</button>
         </div>
       </div>
 
@@ -427,12 +497,36 @@
 
       <!-- MÉTRICAS -->
       <div class="page" id="page-metricas">
+        <div class="card" style="margin-bottom:1rem;padding:1rem 1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <span class="card-title">Período de análisis</span>
+            <div class="periodo-filter">
+              <button class="periodo-btn" data-periodo="dia" onclick="setPeriodoActivo('dia')">Hoy</button>
+              <button class="periodo-btn" data-periodo="semana" onclick="setPeriodoActivo('semana')">Esta semana</button>
+              <button class="periodo-btn active" data-periodo="mes" onclick="setPeriodoActivo('mes')">Este mes</button>
+            </div>
+          </div>
+        </div>
         <div class="stats-grid" id="metricStats"></div>
         <div class="two-col">
           <div class="card"><div class="card-header"><span class="card-title">Distribución por nivel</span></div><div id="nivelChart" style="padding:1rem 0"></div></div>
           <div class="card"><div class="card-header"><span class="card-title">KPIs principales</span></div><div id="kpiContent"></div></div>
         </div>
         <div class="card"><div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div><div id="seguimientoStats"></div></div>
+        <!-- Ranking por médico -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header"><span class="card-title">🏆 Ranking de médicos</span></div>
+            <div id="medicoRanking"><div style="color:#aaa;text-align:center;padding:1.5rem;font-size:13px">Cargando...</div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><span class="card-title">📊 Detalle por médico</span></div>
+            <table class="table">
+              <thead><tr><th>Médico</th><th style="text-align:center">Total</th><th style="text-align:center">Complet.</th><th style="text-align:center">Graves</th><th style="text-align:center">Resol.</th></tr></thead>
+              <tbody id="medicoTabla"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:1.5rem">Cargando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- EMPRESAS -->
@@ -484,7 +578,7 @@
     <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docReceta">
-        <div class="doc-header"><div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Receta Médica</div><div class="receta-num">N° <span id="rec-numero">—</span></div><div style="font-size:10px;color:#555;text-align:right" id="rec-fecha-header">—</div></div></div>
+        <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Receta Médica</div><div class="receta-num">N° <span id="rec-numero">—</span></div><div style="font-size:10px;color:#555;text-align:right" id="rec-fecha-header">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="rec-paciente">—</span></div>
@@ -512,7 +606,7 @@
     <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docCertificado">
-        <div class="doc-header"><div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Certificado Médico</div><div style="font-size:10px;color:#555;text-align:right" id="cert-lugar-fecha">—</div></div></div>
+        <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Certificado Médico</div><div style="font-size:10px;color:#555;text-align:right" id="cert-lugar-fecha">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="cert-paciente">—</span></div>
@@ -544,7 +638,7 @@
     <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docLaboratorio">
-        <div class="doc-header"><div class="doc-logo-area"><div class="doc-logo-box">MEDI<br>LYFT</div><div><div class="doc-org-name">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Pedido de Laboratorio</div><div style="font-size:10px;color:#555;text-align:right" id="lab-fecha">—</div></div></div>
+        <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Pedido de Laboratorio</div><div style="font-size:10px;color:#555;text-align:right" id="lab-fecha">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="lab-paciente">—</span></div>
@@ -564,6 +658,286 @@
         <div class="doc-firma-area">
           <div class="doc-firma-box"><div id="lab-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div><div class="doc-firma-line"><span id="lab-nombre-medico">—</span><br><span id="lab-reg-medico" style="font-size:9px;color:#888"></span><br><span id="lab-esp-medico" style="font-size:9px;color:#888"></span></div></div>
           <div class="doc-firma-box"><div id="lab-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL HISTORIA CLÍNICA -->
+<div class="plantilla-modal-overlay" id="modalHistoriaClinica">
+  <div class="plantilla-modal modal-wide">
+    <div class="plantilla-modal-topbar">
+      <span class="plantilla-modal-title">📋 Historia Clínica</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('historiaclinica')">🖨 Imprimir / PDF</button>
+        <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalHC()">💾 Generar para envío</button>
+        <button class="btn btn-sm" onclick="cerrarModal('modalHistoriaClinica')">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="plantilla-modal-body" style="max-height:80vh;overflow-y:auto">
+      <div class="doc-sheet" id="docHistoriaClinica">
+        <!-- Header -->
+        <div class="doc-header">
+          <div class="doc-logo-area">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg>
+            <div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div>
+          </div>
+          <div><div class="doc-title">Historia Clínica</div><div style="font-size:10px;color:#555;text-align:right" id="hc-fecha-doc">—</div></div>
+        </div>
+
+        <!-- Ficha de Identificación -->
+        <div class="hc-section">
+          <div class="hc-section-title">Ficha de Identificación</div>
+          <div class="hc-grid2" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">Nombre Completo</span><input class="hc-input" id="hc-nombre" placeholder="Apellidos Nombre"/></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="hc-field"><span class="hc-label">Primer Apellido</span><input class="hc-input" id="hc-primer-ap"/></div>
+              <div class="hc-field"><span class="hc-label">Segundo Apellido</span><input class="hc-input" id="hc-segundo-ap"/></div>
+            </div>
+          </div>
+          <div class="hc-grid4" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">N° Cédula</span><input class="hc-input" id="hc-cedula"/></div>
+            <div class="hc-field"><span class="hc-label">Edad</span><input class="hc-input" id="hc-edad" placeholder="años"/></div>
+            <div class="hc-field"><span class="hc-label">Fecha Nacimiento</span><input class="hc-input" id="hc-fecha-nac" type="date"/></div>
+            <div class="hc-field"><span class="hc-label">Sexo</span>
+              <div class="hc-radio-group">
+                <label class="hc-radio-label"><input type="radio" name="hc-sexo" value="Femenino"> Femenino</label>
+                <label class="hc-radio-label"><input type="radio" name="hc-sexo" value="Masculino"> Masculino</label>
+              </div>
+            </div>
+          </div>
+          <div class="hc-grid3" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">Lugar de Nacimiento</span><input class="hc-input" id="hc-lugar-nac" placeholder="Provincia y ciudad"/></div>
+            <div class="hc-field"><span class="hc-label">Estado Civil</span>
+              <div class="hc-radio-group" style="flex-wrap:wrap;gap:10px">
+                <label class="hc-radio-label"><input type="radio" name="hc-estado-civil" value="Soltero"> Soltero</label>
+                <label class="hc-radio-label"><input type="radio" name="hc-estado-civil" value="Casado"> Casado</label>
+                <label class="hc-radio-label"><input type="radio" name="hc-estado-civil" value="Divorciado"> Divorciado</label>
+                <label class="hc-radio-label"><input type="radio" name="hc-estado-civil" value="Viudo"> Viudo</label>
+                <label class="hc-radio-label"><input type="radio" name="hc-estado-civil" value="Unión Libre"> Unión Libre</label>
+              </div>
+            </div>
+            <div class="hc-field"><span class="hc-label">Persona Responsable (Menor)</span><input class="hc-input" id="hc-responsable"/></div>
+          </div>
+          <div class="hc-grid3">
+            <div class="hc-field" style="grid-column:span 2"><span class="hc-label">Lugar de Domicilio</span><input class="hc-input" id="hc-domicilio" placeholder="Provincia, Ciudad y Calle"/></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="hc-field"><span class="hc-label">Ocupación</span><input class="hc-input" id="hc-ocupacion"/></div>
+              <div class="hc-field"><span class="hc-label">Teléfono</span><input class="hc-input" id="hc-telefono"/></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Motivo de consulta -->
+        <div class="hc-section">
+          <div class="hc-section-title">Motivo de la Consulta</div>
+          <textarea class="hc-textarea" id="hc-motivo" rows="3" placeholder="Describe el motivo de la consulta..."></textarea>
+        </div>
+
+        <!-- Antecedentes personales -->
+        <div class="hc-section">
+          <div class="hc-section-title">Antecedentes Personales</div>
+          <textarea class="hc-textarea" id="hc-ant-personales" rows="3" placeholder="Antecedentes médicos personales relevantes..."></textarea>
+        </div>
+
+        <!-- Antecedentes familiares -->
+        <div class="hc-section">
+          <div class="hc-section-title">Antecedentes Familiares</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px">
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-cardiopatia" style="accent-color:#FF5A5F"> Cardiopatía</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-diabetes" style="accent-color:#FF5A5F"> Diabetes</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-enf-cardiovascular" style="accent-color:#FF5A5F"> Enf. Cardiovascular</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-hipertension" style="accent-color:#FF5A5F"> Hipertensión</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-cancer" style="accent-color:#FF5A5F"> Cáncer</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-tuberculosis" style="accent-color:#FF5A5F"> Tuberculosis</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-enf-mental" style="accent-color:#FF5A5F"> Enf. Mental</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-enf-infecciosa" style="accent-color:#FF5A5F"> Enf. Infecciosa</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-mal-formacion" style="accent-color:#FF5A5F"> Mal Formación</label>
+            <label style="display:flex;align-items:center;gap:5px;font-size:11px;color:#555;cursor:pointer"><input type="checkbox" id="hcaf-otro" style="accent-color:#FF5A5F"> Otro</label>
+          </div>
+          <textarea class="hc-textarea" id="hc-ant-familiares-notas" rows="2" placeholder="Notas adicionales sobre antecedentes familiares..."></textarea>
+        </div>
+
+        <!-- Enfermedad actual -->
+        <div class="hc-section">
+          <div class="hc-section-title">Enfermedad o Problema Actual</div>
+          <textarea class="hc-textarea" id="hc-enfermedad" rows="4" placeholder="Descripción detallada del problema actual..."></textarea>
+        </div>
+
+        <!-- Revisión de órganos y sistemas -->
+        <div class="hc-section">
+          <div class="hc-section-title">Revisión de Órganos y Sistemas <span style="font-size:10px;font-weight:400;opacity:0.85">(CP = Con patología · SP = Sin patología)</span></div>
+          <div class="hc-organos-grid">
+            ${[['Cardiopatía','hco-card'],['Respiratorio','hco-resp'],['Cardiovascular','hco-cardv'],['Digestivo','hco-dig'],['Genital','hco-gen'],['Urinario','hco-uri'],['Músculo Esquel.','hco-musc'],['Endócrino','hco-end'],['Hemo Linfático','hco-hem'],['Nervioso','hco-nerv']].map(([n,id]) => `
+            <div class="hc-organo-item"><div class="hc-organo-name">${n}</div><div class="hc-cp-sp"><label><input type="radio" name="${id}" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="${id}" value="SP" style="accent-color:#16a34a"> SP</label></div></div>`).join('')}
+          </div>
+          <textarea class="hc-textarea" id="hc-organos-notas" rows="2" style="margin-top:8px" placeholder="Describe hallazgos con patología..."></textarea>
+        </div>
+
+        <!-- Signos vitales -->
+        <div class="hc-section">
+          <div class="hc-section-title">Signos Vitales y Antropometría</div>
+          <div class="hc-signos-grid">
+            <div class="hc-field"><span class="hc-label">Peso (kg)</span><input class="hc-input" id="hc-peso" placeholder="Ej: 70"/></div>
+            <div class="hc-field"><span class="hc-label">Talla (cm)</span><input class="hc-input" id="hc-talla" placeholder="Ej: 170"/></div>
+            <div class="hc-field"><span class="hc-label">Perímetro cefálico</span><input class="hc-input" id="hc-pcef" placeholder="(Pediatría)"/></div>
+            <div class="hc-field"><span class="hc-label">IMC</span><input class="hc-input" id="hc-imc" placeholder="Calculado"/></div>
+            <div class="hc-field"><span class="hc-label">Temperatura (°C)</span><input class="hc-input" id="hc-temperatura" placeholder="Ej: 36.5"/></div>
+            <div class="hc-field"><span class="hc-label">Pulso (lpm)</span><input class="hc-input" id="hc-pulso" placeholder="Ej: 72"/></div>
+            <div class="hc-field"><span class="hc-label">Respiración (rpm)</span><input class="hc-input" id="hc-respiracion" placeholder="Ej: 18"/></div>
+            <div class="hc-field"><span class="hc-label">Oximetría (%)</span><input class="hc-input" id="hc-oximetria" placeholder="Ej: 98"/></div>
+            <div class="hc-field" style="grid-column:span 2"><span class="hc-label">Tensión Arterial (mmHg)</span><input class="hc-input" id="hc-ta" placeholder="Ej: 120/80"/></div>
+          </div>
+        </div>
+
+        <!-- Examen físico regional -->
+        <div class="hc-section">
+          <div class="hc-section-title">Examen Físico Regional <span style="font-size:10px;font-weight:400;opacity:0.85">(CP = Con patología · SP = Sin patología)</span></div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">
+            ${[['Cabeza','hce-cab'],['Cuello','hce-cue'],['Tórax','hce-tor'],['Abdomen','hce-abd'],['Pelvis','hce-pel'],['Extremidades','hce-ext']].map(([n,id]) => `
+            <div class="hc-organo-item"><div class="hc-organo-name">${n}</div><div class="hc-cp-sp"><label><input type="radio" name="${id}" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="${id}" value="SP" style="accent-color:#16a34a"> SP</label></div></div>`).join('')}
+          </div>
+          <textarea class="hc-textarea" id="hc-examen-notas" rows="2" style="margin-top:8px" placeholder="Describe hallazgos del examen físico..."></textarea>
+        </div>
+
+        <!-- Diagnóstico -->
+        <div class="hc-section">
+          <div class="hc-section-title">Diagnóstico <span style="font-size:10px;font-weight:400;opacity:0.85">(PRE = Presuntivo · DEF = Definitivo)</span></div>
+          ${[1,2,3,4].map(i => `
+          <div class="hc-dx-row">
+            <span class="hc-dx-num">${i}.</span>
+            <input class="hc-dx-input" id="hc-dx-${i}" placeholder="Diagnóstico ${i}..."/>
+            <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
+            <input class="hc-dx-input" id="hc-dx-cie-${i}" style="max-width:70px" placeholder="Ej: J06"/>
+            <div class="hc-dx-tipos">
+              <label><input type="radio" name="hc-dx-tipo-${i}" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
+              <label><input type="radio" name="hc-dx-tipo-${i}" value="DEF" style="accent-color:#16a34a"> DEF</label>
+            </div>
+          </div>`).join('')}
+        </div>
+
+        <!-- Plan de tratamiento -->
+        <div class="hc-section">
+          <div class="hc-section-title">Planes de Tratamiento</div>
+          <textarea class="hc-textarea" id="hc-tratamiento" rows="4" placeholder="Describir el plan terapéutico, medicamentos, indicaciones..."></textarea>
+        </div>
+
+        <!-- Firma -->
+        <div class="doc-firma-area">
+          <div class="doc-firma-box">
+            <div id="hc-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div>
+            <div class="doc-firma-line"><span id="hc-nombre-medico">—</span><br><span id="hc-reg-medico" style="font-size:9px;color:#888"></span><br><span id="hc-esp-medico" style="font-size:9px;color:#888"></span></div>
+          </div>
+          <div class="doc-firma-box">
+            <div id="hc-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL INTERCONSULTA -->
+<div class="plantilla-modal-overlay" id="modalInterconsulta">
+  <div class="plantilla-modal">
+    <div class="plantilla-modal-topbar">
+      <span class="plantilla-modal-title">🔄 Hoja de Interconsulta</span>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('interconsulta')">🖨 Imprimir / PDF</button>
+        <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalInterconsulta()">💾 Generar para envío</button>
+        <button class="btn btn-sm" onclick="cerrarModal('modalInterconsulta')">✕ Cerrar</button>
+      </div>
+    </div>
+    <div class="plantilla-modal-body">
+      <div class="doc-sheet" id="docInterconsulta">
+        <div class="doc-header">
+          <div class="doc-logo-area">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg>
+            <div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div>
+          </div>
+          <div><div class="doc-title">Interconsulta</div><div style="font-size:10px;color:#555;text-align:right" id="inter-fecha-header">—</div></div>
+        </div>
+
+        <!-- Identificación -->
+        <div class="hc-section">
+          <div class="hc-section-title">Datos del Paciente</div>
+          <div class="hc-grid2" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">Nombre Completo</span><input class="hc-input" id="inter-nombre"/></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="hc-field"><span class="hc-label">Primer Apellido</span><input class="hc-input" id="inter-primer-ap"/></div>
+              <div class="hc-field"><span class="hc-label">Segundo Apellido</span><input class="hc-input" id="inter-segundo-ap"/></div>
+            </div>
+          </div>
+          <div class="hc-grid4" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">N° Cédula</span><input class="hc-input" id="inter-cedula"/></div>
+            <div class="hc-field"><span class="hc-label">Edad</span><input class="hc-input" id="inter-edad"/></div>
+            <div class="hc-field"><span class="hc-label">Fecha Nacimiento</span><input class="hc-input" id="inter-fecha-nac" type="date"/></div>
+            <div class="hc-field"><span class="hc-label">Sexo</span>
+              <div class="hc-radio-group">
+                <label class="hc-radio-label"><input type="radio" name="inter-sexo" value="Femenino"> Femenino</label>
+                <label class="hc-radio-label"><input type="radio" name="inter-sexo" value="Masculino"> Masculino</label>
+              </div>
+            </div>
+          </div>
+          <div class="hc-grid3" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">Lugar de Nacimiento</span><input class="hc-input" id="inter-lugar-nac" placeholder="Provincia y ciudad"/></div>
+            <div class="hc-field"><span class="hc-label">Estado Civil</span>
+              <div class="hc-radio-group">
+                <label class="hc-radio-label"><input type="radio" name="inter-estado-civil" value="Soltero"> Soltero</label>
+                <label class="hc-radio-label"><input type="radio" name="inter-estado-civil" value="Casado"> Casado</label>
+                <label class="hc-radio-label"><input type="radio" name="inter-estado-civil" value="Viudo"> Viudo</label>
+                <label class="hc-radio-label"><input type="radio" name="inter-estado-civil" value="Unión Libre"> U. Libre</label>
+              </div>
+            </div>
+            <div class="hc-field"><span class="hc-label">Persona Responsable</span><input class="hc-input" id="inter-responsable" placeholder="(Menor de edad)"/></div>
+          </div>
+          <div class="hc-grid3">
+            <div class="hc-field" style="grid-column:span 2"><span class="hc-label">Domicilio</span><input class="hc-input" id="inter-domicilio" placeholder="Provincia, Ciudad y Calle"/></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <div class="hc-field"><span class="hc-label">Ocupación</span><input class="hc-input" id="inter-ocupacion"/></div>
+              <div class="hc-field"><span class="hc-label">Teléfono</span><input class="hc-input" id="inter-telefono"/></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Datos de interconsulta -->
+        <div class="hc-section">
+          <div class="hc-section-title">Datos de Interconsulta</div>
+          <div class="hc-grid2" style="margin-bottom:10px">
+            <div class="hc-field"><span class="hc-label">Enviado del Servicio de</span><input class="hc-input" id="inter-de-servicio" placeholder="Ej: Medicina General"/></div>
+            <div class="hc-field"><span class="hc-label">Al Servicio de</span><input class="hc-input" id="inter-al-servicio" placeholder="Ej: Cardiología"/></div>
+          </div>
+          <div class="doc-row" style="margin-bottom:10px">
+            <span class="doc-lbl" style="font-size:11px;font-weight:600;color:#888;min-width:80px">Diagnóstico</span>
+            <input class="hc-input" id="inter-diagnostico" style="flex:1" placeholder="Diagnóstico del paciente..."/>
+            <input class="hc-input" id="inter-cie10-val" style="max-width:90px;margin-left:8px" placeholder="CIE-10"/>
+            <div class="hc-dx-tipos" style="margin-left:12px">
+              <label style="font-size:11px;color:#888"><input type="radio" name="inter-dx-tipo" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
+              <label style="font-size:11px;color:#888"><input type="radio" name="inter-dx-tipo" value="DEF" style="accent-color:#16a34a"> DEF</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Justificación -->
+        <div class="hc-section">
+          <div class="hc-section-title">Justificación</div>
+          <textarea class="hc-textarea" id="inter-justificacion" rows="4" placeholder="Justificación clínica para la interconsulta..."></textarea>
+        </div>
+
+        <!-- Fecha y firma -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:1rem">
+          <div>
+            <div class="hc-field" style="margin-bottom:12px"><span class="hc-label">Fecha de Solicitud</span><input class="hc-input" id="inter-fecha" type="text" placeholder="dd/mm/yyyy"/></div>
+            <div class="hc-field"><span class="hc-label">Nombre del Profesional</span><input class="hc-input" id="inter-prof-nombre"/></div>
+          </div>
+          <div class="doc-firma-area" style="margin-top:0;padding-top:0;border-top:none;flex-direction:column;align-items:flex-end">
+            <div class="doc-firma-box">
+              <div id="inter-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div>
+              <div id="inter-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div>
+              <div class="doc-firma-line"><span id="inter-nombre-medico">—</span><br><span id="inter-reg-medico" style="font-size:9px;color:#888"></span><br><span id="inter-esp-medico" style="font-size:9px;color:#888"></span></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

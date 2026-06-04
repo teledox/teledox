@@ -211,88 +211,143 @@ async function generarDocumento(tipo) {
   }
 }
 
+// ── BOTÓN 1: Enviar documentos al paciente por WhatsApp ──────────────────
 async function enviarDocumentos() {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
-  if (!diagnostico) { alert('Ingrese el diagnóstico'); return; }
-  const hayDocs = Object.values(pdfGenerados).some(b => b !== null);
-  if (!hayDocs) { alert('Genere al menos un documento antes de enviar'); return; }
+  if (!diagnostico) { alert('Ingrese el diagnóstico antes de enviar'); return; }
 
-  showToast('⏳ Guardando y enviando documentos...');
+  const docsMarcados = Object.entries(pdfGenerados).filter(([k, v]) => {
+    if (!v) return false;
+    const chk = document.getElementById(`chk-${k}`);
+    return chk && chk.checked;
+  });
+  if (!docsMarcados.length) { alert('Genere al menos un documento y selecciónelo para enviar'); return; }
+
+  showToast('⏳ Enviando documentos al paciente...');
   try {
-    await _enviarDocumentosInterno(diagnostico);
+    const ahora = new Date();
+
+    // Guardar/actualizar receta en BD si tiene medicamentos
+    if (medicamentosData.length > 0) {
+      const payload = {
+        consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
+        medicamentos: medicamentosData, diagnostico,
+        cie10_codigos: cie10Seleccionados,
+        indicaciones: document.getElementById('recetaIndicaciones').value,
+        seguimiento_activo: false,
+        fecha_inicio: ahora.toISOString(),
+        fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
+      };
+      const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
+      if (existing?.length > 0) {
+        await supa('PATCH', 'recetas', payload, `?id=eq.${existing[0].id}`);
+      } else {
+        await supa('POST', 'recetas', payload);
+      }
+    }
+
+    // Subir solo los PDFs seleccionados y marcarlos como enviados
+    const tipoMap = { receta: 'receta', certificado: 'certificado', pedido: 'pedido_laboratorio', historia: 'historia_clinica', interconsulta: 'interconsulta' };
+    for (const [key, pdfBytes] of docsMarcados) {
+      await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, tipoMap[key], pdfBytes, true);
+    }
+
+    // Actualizar consulta → completada
+    await supa('PATCH', 'consultas', {
+      diagnostico,
+      notas_medico: document.getElementById('recetaNotas').value,
+      estado: 'completada',
+      medico_id: currentUser.id
+    }, `?id=eq.${recetaConsultaId}`);
+
+    showToast(`✓ ${docsMarcados.length} documento(s) enviado(s) al paciente por WhatsApp`);
+    const btn = document.getElementById('btnEnviarDocs');
+    if (btn) { btn.textContent = '✓ Documentos enviados'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   } catch (e) {
     console.error('Error al enviar documentos:', e);
     showToast(`Error: ${e.message}`);
   }
 }
 
-async function _enviarDocumentosInterno(diagnostico) {
-  const activar = document.getElementById('activarSeguimiento').checked;
-  const ahora = new Date();
+// ── BOTÓN 2: Activar seguimiento al paciente ─────────────────────────────
+async function activarSeguimiento() {
+  const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
+  if (!diagnostico) { alert('Ingrese el diagnóstico primero'); return; }
 
-  // Guardar/actualizar receta en BD si tiene medicamentos
-  let receta_id = null;
-  if (medicamentosData.length > 0) {
-    const payload = {
-      consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
-      medicamentos: medicamentosData, diagnostico,
-      cie10_codigos: cie10Seleccionados,
-      indicaciones: document.getElementById('recetaIndicaciones').value,
-      seguimiento_activo: activar,
-      fecha_inicio: ahora.toISOString(),
-      fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
-    };
-    const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
-    if (existing?.length > 0) {
-      receta_id = existing[0].id;
-      await supa('PATCH', 'recetas', payload, `?id=eq.${receta_id}`);
-    } else {
-      const res = await supa('POST', 'recetas', payload);
-      receta_id = (res || [])[0]?.id;
-    }
-  }
+  const telefono = _pacData.telefono
+    ? `whatsapp:+593${_pacData.telefono.replace(/^0/, '')}`
+    : null;
+  if (!telefono) { alert('El paciente no tiene número de teléfono registrado'); return; }
 
-  // Subir solo los PDFs generados Y seleccionados por el médico
-  const tipoMap = { receta: 'receta', certificado: 'certificado', pedido: 'pedido_laboratorio', historia: 'historia_clinica', interconsulta: 'interconsulta' };
-  for (const [key, pdfBytes] of Object.entries(pdfGenerados)) {
-    if (!pdfBytes) continue;
-    const chk = document.getElementById(`chk-${key}`);
-    if (chk && !chk.checked) continue; // saltear si no está seleccionado
-    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, tipoMap[key], pdfBytes, true);
-  }
+  showToast('⏳ Activando seguimiento...');
+  try {
+    const ahora = new Date();
+    let activado = false;
 
-  // Actualizar consulta
-  await supa('PATCH', 'consultas', {
-    diagnostico,
-    notas_medico: document.getElementById('recetaNotas').value,
-    estado: 'completada',
-    medico_id: currentUser.id
-  }, `?id=eq.${recetaConsultaId}`);
-
-  // Activar recordatorios (solo si hay receta con medicamentos y es primera vez)
-  const telefono = _pacData.telefono ? `whatsapp:+593${_pacData.telefono.replace(/^0/, '')}` : null;
-  if (activar && receta_id && telefono && medicamentosData.length > 0) {
-    const yaExisten = await supa('GET', 'recordatorios', null, `?receta_id=eq.${receta_id}&limit=1`);
-    if (!yaExisten?.length) {
-      for (const med of medicamentosData) {
-        await supa('POST', 'recordatorios', {
-          receta_id, paciente_id: recetaPacienteId, telefono,
-          medicamento: med.nombre, dosis: med.dosis || '',
-          frecuencia_horas: med.frecuencia_horas,
-          fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),
-          fecha_fin: new Date(ahora.getTime() + med.dias * 86400000).toISOString(),
-          activo: true, tipo: 'medicamento'
+    // 1. Seguimiento por medicamentos prescritos
+    if (medicamentosData.length > 0) {
+      let receta_id;
+      const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
+      if (existing?.length > 0) {
+        receta_id = existing[0].id;
+        await supa('PATCH', 'recetas', { seguimiento_activo: true }, `?id=eq.${receta_id}`);
+      } else {
+        const res = await supa('POST', 'recetas', {
+          consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
+          medicamentos: medicamentosData, diagnostico,
+          cie10_codigos: cie10Seleccionados,
+          indicaciones: document.getElementById('recetaIndicaciones').value,
+          seguimiento_activo: true,
+          fecha_inicio: ahora.toISOString(),
+          fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
         });
+        receta_id = (res || [])[0]?.id;
+      }
+      if (receta_id) {
+        const yaExisten = await supa('GET', 'recordatorios', null, `?receta_id=eq.${receta_id}&activo=eq.true&limit=1`);
+        if (!yaExisten?.length) {
+          for (const med of medicamentosData) {
+            await supa('POST', 'recordatorios', {
+              receta_id, paciente_id: recetaPacienteId, telefono,
+              medicamento: med.nombre, dosis: med.dosis || '',
+              frecuencia_horas: med.frecuencia_horas,
+              fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),
+              fecha_fin: new Date(ahora.getTime() + med.dias * 86400000).toISOString(),
+              activo: true, tipo: 'medicamento'
+            });
+          }
+          activado = true;
+        } else {
+          showToast('ℹ️ Seguimiento por tratamiento ya estaba activo');
+        }
       }
     }
-  }
 
-  showToast('✓ Documentos enviados y consulta completada');
-  const btn = document.querySelector('[onclick="enviarDocumentos()"]');
-  if (btn) {
-    btn.textContent = '✓ Documentos enviados';
-    btn.disabled = true;
-    btn.style.background = '#16a34a';
+    // 2. Seguimiento por enfermedades crónicas del paciente
+    const cronicas = await supa('GET', 'paciente_cronicas', null,
+      `?paciente_id=eq.${recetaPacienteId}&activo=eq.true`);
+    if (cronicas?.length > 0) {
+      for (const c of cronicas) {
+        const proxima = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+        await supa('PATCH', 'paciente_cronicas', {
+          ultima_consulta: ahora.toISOString(),
+          proximo_seguimiento: proxima.toISOString()
+        }, `?id=eq.${c.id}`);
+      }
+      activado = true;
+    }
+
+    if (!activado) {
+      showToast('⚠️ Sin medicamentos ni enfermedades crónicas registradas para activar seguimiento');
+      return;
+    }
+
+    showToast('✓ Seguimiento activado — el bot contactará al paciente automáticamente');
+    const btn = document.getElementById('btnActivarSeguimiento');
+    if (btn) { btn.textContent = '✓ Seguimiento activo'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
+  } catch (e) {
+    console.error('Error activando seguimiento:', e);
+    showToast(`Error: ${e.message}`);
   }
 }
 

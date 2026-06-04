@@ -326,9 +326,17 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Seguimiento automático por WhatsApp</span></div>
-          <div style="display:flex;align-items:center;gap:12px;margin-bottom:1rem"><label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer"><input type="checkbox" id="activarSeguimiento" checked style="width:18px;height:18px" /><span>Activar recordatorios automáticos al paciente por WhatsApp</span></label></div>
-          <div style="font-size:13px;color:#888;background:#f9f9f9;border-radius:8px;padding:1rem">El bot enviará recordatorios según la frecuencia de cada medicamento.</div>
+          <div class="card-header"><span class="card-title">🔔 Seguimiento automático por WhatsApp</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+            <div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem">
+              <div style="font-size:13px;font-weight:600;color:#16a34a;margin-bottom:6px">💊 Por tratamiento prescrito</div>
+              <div style="font-size:12px;color:#555">El bot enviará recordatorios de cada medicamento según la frecuencia indicada (cada 4h, 8h, etc.) durante el tiempo prescrito.</div>
+            </div>
+            <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:1rem">
+              <div style="font-size:13px;font-weight:600;color:#ea580c;margin-bottom:6px">🏥 Por enfermedad crónica</div>
+              <div style="font-size:12px;color:#555">Si el paciente tiene enfermedades crónicas registradas, se actualizará la fecha de próximo seguimiento automáticamente.</div>
+            </div>
+          </div>
         </div>
         <div class="card">
           <div class="card-header">
@@ -366,9 +374,14 @@
             Los documentos seleccionados llegarán en PDF no editable al WhatsApp del paciente al momento de hacer clic en <strong>Enviar</strong>.
           </div>
         </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;align-items:center">
           <button class="btn" onclick="showPage('consultas');loadConsultas()">Cancelar</button>
-          <button class="btn btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="enviarDocumentos()">📤 Enviar documentos y activar seguimiento</button>
+          <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316">
+            🔔 Activar seguimiento
+          </button>
+          <button class="btn btn-primary" id="btnEnviarDocs" onclick="enviarDocumentos()" style="background:#FF5A5F;border-color:#FF5A5F">
+            📤 Enviar documentos al paciente
+          </button>
         </div>
       </div>
 

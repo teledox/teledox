@@ -181,7 +181,6 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
             correo: datos.correo || '',
             telefono: datos.telefonoContacto || telefono,
             lugar_residencia: datos.lugar_residencia || '',
-            modalidad: 'b2c',
           });
           pacienteId = nuevo?.id || null;
         }

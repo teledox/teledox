@@ -10,7 +10,10 @@ async function actualizar(cedula, datos) {
 }
 
 async function crear(datos) {
-  const result = await query('POST', 'pacientes', datos);
+  await query('POST', 'pacientes', datos);
+  // PGRST204 bloquea return=representation en algunas configs RLS
+  // Hacemos GET inmediato por cédula para obtener el ID
+  const result = await query('GET', 'pacientes', null, `?cedula=eq.${datos.cedula}&order=created_at.desc&limit=1`);
   return result?.[0] ?? null;
 }
 

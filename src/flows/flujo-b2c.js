@@ -78,10 +78,10 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
     } else {
       respuesta = `Su seguro/empresa *${mensaje}* no forma parte de nuestra red de alianzas.\n\nPuede continuar con *pago directo* ($8.00).\n\n¿Desea continuar?\n\nResponda *Sí* o *No*`;
       datos.seguro_rechazado = mensaje;
-      nuevoPaso = 52.5;
+      nuevoPaso = 529;
     }
 
-  } else if (paso === 52.5) {
+  } else if (paso === 529) {
     if (mensaje.toLowerCase().includes('s')) {
       respuesta = `Entendido. La teleconsulta tiene un costo de *$8.00*.\n\nPor favor indíquenos su *nombre y apellidos completos:*`;
       datos.modalidad = 'b2c';

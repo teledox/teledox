@@ -9,4 +9,9 @@ async function actualizar(cedula, datos) {
   await query('PATCH', 'pacientes', datos, `?cedula=eq.${cedula}`);
 }
 
-module.exports = { buscarPorCedula, actualizar };
+async function crear(datos) {
+  const result = await query('POST', 'pacientes', datos);
+  return result?.[0] ?? null;
+}
+
+module.exports = { buscarPorCedula, actualizar, crear };

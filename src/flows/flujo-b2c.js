@@ -1,4 +1,5 @@
-const { crearConsulta, crearNotificacion } = require('../services/consultas');
+const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
+const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas } = require('../utils/validaciones');
@@ -163,10 +164,51 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
     if (esFoto || mensaje.length > 3) {
       datos.comprobante_ref = `WhatsApp-${telefono}-${Date.now()}`;
 
-      // Registrar en facturacion_b2c
+      // 1. Crear o reutilizar paciente en BD
+      let pacienteId = datos.paciente_id || null;
+      if (!pacienteId) {
+        const partes = (datos.nombreCompleto || '').trim().split(/\s+/);
+        const nombre = partes[0] || '';
+        const apellidos = partes.slice(1).join(' ') || '';
+        const existente = await buscarPorCedula(datos.cedula);
+        if (existente) {
+          pacienteId = existente.id;
+        } else {
+          const nuevo = await crearPaciente({
+            cedula: datos.cedula || '',
+            nombre,
+            apellidos,
+            correo: datos.correo || '',
+            telefono: datos.telefonoContacto || telefono,
+            lugar_residencia: datos.lugar_residencia || '',
+            modalidad: 'b2c',
+          });
+          pacienteId = nuevo?.id || null;
+        }
+        datos.paciente_id = pacienteId;
+      }
+
+      // 2. Crear consulta
+      const consulta = await crearConsulta({
+        paciente_id: pacienteId,
+        nivel_sintomas: datos.nivel || 1,
+        sintomas_descripcion: datos.sintomas || '',
+        estado: 'pendiente',
+      });
+
+      // 3. Crear notificación en el panel
+      await crearNotificacion(
+        'nueva_consulta',
+        '💰 Nuevo pago B2C',
+        `${datos.nombreCompleto} registró teleconsulta (pago directo $8.00)`,
+        pacienteId,
+        consulta?.id
+      );
+
+      // 4. Registrar en facturacion_b2c
       await registrarFacturacionB2C(datos);
 
-      // Alertar al operador
+      // 5. Alertar al operador
       await alertar(`💰 <b>NUEVO PAGO DIRECTO B2C - MEDILYFT</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}\nSíntomas: ${datos.sintomas}\nPago: ${datos.forma_pago}\nMonto: $8.00`);
 
       await eliminar(telefono);

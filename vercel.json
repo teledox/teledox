@@ -1,8 +1,9 @@
 {
   "version": 2,
   "outputDirectory": "public",
+  "installCommand": "npm install",
   "functions": {
-    "api/webhook.js":  { "maxDuration": 10 },
+    "api/webhook.js":  { "maxDuration": 10, "includeFiles": "node_modules/pdf-lib/**,node_modules/@pdf-lib/**" },
     "api/cron.js":     { "maxDuration": 30 },
     "api/compress.js": { "maxDuration": 15 }
   }

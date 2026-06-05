@@ -1,8 +1,8 @@
 const { query } = require('../services/supabase');
-const { generarHistoriaMedica } = require('../services/generarHistoriaMedica');
-const { subirPDF, registrarDocumento } = require('../services/documentos');
 const { eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
+// generarHistoriaMedica usa pdf-lib — se carga lazy para no crashear el bundler de Vercel
+// Solo se require cuando realmente se va a generar el PDF (paso 17)
 
 async function procesarAntecedentes(paso, mensaje, datos, telefono) {
   let respuesta = '';
@@ -72,6 +72,10 @@ async function guardarAntecedentes(datos) {
 }
 
 async function generarYSubirHistoria(datos) {
+  // Lazy load — evita que pdf-lib crashee el bundler de Vercel en el arranque
+  const { generarHistoriaMedica } = require('../services/generarHistoriaMedica');
+  const { subirPDF, registrarDocumento } = require('../services/documentos');
+
   // Obtener datos completos del paciente
   const pacientes = await query('GET', 'pacientes', null,
     `?id=eq.${datos.paciente_id}&select=*,clientes_b2b(*)`

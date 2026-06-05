@@ -35,21 +35,19 @@ module.exports = async function handler(req, res) {
   // ── POST: mensajes entrantes de Meta ────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  // Meta siempre espera 200 rápido — respondemos primero y procesamos después
-  res.status(200).send('OK');
-
   try {
     const body = req.body || {};
 
     // Validar que es un evento de WhatsApp con mensajes
-    if (body.object !== 'whatsapp_business_account') return;
+    // Si no hay mensajes (ej: status updates), responder 200 y salir
+    if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
     const entry   = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const value   = changes?.value;
 
     // Ignorar status updates (delivered, read, etc.)
-    if (!value?.messages?.length) return;
+    if (!value?.messages?.length) return res.status(200).send('OK');
 
     const msg            = value.messages[0];
     const telefono       = msg.from;
@@ -58,7 +56,7 @@ module.exports = async function handler(req, res) {
     // Solo procesamos mensajes de texto
     if (msg.type !== 'text') {
       await enviar(telefono, 'Por favor envía tu mensaje como texto. 😊');
-      return;
+      return res.status(200).send('OK');
     }
 
     const mensaje = (msg.text?.body || '').trim();
@@ -79,7 +77,8 @@ module.exports = async function handler(req, res) {
       await eliminar(telefono);
       const result = await procesarPaso(0, mensaje, {}, telefono, nombreWhatsApp);
       await guardar(telefono, result.paso, result.datos);
-      return responder(result.respuesta);
+      await responder(result.respuesta);
+      return res.status(200).send('OK');
     }
 
     // Verificar si hay una respuesta de seguimiento pendiente
@@ -91,7 +90,10 @@ module.exports = async function handler(req, res) {
       const pendiente = await buscarRespuestaPendiente(telefono);
       if (pendiente?.respuesta) {
         const respuesta = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
-        if (respuesta) return responder(respuesta);
+        if (respuesta) {
+          await responder(respuesta);
+          return res.status(200).send('OK');
+        }
       }
     }
 
@@ -103,25 +105,29 @@ module.exports = async function handler(req, res) {
     if (paso >= 13 && paso <= 17) {
       const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
       if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      return responder(result.respuesta);
+      await responder(result.respuesta);
+      return res.status(200).send('OK');
     }
 
     // Paso 200+ — enfermedades crónicas
     if (paso >= 200) {
       const result = await procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp);
-      return responder(result.respuesta);
+      await responder(result.respuesta);
+      return res.status(200).send('OK');
     }
 
     // Paso 98 — reagendar post seguimiento
     if (paso === 98) {
       const result = await procesarReagendamiento(datos, mensaje, telefono);
       if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      return responder(result.respuesta);
+      await responder(result.respuesta);
+      return res.status(200).send('OK');
     }
 
     // Paso 99 — ya registrado, espera "hola" para nueva consulta
     if (paso === 99) {
-      return responder(`Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nPara una nueva consulta escriba *hola*.`);
+      await responder(`Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nPara una nueva consulta escriba *hola*.`);
+      return res.status(200).send('OK');
     }
 
     // Flujo principal de consulta
@@ -129,9 +135,11 @@ module.exports = async function handler(req, res) {
     if (!result.terminar) {
       await guardar(telefono, result.paso, result.datos);
     }
-    return responder(result.respuesta);
+    await responder(result.respuesta);
+    return res.status(200).send('OK');
 
   } catch (err) {
     console.error('Error en webhook:', err.message);
+    return res.status(200).send('OK');
   }
 };

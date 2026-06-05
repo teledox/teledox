@@ -1,12 +1,21 @@
 const { WA_VERIFY_TOKEN } = require('../src/config');
-const { obtener, guardar, eliminar } = require('../src/services/sesiones');
-const { buscarRespuestaPendiente } = require('../src/services/seguimiento');
-const { procesarRespuestaSeguimiento } = require('../src/flows/flujo-seguimiento');
-const { procesarPaso } = require('../src/flows/flujo-consulta');
-const { procesarReagendamiento } = require('../src/flows/flujo-reagendar');
-const { procesarCronica } = require('../src/flows/flujo-cronicas');
-const { procesarAntecedentes } = require('../src/flows/flujo-antecedentes');
 const { enviar } = require('../src/services/whatsapp');
+
+// Lazy load — se cargan solo cuando llega un mensaje POST, no al inicio
+// Esto evita que el bundler de Vercel falle por pdf-lib al verificar el webhook
+function getFlows() {
+  return {
+    obtener:                    require('../src/services/sesiones').obtener,
+    guardar:                    require('../src/services/sesiones').guardar,
+    eliminar:                   require('../src/services/sesiones').eliminar,
+    buscarRespuestaPendiente:   require('../src/services/seguimiento').buscarRespuestaPendiente,
+    procesarRespuestaSeguimiento: require('../src/flows/flujo-seguimiento').procesarRespuestaSeguimiento,
+    procesarPaso:               require('../src/flows/flujo-consulta').procesarPaso,
+    procesarReagendamiento:     require('../src/flows/flujo-reagendar').procesarReagendamiento,
+    procesarCronica:            require('../src/flows/flujo-cronicas').procesarCronica,
+    procesarAntecedentes:       require('../src/flows/flujo-antecedentes').procesarAntecedentes,
+  };
+}
 
 module.exports = async function handler(req, res) {
 
@@ -43,7 +52,7 @@ module.exports = async function handler(req, res) {
     if (!value?.messages?.length) return;
 
     const msg            = value.messages[0];
-    const telefono       = msg.from; // ej: "593987654321"
+    const telefono       = msg.from;
     const nombreWhatsApp = value.contacts?.[0]?.profile?.name || 'estimado/a';
 
     // Solo procesamos mensajes de texto
@@ -54,7 +63,12 @@ module.exports = async function handler(req, res) {
 
     const mensaje = (msg.text?.body || '').trim();
 
-    // ── Lógica de flujo (idéntica a antes) ────────────────────────────────
+    // Cargar flows aquí (lazy) para evitar problema de bundling con pdf-lib
+    const {
+      obtener, guardar, eliminar,
+      buscarRespuestaPendiente, procesarRespuestaSeguimiento,
+      procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes
+    } = getFlows();
 
     async function responder(texto) {
       await enviar(telefono, texto);

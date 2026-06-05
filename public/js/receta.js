@@ -260,7 +260,27 @@ async function enviarDocumentos() {
       medico_id: currentUser.id
     }, `?id=eq.${recetaConsultaId}`);
 
-    showToast(`✓ ${docsMarcados.length} documento(s) enviado(s) al paciente por WhatsApp`);
+    // Enviar por WhatsApp via backend
+    const telefonoPaciente = _pacData?.telefono
+      ? String(_pacData.telefono).replace(/^0/, '593')
+      : null;
+
+    if (telefonoPaciente) {
+      const waRes = await fetch('/api/enviar-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paciente_id: recetaPacienteId,
+          consulta_id: recetaConsultaId,
+          telefono: telefonoPaciente
+        })
+      });
+      const waData = await waRes.json();
+      showToast(`✓ ${waData.enviados ?? docsMarcados.length} documento(s) enviado(s) al paciente por WhatsApp`);
+    } else {
+      showToast(`✓ ${docsMarcados.length} documento(s) guardado(s) — paciente sin teléfono registrado`);
+    }
+
     const btn = document.getElementById('btnEnviarDocs');
     if (btn) { btn.textContent = '✓ Documentos enviados'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   } catch (e) {

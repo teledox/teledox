@@ -12,7 +12,12 @@ async function query(method, table, body, params = '') {
     body: body ? JSON.stringify(body) : undefined
   });
   if (res.status === 204) return null;
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) {
+    console.error(`[Supabase] ${method} ${table}: ${JSON.stringify(data)}`);
+    return null;
+  }
+  return data;
 }
 
 module.exports = { query };

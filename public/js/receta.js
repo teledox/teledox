@@ -64,9 +64,13 @@ async function openReceta(consultaId, pacienteId) {
   medicamentosData = [];
   cie10Seleccionados = [];
 
-  // Reset campos y PDFs generados
+  // Reset campos, PDFs y botones de acción
   pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
   actualizarCheckboxDocs();
+  const btnEnviar = document.getElementById('btnEnviarDocs');
+  if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '📤 Enviar documentos y activar seguimiento'; btnEnviar.style.background = ''; btnEnviar.style.borderColor = ''; }
+  const btnSeg = document.getElementById('btnActivarSeguimiento');
+  if (btnSeg) { btnSeg.disabled = false; btnSeg.textContent = '🔔 Activar seguimiento'; btnSeg.style.background = ''; btnSeg.style.borderColor = ''; }
   ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones',
    'certDias','certObservaciones','pedidoExamenes','pedidoObservaciones'
   ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });

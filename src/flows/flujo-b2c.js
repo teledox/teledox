@@ -2,7 +2,7 @@ const { crear: crearConsulta, crearNotificacion } = require('../services/consult
 const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { clasificarSintomas } = require('../utils/validaciones');
+const { clasificarSintomas, esSi } = require('../utils/validaciones');
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_KEY;
@@ -51,22 +51,49 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
   let respuesta = '';
   let nuevoPaso = paso;
 
+  const LISTA_MODALIDAD = {
+    secciones: [{
+      titulo: 'Seleccione una opción',
+      filas: [
+        {
+          id: 'seguro',
+          titulo: '🏥 Mi seguro es afiliado',
+          descripcion: 'Mi seguro/empresa es afiliada a MediLyft'
+        },
+        {
+          id: 'directo',
+          titulo: '💳 Pago directo $8.00',
+          descripcion: 'Teleconsulta particular sin seguro'
+        }
+      ]
+    }],
+    botonTexto: '📋 Seleccionar'
+  };
+
+  const BOTONES_PAGO = [
+    { id: 'transferencia', titulo: '🏦 Transferencia' },
+    { id: 'tarjeta',       titulo: '💳 Con tarjeta'   },
+  ];
+
   // Paso 50: preguntar si tiene seguro o pago directo
   if (paso === 50) {
-    respuesta = `No encontramos su cédula en nuestro sistema.\n\n¿Cómo desea proceder?\n\n1️⃣ Tengo seguro médico\n2️⃣ Pago directo ($8.00)\n\nResponda *1* o *2*`;
-    nuevoPaso = 51;
+    return {
+      respuesta: `No encontramos su cédula *${datos.cedula}* en nuestro sistema.\n\n¿Cómo desea continuar?`,
+      paso: 51, datos, terminar: false,
+      lista: LISTA_MODALIDAD
+    };
 
   } else if (paso === 51) {
-    if (mensaje.trim() === '1') {
+    const m = mensaje.trim().toLowerCase();
+    if (m === '1' || m === 'seguro') {
       respuesta = `Por favor indíquenos el nombre de su seguro médico o empresa:`;
       nuevoPaso = 52;
-    } else if (mensaje.trim() === '2') {
+    } else if (m === '2' || m === 'directo') {
       respuesta = `Perfecto. La teleconsulta tiene un costo de *$8.00*.\n\nPor favor indíquenos su *nombre y apellidos completos:*`;
       datos.modalidad = 'b2c';
       nuevoPaso = 53;
     } else {
-      respuesta = `Por favor responda *1* para seguro médico o *2* para pago directo:`;
-      nuevoPaso = 51;
+      return { respuesta: `Por favor selecciona una opción:`, paso: 51, datos, terminar: false, lista: LISTA_MODALIDAD };
     }
 
   } else if (paso === 52) {
@@ -76,13 +103,19 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       datos.modalidad = 'b2b_externo';
       nuevoPaso = 53;
     } else {
-      respuesta = `Su seguro/empresa *${mensaje}* no forma parte de nuestra red de alianzas.\n\nPuede continuar con *pago directo* ($8.00).\n\n¿Desea continuar?\n\nResponda *Sí* o *No*`;
       datos.seguro_rechazado = mensaje;
-      nuevoPaso = 529;
+      return {
+        respuesta: `Su seguro/empresa *${mensaje}* no forma parte de nuestra red de alianzas.\n\n¿Desea continuar con pago directo ($8.00)?`,
+        paso: 529, datos, terminar: false,
+        botones: [
+          { id: 'si',  titulo: '✅ Sí, continuar' },
+          { id: 'no',  titulo: '❌ No, cancelar'  },
+        ]
+      };
     }
 
   } else if (paso === 529) {
-    if (mensaje.toLowerCase().includes('s')) {
+    if (esSi(mensaje)) {
       respuesta = `Entendido. La teleconsulta tiene un costo de *$8.00*.\n\nPor favor indíquenos su *nombre y apellidos completos:*`;
       datos.modalidad = 'b2c';
       nuevoPaso = 53;
@@ -133,21 +166,24 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       await alertar(`⚠️ <b>SÍNTOMAS MEDIOS - B2C</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
     }
 
-    respuesta = `✅ Sus síntomas han sido registrados.\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?\n\n1️⃣ Transferencia bancaria\n2️⃣ Tarjeta de crédito/débito\n\nResponda *1* o *2*`;
-    nuevoPaso = 59;
+    return {
+      respuesta: `✅ Sus síntomas han sido registrados.\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+      paso: 59, datos, terminar: false,
+      botones: BOTONES_PAGO
+    };
 
   } else if (paso === 59) {
-    if (mensaje.trim() === '1') {
+    const m = mensaje.trim().toLowerCase();
+    if (m === '1' || m === 'transferencia') {
       datos.forma_pago = 'transferencia';
-      respuesta = `💳 *Datos para transferencia:*\n\n🏦 Banco Internacional\n📋 Cuenta Corriente: *640618402*\n🏢 RUC: *1793197189001*\n💰 Monto: *$8.00*\n📝 Concepto: Teleconsulta MediLyft\n\nRealice la transferencia y envíenos la *foto del comprobante* para confirmar su consulta.`;
+      respuesta = `🏦 *Datos para transferencia:*\n\n🏦 Banco Internacional\n📋 Cuenta Corriente: *640618402*\n🏢 RUC: *1793197189001*\n💰 Monto: *$8.00*\n📝 Concepto: Teleconsulta MediLyft\n\nRealice la transferencia y envíenos la *foto del comprobante* para confirmar su consulta.`;
       nuevoPaso = 60;
-    } else if (mensaje.trim() === '2') {
+    } else if (m === '2' || m === 'tarjeta') {
       datos.forma_pago = 'tarjeta';
-      respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para realizar su pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura de pantalla del comprobante* para confirmar su consulta.`;
+      respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura de pantalla del comprobante* para confirmar su consulta.`;
       nuevoPaso = 60;
     } else {
-      respuesta = `Por favor responda *1* para transferencia bancaria o *2* para tarjeta:`;
-      nuevoPaso = 59;
+      return { respuesta: `Por favor selecciona la forma de pago:`, paso: 59, datos, terminar: false, botones: BOTONES_PAGO };
     }
 
   } else if (paso === 60) {

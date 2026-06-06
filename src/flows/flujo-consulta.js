@@ -64,8 +64,14 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       datos.empresa = paciente.clientes_b2b?.nombre_empresa || 'su empresa';
       datos.empresa_id = paciente.clientes_b2b?.id || null;
       datos.seguro = paciente.clientes_b2b?.nombre_seguro || 'su seguro';
-      respuesta = `✅ Hemos identificado que pertenece a *${datos.empresa}* con cobertura de *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?\n\nResponda *Sí* o *No*`;
-      nuevoPaso = 2;
+      return {
+        respuesta: `✅ Le identificamos como afiliado a *${datos.empresa}* con cobertura *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?`,
+        paso: 2, datos, terminar: false,
+        botones: [
+          { id: 'si',  titulo: '✅ Sí, autorizo' },
+          { id: 'no',  titulo: '❌ No autorizo'  },
+        ]
+      };
     } else {
       // MODALIDAD B2C — cédula no encontrada, iniciar flujo pago directo
       datos.cedula = mensaje;
@@ -159,11 +165,17 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
   } else if (paso === 11) {
     datos.horario = mensaje;
-    respuesta = `Confirme sus datos:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n🕐 *Horario:* ${datos.horario}\n\nResponda *Confirmar* o *Corregir*`;
-    nuevoPaso = 12;
+    return {
+      respuesta: `Confirme sus datos:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n🕐 *Horario:* ${datos.horario}`,
+      paso: 12, datos, terminar: false,
+      botones: [
+        { id: 'confirmar', titulo: '✅ Confirmar'     },
+        { id: 'corregir',  titulo: '✏️ Corregir datos' },
+      ]
+    };
 
   } else if (paso === 12) {
-    if (mensaje.toLowerCase() === 'confirmar') {
+    if (mensaje.toLowerCase() === 'confirmar' || mensaje.toLowerCase() === '✅ confirmar') {
       await actualizar(datos.cedula, {
         nombre: datos.nombre,
         apellidos: datos.apellidos,

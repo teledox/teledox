@@ -1,20 +1,30 @@
 const { WA_VERIFY_TOKEN } = require('../src/config');
-const { enviar } = require('../src/services/whatsapp');
+const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
 
-// Lazy load — se cargan solo cuando llega un mensaje POST, no al inicio
-// Esto evita que el bundler de Vercel falle por pdf-lib al verificar el webhook
 function getFlows() {
   return {
-    obtener:                    require('../src/services/sesiones').obtener,
-    guardar:                    require('../src/services/sesiones').guardar,
-    eliminar:                   require('../src/services/sesiones').eliminar,
-    buscarRespuestaPendiente:   require('../src/services/seguimiento').buscarRespuestaPendiente,
+    obtener:                      require('../src/services/sesiones').obtener,
+    guardar:                      require('../src/services/sesiones').guardar,
+    eliminar:                     require('../src/services/sesiones').eliminar,
+    buscarRespuestaPendiente:     require('../src/services/seguimiento').buscarRespuestaPendiente,
     procesarRespuestaSeguimiento: require('../src/flows/flujo-seguimiento').procesarRespuestaSeguimiento,
-    procesarPaso:               require('../src/flows/flujo-consulta').procesarPaso,
-    procesarReagendamiento:     require('../src/flows/flujo-reagendar').procesarReagendamiento,
-    procesarCronica:            require('../src/flows/flujo-cronicas').procesarCronica,
-    procesarAntecedentes:       require('../src/flows/flujo-antecedentes').procesarAntecedentes,
+    procesarPaso:                 require('../src/flows/flujo-consulta').procesarPaso,
+    procesarReagendamiento:       require('../src/flows/flujo-reagendar').procesarReagendamiento,
+    procesarCronica:              require('../src/flows/flujo-cronicas').procesarCronica,
+    procesarAntecedentes:         require('../src/flows/flujo-antecedentes').procesarAntecedentes,
   };
+}
+
+// Envía la respuesta usando texto, botones o lista según lo que retorne el flow
+async function despachar(telefono, result) {
+  const { respuesta, botones, lista } = result;
+  if (botones && botones.length > 0) {
+    await enviarBotones(telefono, respuesta, botones);
+  } else if (lista && lista.secciones) {
+    await enviarLista(telefono, respuesta, lista.secciones, lista.botonTexto);
+  } else {
+    await enviar(telefono, respuesta);
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -24,7 +34,6 @@ module.exports = async function handler(req, res) {
     const mode      = req.query['hub.mode'];
     const token     = req.query['hub.verify_token'];
     const challenge = req.query['hub.challenge'];
-
     if (mode === 'subscribe' && token === WA_VERIFY_TOKEN) {
       console.log('Webhook verificado por Meta ✅');
       return res.status(200).send(challenge);
@@ -32,56 +41,52 @@ module.exports = async function handler(req, res) {
     return res.status(403).send('Forbidden');
   }
 
-  // ── POST: mensajes entrantes de Meta ────────────────────────────────────
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {
     const body = req.body || {};
-
-    // Validar que es un evento de WhatsApp con mensajes
-    // Si no hay mensajes (ej: status updates), responder 200 y salir
     if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
     const entry   = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const value   = changes?.value;
-
-    // Ignorar status updates (delivered, read, etc.)
     if (!value?.messages?.length) return res.status(200).send('OK');
 
     const msg            = value.messages[0];
     const telefono       = msg.from;
     const nombreWhatsApp = value.contacts?.[0]?.profile?.name || 'estimado/a';
 
-    // Solo procesamos mensajes de texto
-    if (msg.type !== 'text') {
-      await enviar(telefono, 'Por favor envía tu mensaje como texto. 😊');
-      return res.status(200).send('OK');
+    // ── Extraer texto (texto plano o respuesta de botón/lista) ──────────
+    let mensaje = '';
+    if (msg.type === 'text') {
+      mensaje = (msg.text?.body || '').trim();
+    } else if (msg.type === 'interactive') {
+      const ir = msg.interactive;
+      if (ir?.type === 'button_reply') {
+        mensaje = ir.button_reply?.id || ir.button_reply?.title || '';
+      } else if (ir?.type === 'list_reply') {
+        mensaje = ir.list_reply?.id || ir.list_reply?.title || '';
+      }
+    } else {
+      // Imagen u otro tipo — solo en paso 60 (comprobante de pago) se acepta
+      mensaje = '__media__';
     }
 
-    const mensaje = (msg.text?.body || '').trim();
-
-    // Cargar flows aquí (lazy) para evitar problema de bundling con pdf-lib
     const {
       obtener, guardar, eliminar,
       buscarRespuestaPendiente, procesarRespuestaSeguimiento,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes
     } = getFlows();
 
-    async function responder(texto) {
-      await enviar(telefono, texto);
-    }
-
     // Reinicio de sesión con "hola"
     if (mensaje.toLowerCase() === 'hola') {
       await eliminar(telefono);
       const result = await procesarPaso(0, mensaje, {}, telefono, nombreWhatsApp);
       await guardar(telefono, result.paso, result.datos);
-      await responder(result.respuesta);
+      await despachar(telefono, result);
       return res.status(200).send('OK');
     }
 
-    // Verificar si hay una respuesta de seguimiento pendiente
     let sesion = await obtener(telefono);
     const pasoActual = sesion?.paso ?? 0;
     const enFlujoConsulta = pasoActual >= 1 && pasoActual <= 12;
@@ -89,9 +94,9 @@ module.exports = async function handler(req, res) {
     if (!enFlujoConsulta) {
       const pendiente = await buscarRespuestaPendiente(telefono);
       if (pendiente?.respuesta) {
-        const respuesta = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
-        if (respuesta) {
-          await responder(respuesta);
+        const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
+        if (resp) {
+          await enviar(telefono, resp);
           return res.status(200).send('OK');
         }
       }
@@ -101,32 +106,32 @@ module.exports = async function handler(req, res) {
     let { paso, datos } = sesion;
     datos = datos || {};
 
-    // Pasos 13-17 — antecedentes médicos + generación historia clínica
+    // Pasos 13-17 — antecedentes médicos
     if (paso >= 13 && paso <= 17) {
       const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
       if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      await responder(result.respuesta);
+      await despachar(telefono, result);
       return res.status(200).send('OK');
     }
 
     // Paso 200+ — enfermedades crónicas
     if (paso >= 200) {
       const result = await procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp);
-      await responder(result.respuesta);
+      await despachar(telefono, result);
       return res.status(200).send('OK');
     }
 
-    // Paso 98 — reagendar post seguimiento
+    // Paso 98 — reagendar
     if (paso === 98) {
       const result = await procesarReagendamiento(datos, mensaje, telefono);
       if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      await responder(result.respuesta);
+      await despachar(telefono, result);
       return res.status(200).send('OK');
     }
 
-    // Paso 99 — ya registrado, espera "hola" para nueva consulta
+    // Paso 99 — ya registrado
     if (paso === 99) {
-      await responder(`Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nPara una nueva consulta escriba *hola*.`);
+      await enviar(telefono, `Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nPara una nueva consulta escriba *hola*.`);
       return res.status(200).send('OK');
     }
 
@@ -135,7 +140,7 @@ module.exports = async function handler(req, res) {
     if (!result.terminar) {
       await guardar(telefono, result.paso, result.datos);
     }
-    await responder(result.respuesta);
+    await despachar(telefono, result);
     return res.status(200).send('OK');
 
   } catch (err) {

@@ -29,7 +29,7 @@ function clasificarSintomas(texto) {
 }
 
 function esSi(texto) {
-  return /^(s[ií]|yes|1|ok)$/i.test(texto.trim());
+  return /^(s[ií]|yes|1|ok|continuar|acepto|autorizo|confirmar|confirm)$/i.test(texto.trim());
 }
 
 function tieneApellidos(texto) {

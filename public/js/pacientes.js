@@ -74,57 +74,105 @@ async function showPacienteDetalle(id) {
   document.getElementById('tab-datos').classList.add('active');
 }
 
-// Eliminar silenciosamente (ignora errores de FK en tablas opcionales)
-async function _del(tabla, query) {
-  try { await supa('DELETE', tabla, null, query); } catch (_) {}
+// ── Helpers de borrado con detección real de errores ─────────────────────
+async function _dbDel(tabla, columna, valor) {
+  const { error } = await supabaseClient.from(tabla).delete().eq(columna, valor);
+  if (error) console.warn(`[DEL] ${tabla}.${columna}=${valor} →`, error.message);
+  return !error;
+}
+
+async function _dbDelIn(tabla, columna, valores) {
+  if (!valores.length) return true;
+  const { error } = await supabaseClient.from(tabla).delete().in(columna, valores);
+  if (error) console.warn(`[DEL] ${tabla}.${columna} IN [${valores}] →`, error.message);
+  return !error;
 }
 
 async function eliminarPaciente(id, nombre) {
   if (currentUser?.rol !== 'admin') return;
-  if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n⚠️ No se puede deshacer.`)) return;
+  if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n\n⚠️ No se puede deshacer.`)) return;
 
   showToast('⏳ Eliminando...');
   try {
-    // Ola 1: registros hoja (sin dependencias entre sí) — EN PARALELO
-    await Promise.all([
-      _del('recordatorios',         `?paciente_id=eq.${id}`),
-      _del('documentos',            `?paciente_id=eq.${id}`),
-      _del('antecedentes',          `?paciente_id=eq.${id}`),
-      _del('paciente_cronicas',     `?paciente_id=eq.${id}`),
-      _del('notificaciones',        `?paciente_id=eq.${id}`),
-      _del('seguimiento_respuestas',`?paciente_id=eq.${id}`),
+    // Ola 1: tablas hoja en paralelo (si fallan se logea pero no corta)
+    await Promise.allSettled([
+      _dbDel('recordatorios',          'paciente_id', id),
+      _dbDel('documentos',             'paciente_id', id),
+      _dbDel('antecedentes',           'paciente_id', id),
+      _dbDel('paciente_cronicas',      'paciente_id', id),
+      _dbDel('notificaciones',         'paciente_id', id),
+      _dbDel('seguimiento_respuestas', 'paciente_id', id),
     ]);
-    // Ola 2: recetas (después de recordatorios)
-    await _del('recetas',   `?paciente_id=eq.${id}`);
-    // Ola 3: consultas (después de docs y recetas)
-    await _del('consultas', `?paciente_id=eq.${id}`);
-    // Ola 4: paciente
-    await supa('DELETE', 'pacientes', null, `?id=eq.${id}`);
 
-    showToast('✓ Paciente eliminado');
+    // Ola 2: recetas (después de recordatorios)
+    await _dbDel('recetas', 'paciente_id', id);
+
+    // Ola 3: consultas (después de docs y recetas)
+    await _dbDel('consultas', 'paciente_id', id);
+
+    // Ola 4: paciente — verificamos que se eliminó realmente
+    const { data: deleted, error: errPac } = await supabaseClient
+      .from('pacientes')
+      .delete()
+      .eq('id', id)
+      .select('id');
+
+    if (errPac) throw new Error(errPac.message);
+
+    if (!deleted || deleted.length === 0) {
+      throw new Error(
+        'El paciente no fue eliminado.\n\n' +
+        'Probable causa: permisos RLS en Supabase.\n\n' +
+        'Ve a Supabase → Authentication → Policies y agrega una política DELETE para admins, ' +
+        'o en Table Editor → pacientes → desactiva RLS.'
+      );
+    }
+
+    showToast('✓ Paciente eliminado correctamente');
     showPage('pacientes');
     loadPacientes();
+
   } catch (e) {
     console.error('Error eliminando paciente:', e);
-    showToast('Error al eliminar — revisa permisos en Supabase');
+    alert(`No se pudo eliminar el paciente:\n\n${e.message}`);
+    showToast('❌ Error al eliminar — ver detalles');
   }
 }
 
 async function eliminarConsultaDesdeDetalle(consultaId, pacienteId) {
   if (currentUser?.rol !== 'admin') return;
   if (!confirm('¿Eliminar esta consulta?\n⚠️ No se puede deshacer.')) return;
-  await _eliminarConsulta(consultaId);
-  showPacienteDetalle(pacienteId);
+  const ok = await _eliminarConsulta(consultaId);
+  if (ok) showPacienteDetalle(pacienteId);
 }
 
 async function _eliminarConsulta(consultaId) {
-  // Paralelo: docs + recordatorios (por receta_id)
-  const recetas = await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&select=id`) || [];
-  const rIds = recetas.map(r => r.id);
-  await Promise.all([
-    _del('documentos', `?consulta_id=eq.${consultaId}`),
-    rIds.length ? _del('recordatorios', `?receta_id=in.(${rIds.join(',')})`) : Promise.resolve(),
-  ]);
-  await _del('recetas',   `?consulta_id=eq.${consultaId}`);
-  await supa('DELETE', 'consultas', null, `?id=eq.${consultaId}`);
+  try {
+    const recetas = await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&select=id`) || [];
+    const rIds = recetas.map(r => r.id);
+
+    await Promise.allSettled([
+      _dbDel('documentos', 'consulta_id', consultaId),
+      rIds.length ? _dbDelIn('recordatorios', 'receta_id', rIds) : Promise.resolve(),
+    ]);
+
+    await _dbDel('recetas', 'consulta_id', consultaId);
+
+    const { data: deleted, error } = await supabaseClient
+      .from('consultas')
+      .delete()
+      .eq('id', consultaId)
+      .select('id');
+
+    if (error) throw new Error(error.message);
+    if (!deleted?.length) throw new Error('Consulta no eliminada — revisa permisos RLS en Supabase.');
+
+    showToast('✓ Consulta eliminada');
+    return true;
+  } catch (e) {
+    console.error('Error eliminando consulta:', e);
+    alert(`No se pudo eliminar la consulta:\n\n${e.message}`);
+    showToast('❌ Error al eliminar');
+    return false;
+  }
 }

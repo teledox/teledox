@@ -78,14 +78,8 @@ async function marcarCompletada(id) {
 
 async function eliminarConsulta(consultaId) {
   if (currentUser?.rol !== 'admin') return;
-  if (!confirm('¿Eliminar esta consulta y todos sus documentos asociados?\n\n⚠️ No se puede deshacer.')) return;
-  showToast('⏳ Eliminando consulta...');
-  try {
-    await _eliminarConsulta(consultaId);
-    showToast('✓ Consulta eliminada');
-    loadConsultas();
-  } catch (e) {
-    console.error('Error:', e);
-    showToast('Error al eliminar la consulta');
-  }
+  if (!confirm('¿Eliminar esta consulta?\n\n⚠️ No se puede deshacer.')) return;
+  showToast('⏳ Eliminando...');
+  const ok = await _eliminarConsulta(consultaId);
+  if (ok) loadConsultas();
 }

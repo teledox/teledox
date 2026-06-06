@@ -83,6 +83,7 @@ async function doLogout() {
   await supabaseClient.auth.signOut();
   currentUser = null;
   if (notifInterval) clearInterval(notifInterval);
+  stopRealtime();
   document.getElementById('loginWrap').style.display = 'flex';
   document.getElementById('appWrap').style.display = 'none';
   showAuthView('login');
@@ -96,7 +97,7 @@ function initApp() {
   document.getElementById('sidebarRole').textContent = currentUser.rol.charAt(0).toUpperCase() + currentUser.rol.slice(1);
   document.getElementById('topAvatar').textContent = ((currentUser.nombre || '?')[0] + (currentUser.apellidos || '?')[0]).toUpperCase();
   document.getElementById('userInfo').textContent = currentUser.nombre + ' ' + currentUser.apellidos;
-  buildNav(); loadDashboard(); startNotifPolling(); startTimerUpdater();
+  buildNav(); loadDashboard(); startNotifPolling(); startTimerUpdater(); startRealtime();
   // Inicializar AudioContext en primer gesto del usuario (política del navegador)
   document.addEventListener('click', initAudio, { once: true });
 }

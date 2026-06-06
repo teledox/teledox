@@ -74,43 +74,57 @@ async function showPacienteDetalle(id) {
   document.getElementById('tab-datos').classList.add('active');
 }
 
+// Eliminar silenciosamente (ignora errores de FK en tablas opcionales)
+async function _del(tabla, query) {
+  try { await supa('DELETE', tabla, null, query); } catch (_) {}
+}
+
 async function eliminarPaciente(id, nombre) {
   if (currentUser?.rol !== 'admin') return;
-  if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n\nEsta acción borrará todas sus consultas, documentos y seguimientos asociados.\n⚠️ No se puede deshacer.`)) return;
+  if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n⚠️ No se puede deshacer.`)) return;
 
-  showToast('⏳ Eliminando paciente y registros asociados...');
+  showToast('⏳ Eliminando...');
   try {
-    // Eliminar en orden para respetar FK
-    await supa('DELETE', 'recordatorios',     null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'documentos',        null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'antecedentes',      null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'paciente_cronicas', null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'recetas',           null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'notificaciones',    null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'consultas',         null, `?paciente_id=eq.${id}`);
-    await supa('DELETE', 'pacientes',         null, `?id=eq.${id}`);
+    // Ola 1: registros hoja (sin dependencias entre sí) — EN PARALELO
+    await Promise.all([
+      _del('recordatorios',         `?paciente_id=eq.${id}`),
+      _del('documentos',            `?paciente_id=eq.${id}`),
+      _del('antecedentes',          `?paciente_id=eq.${id}`),
+      _del('paciente_cronicas',     `?paciente_id=eq.${id}`),
+      _del('notificaciones',        `?paciente_id=eq.${id}`),
+      _del('seguimiento_respuestas',`?paciente_id=eq.${id}`),
+    ]);
+    // Ola 2: recetas (después de recordatorios)
+    await _del('recetas',   `?paciente_id=eq.${id}`);
+    // Ola 3: consultas (después de docs y recetas)
+    await _del('consultas', `?paciente_id=eq.${id}`);
+    // Ola 4: paciente
+    await supa('DELETE', 'pacientes', null, `?id=eq.${id}`);
 
-    showToast('✓ Paciente eliminado permanentemente');
+    showToast('✓ Paciente eliminado');
     showPage('pacientes');
     loadPacientes();
   } catch (e) {
     console.error('Error eliminando paciente:', e);
-    showToast('Error al eliminar el paciente');
+    showToast('Error al eliminar — revisa permisos en Supabase');
   }
 }
 
 async function eliminarConsultaDesdeDetalle(consultaId, pacienteId) {
   if (currentUser?.rol !== 'admin') return;
-  if (!confirm('¿Eliminar esta consulta y sus documentos asociados?\n\n⚠️ No se puede deshacer.')) return;
+  if (!confirm('¿Eliminar esta consulta?\n⚠️ No se puede deshacer.')) return;
   await _eliminarConsulta(consultaId);
   showPacienteDetalle(pacienteId);
 }
 
 async function _eliminarConsulta(consultaId) {
-  await supa('DELETE', 'recordatorios', null, `?receta_id=in.(${
-    ((await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&select=id`)) || []).map(r => r.id).join(',') || 'null'
-  })`);
-  await supa('DELETE', 'recetas',       null, `?consulta_id=eq.${consultaId}`);
-  await supa('DELETE', 'documentos',    null, `?consulta_id=eq.${consultaId}`);
-  await supa('DELETE', 'consultas',     null, `?id=eq.${consultaId}`);
+  // Paralelo: docs + recordatorios (por receta_id)
+  const recetas = await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&select=id`) || [];
+  const rIds = recetas.map(r => r.id);
+  await Promise.all([
+    _del('documentos', `?consulta_id=eq.${consultaId}`),
+    rIds.length ? _del('recordatorios', `?receta_id=in.(${rIds.join(',')})`) : Promise.resolve(),
+  ]);
+  await _del('recetas',   `?consulta_id=eq.${consultaId}`);
+  await supa('DELETE', 'consultas', null, `?id=eq.${consultaId}`);
 }

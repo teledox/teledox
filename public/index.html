@@ -587,16 +587,44 @@
       <!-- EMPRESAS -->
       <div class="page" id="page-empresas">
         <div class="card">
-          <div class="card-header"><span class="card-title">Clientes corporativos B2B</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addEmpresaForm').style.display='block'">+ Agregar empresa</button></div>
-          <table class="table"><thead><tr><th>Empresa</th><th>Seguro</th><th>Pacientes</th><th>Estado</th><th></th></tr></thead><tbody id="empresasBody"></tbody></table>
-        </div>
-        <div class="card" id="addEmpresaForm" style="display:none">
-          <div class="card-header"><span class="card-title">Nueva empresa</span><button class="btn btn-sm" onclick="document.getElementById('addEmpresaForm').style.display='none'">✕</button></div>
-          <div class="two-col">
-            <div class="form-group"><label class="form-label">Nombre empresa *</label><input type="text" class="form-control" id="empNombre" /></div>
-            <div class="form-group"><label class="form-label">Nombre seguro</label><input type="text" class="form-control" id="empSeguro" /></div>
+          <div class="card-header">
+            <span class="card-title">Clientes corporativos B2B</span>
+            <button class="btn btn-sm btn-primary" onclick="document.getElementById('editEmpresaForm').style.display='none';document.getElementById('addEmpresaForm').style.display='block'">+ Nueva empresa</button>
           </div>
-          <button class="btn btn-primary" onclick="saveEmpresa()">Guardar empresa</button>
+          <table class="table">
+            <thead><tr><th>Empresa</th><th style="text-align:center">Pacientes</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <tbody id="empresasBody"></tbody>
+          </table>
+        </div>
+
+        <!-- Formulario: Crear empresa -->
+        <div class="card" id="addEmpresaForm" style="display:none">
+          <div class="card-header">
+            <span class="card-title">Nueva empresa B2B</span>
+            <button class="btn btn-sm" onclick="document.getElementById('addEmpresaForm').style.display='none'">✕</button>
+          </div>
+          <div class="form-group" style="max-width:400px">
+            <label class="form-label">Nombre de la empresa *</label>
+            <input type="text" class="form-control" id="empNombre" placeholder="Ej: Empresa ABC S.A." />
+          </div>
+          <button class="btn btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="saveEmpresa()">Guardar empresa</button>
+        </div>
+
+        <!-- Formulario: Editar empresa -->
+        <div class="card" id="editEmpresaForm" style="display:none;border:2px solid #FF5A5F">
+          <div class="card-header">
+            <span class="card-title">✏️ Editar empresa</span>
+            <button class="btn btn-sm" onclick="document.getElementById('editEmpresaForm').style.display='none'">✕</button>
+          </div>
+          <input type="hidden" id="editEmpresaId" />
+          <div class="form-group" style="max-width:400px">
+            <label class="form-label">Nombre de la empresa *</label>
+            <input type="text" class="form-control" id="editEmpresaNombre" placeholder="Nombre de la empresa" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:0.5rem">
+            <button class="btn btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="updateEmpresa()">💾 Guardar cambios</button>
+            <button class="btn" onclick="document.getElementById('editEmpresaForm').style.display='none'">Cancelar</button>
+          </div>
         </div>
       </div>
 

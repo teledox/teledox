@@ -63,65 +63,38 @@ async function verificarAdmin(token) {
   return u.id;
 }
 
-// ── Eliminar consulta y todas sus dependencias ────────────────────────────
+// ── Eliminar consulta (con CASCADE DELETE en la BD, basta con borrar la raíz)
 async function eliminarConsulta(consultaId) {
-  const recetas = await q('GET', 'recetas', `?consulta_id=eq.${consultaId}&select=id`);
-  const rIds    = (recetas || []).map(r => r.id);
-
-  // Ola 1: dependencias directas de la consulta (paralelo)
-  const tasks = [
-    q('DELETE', 'notificaciones', `?consulta_id=eq.${consultaId}`),
-    q('DELETE', 'documentos',     `?consulta_id=eq.${consultaId}`),
-  ];
-  if (rIds.length) {
-    tasks.push(q('DELETE', 'recordatorios', `?receta_id=in.(${rIds.join(',')})`));
+  // Con CASCADE DELETE activo en Supabase, borrar la consulta
+  // elimina automáticamente documentos, notificaciones y recetas
+  const deleted = await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
+  // Si CASCADE no está configurado aún, intentamos manual
+  if (!Array.isArray(deleted) || deleted.length === 0) {
+    // Intento manual como fallback
+    await Promise.allSettled([
+      q('DELETE', 'notificaciones', `?consulta_id=eq.${consultaId}`),
+      q('DELETE', 'documentos',     `?consulta_id=eq.${consultaId}`),
+    ]);
+    const recetas = await q('GET', 'recetas', `?consulta_id=eq.${consultaId}&select=id`);
+    const rIds = (recetas || []).map(r => r.id);
+    if (rIds.length) await q('DELETE', 'recordatorios', `?receta_id=in.(${rIds.join(',')})`);
+    await q('DELETE', 'recetas',   `?consulta_id=eq.${consultaId}`);
+    await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
   }
-  await Promise.allSettled(tasks);
-
-  // Ola 2: recetas → consulta
-  await q('DELETE', 'recetas',   `?consulta_id=eq.${consultaId}`);
-  await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
 }
 
-// ── Eliminar paciente y todos sus registros ───────────────────────────────
+// ── Eliminar paciente (CASCADE DELETE borra todo en cadena desde pacientes)
 async function eliminarPaciente(pacienteId) {
-  // Obtener IDs de consultas y recetas del paciente
-  const consultas = await q('GET', 'consultas', `?paciente_id=eq.${pacienteId}&select=id`);
-  const cIds      = (consultas || []).map(c => c.id);
-
-  let rIds = [];
-  if (cIds.length) {
-    const recetas = await q('GET', 'recetas', `?consulta_id=in.(${cIds.join(',')})&select=id`);
-    rIds = (recetas || []).map(r => r.id);
-  }
-
-  // Ola 1: hojas (todo en paralelo)
-  const tasks = [
-    q('DELETE', 'documentos',            `?paciente_id=eq.${pacienteId}`),
-    q('DELETE', 'antecedentes',          `?paciente_id=eq.${pacienteId}`),
-    q('DELETE', 'paciente_cronicas',     `?paciente_id=eq.${pacienteId}`),
-    q('DELETE', 'recordatorios',         `?paciente_id=eq.${pacienteId}`),
-    q('DELETE', 'notificaciones',        `?paciente_id=eq.${pacienteId}`),
-    q('DELETE', 'seguimiento_respuestas',`?paciente_id=eq.${pacienteId}`),
-  ];
-  if (cIds.length) {
-    tasks.push(q('DELETE', 'notificaciones', `?consulta_id=in.(${cIds.join(',')})`));
-    tasks.push(q('DELETE', 'documentos',     `?consulta_id=in.(${cIds.join(',')})`));
-  }
-  if (rIds.length) {
-    tasks.push(q('DELETE', 'recordatorios', `?receta_id=in.(${rIds.join(',')})`));
-  }
-  await Promise.allSettled(tasks);
-
-  // Ola 2: recetas
-  await q('DELETE', 'recetas', `?paciente_id=eq.${pacienteId}`);
-
-  // Ola 3: consultas
-  await q('DELETE', 'consultas', `?paciente_id=eq.${pacienteId}`);
-
-  // Ola 4: paciente (final)
+  // Con CASCADE DELETE activo, borrar el paciente elimina en cadena:
+  // consultas → documentos, notificaciones, recetas → recordatorios
   const deleted = await q('DELETE', 'pacientes', `?id=eq.${pacienteId}`);
-  if (!deleted?.length) throw new Error('Paciente no encontrado o ya eliminado');
+
+  if (!Array.isArray(deleted) || deleted.length === 0) {
+    throw new Error(
+      'No se pudo eliminar el paciente. ' +
+      'Ejecuta el SQL de CASCADE DELETE en Supabase SQL Editor y vuelve a intentar.'
+    );
+  }
 }
 
 // ── Handler principal ─────────────────────────────────────────────────────

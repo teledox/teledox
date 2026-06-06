@@ -94,20 +94,25 @@ async function eliminarPaciente(id, nombre) {
 
   showToast('⏳ Eliminando...');
   try {
-    // Ola 1: tablas hoja en paralelo (si fallan se logea pero no corta)
+    // Obtener IDs de consultas del paciente para limpiar FK de notificaciones
+    const consultasPac = await supa('GET', 'consultas', null, `?paciente_id=eq.${id}&select=id`) || [];
+    const cIds = consultasPac.map(c => c.id);
+
+    // Ola 1: tablas hoja en paralelo
     await Promise.allSettled([
       _dbDel('recordatorios',          'paciente_id', id),
       _dbDel('documentos',             'paciente_id', id),
       _dbDel('antecedentes',           'paciente_id', id),
       _dbDel('paciente_cronicas',      'paciente_id', id),
       _dbDel('notificaciones',         'paciente_id', id),
+      cIds.length ? _dbDelIn('notificaciones', 'consulta_id', cIds) : Promise.resolve(), // ← FK fix
       _dbDel('seguimiento_respuestas', 'paciente_id', id),
     ]);
 
     // Ola 2: recetas (después de recordatorios)
     await _dbDel('recetas', 'paciente_id', id);
 
-    // Ola 3: consultas (después de docs y recetas)
+    // Ola 3: consultas (después de docs, recetas y notificaciones)
     await _dbDel('consultas', 'paciente_id', id);
 
     // Ola 4: paciente — verificamos que se eliminó realmente
@@ -151,8 +156,10 @@ async function _eliminarConsulta(consultaId) {
     const recetas = await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&select=id`) || [];
     const rIds = recetas.map(r => r.id);
 
+    // Borrar todo lo que referencia esta consulta (incluye notificaciones por FK)
     await Promise.allSettled([
-      _dbDel('documentos', 'consulta_id', consultaId),
+      _dbDel('documentos',    'consulta_id', consultaId),
+      _dbDel('notificaciones','consulta_id', consultaId),   // ← FK que causaba el error
       rIds.length ? _dbDelIn('recordatorios', 'receta_id', rIds) : Promise.resolve(),
     ]);
 

@@ -80,6 +80,13 @@ async function eliminarConsulta(consultaId) {
   if (currentUser?.rol !== 'admin') return;
   if (!confirm('¿Eliminar esta consulta?\n\n⚠️ No se puede deshacer.')) return;
   showToast('⏳ Eliminando...');
-  const ok = await _eliminarConsulta(consultaId);
-  if (ok) loadConsultas();
+  try {
+    await adminDelete('consulta', consultaId);
+    showToast('✓ Consulta eliminada');
+    loadConsultas();
+  } catch (e) {
+    console.error('Error eliminando consulta:', e);
+    alert(`No se pudo eliminar:\n\n${e.message}`);
+    showToast('❌ Error al eliminar');
+  }
 }

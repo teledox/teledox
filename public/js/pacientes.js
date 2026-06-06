@@ -74,73 +74,33 @@ async function showPacienteDetalle(id) {
   document.getElementById('tab-datos').classList.add('active');
 }
 
-// ── Helpers de borrado con detección real de errores ─────────────────────
-async function _dbDel(tabla, columna, valor) {
-  const { error } = await supabaseClient.from(tabla).delete().eq(columna, valor);
-  if (error) console.warn(`[DEL] ${tabla}.${columna}=${valor} →`, error.message);
-  return !error;
-}
-
-async function _dbDelIn(tabla, columna, valores) {
-  if (!valores.length) return true;
-  const { error } = await supabaseClient.from(tabla).delete().in(columna, valores);
-  if (error) console.warn(`[DEL] ${tabla}.${columna} IN [${valores}] →`, error.message);
-  return !error;
+// ── Helper central: llama al backend con service_role (bypass RLS total) ──
+async function adminDelete(tipo, id) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const token = session?.access_token;
+  const res = await fetch('/api/admin-delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tipo, id, token }),
+  });
+  const result = await res.json();
+  if (!res.ok) throw new Error(result.error || `HTTP ${res.status}`);
+  return result;
 }
 
 async function eliminarPaciente(id, nombre) {
   if (currentUser?.rol !== 'admin') return;
   if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n\n⚠️ No se puede deshacer.`)) return;
-
   showToast('⏳ Eliminando...');
   try {
-    // Obtener IDs de consultas del paciente para limpiar FK de notificaciones
-    const consultasPac = await supa('GET', 'consultas', null, `?paciente_id=eq.${id}&select=id`) || [];
-    const cIds = consultasPac.map(c => c.id);
-
-    // Ola 1: tablas hoja en paralelo
-    await Promise.allSettled([
-      _dbDel('recordatorios',          'paciente_id', id),
-      _dbDel('documentos',             'paciente_id', id),
-      _dbDel('antecedentes',           'paciente_id', id),
-      _dbDel('paciente_cronicas',      'paciente_id', id),
-      _dbDel('notificaciones',         'paciente_id', id),
-      cIds.length ? _dbDelIn('notificaciones', 'consulta_id', cIds) : Promise.resolve(), // ← FK fix
-      _dbDel('seguimiento_respuestas', 'paciente_id', id),
-    ]);
-
-    // Ola 2: recetas (después de recordatorios)
-    await _dbDel('recetas', 'paciente_id', id);
-
-    // Ola 3: consultas (después de docs, recetas y notificaciones)
-    await _dbDel('consultas', 'paciente_id', id);
-
-    // Ola 4: paciente — verificamos que se eliminó realmente
-    const { data: deleted, error: errPac } = await supabaseClient
-      .from('pacientes')
-      .delete()
-      .eq('id', id)
-      .select('id');
-
-    if (errPac) throw new Error(errPac.message);
-
-    if (!deleted || deleted.length === 0) {
-      throw new Error(
-        'El paciente no fue eliminado.\n\n' +
-        'Probable causa: permisos RLS en Supabase.\n\n' +
-        'Ve a Supabase → Authentication → Policies y agrega una política DELETE para admins, ' +
-        'o en Table Editor → pacientes → desactiva RLS.'
-      );
-    }
-
+    await adminDelete('paciente', id);
     showToast('✓ Paciente eliminado correctamente');
     showPage('pacientes');
     loadPacientes();
-
   } catch (e) {
     console.error('Error eliminando paciente:', e);
-    alert(`No se pudo eliminar el paciente:\n\n${e.message}`);
-    showToast('❌ Error al eliminar — ver detalles');
+    alert(`No se pudo eliminar:\n\n${e.message}`);
+    showToast('❌ Error al eliminar');
   }
 }
 
@@ -153,32 +113,12 @@ async function eliminarConsultaDesdeDetalle(consultaId, pacienteId) {
 
 async function _eliminarConsulta(consultaId) {
   try {
-    const recetas = await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&select=id`) || [];
-    const rIds = recetas.map(r => r.id);
-
-    // Borrar todo lo que referencia esta consulta (incluye notificaciones por FK)
-    await Promise.allSettled([
-      _dbDel('documentos',    'consulta_id', consultaId),
-      _dbDel('notificaciones','consulta_id', consultaId),   // ← FK que causaba el error
-      rIds.length ? _dbDelIn('recordatorios', 'receta_id', rIds) : Promise.resolve(),
-    ]);
-
-    await _dbDel('recetas', 'consulta_id', consultaId);
-
-    const { data: deleted, error } = await supabaseClient
-      .from('consultas')
-      .delete()
-      .eq('id', consultaId)
-      .select('id');
-
-    if (error) throw new Error(error.message);
-    if (!deleted?.length) throw new Error('Consulta no eliminada — revisa permisos RLS en Supabase.');
-
+    await adminDelete('consulta', consultaId);
     showToast('✓ Consulta eliminada');
     return true;
   } catch (e) {
     console.error('Error eliminando consulta:', e);
-    alert(`No se pudo eliminar la consulta:\n\n${e.message}`);
+    alert(`No se pudo eliminar:\n\n${e.message}`);
     showToast('❌ Error al eliminar');
     return false;
   }

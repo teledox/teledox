@@ -26,31 +26,26 @@ async function q(method, table, query = '') {
   throw new Error(err.message || `HTTP ${r.status} en ${table}`);
 }
 
-// ── Decodificar JWT localmente (sin llamada extra a Supabase) ─────────────
-function uidDesdeJWT(token) {
+// ── Decodificar payload del JWT ───────────────────────────────────────────
+function decodeJWT(token) {
   try {
-    const payload = token.split('.')[1];
-    // base64url → base64
-    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
-    const json = Buffer.from(base64, 'base64').toString('utf8');
-    const data = JSON.parse(json);
-    return data.sub || null; // Supabase JWT usa "sub" como user ID
-  } catch (e) {
-    return null;
-  }
+    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
+  } catch { return {}; }
 }
 
 // ── Validar que el token pertenece a un admin activo ──────────────────────
 async function verificarAdmin(token) {
   if (!token) throw new Error('Sin token de autenticación');
 
-  // Decodificar JWT para obtener el user ID sin llamada a auth API
-  const uid = uidDesdeJWT(token);
-  if (!uid) throw new Error('No se pudo leer el token');
+  // El JWT de Supabase contiene el email del usuario
+  const payload = decodeJWT(token);
+  const email   = payload.email;
+  if (!email) throw new Error('Token sin email — vuelve a iniciar sesión');
 
-  // Consultar usuarios con SUPA_SERVICE_KEY (igual que hace el bot)
+  // Buscar por correo (campo garantizado en la tabla usuarios)
   const res = await fetch(
-    `${SUPA_URL}/rest/v1/usuarios?id=eq.${uid}&select=id,rol,activo`,
+    `${SUPA_URL}/rest/v1/usuarios?correo=eq.${encodeURIComponent(email)}&activo=eq.true&select=id,rol`,
     {
       headers: {
         'apikey':        SUPA_SERVICE_KEY,
@@ -59,19 +54,13 @@ async function verificarAdmin(token) {
     }
   );
 
-  const text = await res.text();
-  console.log('[admin-delete] uid:', uid, 'usuarios raw:', text);
-
-  let usuarios;
-  try { usuarios = JSON.parse(text); } catch { usuarios = []; }
-
+  const usuarios = await res.json().catch(() => []);
   const u = Array.isArray(usuarios) ? usuarios[0] : null;
 
-  if (!u) throw new Error(`Usuario no encontrado en BD (uid=${uid})`);
-  if (u.rol !== 'admin') throw new Error(`Rol insuficiente: ${u.rol}`);
-  if (!u.activo) throw new Error('Usuario inactivo');
+  if (!u)              throw new Error(`Usuario no encontrado: ${email}`);
+  if (u.rol !== 'admin') throw new Error(`Sin permisos de admin (rol: ${u.rol})`);
 
-  return uid;
+  return u.id;
 }
 
 // ── Eliminar consulta y todas sus dependencias ────────────────────────────

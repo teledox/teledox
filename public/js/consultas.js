@@ -47,6 +47,7 @@ async function loadConsultas() {
           ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
           <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">📋 Docs</button>
           ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')" title="Marcar completada">✓</button>` : ''}
+          ${currentUser.rol === 'admin' ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarConsulta('${c.id}')">🗑</button>` : ''}
         </td>
       </tr>`;
   }).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
@@ -71,4 +72,18 @@ async function marcarCompletada(id) {
   await supa('PATCH', 'consultas', { estado: 'completada' }, `?id=eq.${id}`);
   loadConsultas();
   showToast('✓ Consulta completada');
+}
+
+async function eliminarConsulta(consultaId) {
+  if (currentUser?.rol !== 'admin') return;
+  if (!confirm('¿Eliminar esta consulta y todos sus documentos asociados?\n\n⚠️ No se puede deshacer.')) return;
+  showToast('⏳ Eliminando consulta...');
+  try {
+    await _eliminarConsulta(consultaId);
+    showToast('✓ Consulta eliminada');
+    loadConsultas();
+  } catch (e) {
+    console.error('Error:', e);
+    showToast('Error al eliminar la consulta');
+  }
 }

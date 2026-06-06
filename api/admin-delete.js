@@ -29,14 +29,34 @@ async function q(method, table, query = '') {
 // ── Validar que el token pertenece a un admin activo ──────────────────────
 async function verificarAdmin(token) {
   if (!token) throw new Error('Sin token de autenticación');
+
+  // 1. Obtener datos del usuario desde Supabase Auth usando su propio JWT
   const authRes = await fetch(`${SUPA_URL}/auth/v1/user`, {
-    headers: { 'apikey': SUPA_SERVICE_KEY, 'Authorization': `Bearer ${token}` }
+    headers: {
+      'apikey':        SUPA_SERVICE_KEY,
+      'Authorization': `Bearer ${token}`,
+    }
   });
   if (!authRes.ok) throw new Error('Token inválido o expirado');
   const authUser = await authRes.json();
+  if (!authUser?.id) throw new Error('No se pudo identificar el usuario');
 
-  const usuarios = await q('GET', 'usuarios', `?id=eq.${authUser.id}&rol=eq.admin&activo=eq.true&select=id`);
-  if (!usuarios?.length) throw new Error('Acceso denegado — solo administradores');
+  // 2. Verificar rol admin usando el JWT del propio usuario (evita RLS)
+  const usuariosRes = await fetch(
+    `${SUPA_URL}/rest/v1/usuarios?id=eq.${authUser.id}&select=id,rol,activo`,
+    {
+      headers: {
+        'apikey':        SUPA_SERVICE_KEY,
+        'Authorization': `Bearer ${token}`,   // JWT del usuario, no la service key
+      }
+    }
+  );
+  const usuarios = await usuariosRes.json();
+  const u = Array.isArray(usuarios) ? usuarios[0] : null;
+
+  if (!u || u.rol !== 'admin' || !u.activo) {
+    throw new Error('Acceso denegado — solo administradores');
+  }
   return authUser.id;
 }
 

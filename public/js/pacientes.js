@@ -7,8 +7,10 @@ async function loadPacientes() {
 
 function renderPacientes(list) {
   const esAdmin = currentUser?.rol === 'admin';
-  document.getElementById('pacBody').innerHTML = list.map(p => `
+  const total = list.length;
+  document.getElementById('pacBody').innerHTML = list.map((p, i) => `
     <tr>
+      <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa;min-width:36px">${total - i}</td>
       <td><strong>${p.nombre || '—'} ${p.apellidos || ''}</strong></td>
       <td>${p.cedula || '—'}</td>
       <td>${p.clientes_b2b?.nombre_empresa || '—'}</td>

@@ -19,7 +19,7 @@ async function loadMetricas(periodo) {
   }
 
   const [consultas, pacientes, recetas, respuestas, medicos] = await Promise.all([
-    supa('GET', 'consultas', null, `?select=id,nivel_sintomas,estado,created_at,medico_id&created_at=gte.${desde}`),
+    supa('GET', 'consultas', null, `?select=id,nivel_sintomas,estado,created_at,atendido_at,medico_id,pacientes(clientes_b2b(nombre_empresa))&created_at=gte.${desde}`),
     supa('GET', 'pacientes', null, '?select=count'),
     supa('GET', 'recetas', null, '?select=id,seguimiento_activo'),
     supa('GET', 'seguimiento_respuestas', null, '?select=se_siente_mejor,respuesta'),
@@ -55,6 +55,73 @@ async function loadMetricas(periodo) {
 
   const sinMejora = (respuestas || []).filter(r => r.se_siente_mejor === false).length;
   document.getElementById('seguimientoStats').innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0.5rem 0">${[['Seguimientos exitosos',exitosos,'#16a34a'],['Sin mejoría',sinMejora,'#dc2626'],['Recetas activas',(recetas||[]).length,'#2563eb']].map(([l,v,c]) => `<div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px"><div style="font-size:24px;font-weight:600;color:${c}">${v}</div><div style="font-size:12px;color:#888;margin-top:4px">${l}</div></div>`).join('')}</div>`;
+
+  // === Tiempo de respuesta ===
+  function formatMinutes(min) {
+    if (min === null || isNaN(min)) return '—';
+    if (min < 1) return `${Math.round(min * 60)}s`;
+    if (min < 60) return `${Math.round(min)} min`;
+    return `${Math.floor(min/60)}h ${Math.round(min%60)}m`;
+  }
+
+  const atendidas = all.filter(c => c.atendido_at);
+  const tiempos = atendidas.map(c => (new Date(c.atendido_at) - new Date(c.created_at)) / 60000);
+  const avgGeneral = tiempos.length ? tiempos.reduce((a,b) => a+b, 0) / tiempos.length : null;
+  const minResp = tiempos.length ? Math.min(...tiempos) : null;
+  const maxResp = tiempos.length ? Math.max(...tiempos) : null;
+  const sorted = [...tiempos].sort((a,b) => a-b);
+  const mediana = sorted.length ? (sorted.length % 2 === 0 ? (sorted[sorted.length/2-1]+sorted[sorted.length/2])/2 : sorted[Math.floor(sorted.length/2)]) : null;
+
+  const trEl = document.getElementById('tiempoRespuestaStats');
+  if (trEl) {
+    const color = avgGeneral === null ? '#aaa' : avgGeneral < 5 ? '#16a34a' : avgGeneral < 15 ? '#ca8a04' : '#dc2626';
+    trEl.innerHTML = atendidas.length ? `
+      <div style="text-align:center;padding:1rem 0;margin-bottom:1rem">
+        <div style="font-size:42px;font-weight:700;color:${color}">${formatMinutes(avgGeneral)}</div>
+        <div style="font-size:12px;color:#888;margin-top:4px">Promedio general de respuesta</div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">Basado en ${atendidas.length} consulta${atendidas.length!==1?'s':''} atendida${atendidas.length!==1?'s':''}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        ${[['Mínimo',minResp,'#16a34a'],['Mediana',mediana,'#2563eb'],['Máximo',maxResp,'#dc2626']].map(([l,v,c]) => `
+        <div style="background:#f9f9f9;border-radius:8px;padding:10px;text-align:center">
+          <div style="font-size:17px;font-weight:700;color:${c}">${formatMinutes(v)}</div>
+          <div style="font-size:11px;color:#888;margin-top:2px">${l}</div>
+        </div>`).join('')}
+      </div>` : '<div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">Sin datos de tiempo de respuesta aún.<br><span style="font-size:12px">Se registra cuando un médico hace clic en Atender.</span></div>';
+  }
+
+  // Por empresa B2B
+  const porEmpresa = {};
+  atendidas.forEach(c => {
+    const empresa = c.pacientes?.clientes_b2b?.nombre_empresa || 'B2C / Sin empresa';
+    if (!porEmpresa[empresa]) porEmpresa[empresa] = [];
+    porEmpresa[empresa].push((new Date(c.atendido_at) - new Date(c.created_at)) / 60000);
+  });
+  const b2bEl = document.getElementById('tiempoRespuestaB2B');
+  if (b2bEl) {
+    const empresas = Object.entries(porEmpresa).map(([emp, mins]) => ({
+      emp,
+      count: mins.length,
+      avg: mins.reduce((a,b) => a+b, 0) / mins.length,
+      min: Math.min(...mins),
+      max: Math.max(...mins)
+    })).sort((a,b) => a.avg - b.avg);
+
+    b2bEl.innerHTML = empresas.length ? `
+      <table class="table">
+        <thead><tr><th>Empresa</th><th style="text-align:center">Consultas</th><th style="text-align:center">Promedio</th><th style="text-align:center">Mejor</th><th style="text-align:center">Peor</th></tr></thead>
+        <tbody>${empresas.map(e => {
+          const c = e.avg < 5 ? '#16a34a' : e.avg < 15 ? '#ca8a04' : '#dc2626';
+          return `<tr>
+            <td><strong>${e.emp}</strong></td>
+            <td style="text-align:center">${e.count}</td>
+            <td style="text-align:center;font-weight:700;color:${c}">${formatMinutes(e.avg)}</td>
+            <td style="text-align:center;color:#16a34a">${formatMinutes(e.min)}</td>
+            <td style="text-align:center;color:#dc2626">${formatMinutes(e.max)}</td>
+          </tr>`;
+        }).join('')}</tbody>
+      </table>` : '<div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">Sin datos de empresas en el período.</div>';
+  }
 
   // === Ranking por médico ===
   const medicosData = medicos || [];

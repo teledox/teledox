@@ -31,7 +31,8 @@ async function loadDashboard() {
             return `<div class="alerta-item">
               <div class="alerta-item-info">
                 <div class="alerta-item-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
-                <div class="alerta-item-meta">${nivel} · ${new Date(c.created_at).toLocaleString('es-EC',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
+                <div class="alerta-item-meta">${nivel} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
+                <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span>
               </div>
               <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>
             </div>`;
@@ -91,20 +92,15 @@ async function loadAlertasServicio() {
       : c.nivel_sintomas === 2
         ? '<span class="badge badge-yellow">🟡 Medio</span>'
         : '<span class="badge badge-green">🟢 Leve</span>';
-    const tiempoTranscurrido = (() => {
-      const diff = (Date.now() - new Date(c.created_at).getTime()) / 60000;
-      if (diff < 60) return `${Math.round(diff)} min`;
-      return `${Math.round(diff/60)}h ${Math.round(diff%60)}m`;
-    })();
     return `
       <div style="background:white;border-radius:12px;border:2px solid #fee2e2;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:16px">
         <div style="flex:1">
           <div style="font-size:15px;font-weight:700;color:#1a1a1a">${p.nombre || '—'} ${p.apellidos || ''}</div>
           <div style="font-size:12px;color:#888;margin-top:2px">Cédula: ${p.cedula || '—'} · ${p.clientes_b2b?.nombre_empresa || 'Paciente B2C'}</div>
           <div style="font-size:12px;color:#888;margin-top:2px;max-width:500px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.sintomas_descripcion || '—'}</div>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+          <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
             ${nivel}
-            <span style="font-size:11px;color:#aaa">⏱ Hace ${tiempoTranscurrido}</span>
+            <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">${formatElapsedTime(c.created_at)}</span>
           </div>
         </div>
         <button class="btn btn-sm btn-atender" style="font-size:13px;padding:10px 20px" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>

@@ -96,5 +96,7 @@ function initApp() {
   document.getElementById('sidebarRole').textContent = currentUser.rol.charAt(0).toUpperCase() + currentUser.rol.slice(1);
   document.getElementById('topAvatar').textContent = ((currentUser.nombre || '?')[0] + (currentUser.apellidos || '?')[0]).toUpperCase();
   document.getElementById('userInfo').textContent = currentUser.nombre + ' ' + currentUser.apellidos;
-  buildNav(); loadDashboard(); startNotifPolling();
+  buildNav(); loadDashboard(); startNotifPolling(); startTimerUpdater();
+  // Inicializar AudioContext en primer gesto del usuario (política del navegador)
+  document.addEventListener('click', initAudio, { once: true });
 }

@@ -60,7 +60,7 @@ async function atenderConsulta(consultaId) {
     if (typeof loadDashboard === 'function') loadDashboard();
     return;
   }
-  await supa('PATCH', 'consultas', { medico_id: currentUser.id, estado: 'en_atencion' }, `?id=eq.${consultaId}`);
+  await supa('PATCH', 'consultas', { medico_id: currentUser.id, estado: 'en_atencion', atendido_at: new Date().toISOString() }, `?id=eq.${consultaId}`);
   showToast('✓ Consulta asignada — eres el médico tratante');
   loadConsultas();
   if (typeof loadDashboard === 'function') loadDashboard();

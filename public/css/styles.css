@@ -246,3 +246,8 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .medico-rank-bar { height: 6px; background: #fee2e2; border-radius: 3px; margin-top: 4px; overflow: hidden; }
 .medico-rank-bar-fill { height: 100%; background: #FF5A5F; border-radius: 3px; transition: width 0.4s; }
 .medico-rank-count { font-size: 18px; font-weight: 700; color: #FF5A5F; min-width: 32px; text-align: right; }
+
+/* ===== CRONÓMETRO DE ESPERA ===== */
+.alerta-timer { display: inline-block; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; transition: color 0.5s; }
+@keyframes timerPulse { 0%,100% { opacity:1; } 50% { opacity:0.7; } }
+.alerta-timer[style*="dc2626"] { animation: timerPulse 1.2s ease-in-out infinite; }

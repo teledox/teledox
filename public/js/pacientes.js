@@ -48,9 +48,11 @@ async function showPacienteDetalle(id) {
   ].map(([l, v]) => `<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
 
   const consultas = await supa('GET', 'consultas', null, `?paciente_id=eq.${id}&order=created_at.desc`) || [];
+  const totalC = consultas.length;
   document.getElementById('patConsultas').innerHTML = consultas.length ? `
-    <table class="table"><thead><tr><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th>${esAdmin ? '<th></th>' : ''}</tr></thead>
-    <tbody>${consultas.map(c => `<tr>
+    <table class="table"><thead><tr><th style="text-align:center;width:40px">#</th><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th>${esAdmin ? '<th></th>' : ''}</tr></thead>
+    <tbody>${consultas.map((c, i) => `<tr>
+      <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa">${totalC - i}</td>
       <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
       <td>${c.sintomas_descripcion || '—'}</td>
       <td>${c.diagnostico || '—'}</td>

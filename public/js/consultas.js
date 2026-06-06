@@ -5,7 +5,8 @@ async function loadConsultas() {
     : '?select=*,pacientes(nombre,apellidos,cedula),medico:usuarios!consultas_medico_id_fkey(nombre,apellidos)&order=created_at.desc';
   const consultas = await supa('GET', 'consultas', null, q) || [];
 
-  document.getElementById('consultasBody').innerHTML = consultas.map(c => {
+  const totalCons = consultas.length;
+  document.getElementById('consultasBody').innerHTML = consultas.map((c, i) => {
     const p = c.pacientes || {};
     const med = c.medico;
     const sinMedico = !c.medico_id;
@@ -30,6 +31,7 @@ async function loadConsultas() {
 
     return `
       <tr ${sinMedico && c.estado !== 'completada' ? 'style="background:#fff8f8"' : ''}>
+        <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa;min-width:36px">${totalCons - i}</td>
         <td>
           <strong>${p.nombre || '—'} ${p.apellidos || ''}</strong>
           <br><span style="font-size:11px;color:#aaa">${p.cedula || ''}</span>

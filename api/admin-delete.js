@@ -26,38 +26,52 @@ async function q(method, table, query = '') {
   throw new Error(err.message || `HTTP ${r.status} en ${table}`);
 }
 
+// ── Decodificar JWT localmente (sin llamada extra a Supabase) ─────────────
+function uidDesdeJWT(token) {
+  try {
+    const payload = token.split('.')[1];
+    // base64url → base64
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const json = Buffer.from(base64, 'base64').toString('utf8');
+    const data = JSON.parse(json);
+    return data.sub || null; // Supabase JWT usa "sub" como user ID
+  } catch (e) {
+    return null;
+  }
+}
+
 // ── Validar que el token pertenece a un admin activo ──────────────────────
 async function verificarAdmin(token) {
   if (!token) throw new Error('Sin token de autenticación');
 
-  // 1. Obtener datos del usuario desde Supabase Auth usando su propio JWT
-  const authRes = await fetch(`${SUPA_URL}/auth/v1/user`, {
-    headers: {
-      'apikey':        SUPA_SERVICE_KEY,
-      'Authorization': `Bearer ${token}`,
-    }
-  });
-  if (!authRes.ok) throw new Error('Token inválido o expirado');
-  const authUser = await authRes.json();
-  if (!authUser?.id) throw new Error('No se pudo identificar el usuario');
+  // Decodificar JWT para obtener el user ID sin llamada a auth API
+  const uid = uidDesdeJWT(token);
+  if (!uid) throw new Error('No se pudo leer el token');
 
-  // 2. Verificar rol admin usando el JWT del propio usuario (evita RLS)
-  const usuariosRes = await fetch(
-    `${SUPA_URL}/rest/v1/usuarios?id=eq.${authUser.id}&select=id,rol,activo`,
+  // Consultar usuarios con SUPA_SERVICE_KEY (igual que hace el bot)
+  const res = await fetch(
+    `${SUPA_URL}/rest/v1/usuarios?id=eq.${uid}&select=id,rol,activo`,
     {
       headers: {
         'apikey':        SUPA_SERVICE_KEY,
-        'Authorization': `Bearer ${token}`,   // JWT del usuario, no la service key
+        'Authorization': `Bearer ${SUPA_SERVICE_KEY}`,
       }
     }
   );
-  const usuarios = await usuariosRes.json();
+
+  const text = await res.text();
+  console.log('[admin-delete] uid:', uid, 'usuarios raw:', text);
+
+  let usuarios;
+  try { usuarios = JSON.parse(text); } catch { usuarios = []; }
+
   const u = Array.isArray(usuarios) ? usuarios[0] : null;
 
-  if (!u || u.rol !== 'admin' || !u.activo) {
-    throw new Error('Acceso denegado — solo administradores');
-  }
-  return authUser.id;
+  if (!u) throw new Error(`Usuario no encontrado en BD (uid=${uid})`);
+  if (u.rol !== 'admin') throw new Error(`Rol insuficiente: ${u.rol}`);
+  if (!u.activo) throw new Error('Usuario inactivo');
+
+  return uid;
 }
 
 // ── Eliminar consulta y todas sus dependencias ────────────────────────────

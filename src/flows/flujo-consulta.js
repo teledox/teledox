@@ -1,4 +1,5 @@
-const { buscarPorCedula, actualizar } = require('../services/pacientes');
+const { buscarPorCedula, actualizar, crear: crearPaciente } = require('../services/pacientes');
+const { buscarCedulaB2B } = require('../services/empleados');
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
@@ -55,15 +56,19 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       respuesta = `❌ ${error}\n\nPor favor ingrese su cédula nuevamente:`;
       return { respuesta, paso: 1, datos, terminar: false };
     }
-    const paciente = await buscarPorCedula(mensaje);
+    const [paciente, empleado] = await Promise.all([
+      buscarPorCedula(mensaje),
+      buscarCedulaB2B(mensaje)
+    ]);
+
     if (paciente) {
-      // MODALIDAD B2B — paciente encontrado en BD con empresa
+      // Paciente ya registrado con empresa asignada
       datos.cedula = mensaje;
       datos.paciente_id = paciente.id;
       datos.nombre_paciente = paciente.nombre;
-      datos.empresa = paciente.clientes_b2b?.nombre_empresa || 'su empresa';
-      datos.empresa_id = paciente.clientes_b2b?.id || null;
-      datos.seguro = paciente.clientes_b2b?.nombre_seguro || 'su seguro';
+      datos.empresa = paciente.clientes_b2b?.nombre_empresa || empleado?.clientes_b2b?.nombre_empresa || 'su empresa';
+      datos.empresa_id = paciente.clientes_b2b?.id || empleado?.clientes_b2b?.id || null;
+      datos.seguro = paciente.clientes_b2b?.nombre_seguro || empleado?.clientes_b2b?.nombre_seguro || 'su seguro';
       return {
         respuesta: `✅ Le identificamos como afiliado a *${datos.empresa}* con cobertura *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?`,
         paso: 2, datos, terminar: false,
@@ -72,8 +77,32 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
           { id: 'no',  titulo: '❌ No autorizo'  },
         ]
       };
+    } else if (empleado) {
+      // Cédula autorizada por empresa B2B — crear paciente on-the-fly y continuar sin pago
+      datos.cedula = mensaje;
+      datos.empresa = empleado.clientes_b2b?.nombre_empresa || 'su empresa';
+      datos.empresa_id = empleado.clientes_b2b?.id || null;
+      datos.seguro = empleado.clientes_b2b?.nombre_seguro || 'su seguro';
+      const nuevo = await crearPaciente({
+        cedula: mensaje,
+        nombre: '',
+        apellidos: '',
+        correo: '',
+        telefono,
+        cliente_b2b_id: datos.empresa_id
+      });
+      datos.paciente_id = nuevo?.id || null;
+      datos.nombre_paciente = '';
+      return {
+        respuesta: `✅ Su cédula está registrada como empleado de *${datos.empresa}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?`,
+        paso: 2, datos, terminar: false,
+        botones: [
+          { id: 'si',  titulo: '✅ Sí, autorizo' },
+          { id: 'no',  titulo: '❌ No autorizo'  },
+        ]
+      };
     } else {
-      // MODALIDAD B2C — cédula no encontrada, iniciar flujo pago directo
+      // MODALIDAD B2C — cédula no encontrada en ninguna lista
       datos.cedula = mensaje;
       const result = await procesarB2C(50, mensaje, datos, telefono, nombreWhatsApp);
       await guardar(telefono, result.paso, result.datos);

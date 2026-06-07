@@ -592,9 +592,38 @@
             <button class="btn btn-sm btn-primary" onclick="document.getElementById('editEmpresaForm').style.display='none';document.getElementById('addEmpresaForm').style.display='block'">+ Nueva empresa</button>
           </div>
           <table class="table">
-            <thead><tr><th>Empresa</th><th style="text-align:center">Pacientes</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Empresa</th><th style="text-align:center">Pacientes</th><th style="text-align:center">Empleados</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody id="empresasBody"></tbody>
           </table>
+        </div>
+
+        <!-- Panel: Gestión de cédulas B2B -->
+        <div class="card" id="cedulasPanel" style="display:none;border:2px solid #4f8ef7">
+          <div class="card-header">
+            <span class="card-title">📋 Empleados autorizados — <span id="cedulasEmpresaNombre"></span></span>
+            <button class="btn btn-sm" onclick="cerrarCedulasPanel()">✕</button>
+          </div>
+          <input type="hidden" id="cedulasEmpresaId" />
+
+          <!-- Upload Excel -->
+          <div style="background:#f0f6ff;border-radius:8px;padding:1rem;margin-bottom:1rem">
+            <p style="margin:0 0 0.5rem;font-size:13px;color:#555">Cargue un archivo Excel (.xlsx) con las cédulas en la primera columna. Se agregarán a la lista existente.</p>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <input type="file" id="excelCedulas" accept=".xlsx,.xls" class="form-control" style="max-width:260px" onchange="previewExcel()" />
+              <button class="btn btn-primary" style="background:#4f8ef7;border-color:#4f8ef7" onclick="subirCedulas()">⬆️ Cargar cédulas</button>
+              <button class="btn btn-sm btn-danger" onclick="limpiarCedulasEmpresa()" style="margin-left:auto">🗑 Limpiar todas</button>
+            </div>
+            <div id="excelPreview" style="margin-top:0.5rem;font-size:12px;color:#4f8ef7"></div>
+          </div>
+
+          <!-- Listado actual -->
+          <div style="max-height:320px;overflow-y:auto">
+            <table class="table" style="font-size:13px">
+              <thead><tr><th>#</th><th>Cédula</th><th style="text-align:right">Acción</th></tr></thead>
+              <tbody id="cedulasBody"></tbody>
+            </table>
+          </div>
+          <div id="cedulasCount" style="font-size:12px;color:#888;margin-top:0.5rem"></div>
         </div>
 
         <!-- Formulario: Crear empresa -->
@@ -1030,6 +1059,7 @@
 <!-- SCRIPTS -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/utils.js"></script>
 <script src="/js/realtime.js"></script>

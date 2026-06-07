@@ -25,3 +25,15 @@ CREATE TABLE documentos (
 -- Índices útiles
 CREATE INDEX idx_documentos_paciente ON documentos(paciente_id);
 CREATE INDEX idx_antecedentes_paciente ON antecedentes(paciente_id);
+
+-- Cédulas autorizadas por empresa B2B (empleados con acceso sin pago)
+CREATE TABLE empleados_b2b (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  empresa_id  UUID REFERENCES clientes_b2b(id) ON DELETE CASCADE,
+  cedula      VARCHAR(20) NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(empresa_id, cedula)
+);
+
+CREATE INDEX idx_empleados_b2b_cedula ON empleados_b2b(cedula);
+CREATE INDEX idx_empleados_b2b_empresa ON empleados_b2b(empresa_id);

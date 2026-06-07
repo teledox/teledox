@@ -1,6 +1,6 @@
 // ═══════════════════════════════════════════════════════
 //  Supabase Realtime — actualizaciones instantáneas
-//  Se activa al iniciar sesión y se desactiva al salir
+//  + sincronización cruzada Pacientes ↔ Consultas
 // ═══════════════════════════════════════════════════════
 
 let _rtChannels = [];
@@ -9,28 +9,60 @@ function _pageActive(id) {
   return document.getElementById(`page-${id}`)?.classList.contains('active');
 }
 
+// ── Sincronización cruzada: refresca las secciones abiertas ──────────────
+function syncVistas() {
+  if (_pageActive('consultas'))         loadConsultas();
+  if (_pageActive('pacientes'))         loadPacientes();
+  if (_pageActive('dashboard'))         loadDashboard();
+  if (_pageActive('alertas'))           loadAlertasServicio();
+  if (_pageActive('metricas'))          loadMetricas();
+  if (_pageActive('facturacion-b2c'))   loadFacturacionB2C();
+  if (_pageActive('planillaje-b2b'))    loadPlanillajeB2B();
+  if (_pageActive('operador'))          loadNotificaciones();
+
+  // Si hay un detalle de paciente abierto, refrescarlo también
+  if (_pageActive('paciente-detalle') && currentPacienteId) {
+    showPacienteDetalle(currentPacienteId);
+  }
+}
+
+// ── Sincronización específica: pacientes ↔ consultas ─────────────────────
+function syncPacientesConsultas() {
+  // Refrescar AMBAS secciones simultáneamente aunque solo una esté visible
+  if (_pageActive('consultas'))          loadConsultas();
+  if (_pageActive('pacientes'))          loadPacientes();
+  if (_pageActive('paciente-detalle') && currentPacienteId) {
+    showPacienteDetalle(currentPacienteId);
+  }
+  // Dashboard siempre se actualiza porque muestra resumen de ambas
+  if (_pageActive('dashboard'))          loadDashboard();
+}
+
 function startRealtime() {
-  // Limpiar canales previos
   _rtChannels.forEach(ch => { try { supabaseClient.removeChannel(ch); } catch (_) {} });
   _rtChannels = [];
 
-  // ── Consultas ──────────────────────────────────────────
+  // ── Consultas → sincroniza con Pacientes automáticamente ───────────────
   const chConsultas = supabaseClient
     .channel('rt-consultas')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'consultas' }, () => {
-      if (_pageActive('consultas'))  loadConsultas();
-      if (_pageActive('dashboard'))  loadDashboard();
-      if (_pageActive('alertas'))    loadAlertasServicio();
-      if (_pageActive('facturacion-b2c')) loadFacturacionB2C();
-      if (_pageActive('planillaje-b2b')) loadPlanillajeB2B();
-      if (_pageActive('metricas'))   loadMetricas();
+      syncPacientesConsultas();
+      if (_pageActive('alertas'))  loadAlertasServicio();
+      if (_pageActive('metricas')) loadMetricas();
     })
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') console.log('RT consultas ✅');
-    });
+    .subscribe(s => s === 'SUBSCRIBED' && console.log('RT consultas ✅'));
   _rtChannels.push(chConsultas);
 
-  // ── Notificaciones ─────────────────────────────────────
+  // ── Pacientes → sincroniza con Consultas automáticamente ───────────────
+  const chPacientes = supabaseClient
+    .channel('rt-pacientes')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'pacientes' }, () => {
+      syncPacientesConsultas();
+    })
+    .subscribe(s => s === 'SUBSCRIBED' && console.log('RT pacientes ✅'));
+  _rtChannels.push(chPacientes);
+
+  // ── Notificaciones ─────────────────────────────────────────────────────
   const chNotifs = supabaseClient
     .channel('rt-notificaciones')
     .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones' }, (payload) => {
@@ -40,39 +72,22 @@ function startRealtime() {
       if (document.getElementById('notifPanel')?.classList.contains('open')) loadNotificaciones();
       if (_pageActive('operador')) loadNotificaciones();
     })
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') console.log('RT notificaciones ✅');
-    });
+    .subscribe(s => s === 'SUBSCRIBED' && console.log('RT notificaciones ✅'));
   _rtChannels.push(chNotifs);
 
-  // ── Pacientes ──────────────────────────────────────────
-  const chPacientes = supabaseClient
-    .channel('rt-pacientes')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'pacientes' }, () => {
-      if (_pageActive('pacientes')) loadPacientes();
-      if (_pageActive('dashboard')) loadDashboard();
-    })
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') console.log('RT pacientes ✅');
-    });
-  _rtChannels.push(chPacientes);
-
-  // ── Usuarios ───────────────────────────────────────────
+  // ── Usuarios ───────────────────────────────────────────────────────────
   const chUsuarios = supabaseClient
     .channel('rt-usuarios')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => {
       if (_pageActive('usuarios')) loadUsuarios();
     })
-    .subscribe((status) => {
-      if (status === 'SUBSCRIBED') console.log('RT usuarios ✅');
-    });
+    .subscribe(s => s === 'SUBSCRIBED' && console.log('RT usuarios ✅'));
   _rtChannels.push(chUsuarios);
 
-  // ── Recordatorios / Seguimiento ────────────────────────
-  const chRecordatorios = supabaseClient
+  // ── Recordatorios ──────────────────────────────────────────────────────
+  const chRec = supabaseClient
     .channel('rt-recordatorios')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'recordatorios' }, () => {
-      // Si el detalle del paciente está abierto, recargar seguimiento
       if (_pageActive('paciente-detalle') && currentPacienteId) {
         supa('GET', 'recordatorios', null, `?paciente_id=eq.${currentPacienteId}&activo=eq.true`).then(seg => {
           const el = document.getElementById('seguimientoList');
@@ -84,7 +99,7 @@ function startRealtime() {
       }
     })
     .subscribe();
-  _rtChannels.push(chRecordatorios);
+  _rtChannels.push(chRec);
 }
 
 function stopRealtime() {

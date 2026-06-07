@@ -265,8 +265,9 @@ async function enviarDocumentos() {
     }, `?id=eq.${recetaConsultaId}`);
 
     // Enviar por WhatsApp via backend
+    // Limpiar número: solo dígitos; si empieza en 0 → Ecuador (593)
     const telefonoPaciente = _pacData?.telefono
-      ? String(_pacData.telefono).replace(/^0/, '593')
+      ? (() => { const d = String(_pacData.telefono).replace(/\D/g, ''); return d.startsWith('0') ? '593' + d.slice(1) : d; })()
       : null;
 
     if (telefonoPaciente) {
@@ -280,7 +281,16 @@ async function enviarDocumentos() {
         })
       });
       const waData = await waRes.json();
-      showToast(`✓ ${waData.enviados ?? docsMarcados.length} documento(s) enviado(s) al paciente por WhatsApp`);
+      if (waData.errores?.length) {
+        const detalle = waData.errores[0]?.detalle?.error?.message || JSON.stringify(waData.errores[0]?.detalle);
+        showToast(`⚠️ Error WhatsApp: ${detalle}`);
+        console.error('[enviar-docs] Errores WhatsApp:', waData.errores);
+      } else if (waData.enviados > 0) {
+        showToast(`✓ ${waData.enviados} documento(s) enviado(s) al paciente por WhatsApp`);
+      } else {
+        showToast('⚠️ No se enviaron documentos — revisa la consola del navegador');
+        console.error('[enviar-docs] Respuesta:', waData);
+      }
     } else {
       showToast(`✓ ${docsMarcados.length} documento(s) guardado(s) — paciente sin teléfono registrado`);
     }
@@ -298,8 +308,9 @@ async function activarSeguimiento() {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico primero'); return; }
 
-  const telefono = _pacData.telefono
-    ? `whatsapp:+593${_pacData.telefono.replace(/^0/, '')}`
+  const soloDigitosSeg = String(_pacData.telefono || '').replace(/\D/g, '');
+  const telefono = soloDigitosSeg
+    ? `whatsapp:+${soloDigitosSeg.startsWith('0') ? '593' + soloDigitosSeg.slice(1) : soloDigitosSeg}`
     : null;
   if (!telefono) { alert('El paciente no tiene número de teléfono registrado'); return; }
 

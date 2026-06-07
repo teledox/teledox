@@ -15,9 +15,14 @@ module.exports = async function handler(req, res) {
     const docs = await docsRes.json();
     if (!docs?.length) return res.status(200).json({ ok: true, enviados: 0 });
 
-    const numero = telefono.replace('whatsapp:', '').replace('+', '').replace(/^0/, '593');
+    // Limpiar número: quitar todo excepto dígitos
+    // Si empieza con 0 → Ecuador (reemplazar con 593)
+    // Si ya tiene código de país → usar tal cual
+    const soloDigitos = telefono.replace(/\D/g, '');
+    const numero = soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos;
 
     let enviados = 0;
+    const errores = [];
     for (const doc of docs) {
       // 2. Generar URL firmada (válida 1 hora)
       const signRes = await fetch(
@@ -64,13 +69,14 @@ module.exports = async function handler(req, res) {
 
       const waData = await waRes.json();
       if (!waRes.ok) {
-        console.error(`[enviar-docs] Error enviando ${doc.tipo}:`, JSON.stringify(waData));
+        console.error(`[enviar-docs] Error WhatsApp ${doc.tipo}:`, JSON.stringify(waData));
+        errores.push({ tipo: doc.tipo, status: waRes.status, detalle: waData });
       } else {
         enviados++;
       }
     }
 
-    return res.status(200).json({ ok: true, enviados });
+    return res.status(200).json({ ok: true, enviados, errores: errores.length ? errores : undefined });
   } catch (err) {
     console.error('[enviar-docs]', err.message);
     return res.status(500).json({ error: err.message });

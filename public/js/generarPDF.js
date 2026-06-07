@@ -1,89 +1,104 @@
-async function generarRecetaPDF({ paciente, medico, diagnostico, cie10, medicamentos, indicaciones }) {
+async function generarRecetaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
   const doc = await PDFDocument.create();
-  const page = doc.addPage([595, 842]);
-  const { width, height } = page.getSize();
+  const brand = rgb(1.0, 0.353, 0.373);
+  const gris  = rgb(0.4, 0.4, 0.4);
+  const negro = rgb(0, 0, 0);
+  const blanco = rgb(1, 1, 1);
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
-  const azul   = rgb(1.0, 0.353, 0.373);
-  const gris   = rgb(0.4, 0.4, 0.4);
-  const negro  = rgb(0, 0, 0);
-  const blanco = rgb(1, 1, 1);
+  const page = doc.addPage([595, 842]);
+  const { width, height } = page;
+  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
+  const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
 
-  page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: azul });
-  page.drawText('MEDILYFT', { x: 40, y: height - 45, size: 22, font: bold, color: blanco });
-  page.drawText('Receta Médica', { x: 40, y: height - 65, size: 11, font: normal, color: blanco });
-  page.drawText(`Fecha: ${new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 55, size: 9, font: normal, color: blanco });
+  page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
+  page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
+  page.drawText('Receta Médica', { x: 40, y: height - 62, size: 11, font: normal, color: blanco });
+  page.drawText(`N° ${gV('rec-numero')}`, { x: width - 185, y: height - 52, size: 9, font: normal, color: blanco });
+  page.drawText(`Fecha: ${gV('rec-fecha-header') || new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 64, size: 8, font: normal, color: blanco });
 
-  let y = height - 110;
+  let y = height - 95;
 
   function seccion(titulo) {
-    page.drawRectangle({ x: 40, y: y - 4, width: width - 80, height: 20, color: rgb(0.9, 0.93, 0.97) });
-    page.drawText(titulo, { x: 44, y, size: 10, font: bold, color: azul });
-    y -= 28;
+    page.drawRectangle({ x: 40, y: y - 4, width: width - 80, height: 20, color: rgb(0.99, 0.95, 0.95) });
+    page.drawText(titulo, { x: 44, y, size: 10, font: bold, color: brand }); y -= 26;
   }
-
   function campo(label, valor) {
     page.drawText(`${label}:`, { x: 44, y, size: 9, font: bold, color: gris });
-    page.drawText(String(valor || '—'), { x: 180, y, size: 9, font: normal, color: negro });
-    y -= 16;
+    page.drawText(String(valor || '—'), { x: 190, y, size: 9, font: normal, color: negro }); y -= 14;
   }
-
-  function textoWrapped(texto, startX, maxWidth, lineHeight) {
-    const palabras = (texto || '').split(' ');
-    let linea = '';
+  function campoDoble(l1, v1, l2, v2) {
+    campo(l1, v1); y += 14;
+    page.drawText(`${l2}:`, { x: width / 2 + 4, y, size: 9, font: bold, color: gris });
+    page.drawText(String(v2 || '—'), { x: width / 2 + 4 + 100, y, size: 9, font: normal, color: negro }); y -= 14;
+  }
+  function wrap(texto) {
+    const palabras = (texto || '—').split(' '); let linea = '';
     for (const p of palabras) {
       const test = linea ? `${linea} ${p}` : p;
-      if (normal.widthOfTextAtSize(test, 9) > maxWidth && linea) {
-        page.drawText(linea, { x: startX, y, size: 9, font: normal, color: negro });
-        y -= lineHeight;
-        linea = p;
-      } else {
-        linea = test;
-      }
+      if (normal.widthOfTextAtSize(test, 9) > width - 90 && linea) {
+        page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; linea = p;
+      } else linea = test;
     }
-    if (linea) { page.drawText(linea, { x: startX, y, size: 9, font: normal, color: negro }); y -= lineHeight; }
+    if (linea) { page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; }
   }
-
-  const nombreMedico = medico ? `Dr. ${medico.nombre || ''} ${medico.apellidos || ''}`.trim() : '—';
-
-  seccion('MÉDICO TRATANTE');
-  campo('Nombre', nombreMedico);
-  campo('Especialidad', medico?.especialidad || '—');
-  y -= 6;
 
   seccion('DATOS DEL PACIENTE');
-  campo('Nombre', `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim());
-  campo('Cédula', paciente.cedula);
-  campo('Edad', paciente.edad ? `${paciente.edad} años` : '—');
-  y -= 6;
+  campo('Nombres y apellidos', gV('rec-paciente'));
+  campoDoble('Cédula', gV('rec-cedula'), 'Edad', gV('rec-edad'));
+  campoDoble('Sexo (M-F)', gV('rec-sexo'), 'N° Hoja', gV('rec-hoja'));
+  campo('N° de atención', gV('rec-atencion'));
+  y -= 4;
 
   seccion('DIAGNÓSTICO');
-  campo('Diagnóstico', diagnostico);
-  if (cie10?.length) campo('CIE-10', cie10.map(x => `${x.c} — ${x.n}`).join(' | '));
-  y -= 6;
+  campo('Diagnóstico', gV('rec-diagnostico'));
+  campo('CIE-10', gV('rec-cie10'));
+  y -= 4;
+
+  seccion('ALERGIAS');
+  const alergia = gR('rec-alergias');
+  campo('¿Presenta alergias?', alergia);
+  if (alergia === 'SI') campo('Especificar', gV('rec-alergias-especificar'));
+  y -= 4;
+
+  seccion('ANTROPOMETRÍA');
+  campoDoble('Peso', gV('rec-peso') ? `${gV('rec-peso')} kg` : '—', 'Talla', gV('rec-talla') ? `${gV('rec-talla')} cm` : '—');
+  y -= 4;
 
   seccion('MEDICAMENTOS PRESCRITOS');
-  medicamentos.forEach((m, i) => {
-    page.drawText(`${i + 1}. ${m.nombre || ''}`, { x: 44, y, size: 9, font: bold, color: negro });
-    y -= 14;
-    const detalle = [m.dosis, `cada ${m.frecuencia_horas}h`, `por ${m.dias} día(s)`].filter(Boolean).join(' · ');
-    page.drawText(detalle, { x: 54, y, size: 9, font: normal, color: gris });
-    y -= 18;
-  });
-  y -= 6;
-
-  if (indicaciones) {
-    seccion('INDICACIONES GENERALES');
-    textoWrapped(indicaciones, 44, width - 90, 14);
-    y -= 6;
+  const meds = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs.length < 4) return null;
+    return { nombre: inputs[0].value.trim(), dosis: inputs[1].value.trim(), frecuencia: inputs[2].value.trim(), dias: inputs[3].value.trim() };
+  }).filter(m => m && m.nombre);
+  if (!meds.length) {
+    page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
+  } else {
+    meds.forEach((m, i) => {
+      page.drawText(`${i + 1}. ${m.nombre}`, { x: 44, y, size: 9, font: bold, color: negro }); y -= 13;
+      const detalle = [m.dosis, m.frecuencia, m.dias ? `${m.dias} día(s)` : ''].filter(Boolean).join(' · ');
+      page.drawText(detalle, { x: 54, y, size: 9, font: normal, color: gris }); y -= 16;
+    });
   }
+  y -= 4;
 
-  y -= 40;
-  page.drawLine({ start: { x: width - 210, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
-  page.drawText(nombreMedico, { x: width - 205, y: y - 14, size: 8, font: normal, color: gris });
+  seccion('INDICACIONES');
+  wrap(gV('rec-indicaciones'));
+  y -= 4;
 
+  seccion('MEDIDAS NO FARMACOLÓGICAS');
+  wrap(gV('rec-medidas-no-farmacologicas'));
+  y -= 30;
+
+  // Firma
+  const medNom = gV('rec-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—');
+  page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
+  page.drawText(medNom, { x: width - 215, y: y - 14, size: 9, font: normal, color: gris });
+  const reg = gV('rec-reg-medico');
+  if (reg) page.drawText(reg, { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
+  page.drawText(gV('rec-esp-medico') || '—', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
@@ -157,6 +172,7 @@ async function generarHistoriaClinicaPDF() {
 
   // Identificación
   seccion('FICHA DE IDENTIFICACIÓN');
+  campo('No. de historial', gV('hc-historial'));
   campo('Nombre completo', gV('hc-nombre'));
   campoDoble('Primer apellido', gV('hc-primer-ap'), 'Segundo apellido', gV('hc-segundo-ap')); y -= 0;
   campoDoble('Cédula', gV('hc-cedula'), 'Edad', gV('hc-edad'));
@@ -182,6 +198,29 @@ async function generarHistoriaClinicaPDF() {
   seccion('ENFERMEDAD O PROBLEMA ACTUAL');
   wrap(gV('hc-enfermedad') || '—', 44, width - 90); y -= 4; checkPage();
 
+  // Revisión de órganos y sistemas (CP = Con patología · SP = Sin patología)
+  function listaCpSp(items) {
+    items.forEach(([n, id], i) => {
+      const xPos = i % 2 === 0 ? 44 : width / 2;
+      page.drawText(`${n}: ${gR(id)}`, { x: xPos, y, size: 9, font: normal, color: negro });
+      if (i % 2 === 1) y -= 14;
+    });
+    if (items.length % 2 === 1) y -= 14;
+  }
+
+  seccion('REVISIÓN DE ÓRGANOS Y SISTEMAS (CP = Con patología · SP = Sin patología)');
+  listaCpSp([['Cardiopatía','hco-card'],['Respiratorio','hco-resp'],['Cardiovascular','hco-cardv'],['Digestivo','hco-dig'],['Genital','hco-gen'],['Urinario','hco-uri'],['Músculo Esquel.','hco-musc'],['Endócrino','hco-end'],['Hemo Linfático','hco-hem'],['Nervioso','hco-nerv']]);
+  const organosNotas = gV('hc-organos-notas');
+  if (organosNotas) wrap(organosNotas, 44, width - 90);
+  y -= 4; checkPage();
+
+  // Examen físico regional (CP = Con patología · SP = Sin patología)
+  seccion('EXAMEN FÍSICO REGIONAL (CP = Con patología · SP = Sin patología)');
+  listaCpSp([['Cabeza','hce-cab'],['Cuello','hce-cue'],['Tórax','hce-tor'],['Abdomen','hce-abd'],['Pelvis','hce-pel'],['Extremidades','hce-ext']]);
+  const examenNotas = gV('hc-examen-notas');
+  if (examenNotas) wrap(examenNotas, 44, width - 90);
+  y -= 4; checkPage();
+
   // Signos vitales
   seccion('SIGNOS VITALES Y ANTROPOMETRÍA');
   const sv = [['Peso',gV('hc-peso')],['Talla',gV('hc-talla')],['Temperatura',gV('hc-temperatura')],['Pulso',gV('hc-pulso')],['Respiración',gV('hc-respiracion')],['Tensión Arterial',gV('hc-ta')],['Oximetría',gV('hc-oximetria')],['IMC',gV('hc-imc')]];
@@ -205,7 +244,26 @@ async function generarHistoriaClinicaPDF() {
 
   seccion('PLANES DE TRATAMIENTO');
   wrap(gV('hc-tratamiento') || '—', 44, width - 90);
-  y -= 20;
+  y -= 4; checkPage();
+
+  seccion('EVOLUCIÓN Y PRESCRIPCIONES');
+  const evoluciones = [...document.querySelectorAll('#hc-evolucion-body tr')].map(tr => {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs.length < 3) return null;
+    const fecha = inputs[0].value.trim(), evolucion = inputs[1].value.trim(), prescripcion = inputs[2].value.trim();
+    return (fecha || evolucion || prescripcion) ? { fecha, evolucion, prescripcion } : null;
+  }).filter(Boolean);
+  if (!evoluciones.length) {
+    page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
+  } else {
+    evoluciones.forEach(e => {
+      page.drawText(`${e.fecha || '—'}`, { x: 44, y, size: 9, font: bold, color: negro }); y -= 13;
+      wrap(`Evolución: ${e.evolucion || '—'}`, 54, width - 100);
+      wrap(`Prescripción: ${e.prescripcion || '—'}`, 54, width - 100);
+      y -= 4;
+    });
+  }
+  y -= 16; checkPage();
 
   // Firma
   const medNomFirma = currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—';
@@ -266,6 +324,7 @@ async function generarInterconsultaPDF() {
   }
 
   seccion('DATOS DEL PACIENTE');
+  campo('No. de historial', gV('inter-historial'));
   campo('Nombre completo', gV('inter-nombre'));
   campoDoble('Cédula', gV('inter-cedula'), 'Edad', gV('inter-edad'));
   campoDoble('Sexo', gR('inter-sexo'), 'Fecha nacimiento', gV('inter-fecha-nac'));
@@ -301,76 +360,94 @@ async function generarInterconsultaPDF() {
   return await doc.save();
 }
 
-async function generarCertificadoPDF({ paciente, medico, diagnostico, diasReposo, observaciones }) {
+async function generarCertificadoPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
   const doc = await PDFDocument.create();
-  const page = doc.addPage([595, 842]);
-  const { width, height } = page.getSize();
+  const brand = rgb(1.0, 0.353, 0.373);
+  const gris  = rgb(0.4, 0.4, 0.4);
+  const negro = rgb(0, 0, 0);
+  const blanco = rgb(1, 1, 1);
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
-  const azul   = rgb(1.0, 0.353, 0.373);
-  const gris   = rgb(0.4, 0.4, 0.4);
-  const negro  = rgb(0, 0, 0);
-  const blanco = rgb(1, 1, 1);
+  const page = doc.addPage([595, 842]);
+  const { width, height } = page;
+  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
+  const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
+  const gCB = id => document.getElementById(id)?.checked || false;
 
-  page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: azul });
-  page.drawText('MEDILYFT', { x: 40, y: height - 45, size: 22, font: bold, color: blanco });
-  page.drawText('Certificado Médico', { x: 40, y: height - 65, size: 11, font: normal, color: blanco });
-  page.drawText(`Fecha: ${new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 55, size: 9, font: normal, color: blanco });
+  page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
+  page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
+  page.drawText('Certificado Médico', { x: 40, y: height - 62, size: 11, font: normal, color: blanco });
+  page.drawText(gV('cert-lugar-fecha') || `Fecha: ${new Date().toLocaleDateString('es-EC')}`, { x: width - 220, y: height - 52, size: 9, font: normal, color: blanco });
 
-  let y = height - 130;
+  let y = height - 95;
 
-  page.drawText('CERTIFICADO MÉDICO', { x: width / 2 - 72, y, size: 16, font: bold, color: azul });
-  y -= 50;
-
-  const nombreMedico = medico ? `Dr. ${medico.nombre || ''} ${medico.apellidos || ''}`.trim() : 'el médico tratante';
-  const nombrePaciente = `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim();
-
-  function drawWrapped(texto, startX, maxWidth, size, font, color) {
-    const palabras = (texto || '').split(' ');
-    let linea = '';
+  function seccion(titulo) {
+    page.drawRectangle({ x: 40, y: y - 4, width: width - 80, height: 20, color: rgb(0.99, 0.95, 0.95) });
+    page.drawText(titulo, { x: 44, y, size: 10, font: bold, color: brand }); y -= 26;
+  }
+  function campo(label, valor) {
+    page.drawText(`${label}:`, { x: 44, y, size: 9, font: bold, color: gris });
+    page.drawText(String(valor || '—'), { x: 220, y, size: 9, font: normal, color: negro }); y -= 14;
+  }
+  function wrap(texto) {
+    const palabras = (texto || '—').split(' '); let linea = '';
     for (const p of palabras) {
       const test = linea ? `${linea} ${p}` : p;
-      if (font.widthOfTextAtSize(test, size) > maxWidth && linea) {
-        page.drawText(linea, { x: startX, y, size, font, color });
-        y -= size + 5;
-        linea = p;
-      } else {
-        linea = test;
-      }
+      if (normal.widthOfTextAtSize(test, 9) > width - 90 && linea) {
+        page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; linea = p;
+      } else linea = test;
     }
-    if (linea) { page.drawText(linea, { x: startX, y, size, font, color }); y -= size + 5; }
+    if (linea) { page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; }
   }
 
-  const cuerpo = `Quien suscribe, ${nombreMedico}, certifica que el/la paciente ${nombrePaciente}, portador/a de cédula ${paciente.cedula || '—'}, ha sido atendido/a mediante teleconsulta médica con el siguiente diagnóstico: ${diagnostico}.`;
-  drawWrapped(cuerpo, 60, width - 120, 11, normal, negro);
-  y -= 15;
+  seccion('A) DATOS DEL ESTABLECIMIENTO DE SALUD');
+  campo('Nombre del establecimiento', gV('cert-establecimiento'));
+  campo('Correo del médico', gV('cert-correo-medico'));
+  campo('Teléfono del emisor', gV('cert-tel-emisor'));
+  campo('Dirección del establecimiento', gV('cert-direccion-establecimiento'));
+  campo('Lugar y fecha de emisión', gV('cert-lugar-fecha-emision'));
+  y -= 4;
 
-  if (diasReposo > 0) {
-    drawWrapped(`Se recomienda reposo por ${diasReposo} día(s) a partir de la presente fecha.`, 60, width - 120, 11, normal, negro);
-    y -= 15;
-  }
+  seccion('B) DATOS DEL PACIENTE');
+  campo('Apellidos y nombres', gV('cert-paciente'));
+  campo('Dirección domiciliaria', gV('cert-direccion'));
+  campo('Número de teléfono', gV('cert-telefono'));
+  campo('Puesto de trabajo', gV('cert-puesto-trabajo'));
+  campo('Número de identificación', gV('cert-cedula'));
+  campo('Número de historia clínica', gV('cert-hc'));
+  campo('Institución/empresa de trabajo', gV('cert-empresa'));
+  y -= 4;
 
-  if (observaciones) {
-    page.drawText('Observaciones:', { x: 60, y, size: 11, font: bold, color: negro });
-    y -= 18;
-    drawWrapped(observaciones, 60, width - 120, 11, normal, negro);
-    y -= 15;
-  }
+  seccion('C) MOTIVO DE AISLAMIENTO/ENFERMEDAD');
+  campo('Diagnóstico', gV('cert-diagnostico'));
+  campo('Código CIE-10', gV('cert-cie10'));
+  campo('Tipo de contingencia', gV('cert-tipo-contingencia'));
+  campo('Aislamiento/teletrabajo', gCB('cert-aislamiento') ? 'SÍ' : 'NO');
+  campo('Presenta síntomas', gR('cert-sintomas'));
+  page.drawText('Descripción de la enfermedad:', { x: 44, y, size: 9, font: bold, color: gris }); y -= 14;
+  wrap(gV('cert-descripcion'));
+  y -= 4;
+  campo('Total de días concedidos', `${gV('cert-dias-num') || '—'} (${gV('cert-dias-letra') || '—'})`);
+  campo('Desde', `${gV('cert-desde') || '—'} — ${gV('cert-desde-letra') || '—'}`);
+  campo('Hasta', `${gV('cert-hasta') || '—'} — ${gV('cert-hasta-letra') || '—'}`);
+  y -= 30;
 
-  y -= 50;
+  // Firma
+  const medNom = gV('cert-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—');
   page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
-  page.drawText(nombreMedico, { x: width - 215, y: y - 14, size: 9, font: normal, color: gris });
-  page.drawText('Médico Tratante · MediLyft', { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
-
+  page.drawText(medNom, { x: width - 215, y: y - 14, size: 9, font: normal, color: gris });
+  const reg = gV('cert-reg-medico');
+  if (reg) page.drawText(reg, { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
+  page.drawText('Firma y sello', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
   return await doc.save();
 }
 
-async function generarPedidoPDF({ paciente, medico, diagnostico, examenes, observaciones }) {
+async function generarPedidoPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
   const doc = await PDFDocument.create();
   const page = doc.addPage([595, 842]);
@@ -383,10 +460,12 @@ async function generarPedidoPDF({ paciente, medico, diagnostico, examenes, obser
   const negro  = rgb(0, 0, 0);
   const blanco = rgb(1, 1, 1);
 
+  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
+
   page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: azul });
   page.drawText('MEDILYFT', { x: 40, y: height - 45, size: 22, font: bold, color: blanco });
   page.drawText('Pedido de Laboratorio', { x: 40, y: height - 65, size: 11, font: normal, color: blanco });
-  page.drawText(`Fecha: ${new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 55, size: 9, font: normal, color: blanco });
+  page.drawText(`Fecha: ${gV('lab-fecha') || new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 55, size: 9, font: normal, color: blanco });
 
   let y = height - 110;
 
@@ -402,54 +481,66 @@ async function generarPedidoPDF({ paciente, medico, diagnostico, examenes, obser
     y -= 16;
   }
 
-  const nombreMedico2 = medico ? `Dr. ${medico.nombre || ''} ${medico.apellidos || ''}`.trim() : '—';
-
-  seccion('MÉDICO SOLICITANTE');
-  campo('Nombre', nombreMedico2);
-  campo('Especialidad', medico?.especialidad || '—');
-  y -= 6;
-
-  seccion('DATOS DEL PACIENTE');
-  campo('Nombre', `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim());
-  campo('Cédula', paciente.cedula);
-  campo('Edad', paciente.edad ? `${paciente.edad} años` : '—');
-  y -= 6;
-
-  if (diagnostico) {
-    seccion('DIAGNÓSTICO / INDICACIÓN');
-    campo('Diagnóstico', diagnostico);
-    y -= 6;
-  }
-
-  seccion('EXÁMENES SOLICITADOS');
-  const lineas = (examenes || '').split('\n').filter(l => l.trim());
-  if (!lineas.length) {
-    page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 16;
-  } else {
-    lineas.forEach(linea => {
-      page.drawText(`• ${linea.trim()}`, { x: 44, y, size: 9, font: normal, color: negro });
-      y -= 16;
-    });
-  }
-  y -= 6;
-
-  if (observaciones) {
-    seccion('INSTRUCCIONES / PREPARACIÓN');
-    const palabras = observaciones.split(' ');
-    let linea = '';
+  function wrap(texto) {
+    const palabras = (texto || '').split(' '); let linea = '';
     for (const p of palabras) {
       const test = linea ? `${linea} ${p}` : p;
-      if (normal.widthOfTextAtSize(test, 9) > width - 90 && linea) {
-        page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 14; linea = p;
+      if (normal.widthOfTextAtSize(test, 9) > width - 100 && linea) {
+        page.drawText(linea, { x: 54, y, size: 9, font: normal, color: negro }); y -= 14; linea = p;
       } else { linea = test; }
     }
-    if (linea) { page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 14; }
+    if (linea) { page.drawText(linea, { x: 54, y, size: 9, font: normal, color: negro }); y -= 14; }
+  }
+
+  seccion('DATOS DEL PACIENTE');
+  campo('Nombre', gV('lab-paciente'));
+  campo('Cédula', gV('lab-cedula'));
+  campo('Edad', gV('lab-edad'));
+  y -= 6;
+
+  seccion('DIAGNÓSTICO / INDICACIÓN');
+  campo('Diagnóstico', gV('lab-diagnostico'));
+  y -= 6;
+
+  seccion('EXÁMENES SOLICITADOS');
+  const categorias = [...document.querySelectorAll('#docLaboratorio .lab-col')].map(col => ({
+    titulo: col.querySelector('.lab-col-title')?.textContent.trim() || '',
+    items: [...col.querySelectorAll('.lab-item')]
+      .filter(item => item.querySelector('.lab-check')?.checked)
+      .map(item => item.textContent.trim())
+  })).filter(c => c.items.length);
+  const otrosExamenes = gV('lab-otros-examenes');
+
+  if (!categorias.length && !otrosExamenes) {
+    page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 16;
+  } else {
+    categorias.forEach(c => {
+      page.drawText(c.titulo, { x: 44, y, size: 9, font: bold, color: negro }); y -= 14;
+      c.items.forEach(it => { page.drawText(`• ${it}`, { x: 54, y, size: 9, font: normal, color: negro }); y -= 14; });
+      y -= 4;
+    });
+    if (otrosExamenes) {
+      page.drawText('Otros exámenes', { x: 44, y, size: 9, font: bold, color: negro }); y -= 14;
+      wrap(otrosExamenes);
+      y -= 4;
+    }
+  }
+  y -= 6;
+
+  const instrucciones = gV('lab-instrucciones');
+  if (instrucciones) {
+    seccion('INSTRUCCIONES / PREPARACIÓN');
+    wrap(instrucciones);
     y -= 6;
   }
 
   y -= 30;
-  page.drawLine({ start: { x: width - 210, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
-  page.drawText(nombreMedico2, { x: width - 205, y: y - 14, size: 8, font: normal, color: gris });
+  const nombreMedico2 = gV('lab-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—');
+  page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
+  page.drawText(nombreMedico2, { x: width - 215, y: y - 14, size: 8, font: normal, color: gris });
+  const regMedico = gV('lab-reg-medico');
+  if (regMedico) page.drawText(regMedico, { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
+  page.drawText(gV('lab-esp-medico') || '—', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
 
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });

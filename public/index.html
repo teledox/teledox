@@ -279,34 +279,25 @@
         <div class="card" style="margin-bottom:1rem">
           <div class="card-header"><span class="card-title">📄 Plantillas clínicas</span></div>
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+            <div style="display:flex;justify-content:space-between;align-items:center">
               <div><strong>💊 Receta Médica</strong><span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span></div>
-              <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="mostrarPlantilla('receta')">Plantilla</button><button class="btn btn-sm btn-primary" onclick="generarDocumento('receta')">Generar</button></div>
+              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaReceta()">📋 Abrir plantilla</button>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="font-size:13px;font-weight:600;color:#374151">Medicamentos prescritos</span><button class="btn btn-sm btn-primary" onclick="agregarMedicamento()">+ Agregar</button></div><div id="medicamentosLista"></div></div>
-              <iframe id="previewReceta" style="width:100%;height:620px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
-            </div>
+            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo (alergias, peso/talla, medicamentos, indicaciones, medidas no farmacológicas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
           </div>
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-              <div><strong>📄 Certificado Médico</strong><span style="font-size:12px;color:#888;margin-left:8px">Reposo + días + diagnóstico</span></div>
-              <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="mostrarPlantilla('certificado')">Plantilla</button><button class="btn btn-sm btn-primary" onclick="generarDocumento('certificado')">Generar</button></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>📄 Certificado Médico</strong><span style="font-size:12px;color:#888;margin-left:8px">Establecimiento + datos laborales + reposo</span></div>
+              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaCertificado()">📋 Abrir plantilla</button>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div><div class="form-group"><label class="form-label">Días de reposo</label><input type="number" class="form-control" id="certDias" min="0" max="90" placeholder="0 = sin reposo" /></div><div class="form-group" style="margin:0"><label class="form-label">Observaciones</label><textarea class="form-control" id="certObservaciones" rows="5" placeholder="Indicaciones adicionales..."></textarea></div></div>
-              <iframe id="previewCertificado" style="width:100%;height:500px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
-            </div>
+            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario oficial (establecimiento, datos laborales, tipo de contingencia, días de reposo) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
           </div>
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
-              <div><strong>🔬 Pedido de Laboratorio</strong><span style="font-size:12px;color:#888;margin-left:8px">Exámenes + marcadores</span></div>
-              <div style="display:flex;gap:6px"><button class="btn btn-sm" onclick="mostrarPlantilla('pedido')">Plantilla</button><button class="btn btn-sm btn-primary" onclick="generarDocumento('pedido')">Generar</button></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong>🔬 Pedido de Laboratorio</strong><span style="font-size:12px;color:#888;margin-left:8px">Exámenes seleccionables por categoría</span></div>
+              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaLaboratorio()">📋 Abrir plantilla</button>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start">
-              <div><div class="form-group"><label class="form-label">Exámenes solicitados</label><textarea class="form-control" id="pedidoExamenes" rows="7" placeholder="Biometría hemática completa&#10;Glucosa basal&#10;..."></textarea></div><div class="form-group" style="margin:0"><label class="form-label">Instrucciones</label><textarea class="form-control" id="pedidoObservaciones" rows="3" placeholder="Ayuno de 8h, etc."></textarea></div></div>
-              <iframe id="previewPedido" style="width:100%;height:580px;border:1px solid #e5e7eb;border-radius:6px;background:#f9f9f9;display:none"></iframe>
-            </div>
+            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario con los exámenes organizados por categoría (selecciona con casillas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
           </div>
 
           <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
@@ -687,22 +678,36 @@
 <!-- MODAL RECETA -->
 <div class="plantilla-modal-overlay" id="modalReceta">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalReceta()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docReceta">
         <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Receta Médica</div><div class="receta-num">N° <span id="rec-numero">—</span></div><div style="font-size:10px;color:#555;text-align:right" id="rec-fecha-header">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
           <div class="doc-grid2">
-            <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="rec-paciente">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Nombres y apellidos:</span><span class="doc-val" id="rec-paciente">—</span></div>
             <div class="doc-row"><span class="doc-lbl">Cédula:</span><span class="doc-val" id="rec-cedula">—</span></div>
             <div class="doc-row"><span class="doc-lbl">Edad:</span><span class="doc-val" id="rec-edad">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Sexo (M-F):</span><span class="doc-val" id="rec-sexo">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">N° Hoja:</span><input class="doc-val-edit" id="rec-hoja" placeholder="1" /></div>
             <div class="doc-row"><span class="doc-lbl">N° Atención:</span><span class="doc-val" id="rec-atencion">—</span></div>
             <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="rec-diagnostico">—</span></div>
             <div class="doc-row"><span class="doc-lbl">CIE-10:</span><span class="doc-val" id="rec-cie10">—</span></div>
           </div>
+          <div class="doc-row" style="margin-top:6px">
+            <span class="doc-lbl">Alergias:</span>
+            <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="rec-alergias" value="SI" style="accent-color:#FF5A5F"> SI</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="rec-alergias" value="NO" style="accent-color:#FF5A5F" checked> NO</label>
+            <span class="doc-lbl" style="min-width:auto;margin-left:8px">Especificar:</span>
+            <input class="doc-val-edit" id="rec-alergias-especificar" placeholder="Ej: penicilina..." />
+          </div>
+          <div class="doc-row">
+            <span class="doc-lbl" style="min-width:60px">Peso:</span><input class="doc-val-edit" id="rec-peso" placeholder="kg" style="max-width:90px" />
+            <span class="doc-lbl" style="min-width:60px;margin-left:12px">Talla:</span><input class="doc-val-edit" id="rec-talla" placeholder="cm" style="max-width:90px" />
+          </div>
         </div>
         <div class="doc-section"><div class="doc-section-title">Medicamentos prescritos</div><table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead><tbody id="rec-meds-body"></tbody></table></div>
         <div class="doc-section"><div class="doc-section-title">Indicaciones</div><textarea class="doc-textarea" id="rec-indicaciones" placeholder="Indicaciones generales..."></textarea></div>
+        <div class="doc-section"><div class="doc-section-title">Medidas no farmacológicas</div><textarea class="doc-textarea" id="rec-medidas-no-farmacologicas" placeholder="Ej: evitar irritantes, hidratación, reposo relativo..."></textarea></div>
         <div class="doc-firma-area">
           <div class="doc-firma-box"><div id="rec-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div><div class="doc-firma-line"><span id="rec-nombre-medico">—</span><br><span id="rec-reg-medico" style="font-size:9px;color:#888"></span><br><span id="rec-esp-medico" style="font-size:9px;color:#888"></span></div></div>
           <div class="doc-firma-box"><div id="rec-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div></div>
@@ -715,28 +720,58 @@
 <!-- MODAL CERTIFICADO -->
 <div class="plantilla-modal-overlay" id="modalCertificado">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
-    <div class="plantilla-modal-body">
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalCertificado()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
+    <div class="plantilla-modal-body" style="max-height:80vh;overflow-y:auto">
       <div class="doc-sheet" id="docCertificado">
         <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Certificado Médico</div><div style="font-size:10px;color:#555;text-align:right" id="cert-lugar-fecha">—</div></div></div>
-        <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
+
+        <div class="doc-section"><div class="doc-section-title">A) Datos del establecimiento de salud</div>
           <div class="doc-grid2">
-            <div class="doc-row"><span class="doc-lbl">Paciente:</span><span class="doc-val" id="cert-paciente">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Cédula:</span><span class="doc-val" id="cert-cedula">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Empresa:</span><span class="doc-val" id="cert-empresa">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Teléfono:</span><span class="doc-val" id="cert-telefono">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="cert-diagnostico">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">CIE-10:</span><span class="doc-val" id="cert-cie10">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Nombre del establecimiento:</span><span class="doc-val" id="cert-establecimiento">MediLyft</span></div>
+            <div class="doc-row"><span class="doc-lbl">Correo del médico:</span><span class="doc-val" id="cert-correo-medico">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Teléfono del emisor:</span><span class="doc-val" id="cert-tel-emisor">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Dirección del establecimiento:</span><input class="doc-val-edit" id="cert-direccion-establecimiento" placeholder="Dirección..." /></div>
+            <div class="doc-row" style="grid-column:span 2"><span class="doc-lbl">Lugar y fecha de emisión:</span><span class="doc-val" id="cert-lugar-fecha-emision">—</span></div>
           </div>
         </div>
-        <div class="doc-section"><div class="doc-section-title">Descripción</div><textarea class="doc-textarea" id="cert-descripcion" placeholder="Descripción del caso..."></textarea></div>
+
+        <div class="doc-section"><div class="doc-section-title">B) Datos del paciente</div>
+          <div class="doc-grid2">
+            <div class="doc-row"><span class="doc-lbl">Apellidos y nombres:</span><span class="doc-val" id="cert-paciente">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Dirección domiciliaria:</span><span class="doc-val" id="cert-direccion">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Número de teléfono:</span><span class="doc-val" id="cert-telefono">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Puesto de trabajo:</span><input class="doc-val-edit" id="cert-puesto-trabajo" placeholder="Cargo del paciente..." /></div>
+            <div class="doc-row"><span class="doc-lbl">Número de identificación:</span><span class="doc-val" id="cert-cedula">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Número de historia clínica:</span><span class="doc-val" id="cert-hc">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Institución/empresa de trabajo:</span><span class="doc-val" id="cert-empresa">—</span></div>
+          </div>
+        </div>
+
+        <div class="doc-section"><div class="doc-section-title">C) Motivo de aislamiento/enfermedad</div>
+          <div class="doc-grid2">
+            <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="cert-diagnostico">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><span class="doc-val" id="cert-cie10">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Tipo de contingencia:</span><input class="doc-val-edit" id="cert-tipo-contingencia" placeholder="Ej: Enfermedad general" /></div>
+            <div class="doc-row">
+              <span class="doc-lbl">Enfermedad:</span>
+              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="checkbox" id="cert-aislamiento" style="accent-color:#FF5A5F"> Aislamiento/teletrabajo</label>
+            </div>
+            <div class="doc-row">
+              <span class="doc-lbl">Presenta síntomas:</span>
+              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-sintomas" value="SI" style="accent-color:#FF5A5F" checked> SI</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-sintomas" value="NO" style="accent-color:#FF5A5F"> NO</label>
+            </div>
+          </div>
+          <div class="doc-section" style="margin-top:8px"><div class="doc-section-title" style="background:#f3f4f6;color:#555">Descripción de la enfermedad</div><textarea class="doc-textarea" id="cert-descripcion" placeholder="Descripción del caso..."></textarea></div>
+        </div>
+
         <div class="doc-section"><div class="doc-section-title">Reposo médico</div>
-          <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Total de días:</span><input type="number" class="cert-dias-num" id="cert-dias-num" min="1" max="365" value="1" oninput="actualizarDiasLetra()" /><input type="text" class="cert-dias-letra" id="cert-dias-letra" placeholder="UNO" readonly /></div>
+          <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Total de días concedidos:</span><input type="number" class="cert-dias-num" id="cert-dias-num" min="1" max="365" value="1" oninput="actualizarDiasLetra()" /><input type="text" class="cert-dias-letra" id="cert-dias-letra" placeholder="UNO" readonly /></div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Desde:</span><input type="date" class="doc-val-edit" id="cert-desde" style="max-width:130px" oninput="actualizarHastaFecha()" /><input type="text" class="cert-dias-letra" id="cert-desde-letra" readonly placeholder="fecha en letra" /></div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Hasta:</span><input type="date" class="doc-val-edit" id="cert-hasta" style="max-width:130px" /><input type="text" class="cert-dias-letra" id="cert-hasta-letra" readonly placeholder="fecha en letra" /></div>
         </div>
         <div class="doc-firma-area">
-          <div class="doc-firma-box"><div id="cert-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div><div class="doc-firma-line"><span id="cert-nombre-medico">—</span><br><span id="cert-reg-medico" style="font-size:9px;color:#888"></span><br><span id="cert-esp-medico" style="font-size:9px;color:#888"></span><br><span id="cert-correo-medico" style="font-size:9px;color:#888"></span></div></div>
+          <div class="doc-firma-box"><div id="cert-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div><div class="doc-firma-line"><span id="cert-nombre-medico">—</span><br><span id="cert-reg-medico" style="font-size:9px;color:#888"></span><br><span id="cert-esp-medico" style="font-size:9px;color:#888"></span></div></div>
           <div class="doc-firma-box"><div id="cert-sello-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div></div>
         </div>
       </div>
@@ -747,7 +782,7 @@
 <!-- MODAL LABORATORIO -->
 <div class="plantilla-modal-overlay" id="modalLaboratorio">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalLaboratorio()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div class="doc-sheet" id="docLaboratorio">
         <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Pedido de Laboratorio</div><div style="font-size:10px;color:#555;text-align:right" id="lab-fecha">—</div></div></div>
@@ -765,7 +800,8 @@
             <div class="lab-col"><div class="lab-col-title">Química sanguínea</div><div class="lab-items"><label class="lab-item"><input type="checkbox" class="lab-check"> Glucosa</label><label class="lab-item"><input type="checkbox" class="lab-check"> Urea / BUN</label><label class="lab-item"><input type="checkbox" class="lab-check"> Creatinina</label><label class="lab-item"><input type="checkbox" class="lab-check"> Colesterol total</label><label class="lab-item"><input type="checkbox" class="lab-check"> Triglicéridos</label><label class="lab-item"><input type="checkbox" class="lab-check"> HDL / LDL</label><label class="lab-item"><input type="checkbox" class="lab-check"> Ácido úrico</label><label class="lab-item"><input type="checkbox" class="lab-check"> TGO / TGP</label></div></div>
             <div class="lab-col"><div class="lab-col-title">Otros</div><div class="lab-items"><label class="lab-item"><input type="checkbox" class="lab-check"> EMO (orina)</label><label class="lab-item"><input type="checkbox" class="lab-check"> Coproparasitario</label><label class="lab-item"><input type="checkbox" class="lab-check"> TSH / T3 / T4</label><label class="lab-item"><input type="checkbox" class="lab-check"> HbA1c</label><label class="lab-item"><input type="checkbox" class="lab-check"> PCR</label><label class="lab-item"><input type="checkbox" class="lab-check"> Proteínas totales</label></div></div>
           </div>
-          <div style="margin-top:8px"><label class="form-label" style="font-size:10px">Otros exámenes:</label><input type="text" class="form-control" style="font-size:10px" placeholder="Especifique..." /></div>
+          <div style="margin-top:8px"><label class="form-label" style="font-size:10px">Otros exámenes:</label><input type="text" class="form-control" id="lab-otros-examenes" style="font-size:10px" placeholder="Especifique..." /></div>
+          <div style="margin-top:8px"><label class="form-label" style="font-size:10px">Instrucciones / preparación:</label><input type="text" class="form-control" id="lab-instrucciones" style="font-size:10px" placeholder="Ej: Ayuno de 8h..." /></div>
         </div>
         <div class="doc-firma-area">
           <div class="doc-firma-box"><div id="lab-firma-container" style="height:56px;display:flex;align-items:center;justify-content:center"></div><div class="doc-firma-line"><span id="lab-nombre-medico">—</span><br><span id="lab-reg-medico" style="font-size:9px;color:#888"></span><br><span id="lab-esp-medico" style="font-size:9px;color:#888"></span></div></div>
@@ -809,6 +845,7 @@
             </div>
           </div>
           <div class="hc-grid4" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">No. de Historial</span><input class="hc-input" id="hc-historial"/></div>
             <div class="hc-field"><span class="hc-label">N° Cédula</span><input class="hc-input" id="hc-cedula"/></div>
             <div class="hc-field"><span class="hc-label">Edad</span><input class="hc-input" id="hc-edad" placeholder="años"/></div>
             <div class="hc-field"><span class="hc-label">Fecha Nacimiento</span><input class="hc-input" id="hc-fecha-nac" type="date"/></div>
@@ -881,8 +918,16 @@
         <div class="hc-section">
           <div class="hc-section-title">Revisión de Órganos y Sistemas <span style="font-size:10px;font-weight:400;opacity:0.85">(CP = Con patología · SP = Sin patología)</span></div>
           <div class="hc-organos-grid">
-            ${[['Cardiopatía','hco-card'],['Respiratorio','hco-resp'],['Cardiovascular','hco-cardv'],['Digestivo','hco-dig'],['Genital','hco-gen'],['Urinario','hco-uri'],['Músculo Esquel.','hco-musc'],['Endócrino','hco-end'],['Hemo Linfático','hco-hem'],['Nervioso','hco-nerv']].map(([n,id]) => `
-            <div class="hc-organo-item"><div class="hc-organo-name">${n}</div><div class="hc-cp-sp"><label><input type="radio" name="${id}" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="${id}" value="SP" style="accent-color:#16a34a"> SP</label></div></div>`).join('')}
+            <div class="hc-organo-item"><div class="hc-organo-name">Cardiopatía</div><div class="hc-cp-sp"><label><input type="radio" name="hco-card" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-card" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Respiratorio</div><div class="hc-cp-sp"><label><input type="radio" name="hco-resp" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-resp" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Cardiovascular</div><div class="hc-cp-sp"><label><input type="radio" name="hco-cardv" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-cardv" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Digestivo</div><div class="hc-cp-sp"><label><input type="radio" name="hco-dig" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-dig" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Genital</div><div class="hc-cp-sp"><label><input type="radio" name="hco-gen" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-gen" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Urinario</div><div class="hc-cp-sp"><label><input type="radio" name="hco-uri" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-uri" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Músculo Esquel.</div><div class="hc-cp-sp"><label><input type="radio" name="hco-musc" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-musc" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Endócrino</div><div class="hc-cp-sp"><label><input type="radio" name="hco-end" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-end" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Hemo Linfático</div><div class="hc-cp-sp"><label><input type="radio" name="hco-hem" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-hem" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Nervioso</div><div class="hc-cp-sp"><label><input type="radio" name="hco-nerv" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hco-nerv" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
           </div>
           <textarea class="hc-textarea" id="hc-organos-notas" rows="2" style="margin-top:8px" placeholder="Describe hallazgos con patología..."></textarea>
         </div>
@@ -907,8 +952,12 @@
         <div class="hc-section">
           <div class="hc-section-title">Examen Físico Regional <span style="font-size:10px;font-weight:400;opacity:0.85">(CP = Con patología · SP = Sin patología)</span></div>
           <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px">
-            ${[['Cabeza','hce-cab'],['Cuello','hce-cue'],['Tórax','hce-tor'],['Abdomen','hce-abd'],['Pelvis','hce-pel'],['Extremidades','hce-ext']].map(([n,id]) => `
-            <div class="hc-organo-item"><div class="hc-organo-name">${n}</div><div class="hc-cp-sp"><label><input type="radio" name="${id}" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="${id}" value="SP" style="accent-color:#16a34a"> SP</label></div></div>`).join('')}
+            <div class="hc-organo-item"><div class="hc-organo-name">Cabeza</div><div class="hc-cp-sp"><label><input type="radio" name="hce-cab" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hce-cab" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Cuello</div><div class="hc-cp-sp"><label><input type="radio" name="hce-cue" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hce-cue" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Tórax</div><div class="hc-cp-sp"><label><input type="radio" name="hce-tor" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hce-tor" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Abdomen</div><div class="hc-cp-sp"><label><input type="radio" name="hce-abd" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hce-abd" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Pelvis</div><div class="hc-cp-sp"><label><input type="radio" name="hce-pel" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hce-pel" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
+            <div class="hc-organo-item"><div class="hc-organo-name">Extremidades</div><div class="hc-cp-sp"><label><input type="radio" name="hce-ext" value="CP" style="accent-color:#FF5A5F"> CP</label><label><input type="radio" name="hce-ext" value="SP" style="accent-color:#16a34a"> SP</label></div></div>
           </div>
           <textarea class="hc-textarea" id="hc-examen-notas" rows="2" style="margin-top:8px" placeholder="Describe hallazgos del examen físico..."></textarea>
         </div>
@@ -916,23 +965,58 @@
         <!-- Diagnóstico -->
         <div class="hc-section">
           <div class="hc-section-title">Diagnóstico <span style="font-size:10px;font-weight:400;opacity:0.85">(PRE = Presuntivo · DEF = Definitivo)</span></div>
-          ${[1,2,3,4].map(i => `
           <div class="hc-dx-row">
-            <span class="hc-dx-num">${i}.</span>
-            <input class="hc-dx-input" id="hc-dx-${i}" placeholder="Diagnóstico ${i}..."/>
+            <span class="hc-dx-num">1.</span>
+            <input class="hc-dx-input" id="hc-dx-1" placeholder="Diagnóstico 1..."/>
             <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
-            <input class="hc-dx-input" id="hc-dx-cie-${i}" style="max-width:70px" placeholder="Ej: J06"/>
+            <input class="hc-dx-input" id="hc-dx-cie-1" style="max-width:70px" placeholder="Ej: J06"/>
             <div class="hc-dx-tipos">
-              <label><input type="radio" name="hc-dx-tipo-${i}" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
-              <label><input type="radio" name="hc-dx-tipo-${i}" value="DEF" style="accent-color:#16a34a"> DEF</label>
+              <label><input type="radio" name="hc-dx-tipo-1" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
+              <label><input type="radio" name="hc-dx-tipo-1" value="DEF" style="accent-color:#16a34a"> DEF</label>
             </div>
-          </div>`).join('')}
+          </div>
+          <div class="hc-dx-row">
+            <span class="hc-dx-num">2.</span>
+            <input class="hc-dx-input" id="hc-dx-2" placeholder="Diagnóstico 2..."/>
+            <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
+            <input class="hc-dx-input" id="hc-dx-cie-2" style="max-width:70px" placeholder="Ej: J06"/>
+            <div class="hc-dx-tipos">
+              <label><input type="radio" name="hc-dx-tipo-2" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
+              <label><input type="radio" name="hc-dx-tipo-2" value="DEF" style="accent-color:#16a34a"> DEF</label>
+            </div>
+          </div>
+          <div class="hc-dx-row">
+            <span class="hc-dx-num">3.</span>
+            <input class="hc-dx-input" id="hc-dx-3" placeholder="Diagnóstico 3..."/>
+            <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
+            <input class="hc-dx-input" id="hc-dx-cie-3" style="max-width:70px" placeholder="Ej: J06"/>
+            <div class="hc-dx-tipos">
+              <label><input type="radio" name="hc-dx-tipo-3" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
+              <label><input type="radio" name="hc-dx-tipo-3" value="DEF" style="accent-color:#16a34a"> DEF</label>
+            </div>
+          </div>
+          <div class="hc-dx-row">
+            <span class="hc-dx-num">4.</span>
+            <input class="hc-dx-input" id="hc-dx-4" placeholder="Diagnóstico 4..."/>
+            <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
+            <input class="hc-dx-input" id="hc-dx-cie-4" style="max-width:70px" placeholder="Ej: J06"/>
+            <div class="hc-dx-tipos">
+              <label><input type="radio" name="hc-dx-tipo-4" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
+              <label><input type="radio" name="hc-dx-tipo-4" value="DEF" style="accent-color:#16a34a"> DEF</label>
+            </div>
+          </div>
         </div>
 
         <!-- Plan de tratamiento -->
         <div class="hc-section">
           <div class="hc-section-title">Planes de Tratamiento</div>
           <textarea class="hc-textarea" id="hc-tratamiento" rows="4" placeholder="Describir el plan terapéutico, medicamentos, indicaciones..."></textarea>
+        </div>
+
+        <!-- Evolución y prescripciones -->
+        <div class="hc-section">
+          <div class="hc-section-title">Evolución y Prescripciones</div>
+          <table class="receta-med-table"><thead><tr><th>Fecha</th><th>Evolución</th><th>Prescripción</th></tr></thead><tbody id="hc-evolucion-body"></tbody></table>
         </div>
 
         <!-- Firma -->
@@ -982,6 +1066,7 @@
             </div>
           </div>
           <div class="hc-grid4" style="margin-bottom:8px">
+            <div class="hc-field"><span class="hc-label">No. de Historial</span><input class="hc-input" id="inter-historial"/></div>
             <div class="hc-field"><span class="hc-label">N° Cédula</span><input class="hc-input" id="inter-cedula"/></div>
             <div class="hc-field"><span class="hc-label">Edad</span><input class="hc-input" id="inter-edad"/></div>
             <div class="hc-field"><span class="hc-label">Fecha Nacimiento</span><input class="hc-input" id="inter-fecha-nac" type="date"/></div>

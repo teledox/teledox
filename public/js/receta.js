@@ -18,45 +18,7 @@ const CIE10 = [
   {c:'Z00',n:'Examen general'},{c:'Z10',n:'Examen rutinario de salud'},{c:'Z23',n:'Necesidad de inmunización'},{c:'Z30',n:'Anticoncepción'},{c:'Z34',n:'Supervisión del embarazo normal'}
 ];
 
-let _pacData = {}, _medicoData = {};
-
-function mostrarPDFEnIframe(pdfBytes, iframeId) {
-  const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-  const iframe = document.getElementById(iframeId);
-  if (iframe._prevUrl) URL.revokeObjectURL(iframe._prevUrl);
-  iframe._prevUrl = URL.createObjectURL(blob);
-  iframe.src = iframe._prevUrl;
-  iframe.style.display = 'block';
-}
-
-async function cargarPreviewDesdeStorage(storagePath, iframeId) {
-  const res = await fetch(`${SUPA_URL}/storage/v1/object/sign/documentos-pacientes/${storagePath}`, {
-    method: 'POST',
-    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ expiresIn: 3600 })
-  });
-  const data = await res.json();
-  if (data.signedURL) {
-    const iframe = document.getElementById(iframeId);
-    iframe.src = `${SUPA_URL}/storage/v1${data.signedURL}`;
-    iframe.style.display = 'block';
-  }
-}
-
-async function mostrarPlantilla(tipo) {
-  try {
-    if (tipo === 'receta') {
-      const bytes = await generarRecetaPDF({ paciente: _pacData, medico: _medicoData, diagnostico: '', cie10: [], medicamentos: [], indicaciones: '' });
-      mostrarPDFEnIframe(bytes, 'previewReceta');
-    } else if (tipo === 'certificado') {
-      const bytes = await generarCertificadoPDF({ paciente: _pacData, medico: _medicoData, diagnostico: '', diasReposo: 0, observaciones: '' });
-      mostrarPDFEnIframe(bytes, 'previewCertificado');
-    } else if (tipo === 'pedido') {
-      const bytes = await generarPedidoPDF({ paciente: _pacData, medico: _medicoData, diagnostico: '', examenes: '', observaciones: '' });
-      mostrarPDFEnIframe(bytes, 'previewPedido');
-    }
-  } catch(e) { console.error('Error plantilla:', e); }
-}
+let _pacData = {};
 
 async function openReceta(consultaId, pacienteId) {
   recetaConsultaId = consultaId;
@@ -71,24 +33,20 @@ async function openReceta(consultaId, pacienteId) {
   if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '📤 Enviar documentos y activar seguimiento'; btnEnviar.style.background = ''; btnEnviar.style.borderColor = ''; }
   const btnSeg = document.getElementById('btnActivarSeguimiento');
   if (btnSeg) { btnSeg.disabled = false; btnSeg.textContent = '🔔 Activar seguimiento'; btnSeg.style.background = ''; btnSeg.style.borderColor = ''; }
-  ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones',
-   'certDias','certObservaciones','pedidoExamenes','pedidoObservaciones'
-  ].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cie10Dropdown').style.display = 'none';
   document.getElementById('cie10Seleccionados').innerHTML = '';
-  document.getElementById('medicamentosLista').innerHTML = '';
-  ['previewReceta','previewCertificado','previewPedido'].forEach(id => {
-    const f = document.getElementById(id);
-    if (f) { f.src = ''; f.style.display = 'none'; }
-  });
 
-  // Cargar paciente y médico
-  const [pacRes, medRes] = await Promise.all([
+  // Cargar paciente y consulta — alimentan currentPacienteData/currentConsultaData,
+  // que usan todas las funciones abrirPlantillaXxx para autorrellenar los documentos
+  const [pacRes, consultaRes] = await Promise.all([
     supa('GET', 'pacientes', null, `?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
-    supa('GET', 'usuarios', null, `?id=eq.${currentUser.id}`)
+    supa('GET', 'consultas', null, `?id=eq.${consultaId}`)
   ]);
-  _pacData    = (pacRes || [])[0] || {};
-  _medicoData = (medRes || [])[0] || {};
+  _pacData = (pacRes || [])[0] || {};
+  currentPacienteData = _pacData;
+  currentConsultaData = (consultaRes || [])[0] || {};
 
   const init = ((_pacData.nombre || '?')[0] + (_pacData.apellidos || '?')[0]).toUpperCase();
   document.getElementById('recetaPacienteHeader').innerHTML = `
@@ -98,65 +56,36 @@ async function openReceta(consultaId, pacienteId) {
   `;
   showPage('receta');
 
-  // Cargar datos existentes en segundo plano
-  const [recetaData, docsData] = await Promise.all([
-    supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&order=created_at.desc&limit=1`),
-    supa('GET', 'documentos', null, `?consulta_id=eq.${consultaId}`)
-  ]);
-
   // Pre-cargar receta si existe
+  const recetaData = await supa('GET', 'recetas', null, `?consulta_id=eq.${consultaId}&order=created_at.desc&limit=1`);
   const receta = (recetaData || [])[0];
   if (receta) {
     document.getElementById('recetaDiagnostico').value = receta.diagnostico || '';
     document.getElementById('recetaIndicaciones').value = receta.indicaciones || '';
     medicamentosData = (receta.medicamentos || []).map(m => ({ ...m, id: Date.now() + Math.random() }));
     cie10Seleccionados = receta.cie10_codigos || [];
-    renderMedicamentos();
     renderCIE10();
   }
-
-  // Cargar previews de documentos existentes
-  const iframeMap = { receta: 'previewReceta', certificado: 'previewCertificado', pedido_laboratorio: 'previewPedido' };
-  for (const doc of docsData || []) {
-    if (iframeMap[doc.tipo] && doc.storage_path) {
-      cargarPreviewDesdeStorage(doc.storage_path, iframeMap[doc.tipo]);
-    }
-  }
 }
 
-function agregarMedicamento() {
-  const id = Date.now();
-  medicamentosData.push({ id, nombre: '', dosis: '', frecuencia_horas: 8, dias: 5 });
-  renderMedicamentos();
+// Sincroniza medicamentosData con la tabla editable del modal de Receta (para registrar seguimiento de tratamiento)
+function sincronizarMedicamentosDesdeModal() {
+  const freqAHoras = { 'Cada 4h': 4, 'Cada 6h': 6, 'Cada 8h': 8, 'Cada 12h': 12, 'Una vez al día': 24 };
+  medicamentosData = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
+    const inputs = tr.querySelectorAll('input');
+    if (inputs.length < 4) return null;
+    const nombre = inputs[0].value.trim();
+    if (!nombre) return null;
+    const freqTxt = inputs[2].value.trim();
+    const horasMatch = freqTxt.match(/(\d+)/);
+    const frecuencia_horas = freqAHoras[freqTxt] || (horasMatch ? parseInt(horasMatch[1]) : 8);
+    return {
+      id: Date.now() + Math.random(),
+      nombre, dosis: inputs[1].value.trim(),
+      frecuencia_horas, dias: parseInt(inputs[3].value) || 1
+    };
+  }).filter(Boolean);
 }
-
-function renderMedicamentos() {
-  document.getElementById('medicamentosLista').innerHTML = medicamentosData.map((m, i) => `
-    <div style="background:#f9f9f9;border-radius:8px;padding:1rem;margin-bottom:8px;border:1px solid #eee">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-        <span style="font-size:13px;font-weight:600;color:#555">Medicamento ${i + 1}</span>
-        <button class="btn btn-sm btn-danger" onclick="quitarMedicamento(${m.id})">✕</button>
-      </div>
-      <div class="two-col" style="gap:8px">
-        <div class="form-group" style="margin:0"><label class="form-label">Medicamento *</label><input type="text" class="form-control" value="${m.nombre}" onchange="updateMed(${m.id},'nombre',this.value)" placeholder="Ej: Paracetamol 500mg" /></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Dosis</label><input type="text" class="form-control" value="${m.dosis}" onchange="updateMed(${m.id},'dosis',this.value)" placeholder="Ej: 1 tableta" /></div>
-        <div class="form-group" style="margin:0"><label class="form-label">Frecuencia</label>
-          <select class="form-control" onchange="updateMed(${m.id},'frecuencia_horas',parseInt(this.value))">
-            <option value="4" ${m.frecuencia_horas === 4 ? 'selected' : ''}>Cada 4 horas</option>
-            <option value="6" ${m.frecuencia_horas === 6 ? 'selected' : ''}>Cada 6 horas</option>
-            <option value="8" ${m.frecuencia_horas === 8 ? 'selected' : ''}>Cada 8 horas</option>
-            <option value="12" ${m.frecuencia_horas === 12 ? 'selected' : ''}>Cada 12 horas</option>
-            <option value="24" ${m.frecuencia_horas === 24 ? 'selected' : ''}>Una vez al día</option>
-          </select>
-        </div>
-        <div class="form-group" style="margin:0"><label class="form-label">Duración (días) *</label><input type="number" class="form-control" value="${m.dias}" min="1" max="90" onchange="updateMed(${m.id},'dias',parseInt(this.value))" /></div>
-      </div>
-    </div>
-  `).join('') || '<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Agregue al menos un medicamento</div>';
-}
-
-function updateMed(id, campo, valor) { const m = medicamentosData.find(x => x.id === id); if (m) m[campo] = valor; }
-function quitarMedicamento(id) { medicamentosData = medicamentosData.filter(x => x.id !== id); renderMedicamentos(); }
 
 // PDFs generados localmente (antes de enviar)
 let pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
@@ -176,43 +105,6 @@ function actualizarCheckboxDocs() {
       status.className = `doc-check-status ${generado ? 'generado' : 'pendiente'}`;
     }
   });
-}
-
-async function generarDocumento(tipo) {
-  const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
-  if (!diagnostico) { alert('Ingrese el diagnóstico antes de generar'); return; }
-  try {
-    showToast('⏳ Generando...');
-    let pdfBytes;
-    if (tipo === 'receta') {
-      if (!medicamentosData.length) { alert('Agregue al menos un medicamento para la receta'); return; }
-      pdfBytes = await generarRecetaPDF({
-        paciente: _pacData, medico: _medicoData, diagnostico,
-        cie10: cie10Seleccionados, medicamentos: medicamentosData,
-        indicaciones: document.getElementById('recetaIndicaciones').value
-      });
-    } else if (tipo === 'certificado') {
-      pdfBytes = await generarCertificadoPDF({
-        paciente: _pacData, medico: _medicoData, diagnostico,
-        diasReposo: parseInt(document.getElementById('certDias').value) || 0,
-        observaciones: document.getElementById('certObservaciones').value.trim()
-      });
-    } else if (tipo === 'pedido') {
-      const examenes = document.getElementById('pedidoExamenes').value.trim();
-      if (!examenes) { alert('Ingrese los exámenes solicitados'); return; }
-      pdfBytes = await generarPedidoPDF({
-        paciente: _pacData, medico: _medicoData, diagnostico,
-        examenes, observaciones: document.getElementById('pedidoObservaciones').value.trim()
-      });
-    }
-    pdfGenerados[tipo] = pdfBytes;
-    actualizarCheckboxDocs();
-    mostrarPDFEnIframe(pdfBytes, tipo === 'pedido' ? 'previewPedido' : tipo === 'certificado' ? 'previewCertificado' : 'previewReceta');
-    showToast('✓ Documento generado — revisa el preview');
-  } catch (e) {
-    console.error('Error generando documento:', e);
-    showToast('Error al generar el documento');
-  }
 }
 
 // ── BOTÓN 1: Enviar documentos al paciente por WhatsApp ──────────────────

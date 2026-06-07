@@ -41,31 +41,50 @@ function abrirPlantillaReceta() {
   document.getElementById('rec-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
   document.getElementById('rec-cedula').textContent = p.cedula || '—';
   document.getElementById('rec-edad').textContent = p.edad ? `${p.edad} años` : '—';
-  document.getElementById('rec-hc').textContent = p.cedula || '—';
+  document.getElementById('rec-sexo').textContent = p.sexo ? p.sexo[0].toUpperCase() : '—';
+  document.getElementById('rec-hoja').value = '1';
   document.getElementById('rec-atencion').textContent = recetaConsultaId ? recetaConsultaId.slice(-8).toUpperCase() : '—';
   const diag = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
   document.getElementById('rec-diagnostico').textContent = diag;
   document.getElementById('rec-cie10').textContent = cie10Seleccionados.map(x => x.c).join(', ') || '—';
+  const noRadio = document.querySelector('input[name="rec-alergias"][value="NO"]');
+  if (noRadio) noRadio.checked = true;
+  document.getElementById('rec-alergias-especificar').value = '';
+  document.getElementById('rec-peso').value = '';
+  document.getElementById('rec-talla').value = '';
+  document.getElementById('rec-medidas-no-farmacologicas').value = '';
   const freqLabel = { 4: 'Cada 4h', 6: 'Cada 6h', 8: 'Cada 8h', 12: 'Cada 12h', 24: 'Una vez al día' };
-  document.getElementById('rec-meds-body').innerHTML = medicamentosData.length > 0
-    ? medicamentosData.map(m => `<tr><td><input value="${m.nombre || ''}" placeholder="Medicamento..." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="${m.dosis || ''}" placeholder="Dosis..." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="${freqLabel[m.frecuencia_horas] || ''}" placeholder="Frecuencia..." style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td><td><input value="${m.dias || ''}" placeholder="días" style="width:100%;border:none;outline:none;font-size:10px;background:transparent" /></td></tr>`).join('')
-    : '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:8px;font-style:italic">Sin medicamentos</td></tr>';
+  const medInput = (val, placeholder) => `<input value="${val || ''}" placeholder="${placeholder}" style="width:100%;border:none;outline:none;font-size:10px;background:transparent" />`;
+  const filas = Math.max(medicamentosData.length, 5);
+  document.getElementById('rec-meds-body').innerHTML = Array.from({ length: filas }, (_, i) => {
+    const m = medicamentosData[i] || {};
+    return `<tr><td>${medInput(m.nombre, 'Medicamento...')}</td><td>${medInput(m.dosis, 'Dosis...')}</td><td>${medInput(freqLabel[m.frecuencia_horas], 'Frecuencia...')}</td><td>${medInput(m.dias, 'días')}</td></tr>`;
+  }).join('');
   document.getElementById('rec-indicaciones').value = document.getElementById('recetaIndicaciones').value || '';
   poblarDatosMedico('rec');
   document.getElementById('modalReceta').classList.add('open');
 }
 
 function abrirPlantillaCertificado() {
-  const p = currentPacienteData || {}, c = currentConsultaData || {}, hoy = new Date();
+  const p = currentPacienteData || {}, c = currentConsultaData || {}, m = currentUser || {}, hoy = new Date();
+  const fechaTexto = hoy.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
   document.getElementById('cert-lugar-fecha').textContent = `MediLyft; ${hoy.toLocaleDateString('es-EC')}`;
+  document.getElementById('cert-tel-emisor').textContent = m.telefono || '—';
+  document.getElementById('cert-direccion-establecimiento').value = '';
+  document.getElementById('cert-lugar-fecha-emision').textContent = `Quito, ${fechaTexto}`;
   document.getElementById('cert-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
   document.getElementById('cert-direccion').textContent = (p.lugar_residencia || '—').toUpperCase();
   document.getElementById('cert-telefono').textContent = p.telefono || '—';
+  document.getElementById('cert-puesto-trabajo').value = p.ocupacion || '';
   document.getElementById('cert-empresa').textContent = (p.clientes_b2b?.nombre_empresa || '—').toUpperCase();
   document.getElementById('cert-cedula').textContent = p.cedula || '—';
   document.getElementById('cert-hc').textContent = p.cedula || '—';
   document.getElementById('cert-diagnostico').textContent = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
   document.getElementById('cert-cie10').textContent = cie10Seleccionados.map(x => x.c).join(', ') || '—';
+  document.getElementById('cert-tipo-contingencia').value = '';
+  document.getElementById('cert-aislamiento').checked = false;
+  const siRadio = document.querySelector('input[name="cert-sintomas"][value="SI"]');
+  if (siRadio) siRadio.checked = true;
   document.getElementById('cert-descripcion').value = c.sintomas_descripcion || '';
   const fechaHoy = hoy.toISOString().split('T')[0];
   document.getElementById('cert-desde').value = fechaHoy;
@@ -83,8 +102,24 @@ function abrirPlantillaLaboratorio() {
   document.getElementById('lab-diagnostico').textContent = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
   document.getElementById('lab-fecha').textContent = new Date().toLocaleDateString('es-EC');
   document.querySelectorAll('#docLaboratorio .lab-check').forEach(cb => cb.checked = false);
+  document.getElementById('lab-otros-examenes').value = '';
+  document.getElementById('lab-instrucciones').value = '';
   poblarDatosMedico('lab');
   document.getElementById('modalLaboratorio').classList.add('open');
+}
+
+async function generarDocumentoDesdeModalLaboratorio() {
+  try {
+    showToast('⏳ Generando Pedido de Laboratorio...');
+    const pdfBytes = await generarPedidoPDF();
+    pdfGenerados.pedido = pdfBytes;
+    actualizarCheckboxDocs();
+    cerrarModal('modalLaboratorio');
+    showToast('✓ Pedido de Laboratorio generado — listo para enviar al paciente');
+  } catch (e) {
+    console.error('Error Pedido de Laboratorio:', e);
+    showToast('Error al generar el Pedido de Laboratorio');
+  }
 }
 
 function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -153,6 +188,7 @@ function abrirPlantillaHistoriaClinica() {
   set('hc-cedula', p.cedula || '');
   set('hc-edad', p.edad || '');
   set('hc-fecha-nac', p.fecha_nacimiento || '');
+  set('hc-historial', p.cedula || '');
   set('hc-lugar-nac', p.lugar_residencia || '');
   set('hc-domicilio', p.lugar_residencia || '');
   set('hc-ocupacion', p.ocupacion || '');
@@ -165,6 +201,10 @@ function abrirPlantillaHistoriaClinica() {
   // Pre-llenar antecedentes si existen
   const diag = document.getElementById('recetaDiagnostico')?.value || '';
   if (diag) set('hc-enfermedad', diag);
+  const evoInput = (placeholder, extra = '') => `<input placeholder="${placeholder}" style="width:100%;border:none;outline:none;font-size:10px;background:transparent" ${extra}/>`;
+  document.getElementById('hc-evolucion-body').innerHTML = Array.from({ length: 4 }, () =>
+    `<tr><td>${evoInput('dd/mm/aaaa')}</td><td>${evoInput('Evolución del paciente...')}</td><td>${evoInput('Prescripción / indicaciones...')}</td></tr>`
+  ).join('');
   poblarDatosMedico('hc');
   document.getElementById('modalHistoriaClinica').classList.add('open');
 }
@@ -182,6 +222,7 @@ function abrirPlantillaInterconsulta() {
   set('inter-nombre', `${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim());
   set('inter-primer-ap', (apellidos[0] || '').toUpperCase());
   set('inter-segundo-ap', (apellidos[1] || '').toUpperCase());
+  set('inter-historial', p.cedula || '');
   set('inter-cedula', p.cedula || '');
   set('inter-edad', p.edad || '');
   set('inter-fecha-nac', p.fecha_nacimiento || '');
@@ -202,6 +243,35 @@ function abrirPlantillaInterconsulta() {
   }
   poblarDatosMedico('inter');
   document.getElementById('modalInterconsulta').classList.add('open');
+}
+
+async function generarDocumentoDesdeModalReceta() {
+  try {
+    showToast('⏳ Generando Receta Médica...');
+    sincronizarMedicamentosDesdeModal();
+    const pdfBytes = await generarRecetaPDF();
+    pdfGenerados.receta = pdfBytes;
+    actualizarCheckboxDocs();
+    cerrarModal('modalReceta');
+    showToast('✓ Receta Médica generada — lista para enviar al paciente');
+  } catch (e) {
+    console.error('Error Receta:', e);
+    showToast('Error al generar la Receta Médica');
+  }
+}
+
+async function generarDocumentoDesdeModalCertificado() {
+  try {
+    showToast('⏳ Generando Certificado Médico...');
+    const pdfBytes = await generarCertificadoPDF();
+    pdfGenerados.certificado = pdfBytes;
+    actualizarCheckboxDocs();
+    cerrarModal('modalCertificado');
+    showToast('✓ Certificado Médico generado — listo para enviar al paciente');
+  } catch (e) {
+    console.error('Error Certificado:', e);
+    showToast('Error al generar el Certificado Médico');
+  }
 }
 
 async function generarDocumentoDesdeModalHC() {

@@ -17,18 +17,37 @@ function getTimerColor(createdAt) {
   return '#dc2626';
 }
 
-let _timerInterval = null;
-function startTimerUpdater() {
-  if (_timerInterval) clearInterval(_timerInterval);
-  _timerInterval = setInterval(() => {
+let _timerRunning = false;
+let _timerLastTick = 0;
+
+function _tickTimers(now) {
+  if (now - _timerLastTick >= 1000) {
+    _timerLastTick = now;
     document.querySelectorAll('.alerta-timer[data-created]').forEach(el => {
-      const t = formatElapsedTime(el.dataset.created);
-      const c = getTimerColor(el.dataset.created);
-      el.textContent = '⏱ ' + t;
-      el.style.color = c;
+      const created = el.dataset.created;
+      if (!created || created === 'undefined' || created === 'null') return;
+      el.textContent = '⏱ ' + formatElapsedTime(created);
+      el.style.color = getTimerColor(created);
       el.style.fontWeight = '700';
     });
-  }, 1000);
+  }
+  requestAnimationFrame(_tickTimers);
+}
+
+function startTimerUpdater() {
+  // Actualización inmediata al llamar
+  document.querySelectorAll('.alerta-timer[data-created]').forEach(el => {
+    const created = el.dataset.created;
+    if (!created || created === 'undefined' || created === 'null') return;
+    el.textContent = '⏱ ' + formatElapsedTime(created);
+    el.style.color = getTimerColor(created);
+    el.style.fontWeight = '700';
+  });
+  // Iniciar el loop de rAF solo una vez
+  if (!_timerRunning) {
+    _timerRunning = true;
+    requestAnimationFrame(_tickTimers);
+  }
 }
 
 // ===== SONIDO DE ALERTA =====

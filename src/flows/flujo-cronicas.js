@@ -1,6 +1,7 @@
 const { query } = require('../services/supabase');
 const { alertar } = require('../services/telegram');
 const { guardar, eliminar } = require('../services/sesiones');
+const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 
 const ENFERMEDADES = {
   'hipertension': {
@@ -279,9 +280,23 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
   if (resultado.nivel === 3) {
     respuesta = `${resultado.msg}\n\n📞 *Llame al 911 AHORA*\ntel:911`;
     await alertar(`🚨 <b>ALERTA GRAVE CRÓNICO — ${enfDef.nombre}</b>\nPaciente: ${nombreWhatsApp}\nTeléfono: ${telefono}\nValores: ${JSON.stringify(datos.valores)}`);
+    const consultaGrave = await crearConsulta({
+      paciente_id: datos.paciente_id,
+      nivel_sintomas: 3,
+      sintomas_descripcion: `Seguimiento de ${enfDef.nombre} fuera de rango (alerta grave): ${JSON.stringify(datos.valores)}`,
+      estado: 'pendiente'
+    });
+    await crearNotificacion('urgente', `🚨 Alerta grave — ${enfDef.nombre}`, `${nombreWhatsApp} reportó valores fuera de rango en su seguimiento crónico. Requiere agendar consulta de seguimiento con prioridad.`, datos.paciente_id, consultaGrave?.id);
   } else if (resultado.nivel === 2) {
     respuesta = `${resultado.msg}\n\nHemos notificado a su equipo médico. Le contactarán pronto.\n\nSi empeora, llame al *911* de inmediato.`;
     await alertar(`⚠️ <b>ALERTA MEDIA CRÓNICO — ${enfDef.nombre}</b>\nPaciente: ${nombreWhatsApp}\nTeléfono: ${telefono}\nValores: ${JSON.stringify(datos.valores)}`);
+    const consultaMedia = await crearConsulta({
+      paciente_id: datos.paciente_id,
+      nivel_sintomas: 2,
+      sintomas_descripcion: `Seguimiento de ${enfDef.nombre} con valores de atención: ${JSON.stringify(datos.valores)}`,
+      estado: 'pendiente'
+    });
+    await crearNotificacion('urgente', `⚠️ Valores de atención — ${enfDef.nombre}`, `${nombreWhatsApp} reportó valores de atención en su seguimiento crónico. Considere agendar una consulta de seguimiento.`, datos.paciente_id, consultaMedia?.id);
   } else {
     respuesta = `${resultado.msg}\n\nGracias por su reporte diario. Su seguimiento ha sido registrado. 📋\n\nSi tiene algún síntoma nuevo escriba *hola*.`;
   }

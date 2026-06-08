@@ -173,12 +173,13 @@ async function enviarDocumentos() {
         })
       });
       const waData = await waRes.json();
+      console.log(`[enviar-docs] Número WhatsApp usado: ${waData.numero || telefonoPaciente} (original en BD: ${_pacData.telefono})`);
       if (waData.errores?.length) {
         const detalle = waData.errores[0]?.detalle?.error?.message || JSON.stringify(waData.errores[0]?.detalle);
-        showToast(`⚠️ Error WhatsApp: ${detalle}`);
+        showToast(`⚠️ Error WhatsApp (enviado a ${waData.numero || telefonoPaciente}): ${detalle}`);
         console.error('[enviar-docs] Errores WhatsApp:', waData.errores);
       } else if (waData.enviados > 0) {
-        showToast(`✓ ${waData.enviados} documento(s) enviado(s) al paciente por WhatsApp`);
+        showToast(`✓ ${waData.enviados} documento(s) enviado(s) a ${waData.numero || telefonoPaciente} por WhatsApp`);
       } else {
         showToast('⚠️ No se enviaron documentos — revisa la consola del navegador');
         console.error('[enviar-docs] Respuesta:', waData);

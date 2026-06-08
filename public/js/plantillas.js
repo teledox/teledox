@@ -109,6 +109,7 @@ function abrirPlantillaLaboratorio() {
 }
 
 async function generarDocumentoDesdeModalLaboratorio() {
+  if (!confirmarPeseAVacios('modalLaboratorio')) return;
   try {
     showToast('⏳ Generando Pedido de Laboratorio...');
     const pdfBytes = await generarPedidoPDF();
@@ -120,6 +121,31 @@ async function generarDocumentoDesdeModalLaboratorio() {
     console.error('Error Pedido de Laboratorio:', e);
     showToast('Error al generar el Pedido de Laboratorio');
   }
+}
+
+// Escanea un modal de documento y devuelve los nombres de los campos editables que están vacíos
+// (esos espacios saldrán como "—" en el PDF). Sirve para avisar al médico antes de generar/enviar.
+function camposVaciosEnModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return [];
+  const campos = [...modal.querySelectorAll('.doc-val-edit, .doc-textarea, .hc-input, .hc-textarea, .form-control')];
+  const vistos = new Set();
+  const vacios = [];
+  for (const el of campos) {
+    if (el.readOnly || el.value.trim()) continue;
+    const fila = el.closest('.doc-row, .hc-field, .cert-dias-row') || el.parentElement;
+    const lbl = fila?.querySelector('.doc-lbl, .hc-label, .form-label');
+    const nombre = (lbl?.textContent || el.placeholder || el.id || '').replace(/[:*]+$/, '').trim();
+    if (nombre && !vistos.has(nombre)) { vistos.add(nombre); vacios.push(nombre); }
+  }
+  return vacios;
+}
+
+// Antes de generar, avisa qué campos quedarán vacíos ("—") y deja confirmar o volver a llenarlos
+function confirmarPeseAVacios(modalId) {
+  const vacios = camposVaciosEnModal(modalId);
+  if (!vacios.length) return true;
+  return confirm(`Estos campos están vacíos y se mostrarán como "—" en el documento:\n\n• ${vacios.join('\n• ')}\n\n¿Generar de todos modos?`);
 }
 
 function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
@@ -246,6 +272,7 @@ function abrirPlantillaInterconsulta() {
 }
 
 async function generarDocumentoDesdeModalReceta() {
+  if (!confirmarPeseAVacios('modalReceta')) return;
   try {
     showToast('⏳ Generando Receta Médica...');
     sincronizarMedicamentosDesdeModal();
@@ -261,6 +288,7 @@ async function generarDocumentoDesdeModalReceta() {
 }
 
 async function generarDocumentoDesdeModalCertificado() {
+  if (!confirmarPeseAVacios('modalCertificado')) return;
   try {
     showToast('⏳ Generando Certificado Médico...');
     const pdfBytes = await generarCertificadoPDF();
@@ -275,6 +303,7 @@ async function generarDocumentoDesdeModalCertificado() {
 }
 
 async function generarDocumentoDesdeModalHC() {
+  if (!confirmarPeseAVacios('modalHistoriaClinica')) return;
   try {
     showToast('⏳ Generando Historia Clínica...');
     const pdfBytes = await generarHistoriaClinicaPDF();
@@ -289,6 +318,7 @@ async function generarDocumentoDesdeModalHC() {
 }
 
 async function generarDocumentoDesdeModalInterconsulta() {
+  if (!confirmarPeseAVacios('modalInterconsulta')) return;
   try {
     showToast('⏳ Generando Interconsulta...');
     const pdfBytes = await generarInterconsultaPDF();

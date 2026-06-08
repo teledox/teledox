@@ -20,6 +20,7 @@ module.exports = async function handler(req, res) {
     // Si ya tiene código de país → usar tal cual
     const soloDigitos = telefono.replace(/\D/g, '');
     const numero = soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos;
+    console.log(`[enviar-docs] Enviando a paciente_id=${paciente_id}, telefono original="${telefono}" → número WhatsApp="${numero}"`);
 
     let enviados = 0;
     const errores = [];
@@ -81,7 +82,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ ok: true, enviados, errores: errores.length ? errores : undefined });
+    return res.status(200).json({ ok: true, enviados, numero, errores: errores.length ? errores : undefined });
   } catch (err) {
     console.error('[enviar-docs]', err.message);
     return res.status(500).json({ error: err.message });

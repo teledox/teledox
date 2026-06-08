@@ -106,7 +106,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       datos.seguro_rechazado = mensaje;
       return {
         respuesta: `Su seguro/empresa *${mensaje}* no forma parte de nuestra red de alianzas.\n\n¿Desea continuar con pago directo ($8.00)?`,
-        paso: 529, datos, terminar: false,
+        paso: 61, datos, terminar: false,
         botones: [
           { id: 'si',  titulo: '✅ Sí, continuar' },
           { id: 'no',  titulo: '❌ No, cancelar'  },
@@ -114,7 +114,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       };
     }
 
-  } else if (paso === 529) {
+  } else if (paso === 61) {
     if (esSi(mensaje)) {
       respuesta = `Entendido. La teleconsulta tiene un costo de *$8.00*.\n\nPor favor indíquenos su *nombre y apellidos completos:*`;
       datos.modalidad = 'b2c';
@@ -139,14 +139,14 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
     datos.correo = mensaje;
     return {
       respuesta: `*Número de teléfono de contacto:*\n\n¿Desea usar el número desde el que nos escribe (*${telefono}*) o prefiere indicar otro?`,
-      paso: 551, datos, terminar: false,
+      paso: 62, datos, terminar: false,
       botones: [
         { id: 'actual', titulo: '📱 Usar este número' },
         { id: 'otro',   titulo: '✏️ Indicar otro'     },
       ]
     };
 
-  } else if (paso === 551) {
+  } else if (paso === 62) {
     const m = mensaje.trim().toLowerCase();
     if (m === 'actual' || m.includes('usar este')) {
       datos.telefonoContacto = telefono;

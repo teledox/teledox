@@ -157,33 +157,28 @@ async function subirCedulas() {
 
       if (!cedulas.length) { showToast('No se encontraron cédulas válidas'); return; }
 
-      // Obtener token de sesión activo (igual que supa())
+      // Obtener token de sesión activo
       const { data: { session } } = await supabaseClient.auth.getSession();
       const token = session?.access_token || SUPA_KEY;
 
-      // Upsert en lotes de 200 con header correcto para ignorar duplicados
-      const LOTE = 200;
+      // Enviar al backend (service_role bypass RLS) en lotes de 500
+      const LOTE = 500;
       let errores = 0;
       for (let i = 0; i < cedulas.length; i += LOTE) {
-        const lote = cedulas.slice(i, i + LOTE).map(c => ({ empresa_id: empresaId, cedula: c }));
-        const r = await fetch(`${SUPA_URL}/rest/v1/empleados_b2b?on_conflict=empresa_id%2Ccedula`, {
+        const lote = cedulas.slice(i, i + LOTE);
+        const r = await fetch('/api/empleados-b2b', {
           method: 'POST',
-          headers: {
-            'apikey': SUPA_KEY,
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-            'Prefer': 'resolution=ignore-duplicates,return=representation'
-          },
-          body: JSON.stringify(lote)
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token, empresa_id: empresaId, cedulas: lote })
         });
-        if (!r.ok) { errores++; console.error('Upsert error lote', i, await r.text()); }
+        if (!r.ok) { errores++; console.error('Error lote', i, await r.text()); }
       }
 
       document.getElementById('excelCedulas').value       = '';
       document.getElementById('excelPreview').textContent = '';
       await renderCedulas(empresaId);
       loadEmpresas();
-      if (errores) showToast(`⚠️ ${cedulas.length} cédulas procesadas con ${errores} error(es)`);
+      if (errores) showToast(`⚠️ Error al cargar cédulas — revisa la consola`);
       else showToast(`✓ ${cedulas.length} cédulas cargadas correctamente`);
     } catch (err) {
       console.error(err);

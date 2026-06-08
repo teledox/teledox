@@ -38,6 +38,11 @@ module.exports = async function handler(req, res) {
         }
       );
       const signData = await signRes.json();
+      if (!signRes.ok || !signData.signedURL) {
+        console.error(`[enviar-docs] Error firmando URL de ${doc.tipo} (${doc.storage_path}):`, JSON.stringify(signData));
+        errores.push({ tipo: doc.tipo, status: signRes.status, detalle: { error: { message: signData.message || signData.error || 'No se pudo generar el enlace firmado del documento' } } });
+        continue;
+      }
       const urlFirmada = `${SUPABASE_URL}/storage/v1${signData.signedURL}`;
 
       const nombreDoc = {

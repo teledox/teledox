@@ -9,7 +9,7 @@ async function generarRecetaPDF() {
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
   const page = doc.addPage([595, 842]);
-  const { width, height } = page;
+  const { width, height } = page.getSize();
   const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
   const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
 
@@ -122,7 +122,7 @@ async function generarHistoriaClinicaPDF() {
 
   function buildPage() {
     const page = doc.addPage([595, 842]);
-    const { width, height } = page;
+    const { width, height } = page.getSize();
     page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
     page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
     page.drawText('Historia Clínica', { x: 40, y: height - 62, size: 11, font: normal, color: blanco });
@@ -288,7 +288,7 @@ async function generarInterconsultaPDF() {
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
   const page = doc.addPage([595, 842]);
-  const { width, height } = page;
+  const { width, height } = page.getSize();
   const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
   const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
 
@@ -371,7 +371,7 @@ async function generarCertificadoPDF() {
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
   const page = doc.addPage([595, 842]);
-  const { width, height } = page;
+  const { width, height } = page.getSize();
   const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
   const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
   const gCB = id => document.getElementById(id)?.checked || false;

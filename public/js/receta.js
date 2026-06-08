@@ -187,8 +187,9 @@ async function enviarDocumentos() {
       showToast(`✓ ${docsMarcados.length} documento(s) guardado(s) — paciente sin teléfono registrado`);
     }
 
+    // TEMPORAL (testing): no se deshabilita el botón para poder reenviar y probar la recepción.
     const btn = document.getElementById('btnEnviarDocs');
-    if (btn) { btn.textContent = '✓ Documentos enviados'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
+    if (btn) { btn.textContent = '✓ Documentos enviados — reenviar'; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   } catch (e) {
     console.error('Error al enviar documentos:', e);
     showToast(`Error: ${e.message}`);

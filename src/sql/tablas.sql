@@ -37,3 +37,20 @@ CREATE TABLE empleados_b2b (
 
 CREATE INDEX idx_empleados_b2b_cedula ON empleados_b2b(cedula);
 CREATE INDEX idx_empleados_b2b_empresa ON empleados_b2b(empresa_id);
+
+-- Datos editables de cada documento por consulta (para que al reabrir una plantilla
+-- ya generada aparezca todo lo llenado y solo haya que ajustar/actualizar lo que falte).
+-- 'datos' guarda { campos:{id->valor}, radios:{name->valor}, checks:{id|cb#->bool} }.
+CREATE TABLE documentos_datos (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  consulta_id UUID NOT NULL REFERENCES consultas(id) ON DELETE CASCADE,
+  paciente_id UUID REFERENCES pacientes(id) ON DELETE CASCADE,
+  tipo        TEXT NOT NULL, -- receta | certificado | laboratorio | historia | interconsulta
+  datos       JSONB NOT NULL DEFAULT '{}'::jsonb,
+  medico_id   UUID,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (consulta_id, tipo)
+);
+
+CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);

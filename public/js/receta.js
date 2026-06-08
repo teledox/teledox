@@ -69,12 +69,40 @@ async function openReceta(consultaId, pacienteId) {
 
   // Card de medicamentos de seguimiento (independiente del PDF)
   if (typeof renderSeguimientoMeds === 'function') renderSeguimientoMeds();
+
+  // Cargar datos guardados de los documentos para esta consulta (para pre-rellenar al reabrir)
+  documentosGuardados = {};
+  const docsGuardados = await supa('GET', 'documentos_datos', null, `?consulta_id=eq.${consultaId}`);
+  (docsGuardados || []).forEach(d => { documentosGuardados[d.tipo] = d.datos; });
 }
 
 // Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento
 function sincronizarMedicamentosDesdeModal() {
   medicamentosData = _leerMedRows('rec-meds-body');
   if (typeof renderSeguimientoMeds === 'function') renderSeguimientoMeds();
+}
+
+// Guarda/actualiza la receta (medicamentos + diagnóstico) en BD para que persista al reabrir,
+// aunque todavía no se haya enviado ni activado el seguimiento. No toca seguimiento_activo.
+async function guardarRecetaBD() {
+  if (!recetaConsultaId || medicamentosData.length === 0) return;
+  const ahora = new Date();
+  const payload = {
+    consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser?.id,
+    medicamentos: medicamentosData,
+    diagnostico: document.getElementById('recetaDiagnostico').value.trim(),
+    cie10_codigos: cie10Seleccionados,
+    indicaciones: document.getElementById('recetaIndicaciones').value,
+    fecha_inicio: ahora.toISOString(),
+    fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias || 1)) * 86400000).toISOString()
+  };
+  try {
+    const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
+    if (existing?.length) await supa('PATCH', 'recetas', payload, `?id=eq.${existing[0].id}`);
+    else await supa('POST', 'recetas', payload);
+  } catch (e) {
+    console.error('Error guardando receta en BD', e);
+  }
 }
 
 // PDFs generados localmente (antes de enviar)

@@ -94,6 +94,81 @@ function addFilaSeguimiento() {
   if (body) body.innerHTML = _medRowsHTML(medicamentosData, medicamentosData.length + 1);
 }
 
+// ── Persistencia de datos de documentos (por consulta + tipo) ──────────────
+// Captura los campos editables de cada plantilla y los guarda en documentos_datos,
+// para que al reabrir un documento ya generado aparezca todo lo llenado y solo
+// haya que ajustar lo que falte (en vez de volver a llenarlo desde cero).
+let documentosGuardados = {};   // { tipo: datos }
+
+const DOC_SHEETS = {
+  receta:        'docReceta',
+  certificado:   'docCertificado',
+  laboratorio:   'docLaboratorio',
+  historia:      'docHistoriaClinica',
+  interconsulta: 'docInterconsulta'
+};
+
+function capturarDatosDoc(tipo) {
+  const sheet = document.getElementById(DOC_SHEETS[tipo]);
+  if (!sheet) return null;
+  const datos = { campos: {}, radios: {}, checks: {} };
+  // inputs de texto/número/fecha, textareas y selects (por id o name)
+  sheet.querySelectorAll('input:not([type=radio]):not([type=checkbox]), textarea, select').forEach(el => {
+    const key = el.id || el.name;
+    if (key) datos.campos[key] = el.value;
+  });
+  // radios marcados (por name)
+  sheet.querySelectorAll('input[type=radio]:checked').forEach(el => {
+    if (el.name) datos.radios[el.name] = el.value;
+  });
+  // checkboxes (por id, o por índice si no tienen id — ej. los del laboratorio)
+  [...sheet.querySelectorAll('input[type=checkbox]')].forEach((el, i) => {
+    datos.checks[el.id || ('cb' + i)] = el.checked;
+  });
+  return datos;
+}
+
+function restaurarDatosDoc(tipo) {
+  const datos = documentosGuardados[tipo];
+  const sheet = document.getElementById(DOC_SHEETS[tipo]);
+  if (!datos || !sheet) return;
+  Object.entries(datos.campos || {}).forEach(([k, v]) => {
+    let el = null;
+    try { el = sheet.querySelector('#' + CSS.escape(k)); } catch (_) {}
+    if (!el) el = sheet.querySelector(`[name="${k}"]`);
+    if (el) { el.value = v; el.dispatchEvent(new Event('input', { bubbles: true })); el.dispatchEvent(new Event('change', { bubbles: true })); }
+  });
+  Object.entries(datos.radios || {}).forEach(([name, v]) => {
+    sheet.querySelectorAll(`input[type=radio][name="${name}"]`).forEach(r => { r.checked = (r.value === v); });
+    const sel = sheet.querySelector(`input[type=radio][name="${name}"]:checked`);
+    if (sel) sel.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  const cbs = [...sheet.querySelectorAll('input[type=checkbox]')];
+  Object.entries(datos.checks || {}).forEach(([k, v]) => {
+    let el = null;
+    if (k.startsWith('cb')) el = cbs[parseInt(k.slice(2), 10)];
+    else { try { el = sheet.querySelector('#' + CSS.escape(k)); } catch (_) {} }
+    if (el) el.checked = !!v;
+  });
+}
+
+async function guardarDatosDoc(tipo) {
+  const datos = capturarDatosDoc(tipo);
+  if (!datos || !recetaConsultaId) return;
+  documentosGuardados[tipo] = datos;
+  try {
+    const payload = {
+      consulta_id: recetaConsultaId, paciente_id: recetaPacienteId,
+      medico_id: currentUser?.id, tipo, datos, updated_at: new Date().toISOString()
+    };
+    const existing = await supa('GET', 'documentos_datos', null, `?consulta_id=eq.${recetaConsultaId}&tipo=eq.${tipo}&limit=1`);
+    if (existing?.length) await supa('PATCH', 'documentos_datos', payload, `?id=eq.${existing[0].id}`);
+    else await supa('POST', 'documentos_datos', payload);
+  } catch (e) {
+    console.error('Error guardando datos del documento', tipo, e);
+  }
+}
+
 function abrirPlantillaReceta() {
   const p = currentPacienteData || {}, c = currentConsultaData || {};
   document.getElementById('rec-numero').textContent = Date.now().toString().slice(-6);
@@ -117,6 +192,7 @@ function abrirPlantillaReceta() {
   document.getElementById('rec-meds-body').innerHTML = _medRowsHTML(medicamentosData, 5);
   document.getElementById('rec-indicaciones').value = document.getElementById('recetaIndicaciones').value || '';
   poblarDatosMedico('rec');
+  restaurarDatosDoc('receta');
   document.getElementById('modalReceta').classList.add('open');
 }
 
@@ -146,6 +222,7 @@ function abrirPlantillaCertificado() {
   document.getElementById('cert-hasta').value = fechaHoy;
   actualizarDiasLetra(); actualizarHastaFecha();
   poblarDatosMedico('cert');
+  restaurarDatosDoc('certificado');
   document.getElementById('modalCertificado').classList.add('open');
 }
 
@@ -160,6 +237,7 @@ function abrirPlantillaLaboratorio() {
   document.getElementById('lab-otros-examenes').value = '';
   document.getElementById('lab-instrucciones').value = '';
   poblarDatosMedico('lab');
+  restaurarDatosDoc('laboratorio');
   document.getElementById('modalLaboratorio').classList.add('open');
 }
 
@@ -169,6 +247,7 @@ async function generarDocumentoDesdeModalLaboratorio() {
     showToast('⏳ Generando Pedido de Laboratorio...');
     const pdfBytes = await generarPedidoPDF();
     pdfGenerados.pedido = pdfBytes;
+    await guardarDatosDoc('laboratorio');
     actualizarCheckboxDocs();
     cerrarModal('modalLaboratorio');
     showToast('✓ Pedido de Laboratorio generado — listo para enviar al paciente');
@@ -287,6 +366,7 @@ function abrirPlantillaHistoriaClinica() {
     `<tr><td>${evoInput('dd/mm/aaaa')}</td><td>${evoInput('Evolución del paciente...')}</td><td>${evoInput('Prescripción / indicaciones...')}</td></tr>`
   ).join('');
   poblarDatosMedico('hc');
+  restaurarDatosDoc('historia');
   document.getElementById('modalHistoriaClinica').classList.add('open');
 }
 
@@ -323,6 +403,7 @@ function abrirPlantillaInterconsulta() {
     if (radio) radio.checked = true;
   }
   poblarDatosMedico('inter');
+  restaurarDatosDoc('interconsulta');
   document.getElementById('modalInterconsulta').classList.add('open');
 }
 
@@ -333,6 +414,8 @@ async function generarDocumentoDesdeModalReceta() {
     sincronizarMedicamentosDesdeModal();
     const pdfBytes = await generarRecetaPDF();
     pdfGenerados.receta = pdfBytes;
+    await guardarDatosDoc('receta');
+    await guardarRecetaBD();
     actualizarCheckboxDocs();
     cerrarModal('modalReceta');
     showToast('✓ Receta Médica generada — lista para enviar al paciente');
@@ -348,6 +431,7 @@ async function generarDocumentoDesdeModalCertificado() {
     showToast('⏳ Generando Certificado Médico...');
     const pdfBytes = await generarCertificadoPDF();
     pdfGenerados.certificado = pdfBytes;
+    await guardarDatosDoc('certificado');
     actualizarCheckboxDocs();
     cerrarModal('modalCertificado');
     showToast('✓ Certificado Médico generado — listo para enviar al paciente');
@@ -363,6 +447,7 @@ async function generarDocumentoDesdeModalHC() {
     showToast('⏳ Generando Historia Clínica...');
     const pdfBytes = await generarHistoriaClinicaPDF();
     pdfGenerados.historia = pdfBytes;
+    await guardarDatosDoc('historia');
     actualizarCheckboxDocs();
     cerrarModal('modalHistoriaClinica');
     showToast('✓ Historia Clínica generada — lista para enviar al paciente');
@@ -378,6 +463,7 @@ async function generarDocumentoDesdeModalInterconsulta() {
     showToast('⏳ Generando Interconsulta...');
     const pdfBytes = await generarInterconsultaPDF();
     pdfGenerados.interconsulta = pdfBytes;
+    await guardarDatosDoc('interconsulta');
     actualizarCheckboxDocs();
     cerrarModal('modalInterconsulta');
     showToast('✓ Interconsulta generada — lista para enviar al paciente');

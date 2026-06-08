@@ -157,6 +157,10 @@ async function subirCedulas() {
 
       if (!cedulas.length) { showToast('No se encontraron cédulas válidas'); return; }
 
+      // Obtener token de sesión activo (igual que supa())
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const token = session?.access_token || SUPA_KEY;
+
       // Upsert en lotes de 200 con header correcto para ignorar duplicados
       const LOTE = 200;
       let errores = 0;
@@ -166,7 +170,7 @@ async function subirCedulas() {
           method: 'POST',
           headers: {
             'apikey': SUPA_KEY,
-            'Authorization': `Bearer ${SUPA_KEY}`,
+            'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json',
             'Prefer': 'resolution=ignore-duplicates,return=representation'
           },

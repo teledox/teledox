@@ -5,8 +5,8 @@ async function loadDashboard() {
     supa('GET', 'notificaciones', null, '?leida=eq.false&order=created_at.desc&limit=5')
   ]);
   const all = consultas || [];
-  const pendientes = all.filter(c => c.estado === 'pendiente');
-  const sinMedico = all.filter(c => !c.medico_id && c.estado !== 'completada');
+  const pendientes = all.filter(c => c.estado === 'pendiente' && !window._atendiendo?.has(c.id));
+  const sinMedico = all.filter(c => !c.medico_id && c.estado !== 'completada' && !window._atendiendo?.has(c.id));
   const hoy = new Date().toDateString();
   const hoyCount = all.filter(c => new Date(c.created_at).toDateString() === hoy).length;
 
@@ -68,8 +68,9 @@ async function loadDashboard() {
 }
 
 async function loadAlertasServicio() {
-  const consultas = await supa('GET', 'consultas', null,
+  let consultas = await supa('GET', 'consultas', null,
     '?select=*,pacientes(nombre,apellidos,cedula,clientes_b2b(nombre_empresa))&medico_id=is.null&estado=neq.completada&order=nivel_sintomas.desc,created_at.asc') || [];
+  consultas = consultas.filter(c => !window._atendiendo?.has(c.id));
   const el = document.getElementById('alertasServicioList');
   if (!el) return;
 

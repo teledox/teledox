@@ -163,7 +163,7 @@ async function subirCedulas() {
 
       // Enviar al backend (service_role bypass RLS) en lotes de 500
       const LOTE = 500;
-      let errores = 0;
+      let errorMsg = null;
       for (let i = 0; i < cedulas.length; i += LOTE) {
         const lote = cedulas.slice(i, i + LOTE);
         const r = await fetch('/api/empleados-b2b', {
@@ -171,14 +171,19 @@ async function subirCedulas() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token, empresa_id: empresaId, cedulas: lote })
         });
-        if (!r.ok) { errores++; console.error('Error lote', i, await r.text()); }
+        if (!r.ok) {
+          const body = await r.json().catch(() => ({}));
+          errorMsg = body.error || `HTTP ${r.status}`;
+          console.error('Error lote', i, errorMsg);
+          break;
+        }
       }
 
       document.getElementById('excelCedulas').value       = '';
       document.getElementById('excelPreview').textContent = '';
       await renderCedulas(empresaId);
       loadEmpresas();
-      if (errores) showToast(`⚠️ Error al cargar cédulas — revisa la consola`);
+      if (errorMsg) showToast(`⚠️ ${errorMsg}`);
       else showToast(`✓ ${cedulas.length} cédulas cargadas correctamente`);
     } catch (err) {
       console.error(err);

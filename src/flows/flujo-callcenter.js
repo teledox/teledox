@@ -81,9 +81,16 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
       paso: 304, datos, terminar: false
     };
 
-  // ── Paso 304: teléfono del paciente ──────────────────────────────────────
+  // ── Paso 304: teléfono del paciente (obligatorio para envío de docs y seguimiento) ──────
   } else if (paso === 304) {
-    datos.cc_telefono = mensaje.trim();
+    const tel = mensaje.trim().replace(/\D/g, '');
+    if (tel.length < 7) {
+      return {
+        respuesta: `❌ Número inválido. Ingrese el *teléfono celular* del paciente (mínimo 7 dígitos):\n\nEj: 0991234567`,
+        paso: 304, datos, terminar: false
+      };
+    }
+    datos.cc_telefono = tel;
     return {
       respuesta: `📧 Ingrese el *correo electrónico* del paciente (o escriba *no* si no tiene):`,
       paso: 305, datos, terminar: false

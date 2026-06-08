@@ -3,24 +3,31 @@ const { WA_TOKEN, WA_PHONE_ID, SUPABASE_URL, SUPABASE_KEY } = require('../src/co
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  const { paciente_id, consulta_id, telefono } = req.body || {};
-  if (!paciente_id || !telefono) return res.status(400).json({ error: 'Faltan paciente_id o telefono' });
+  const { paciente_id, consulta_id } = req.body || {};
+  if (!paciente_id) return res.status(400).json({ error: 'Falta paciente_id' });
 
   try {
-    // 1. Obtener documentos marcados como enviados de esta consulta
+    // 1. Obtener teléfono del paciente SIEMPRE desde la BD
+    //    Garantiza que en consultas de call center se envíe al paciente real, no al operador
+    const pacRes = await fetch(
+      `${SUPABASE_URL}/rest/v1/pacientes?id=eq.${paciente_id}&select=telefono,nombre,apellidos`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const pacRows = await pacRes.json();
+    const telefonoDB = pacRows?.[0]?.telefono;
+    if (!telefonoDB) return res.status(400).json({ error: 'El paciente no tiene teléfono registrado en su perfil' });
+    const soloDigitos = String(telefonoDB).replace(/\D/g, '');
+    const numero = soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos;
+    if (!numero || numero.length < 10) return res.status(400).json({ error: `Teléfono del paciente inválido: ${telefonoDB}` });
+    console.log(`[enviar-docs] → paciente ${pacRows[0]?.nombre} ${pacRows[0]?.apellidos || ''} · WhatsApp ${numero}`);
+
+    // 2. Obtener documentos marcados como enviados de esta consulta
     const docsRes = await fetch(
       `${SUPABASE_URL}/rest/v1/documentos?paciente_id=eq.${paciente_id}&consulta_id=eq.${consulta_id}&enviado_paciente=eq.true`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     const docs = await docsRes.json();
     if (!docs?.length) return res.status(200).json({ ok: true, enviados: 0 });
-
-    // Limpiar número: quitar todo excepto dígitos
-    // Si empieza con 0 → Ecuador (reemplazar con 593)
-    // Si ya tiene código de país → usar tal cual
-    const soloDigitos = telefono.replace(/\D/g, '');
-    const numero = soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos;
-    console.log(`[enviar-docs] Enviando a paciente_id=${paciente_id}, telefono original="${telefono}" → número WhatsApp="${numero}"`);
 
     let enviados = 0;
     const errores = [];

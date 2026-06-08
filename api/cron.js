@@ -25,8 +25,13 @@ module.exports = async function handler(req, res) {
 
     for (const r of recordatorios || []) {
       try {
-        const telefono = r.telefono;
-        if (!telefono) continue;
+        // Usar siempre el teléfono actual del paciente desde la BD
+        // Garantiza que en consultas de call center el mensaje llegue al paciente, no al operador
+        const telefonoPaciente = r.pacientes?.telefono;
+        if (!telefonoPaciente) continue;
+        const soloDigRec = String(telefonoPaciente).replace(/\D/g, '');
+        if (!soloDigRec || soloDigRec.length < 7) continue;
+        const telefono = `whatsapp:+${soloDigRec.startsWith('0') ? '593' + soloDigRec.slice(1) : soloDigRec}`;
 
         const paciente = r.pacientes || {};
         let mensaje = '';

@@ -59,29 +59,51 @@ async function loadConsultas() {
 window._atendiendo = window._atendiendo || new Set();
 
 async function atenderConsulta(consultaId, btnEl) {
-  if (window._atendiendo.has(consultaId)) return; // evitar doble clic
+  if (window._atendiendo.has(consultaId)) return;
   window._atendiendo.add(consultaId);
 
-  // Ocultar la tarjeta/fila de forma inmediata sin esperar red
+  // Ocultar tarjeta inmediatamente
   const card = (btnEl || document.querySelector(`[onclick*="${consultaId}"]`))?.closest('.alerta-item, tr, [style*="border:2px solid #fee2e2"]');
   if (card) card.style.display = 'none';
 
-  const existing = await supa('GET', 'consultas', null, `?id=eq.${consultaId}&select=medico_id`);
-  if (existing?.[0]?.medico_id) {
-    showToast('⚠️ Esta consulta ya fue tomada por otro médico');
-    window._atendiendo.delete(consultaId);
-    if (card) card.style.display = '';
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+
+    const res = await fetch('/api/atender-consulta', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, consulta_id: consultaId })
+    });
+    const result = await res.json();
+
+    if (res.status === 409 || result.error === 'ya_tomada') {
+      showToast('⚠️ Esta consulta ya fue tomada por otro médico');
+      if (card) card.style.display = '';
+      window._atendiendo.delete(consultaId);
+      loadConsultas();
+      if (typeof loadDashboard === 'function') loadDashboard();
+      return;
+    }
+
+    if (!res.ok) {
+      showToast('❌ Error al asignar consulta: ' + (result.error || res.status));
+      if (card) card.style.display = '';
+      window._atendiendo.delete(consultaId);
+      return;
+    }
+
+    showToast('✓ Consulta asignada — eres el médico tratante');
     loadConsultas();
     if (typeof loadDashboard === 'function') loadDashboard();
-    return;
+    if (typeof loadAlertasServicio === 'function') loadAlertasServicio();
+    setTimeout(() => window._atendiendo.delete(consultaId), 3000);
+
+  } catch (e) {
+    showToast('❌ Error de conexión al atender consulta');
+    if (card) card.style.display = '';
+    window._atendiendo.delete(consultaId);
   }
-  await supa('PATCH', 'consultas', { medico_id: currentUser.id, estado: 'en_atencion', atendido_at: new Date().toISOString() }, `?id=eq.${consultaId}`);
-  showToast('✓ Consulta asignada — eres el médico tratante');
-  // Limpiar del Set solo tras refresco completo para que el Realtime no la reactive
-  loadConsultas();
-  if (typeof loadDashboard === 'function') loadDashboard();
-  if (typeof loadAlertasServicio === 'function') loadAlertasServicio();
-  setTimeout(() => window._atendiendo.delete(consultaId), 3000);
 }
 
 async function marcarCompletada(id) {

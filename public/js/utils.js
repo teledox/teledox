@@ -17,37 +17,35 @@ function getTimerColor(createdAt) {
   return '#dc2626';
 }
 
-let _timerRunning = false;
-let _timerLastTick = 0;
+function _updateTimers() {
+  var now = Date.now();
+  document.querySelectorAll('.alerta-timer[data-created]').forEach(function(el) {
+    var created = el.getAttribute('data-created');
+    if (!created || created === 'undefined' || created === 'null') return;
+    var ms = new Date(created).getTime();
+    if (!ms || isNaN(ms)) return;
+    var elapsed = Math.max(0, Math.floor((now - ms) / 1000));
+    var h = Math.floor(elapsed / 3600);
+    var m = Math.floor((elapsed % 3600) / 60);
+    var s = elapsed % 60;
+    var t = h > 0
+      ? h + 'h ' + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's'
+      : m > 0 ? m + 'm ' + String(s).padStart(2,'0') + 's'
+      : s + 's';
+    el.textContent = '⏱ ' + t;
+    var min = (now - ms) / 60000;
+    el.style.color = min < 3 ? '#16a34a' : min < 10 ? '#ca8a04' : min < 20 ? '#ea580c' : '#dc2626';
+    el.style.fontWeight = '700';
+  });
+}
 
-function _tickTimers(now) {
-  if (now - _timerLastTick >= 1000) {
-    _timerLastTick = now;
-    document.querySelectorAll('.alerta-timer[data-created]').forEach(el => {
-      const created = el.dataset.created;
-      if (!created || created === 'undefined' || created === 'null') return;
-      el.textContent = '⏱ ' + formatElapsedTime(created);
-      el.style.color = getTimerColor(created);
-      el.style.fontWeight = '700';
-    });
-  }
-  requestAnimationFrame(_tickTimers);
+// Intervalo global — se crea UNA sola vez y nunca se borra
+if (!window._globalTimerInterval) {
+  window._globalTimerInterval = setInterval(_updateTimers, 1000);
 }
 
 function startTimerUpdater() {
-  // Actualización inmediata al llamar
-  document.querySelectorAll('.alerta-timer[data-created]').forEach(el => {
-    const created = el.dataset.created;
-    if (!created || created === 'undefined' || created === 'null') return;
-    el.textContent = '⏱ ' + formatElapsedTime(created);
-    el.style.color = getTimerColor(created);
-    el.style.fontWeight = '700';
-  });
-  // Iniciar el loop de rAF solo una vez
-  if (!_timerRunning) {
-    _timerRunning = true;
-    requestAnimationFrame(_tickTimers);
-  }
+  _updateTimers(); // actualización inmediata
 }
 
 // ===== SONIDO DE ALERTA =====

@@ -1,5 +1,6 @@
 const { buscarPorCedula, actualizar, crear: crearPaciente } = require('../services/pacientes');
 const { buscarCedulaB2B } = require('../services/empleados');
+const { buscarEmpresaPorCodigo } = require('./flujo-callcenter');
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
@@ -51,6 +52,19 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
     nuevoPaso = 1;
 
   } else if (paso === 1) {
+    // Verificar si es un código de acceso call center (no numérico puro o con letras)
+    const posibleCodigo = mensaje.trim().toUpperCase();
+    if (posibleCodigo.length >= 4 && posibleCodigo.length <= 20 && !/^\d+$/.test(posibleCodigo)) {
+      const empresa = await buscarEmpresaPorCodigo(posibleCodigo);
+      if (empresa) {
+        datos.cc_empresa    = empresa.nombre_empresa;
+        datos.cc_empresa_id = empresa.id;
+        return { respuesta: '', paso: 300, datos, terminar: false,
+          _redirect: { paso: 300, datos }
+        };
+      }
+    }
+
     const { valida, error, cedula: cedulaLimpia } = validarCedula(mensaje);
     if (!valida) {
       respuesta = `❌ ${error}\n\nPor favor ingrese su cédula nuevamente:`;

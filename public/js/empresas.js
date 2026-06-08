@@ -18,6 +18,11 @@ async function loadEmpresas() {
       <td><strong>${e.nombre_empresa}</strong></td>
       <td style="text-align:center">${countsPac[e.id] || 0}</td>
       <td style="text-align:center">${countsEmp[e.id] || 0}</td>
+      <td style="text-align:center">
+        ${e.codigo_acceso
+          ? `<code style="background:#f0f6ff;padding:2px 8px;border-radius:4px;font-size:12px;color:#4f8ef7;font-weight:700">${e.codigo_acceso}</code>`
+          : `<button class="btn btn-sm" style="font-size:11px" onclick="generarCodigo('${e.id}')">+ Generar</button>`}
+      </td>
       <td>${e.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-red">Inactivo</span>'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" style="background:#f0f6ff;color:#4f8ef7;border-color:#4f8ef7"
@@ -28,7 +33,7 @@ async function loadEmpresas() {
           onclick="eliminarEmpresa('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
+  `).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
 }
 
 async function saveEmpresa() {
@@ -200,6 +205,14 @@ async function eliminarCedula(id, cedula) {
   await renderCedulas(empresaId);
   loadEmpresas();
   showToast('✓ Cédula eliminada');
+}
+
+async function generarCodigo(empresaId) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const codigo = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  await supa('PATCH', 'clientes_b2b', { codigo_acceso: codigo }, `?id=eq.${empresaId}`);
+  loadEmpresas();
+  showToast(`✓ Código generado: ${codigo}`);
 }
 
 async function limpiarCedulasEmpresa() {

@@ -38,6 +38,9 @@ CREATE TABLE empleados_b2b (
 CREATE INDEX idx_empleados_b2b_cedula ON empleados_b2b(cedula);
 CREATE INDEX idx_empleados_b2b_empresa ON empleados_b2b(empresa_id);
 
+-- Codigo de acceso call center por empresa (agregar a tabla existente)
+-- ALTER TABLE clientes_b2b ADD COLUMN IF NOT EXISTS codigo_acceso VARCHAR(20) UNIQUE;
+
 -- Datos editables de cada documento por consulta (para que al reabrir una plantilla
 -- ya generada aparezca todo lo llenado y solo haya que ajustar/actualizar lo que falte).
 -- 'datos' guarda { campos:{id->valor}, radios:{name->valor}, checks:{id|cb#->bool} }.

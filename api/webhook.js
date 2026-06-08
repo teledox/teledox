@@ -23,6 +23,8 @@ function getFlows() {
     procesarReagendamiento:       require('../src/flows/flujo-reagendar').procesarReagendamiento,
     procesarCronica:              require('../src/flows/flujo-cronicas').procesarCronica,
     procesarAntecedentes:         require('../src/flows/flujo-antecedentes').procesarAntecedentes,
+    procesarCallCenter:           require('../src/flows/flujo-callcenter').procesarCallCenter,
+    buscarEmpresaPorCodigo:       require('../src/flows/flujo-callcenter').buscarEmpresaPorCodigo,
   };
 }
 
@@ -86,7 +88,8 @@ module.exports = async function handler(req, res) {
     const {
       obtener, guardar, eliminar,
       buscarRespuestaPendiente, procesarRespuestaSeguimiento,
-      procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes
+      procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
+      procesarCallCenter, buscarEmpresaPorCodigo
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -125,6 +128,15 @@ module.exports = async function handler(req, res) {
     let { paso, datos } = sesion;
     datos = datos || {};
 
+    // Pasos 300+ — flujo call center B2B
+    if (paso >= 300) {
+      const result = await procesarCallCenter(paso, mensaje, datos, telefono);
+      if (!result.terminar) await guardar(telefono, result.paso, result.datos);
+      else await eliminar(telefono);
+      await despachar(telefono, result);
+      return res.status(200).send('OK');
+    }
+
     // Pasos 13-17 — antecedentes médicos
     if (paso >= 13 && paso <= 17) {
       const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
@@ -155,7 +167,16 @@ module.exports = async function handler(req, res) {
     }
 
     // Flujo principal de consulta
-    const result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp);
+    let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp);
+
+    // Redirección a call center cuando el paso 1 detecta un código de empresa
+    if (result._redirect) {
+      const ccResult = await procesarCallCenter(300, '', result._redirect.datos, telefono);
+      await guardar(telefono, ccResult.paso, ccResult.datos);
+      await despachar(telefono, ccResult);
+      return res.status(200).send('OK');
+    }
+
     if (!result.terminar) {
       await guardar(telefono, result.paso, result.datos);
     }

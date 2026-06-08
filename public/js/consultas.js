@@ -25,6 +25,11 @@ async function loadConsultas() {
       pendiente:   '<span class="badge badge-yellow">⏳ Pendiente</span>'
     }[c.estado] || `<span class="badge badge-gray">${c.estado}</span>`;
 
+    // Timer en vivo: cuánto lleva la consulta sin agendar (solo mientras está pendiente)
+    const timerEspera = c.estado === 'pendiente'
+      ? `<div style="margin-top:5px"><span class="alerta-timer" data-created="${c.created_at}" style="font-size:12px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span><div style="font-size:9px;color:#aaa">sin agendar</div></div>`
+      : '';
+
     const medicoInfo = med
       ? `<div style="font-size:11px;color:#16a34a;margin-top:3px">🩺 Dr. ${med.nombre || ''} ${med.apellidos || ''}</div>`
       : `<div style="font-size:11px;color:#FF5A5F;margin-top:3px">⚠️ Sin médico asignado</div>`;
@@ -43,7 +48,7 @@ async function loadConsultas() {
         </td>
         <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.sintomas_descripcion||'').replace(/"/g,"&quot;")}">${c.sintomas_descripcion || '—'}</td>
         <td>${nivelBadge}</td>
-        <td>${estadoBadge}</td>
+        <td>${estadoBadge}${timerEspera}</td>
         <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:170px">
           ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
           ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
@@ -53,6 +58,9 @@ async function loadConsultas() {
         </td>
       </tr>`;
   }).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
+
+  // Iniciar de inmediato los cronómetros recién renderizados (el intervalo global los sigue actualizando)
+  if (typeof startTimerUpdater === 'function') startTimerUpdater();
 }
 
 // IDs de consultas en proceso de ser atendidas — bloqueadas del render

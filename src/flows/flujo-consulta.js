@@ -69,6 +69,15 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       datos.empresa = paciente.clientes_b2b?.nombre_empresa || empleado?.clientes_b2b?.nombre_empresa || 'su empresa';
       datos.empresa_id = paciente.clientes_b2b?.id || empleado?.clientes_b2b?.id || null;
       datos.seguro = paciente.clientes_b2b?.nombre_seguro || empleado?.clientes_b2b?.nombre_seguro || 'su seguro';
+      // Pre-cargar datos personales ya registrados para no volver a preguntarlos más adelante
+      datos.nombre = paciente.nombre || '';
+      datos.apellidos = paciente.apellidos || '';
+      datos.nombreCompleto = `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim();
+      datos.edad = paciente.edad || '';
+      datos.fecha_nacimiento = paciente.fecha_nacimiento || '';
+      datos.correo = paciente.correo || '';
+      datos.telefono = paciente.telefono || '';
+      datos.lugar_residencia = paciente.lugar_residencia || '';
       return {
         respuesta: `✅ Le identificamos como afiliado a *${datos.empresa}* con cobertura *${datos.seguro}*.\n\n¿Acepta el uso y tratamiento de sus datos personales con fines médicos?`,
         paso: 2, datos, terminar: false,
@@ -143,7 +152,30 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
         paso: 0, datos, terminar: true
       };
     } else {
+      const datosCompletos = datos.paciente_id && datos.nombreCompleto?.trim() && datos.telefono && datos.correo && datos.lugar_residencia;
+      if (datosCompletos) {
+        return {
+          respuesta: `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nYa tenemos estos datos suyos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n\n¿Desea usar estos datos o prefiere actualizarlos?`,
+          paso: 39, datos, terminar: false,
+          botones: [
+            { id: 'usar',       titulo: '✅ Usar mis datos'  },
+            { id: 'actualizar', titulo: '✏️ Actualizar datos' },
+          ]
+        };
+      }
       respuesta = `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nNecesitamos completar sus datos:\n\n👤 *Nombre y apellidos completos:*`;
+      nuevoPaso = 4;
+    }
+
+  } else if (paso === 39) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'usar' || m.includes('usar mis datos')) {
+      return {
+        respuesta: `*Horario de preferencia* para la teleconsulta\n(ej: mañana martes a las 10:00 AM):`,
+        paso: 11, datos, terminar: false
+      };
+    } else {
+      respuesta = `Entendido, actualicemos sus datos.\n\n👤 *Nombre y apellidos completos:*`;
       nuevoPaso = 4;
     }
 
@@ -179,8 +211,25 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
   } else if (paso === 8) {
     datos.correo = mensaje;
-    respuesta = `*Número de teléfono de contacto:*`;
-    nuevoPaso = 9;
+    return {
+      respuesta: `*Número de teléfono de contacto:*\n\n¿Desea usar el número desde el que nos escribe (*${telefono}*) o prefiere indicar otro?`,
+      paso: 81, datos, terminar: false,
+      botones: [
+        { id: 'actual', titulo: '📱 Usar este número' },
+        { id: 'otro',   titulo: '✏️ Indicar otro'     },
+      ]
+    };
+
+  } else if (paso === 81) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'actual' || m.includes('usar este')) {
+      datos.telefono = telefono;
+      respuesta = `*Lugar de residencia* (ciudad y barrio):`;
+      nuevoPaso = 10;
+    } else {
+      respuesta = `Indíquenos el número de teléfono que desea registrar:`;
+      nuevoPaso = 9;
+    }
 
   } else if (paso === 9) {
     datos.telefono = mensaje;

@@ -137,8 +137,25 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
   } else if (paso === 55) {
     datos.correo = mensaje;
-    respuesta = `*Número de teléfono de contacto:*`;
-    nuevoPaso = 56;
+    return {
+      respuesta: `*Número de teléfono de contacto:*\n\n¿Desea usar el número desde el que nos escribe (*${telefono}*) o prefiere indicar otro?`,
+      paso: 551, datos, terminar: false,
+      botones: [
+        { id: 'actual', titulo: '📱 Usar este número' },
+        { id: 'otro',   titulo: '✏️ Indicar otro'     },
+      ]
+    };
+
+  } else if (paso === 551) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'actual' || m.includes('usar este')) {
+      datos.telefonoContacto = telefono;
+      respuesta = `*Lugar de residencia* (ciudad y barrio):`;
+      nuevoPaso = 57;
+    } else {
+      respuesta = `Indíquenos el número de teléfono que desea registrar:`;
+      nuevoPaso = 56;
+    }
 
   } else if (paso === 56) {
     datos.telefonoContacto = mensaje;

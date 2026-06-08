@@ -110,7 +110,9 @@ module.exports = async function handler(req, res) {
     // en medio de una consulta, O si el mensaje es claramente una respuesta al recordatorio
     // (Sí/No para medicamento, 1/2/3 para fin de tratamiento). Así un "Sí" al recordatorio
     // no se confunde con la cédula aunque haya quedado una sesión vieja a medias.
-    const pendiente = await buscarRespuestaPendiente(telefono);
+    // El seguimiento NUNCA intercepta mensajes interactivos (botones/listas),
+    // ya que el seguimiento solo usa texto libre — los botones siempre son del flujo de consulta.
+    const pendiente = !esInteractivo ? await buscarRespuestaPendiente(telefono) : null;
     if (pendiente?.respuesta && (!enFlujoConsulta || esRespuestaSeguimiento(pendiente.respuesta, mensaje))) {
       const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
       if (resp) {

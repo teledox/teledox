@@ -1,6 +1,16 @@
 // ===== CRONÓMETRO DE ESPERA =====
+// Postgres devuelve los timestamps SIN zona horaria (ej. "2026-06-08T23:22:10").
+// El navegador los interpretaría como hora local; como en realidad son UTC, hay que
+// agregar 'Z' para que el tiempo transcurrido no salga negativo (y el timer quede en 0).
+function _parseUTC(ts) {
+  if (!ts) return NaN;
+  let s = String(ts);
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(s)) s += 'Z';
+  return new Date(s).getTime();
+}
+
 function formatElapsedTime(createdAt) {
-  const elapsed = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 1000));
+  const elapsed = Math.max(0, Math.floor((Date.now() - _parseUTC(createdAt)) / 1000));
   const h = Math.floor(elapsed / 3600);
   const m = Math.floor((elapsed % 3600) / 60);
   const s = elapsed % 60;
@@ -10,7 +20,7 @@ function formatElapsedTime(createdAt) {
 }
 
 function getTimerColor(createdAt) {
-  const min = (Date.now() - new Date(createdAt).getTime()) / 60000;
+  const min = (Date.now() - _parseUTC(createdAt)) / 60000;
   if (min < 3)  return '#16a34a';
   if (min < 10) return '#ca8a04';
   if (min < 20) return '#ea580c';
@@ -22,7 +32,7 @@ function _updateTimers() {
   document.querySelectorAll('.alerta-timer[data-created]').forEach(function(el) {
     var created = el.getAttribute('data-created');
     if (!created || created === 'undefined' || created === 'null') return;
-    var ms = new Date(created).getTime();
+    var ms = _parseUTC(created);
     if (isNaN(ms)) return;
     var elapsed = Math.max(0, Math.floor((now - ms) / 1000));
     var h = Math.floor(elapsed / 3600);

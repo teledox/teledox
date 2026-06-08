@@ -52,7 +52,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
     nuevoPaso = 1;
 
   } else if (paso === 1) {
-    // Verificar si es un código de acceso call center (no numérico puro o con letras)
+    // Verificar si es un código de acceso call center (tiene letras → no es cédula)
     const posibleCodigo = mensaje.trim().toUpperCase();
     if (posibleCodigo.length >= 4 && posibleCodigo.length <= 20 && !/^\d+$/.test(posibleCodigo)) {
       const empresa = await buscarEmpresaPorCodigo(posibleCodigo);
@@ -63,6 +63,11 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
           _redirect: { paso: 300, datos }
         };
       }
+      // Tiene letras → claramente intentaron un código de acceso, no una cédula
+      return {
+        respuesta: `❌ El *código de acceso* "${posibleCodigo}" no es válido o está inactivo.\n\nVerifíquelo con su empresa, o si es paciente particular ingrese su *cédula* (10 dígitos):`,
+        paso: 1, datos, terminar: false
+      };
     }
 
     const { valida, error, cedula: cedulaLimpia } = validarCedula(mensaje);

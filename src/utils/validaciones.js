@@ -1,8 +1,8 @@
 function validarCedula(cedula) {
-  // Solo exigir 10 dígitos — el verificador se omite para no bloquear
-  // pacientes que escriben un dígito mal y deben poder acceder al flujo B2C
-  if (!/^\d{10}$/.test(cedula)) return { valida: false, error: 'Debe tener exactamente 10 dígitos numéricos.' };
-  return { valida: true, error: null };
+  // Limpiar espacios, guiones y cualquier caracter no numérico que WhatsApp pueda agregar
+  const limpia = String(cedula || '').replace(/\D/g, '').trim();
+  if (limpia.length !== 10) return { valida: false, error: 'Debe tener exactamente 10 dígitos numéricos.' };
+  return { valida: true, cedula: limpia, error: null };
 }
 
 function clasificarSintomas(texto) {

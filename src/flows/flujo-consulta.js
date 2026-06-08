@@ -51,20 +51,22 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
     nuevoPaso = 1;
 
   } else if (paso === 1) {
-    const { valida, error } = validarCedula(mensaje);
+    const { valida, error, cedula: cedulaLimpia } = validarCedula(mensaje);
     if (!valida) {
       respuesta = `❌ ${error}\n\nPor favor ingrese su cédula nuevamente:`;
       return { respuesta, paso: 1, datos, terminar: false };
     }
+    // Usar la cédula limpia (sin caracteres extraños que WhatsApp pueda agregar)
+    const cedulaFinal = cedulaLimpia || mensaje.replace(/\D/g, '');
     const [paciente, empleado] = await Promise.all([
-      buscarPorCedula(mensaje),
-      buscarCedulaB2B(mensaje)
+      buscarPorCedula(cedulaFinal),
+      buscarCedulaB2B(cedulaFinal)
     ]);
 
     if (paciente) {
       // Paciente ya registrado — puede ser afiliado B2B o particular (B2C)
       const afiliacionB2B = paciente.clientes_b2b || empleado?.clientes_b2b || null;
-      datos.cedula = mensaje;
+      datos.cedula = cedulaFinal;
       datos.paciente_id = paciente.id;
       datos.nombre_paciente = paciente.nombre;
       datos.empresa = afiliacionB2B?.nombre_empresa || null;
@@ -92,12 +94,12 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       };
     } else if (empleado) {
       // Cédula autorizada por empresa B2B — crear paciente on-the-fly y continuar sin pago
-      datos.cedula = mensaje;
+      datos.cedula = cedulaFinal;
       datos.empresa = empleado.clientes_b2b?.nombre_empresa || 'su empresa';
       datos.empresa_id = empleado.clientes_b2b?.id || null;
       datos.seguro = empleado.clientes_b2b?.nombre_seguro || 'su seguro';
       const nuevo = await crearPaciente({
-        cedula: mensaje,
+        cedula: cedulaFinal,
         nombre: '',
         apellidos: '',
         correo: '',
@@ -116,8 +118,8 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       };
     } else {
       // MODALIDAD B2C — cédula no encontrada en ninguna lista
-      datos.cedula = mensaje;
-      const result = await procesarB2C(50, mensaje, datos, telefono, nombreWhatsApp);
+      datos.cedula = cedulaFinal;
+      const result = await procesarB2C(50, cedulaFinal, datos, telefono, nombreWhatsApp);
       await guardar(telefono, result.paso, result.datos);
       return result;
     }

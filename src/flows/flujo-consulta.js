@@ -48,7 +48,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
   }
 
   if (paso === 0) {
-    respuesta = `¡Hola, ${nombreWhatsApp}! 👋 Bienvenido a *MediLyft*.\n\nEstamos listos para ayudarle.\n\nPor favor indíquenos su número de *cédula de identidad*:`;
+    respuesta = `¡Hola, ${nombreWhatsApp}! 👋 Bienvenido a *MediLyft*.\n\nEstamos listos para ayudarle.\n\nPor favor indíquenos su número de *cédula de identidad* o su *código de acceso* de empresa:`;
     nuevoPaso = 1;
 
   } else if (paso === 1) {
@@ -67,7 +67,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
     const { valida, error, cedula: cedulaLimpia } = validarCedula(mensaje);
     if (!valida) {
-      respuesta = `❌ ${error}\n\nPor favor ingrese su cédula nuevamente:`;
+      respuesta = `❌ ${error}\n\nIngrese su *cédula* (10 dígitos) o su *código de acceso* de empresa:`;
       return { respuesta, paso: 1, datos, terminar: false };
     }
     // Usar la cédula limpia (sin caracteres extraños que WhatsApp pueda agregar)

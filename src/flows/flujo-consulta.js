@@ -213,14 +213,14 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
     datos.correo = mensaje;
     return {
       respuesta: `*Número de teléfono de contacto:*\n\n¿Desea usar el número desde el que nos escribe (*${telefono}*) o prefiere indicar otro?`,
-      paso: 81, datos, terminar: false,
+      paso: 41, datos, terminar: false,
       botones: [
         { id: 'actual', titulo: '📱 Usar este número' },
         { id: 'otro',   titulo: '✏️ Indicar otro'     },
       ]
     };
 
-  } else if (paso === 81) {
+  } else if (paso === 41) {
     const m = mensaje.trim().toLowerCase();
     if (m === 'actual' || m.includes('usar este')) {
       datos.telefono = telefono;

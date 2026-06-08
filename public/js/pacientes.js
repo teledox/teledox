@@ -40,7 +40,8 @@ async function showPacienteDetalle(id) {
     <div class="patient-avatar-lg">${init}</div>
     <div style="flex:1"><div class="patient-name">${pac.nombre || ''} ${pac.apellidos || ''}</div>
     <div class="patient-meta">Cédula: ${pac.cedula || '—'} · ${pac.clientes_b2b?.nombre_empresa || '—'}</div></div>
-    ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;margin-left:auto" onclick="eliminarPaciente('${pac.id}','${(pac.nombre+' '+(pac.apellidos||'')).trim().replace(/'/g,"\\'")}')">🗑 Eliminar paciente</button>` : ''}
+    <button class="btn btn-sm" style="margin-left:auto" onclick="mostrarEditorPaciente('${pac.id}')">✏️ Editar datos</button>
+    ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarPaciente('${pac.id}','${(pac.nombre+' '+(pac.apellidos||'')).trim().replace(/'/g,"\\'")}')">🗑 Eliminar paciente</button>` : ''}
   `;
   document.getElementById('detailGrid').innerHTML = [
     ['Edad', pac.edad || '—'], ['Nacimiento', pac.fecha_nacimiento || '—'], ['Correo', pac.correo || '—'],
@@ -72,6 +73,55 @@ async function showPacienteDetalle(id) {
   document.querySelectorAll('#page-paciente-detalle .tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector('#page-paciente-detalle .tab-bar .tab').classList.add('active');
   document.getElementById('tab-datos').classList.add('active');
+}
+
+// ── Editar datos personales del paciente (ej. corregir teléfono mal registrado) ──
+function mostrarEditorPaciente(id) {
+  const pac = pacientesData.find(x => x.id === id);
+  if (!pac) return;
+  const esc = v => (v ?? '').toString().replace(/"/g, '&quot;');
+  const campo = (label, key, tipo = 'text') =>
+    `<div class="detail-item"><div class="detail-label">${label}</div><input class="form-control" id="edit-pac-${key}" type="${tipo}" value="${esc(pac[key])}" /></div>`;
+  document.getElementById('detailGrid').innerHTML = `
+    ${campo('Nombre', 'nombre')}
+    ${campo('Apellidos', 'apellidos')}
+    ${campo('Cédula', 'cedula')}
+    ${campo('Edad', 'edad', 'number')}
+    ${campo('Nacimiento', 'fecha_nacimiento', 'date')}
+    ${campo('Correo', 'correo', 'email')}
+    ${campo('Teléfono (con código de país, ej: 593987654321)', 'telefono', 'tel')}
+    ${campo('Residencia', 'lugar_residencia')}
+    <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:4px">
+      <button class="btn btn-sm btn-primary" onclick="guardarDatosPaciente('${id}')">💾 Guardar cambios</button>
+      <button class="btn btn-sm" onclick="showPacienteDetalle('${id}')">Cancelar</button>
+    </div>`;
+}
+
+async function guardarDatosPaciente(id) {
+  const val = key => document.getElementById(`edit-pac-${key}`).value.trim();
+  const nombre = val('nombre');
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
+  const payload = {
+    nombre,
+    apellidos: val('apellidos') || null,
+    cedula: val('cedula') || null,
+    edad: val('edad') ? parseInt(val('edad')) : null,
+    fecha_nacimiento: val('fecha_nacimiento') || null,
+    correo: val('correo') || null,
+    telefono: val('telefono').replace(/[^\d+]/g, '') || null,
+    lugar_residencia: val('lugar_residencia') || null
+  };
+  showToast('⏳ Guardando datos del paciente...');
+  try {
+    const result = await supa('PATCH', 'pacientes', payload, `?id=eq.${id}`);
+    if (result && (result.message || result.code)) throw new Error(result.message || result.code);
+    showToast('✓ Datos del paciente actualizados');
+    await loadPacientes();
+    await showPacienteDetalle(id);
+  } catch (e) {
+    console.error('Error actualizando paciente:', e);
+    showToast('❌ Error al guardar los datos');
+  }
 }
 
 // ── Helper central: llama al backend con service_role (bypass RLS total) ──

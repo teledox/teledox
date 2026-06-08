@@ -63,59 +63,73 @@ async function verificarAdmin(token) {
   return u.id;
 }
 
-// ── Eliminar consulta (con CASCADE DELETE en la BD, basta con borrar la raíz)
-async function eliminarConsulta(consultaId) {
-  // Con CASCADE DELETE activo en Supabase, borrar la consulta
-  // elimina automáticamente documentos, notificaciones y recetas
-  const deleted = await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
-  // Si CASCADE no está configurado aún, intentamos manual
-  if (!Array.isArray(deleted) || deleted.length === 0) {
-    // Intento manual como fallback
-    await Promise.allSettled([
-      q('DELETE', 'notificaciones', `?consulta_id=eq.${consultaId}`),
-      q('DELETE', 'documentos',     `?consulta_id=eq.${consultaId}`),
-    ]);
-    const recetas = await q('GET', 'recetas', `?consulta_id=eq.${consultaId}&select=id`);
-    const rIds = (recetas || []).map(r => r.id);
-    if (rIds.length) await q('DELETE', 'recordatorios', `?receta_id=in.(${rIds.join(',')})`);
-    await q('DELETE', 'recetas',   `?consulta_id=eq.${consultaId}`);
-    await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
+// ── Borrar recetas + toda su cadena de dependientes
+async function borrarCadenaRecetas(recetaIds) {
+  if (!recetaIds.length) return;
+  const inR = `(${recetaIds.join(',')})`;
+  // seguimiento_respuestas → recordatorios → recetas
+  const recordatorios = await q('GET', 'recordatorios', `?receta_id=in.${inR}&select=id`);
+  const recIds = (recordatorios || []).map(r => r.id);
+  if (recIds.length) {
+    await q('DELETE', 'seguimiento_respuestas', `?recordatorio_id=in.(${recIds.join(',')})`);
+    await q('DELETE', 'recordatorios', `?receta_id=in.${inR}`);
   }
+  await q('DELETE', 'recetas', `?id=in.${inR}`);
 }
 
-// ── Eliminar paciente (borrado manual en cascada)
+// ── Eliminar consulta completa (manual en cascada)
+async function eliminarConsulta(consultaId) {
+  // 1. Recetas y su cadena
+  const recetas = await q('GET', 'recetas', `?consulta_id=eq.${consultaId}&select=id`);
+  await borrarCadenaRecetas((recetas || []).map(r => r.id));
+
+  // 2. Resto de dependientes
+  await Promise.allSettled([
+    q('DELETE', 'notificaciones',  `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'documentos',      `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'planillaje_b2b',  `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'documentos_datos',`?consulta_id=eq.${consultaId}`),
+  ]);
+
+  // 3. Consulta
+  await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
+}
+
+// ── Eliminar paciente completo (manual en cascada)
 async function eliminarPaciente(pacienteId) {
-  // 1. Obtener consultas del paciente para borrar sus dependientes
+  // 1. Consultas del paciente
   const consultas = await q('GET', 'consultas', `?paciente_id=eq.${pacienteId}&select=id`);
   const cIds = (consultas || []).map(c => c.id);
 
   if (cIds.length) {
-    const inConsultas = `(${cIds.join(',')})`;
-    // Obtener recetas para borrar recordatorios
-    const recetas = await q('GET', 'recetas', `?consulta_id=in.${inConsultas}&select=id`);
-    const rIds = (recetas || []).map(r => r.id);
-    if (rIds.length) await q('DELETE', 'recordatorios', `?receta_id=in.(${rIds.join(',')})`);
+    const inC = `(${cIds.join(',')})`;
 
+    // 1a. Recetas y su cadena (recordatorios, seguimiento_respuestas)
+    const recetas = await q('GET', 'recetas', `?consulta_id=in.${inC}&select=id`);
+    await borrarCadenaRecetas((recetas || []).map(r => r.id));
+
+    // 1b. Resto de dependientes de consultas
     await Promise.allSettled([
-      q('DELETE', 'recetas',        `?consulta_id=in.${inConsultas}`),
-      q('DELETE', 'documentos',     `?consulta_id=in.${inConsultas}`),
-      q('DELETE', 'notificaciones', `?consulta_id=in.${inConsultas}`),
-      q('DELETE', 'planillaje_b2b', `?consulta_id=in.${inConsultas}`),
+      q('DELETE', 'notificaciones',  `?consulta_id=in.${inC}`),
+      q('DELETE', 'documentos',      `?consulta_id=in.${inC}`),
+      q('DELETE', 'planillaje_b2b',  `?consulta_id=in.${inC}`),
+      q('DELETE', 'documentos_datos',`?consulta_id=in.${inC}`),
     ]);
+
     await q('DELETE', 'consultas', `?paciente_id=eq.${pacienteId}`);
   }
 
-  // 2. Borrar tablas directamente vinculadas al paciente
+  // 2. Tablas directas del paciente
   await Promise.allSettled([
     q('DELETE', 'enfermedades_cronicas', `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'antecedentes',          `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'documentos',            `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'notificaciones',        `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'seguimiento',           `?paciente_id=eq.${pacienteId}`),
-    q('DELETE', 'empleados_b2b',         `?cedula=eq.(SELECT cedula FROM pacientes WHERE id=eq.${pacienteId})`),
+    q('DELETE', 'registros_cronicos',    `?paciente_id=eq.${pacienteId}`),
   ]);
 
-  // 3. Finalmente borrar el paciente
+  // 3. Paciente
   await q('DELETE', 'pacientes', `?id=eq.${pacienteId}`);
 }
 

@@ -1,21 +1,7 @@
 function validarCedula(cedula) {
-  if (!/^\d{10}$/.test(cedula)) return { valida: false, error: 'Debe tener 10 dígitos.' };
-  const provincia = parseInt(cedula.substring(0, 2));
-  if ((provincia < 1 || provincia > 24) && provincia !== 30)
-    return { valida: false, error: 'Código de provincia inválido.' };
-  if (parseInt(cedula[2]) >= 6)
-    return { valida: false, error: 'Tercer dígito inválido.' };
-  const coeficientes = [2, 1, 2, 1, 2, 1, 2, 1, 2];
-  let suma = 0;
-  for (let i = 0; i < 9; i++) {
-    let r = parseInt(cedula[i]) * coeficientes[i];
-    if (r >= 10) r -= 9;
-    suma += r;
-  }
-  const residuo = suma % 10;
-  const digitoCalculado = residuo === 0 ? 0 : 10 - residuo;
-  if (digitoCalculado !== parseInt(cedula[9]))
-    return { valida: false, error: 'Cédula inválida (dígito verificador).' };
+  // Solo exigir 10 dígitos — el verificador se omite para no bloquear
+  // pacientes que escriben un dígito mal y deben poder acceder al flujo B2C
+  if (!/^\d{10}$/.test(cedula)) return { valida: false, error: 'Debe tener exactamente 10 dígitos numéricos.' };
   return { valida: true, error: null };
 }
 

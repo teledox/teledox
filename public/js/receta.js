@@ -66,21 +66,15 @@ async function openReceta(consultaId, pacienteId) {
     cie10Seleccionados = receta.cie10_codigos || [];
     renderCIE10();
   }
+
+  // Card de medicamentos de seguimiento (independiente del PDF)
+  if (typeof renderSeguimientoMeds === 'function') renderSeguimientoMeds();
 }
 
-// Sincroniza medicamentosData con la tabla editable del modal de Receta (para registrar seguimiento de tratamiento)
+// Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento
 function sincronizarMedicamentosDesdeModal() {
-  medicamentosData = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
-    const nombre = tr.querySelector('.med-nombre')?.value.trim();
-    if (!nombre) return null;
-    return {
-      id: Date.now() + Math.random(),
-      nombre,
-      dosis: tr.querySelector('.med-dosis')?.value.trim() || '',
-      frecuencia_horas: parseFloat(tr.querySelector('.med-frecuencia')?.value) || 8,
-      dias: parseInt(tr.querySelector('.med-dias')?.value) || 1
-    };
-  }).filter(Boolean);
+  medicamentosData = _leerMedRows('rec-meds-body');
+  if (typeof renderSeguimientoMeds === 'function') renderSeguimientoMeds();
 }
 
 // PDFs generados localmente (antes de enviar)
@@ -203,6 +197,9 @@ async function activarSeguimiento() {
     ? `whatsapp:+${soloDigitosSeg.startsWith('0') ? '593' + soloDigitosSeg.slice(1) : soloDigitosSeg}`
     : null;
   if (!telefono) { alert('El paciente no tiene número de teléfono registrado'); return; }
+
+  // Leer los medicamentos directo del card de seguimiento (sin depender del PDF)
+  if (typeof sincronizarMedSeguimiento === 'function') sincronizarMedSeguimiento();
 
   showToast('⏳ Activando seguimiento...');
   try {

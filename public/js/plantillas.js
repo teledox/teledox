@@ -34,6 +34,66 @@ function poblarDatosMedico(prefijo) {
   if (prefijo === 'cert') { const ce = document.getElementById('cert-correo-medico'); if (ce) ce.textContent = m.correo || ''; }
 }
 
+// ── Medicamentos: opciones de frecuencia + helpers compartidos ──────────────
+// Usados por la tabla del PDF de receta (#rec-meds-body) y por el card de
+// seguimiento del bot (#seg-meds-body). La frecuencia va en horas (el cron la
+// multiplica por 3600000). Las opciones "(prueba)" son para testear el bot.
+const FREQ_MED_OPCIONES = [
+  [1 / 60, 'Cada 1 min (prueba)'],
+  [0.25,   'Cada 15 min (prueba)'],
+  [4, 'Cada 4h'], [6, 'Cada 6h'], [8, 'Cada 8h'], [12, 'Cada 12h'], [24, 'Una vez al día']
+];
+
+// Estilos vienen de .receta-med-table input/select en styles.css
+function _medRowsHTML(meds, minFilas) {
+  const txt = (v, ph, cls, extra = '') => `<input class="${cls}" value="${v ?? ''}" placeholder="${ph}" ${extra} />`;
+  const freq = (v) => `<select class="med-frecuencia"><option value="">Frecuencia...</option>${FREQ_MED_OPCIONES.map(([h, l]) => `<option value="${h}" ${v == h ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const filas = Math.max((meds || []).length, minFilas || 3);
+  return Array.from({ length: filas }, (_, i) => {
+    const m = (meds || [])[i] || {};
+    return `<tr>
+      <td>${txt(m.nombre, 'Medicamento...', 'med-nombre', 'list="meds-comunes"')}</td>
+      <td>${txt(m.dosis, 'Dosis...', 'med-dosis')}</td>
+      <td>${freq(m.frecuencia_horas)}</td>
+      <td>${txt(m.dias, 'días', 'med-dias', 'type="number" min="1"')}</td>
+    </tr>`;
+  }).join('');
+}
+
+function _leerMedRows(tbodyId) {
+  return [...document.querySelectorAll(`#${tbodyId} tr`)].map(tr => {
+    const nombre = tr.querySelector('.med-nombre')?.value.trim();
+    if (!nombre) return null;
+    return {
+      id: Date.now() + Math.random(),
+      nombre,
+      dosis: tr.querySelector('.med-dosis')?.value.trim() || '',
+      frecuencia_horas: parseFloat(tr.querySelector('.med-frecuencia')?.value) || 8,
+      dias: parseInt(tr.querySelector('.med-dias')?.value) || 1
+    };
+  }).filter(Boolean);
+}
+
+// Card de medicamentos de SEGUIMIENTO (en la página de receta, aparte del PDF).
+// Comparte medicamentosData con la receta, pero se llena/edita sin abrir el PDF.
+function renderSeguimientoMeds() {
+  const body = document.getElementById('seg-meds-body');
+  if (!body) return;
+  body.innerHTML = _medRowsHTML(medicamentosData, 3);
+  body.oninput = sincronizarMedSeguimiento;   // mantener medicamentosData al día mientras escribe
+}
+
+function sincronizarMedSeguimiento() {
+  if (!document.getElementById('seg-meds-body')) return;
+  medicamentosData = _leerMedRows('seg-meds-body');
+}
+
+function addFilaSeguimiento() {
+  sincronizarMedSeguimiento();
+  const body = document.getElementById('seg-meds-body');
+  if (body) body.innerHTML = _medRowsHTML(medicamentosData, medicamentosData.length + 1);
+}
+
 function abrirPlantillaReceta() {
   const p = currentPacienteData || {}, c = currentConsultaData || {};
   document.getElementById('rec-numero').textContent = Date.now().toString().slice(-6);
@@ -53,23 +113,8 @@ function abrirPlantillaReceta() {
   document.getElementById('rec-peso').value = '';
   document.getElementById('rec-talla').value = '';
   document.getElementById('rec-medidas-no-farmacologicas').value = '';
-  // Frecuencia como SELECT (valor = horas) → el bot la usa para programar recordatorios.
-  // Medicamento con datalist de sugerencias; días como número. Todos con clase para
-  // que sincronizarMedicamentosDesdeModal y generarPDF los lean sin depender del orden.
-  const FREQ_OPCIONES = [[0.25, 'Cada 15 min (prueba)'], [4, 'Cada 4h'], [6, 'Cada 6h'], [8, 'Cada 8h'], [12, 'Cada 12h'], [24, 'Una vez al día']];
-  const baseStyle = 'width:100%;border:none;outline:none;font-size:10px;background:transparent';
-  const medText = (val, ph, cls, extra = '') => `<input class="${cls}" value="${val ?? ''}" placeholder="${ph}" style="${baseStyle}" ${extra} />`;
-  const medFreq = (val) => `<select class="med-frecuencia" style="${baseStyle}"><option value="">Frecuencia...</option>${FREQ_OPCIONES.map(([h, l]) => `<option value="${h}" ${val == h ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
-  const filas = Math.max(medicamentosData.length, 5);
-  document.getElementById('rec-meds-body').innerHTML = Array.from({ length: filas }, (_, i) => {
-    const m = medicamentosData[i] || {};
-    return `<tr>
-      <td>${medText(m.nombre, 'Medicamento...', 'med-nombre', 'list="meds-comunes"')}</td>
-      <td>${medText(m.dosis, 'Dosis...', 'med-dosis')}</td>
-      <td>${medFreq(m.frecuencia_horas)}</td>
-      <td>${medText(m.dias, 'días', 'med-dias', 'type="number" min="1"')}</td>
-    </tr>`;
-  }).join('');
+  // Tabla de medicamentos del PDF (comparte medicamentosData con el card de seguimiento)
+  document.getElementById('rec-meds-body').innerHTML = _medRowsHTML(medicamentosData, 5);
   document.getElementById('rec-indicaciones').value = document.getElementById('recetaIndicaciones').value || '';
   poblarDatosMedico('rec');
   document.getElementById('modalReceta').classList.add('open');

@@ -1,22 +1,12 @@
-// Renderiza el banner global de "consultas sin médico". Visible en todas las
-// páginas (vive en .content). Se llama desde loadDashboard y desde realtime.
-// Si no se le pasa la lista ya filtrada, la consulta él mismo.
-async function renderAlertasBanner(sinMedicoPre) {
-  const banner = document.getElementById('servicioAlertasBanner');
-  if (!banner) return;
-  const esStaff = currentUser?.rol === 'medico' || currentUser?.rol === 'admin';
-  if (!esStaff) { banner.style.display = 'none'; return; }
+// Banner de "consultas sin médico". Se monta en DOS lugares:
+//  - #servicioAlertasBannerDash : dentro del dashboard (posición original)
+//  - #servicioAlertasBanner     : global y sticky, para el resto de páginas
+// Para no duplicarlo, en el dashboard se muestra solo el de adentro y en las
+// demás páginas solo el global (ver actualizarVisibilidadBanner).
+let _bannerHtml = '';
 
-  let sinMedico = sinMedicoPre;
-  if (!sinMedico) {
-    const consultas = await supa('GET', 'consultas', null,
-      '?medico_id=is.null&estado=neq.completada&select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc');
-    sinMedico = (consultas || []).filter(c => !window._atendiendo?.has(c.id));
-  }
-
-  if (sinMedico.length === 0) { banner.style.display = 'none'; return; }
-  banner.style.display = 'block';
-  banner.innerHTML = `
+function _bannerHtmlDesde(sinMedico) {
+  return `
     <div class="alerta-servicio">
       <div class="alerta-titulo">🔴 ${sinMedico.length} consulta${sinMedico.length > 1 ? 's' : ''} sin médico asignado — ¡Se requiere atención!</div>
       ${sinMedico.slice(0, 4).map(c => {
@@ -33,6 +23,32 @@ async function renderAlertasBanner(sinMedicoPre) {
       }).join('')}
       ${sinMedico.length > 4 ? `<div style="text-align:center;padding-top:10px;font-size:12px;opacity:0.9">+ ${sinMedico.length - 4} más — <a href="#" onclick="showPage('alertas');return false;" style="color:white;font-weight:700;text-decoration:underline">Ver todas las alertas</a></div>` : ''}
     </div>`;
+}
+
+// Decide cuál de los dos contenedores se ve, según la página activa (evita duplicado)
+function actualizarVisibilidadBanner() {
+  const onDash = document.getElementById('page-dashboard')?.classList.contains('active');
+  const dashEl = document.getElementById('servicioAlertasBannerDash');
+  const globalEl = document.getElementById('servicioAlertasBanner');
+  if (dashEl)   dashEl.style.display   = (_bannerHtml && onDash)  ? 'block' : 'none';
+  if (globalEl) globalEl.style.display = (_bannerHtml && !onDash) ? 'block' : 'none';
+}
+
+// Si no se le pasa la lista ya filtrada, la consulta él mismo.
+async function renderAlertasBanner(sinMedicoPre) {
+  const esStaff = currentUser?.rol === 'medico' || currentUser?.rol === 'admin';
+  let sinMedico = esStaff ? sinMedicoPre : [];
+  if (esStaff && !sinMedico) {
+    const consultas = await supa('GET', 'consultas', null,
+      '?medico_id=is.null&estado=neq.completada&select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc');
+    sinMedico = (consultas || []).filter(c => !window._atendiendo?.has(c.id));
+  }
+  _bannerHtml = (sinMedico && sinMedico.length) ? _bannerHtmlDesde(sinMedico) : '';
+  ['servicioAlertasBannerDash', 'servicioAlertasBanner'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = _bannerHtml;
+  });
+  actualizarVisibilidadBanner();
 }
 
 async function loadDashboard() {

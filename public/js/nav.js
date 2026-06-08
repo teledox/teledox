@@ -102,6 +102,9 @@ function showPage(id, el) {
   };
   document.getElementById('pageTitle').textContent = titles[id] || id;
 
+  // Mostrar el banner de "sin médico" en el contenedor correcto (dashboard vs global)
+  if (typeof actualizarVisibilidadBanner === 'function') actualizarVisibilidadBanner();
+
   if (id === 'pacientes') loadPacientes();
   if (id === 'consultas') loadConsultas();
   if (id === 'operador') loadNotificaciones();

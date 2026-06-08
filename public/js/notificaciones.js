@@ -58,10 +58,12 @@ function toggleNotif() {
 let _lastUnclaimedCount = -1;
 
 function startNotifPolling() {
+  // Polling ligero cada 8s solo para detectar nuevas notificaciones/alertas
+  // (el polling de 6s en realtime.js ya refresca las vistas activas)
   notifInterval = setInterval(async () => {
     // --- 1. Notificaciones generales ---
-    const notifs = await supa('GET', 'notificaciones', null, '?leida=eq.false&order=created_at.desc');
-    const count = (notifs || []).length;
+    const notifs = await supa('GET', 'notificaciones', null, '?leida=eq.false&select=id,titulo&order=created_at.desc');
+    const count  = (notifs || []).length;
     updateNotifBadge(count);
 
     if (count > lastNotifCount && lastNotifCount >= 0) {
@@ -71,30 +73,23 @@ function startNotifPolling() {
     }
     lastNotifCount = count;
 
-    // --- 2. Consultas sin médico (para médicos/admins) ---
+    // --- 2. Consultas sin médico ---
     if (currentUser && (currentUser.rol === 'medico' || currentUser.rol === 'admin')) {
       const sinMedico = await supa('GET', 'consultas', null,
-        '?medico_id=is.null&estado=neq.completada&select=id&order=created_at.desc');
+        '?medico_id=is.null&estado=neq.completada&select=id');
       const unclaimedCount = (sinMedico || []).length;
 
       if (unclaimedCount > _lastUnclaimedCount && _lastUnclaimedCount >= 0) {
         playAlertSound();
-        showToast(`🔴 Nueva consulta esperando médico — ${unclaimedCount} sin atender`);
+        showToast(`🔴 Nueva consulta sin médico — ${unclaimedCount} esperando`);
       }
 
-      // Actualizar badge del menú de alertas
       const badge = document.getElementById('alertasBadge');
       if (badge) {
-        badge.textContent = unclaimedCount;
+        badge.textContent   = unclaimedCount;
         badge.style.display = unclaimedCount > 0 ? 'inline-flex' : 'none';
-      }
-
-      // Refrescar vistas si están activas
-      if (unclaimedCount !== _lastUnclaimedCount) {
-        if (document.getElementById('page-dashboard')?.classList.contains('active')) loadDashboard();
-        if (document.getElementById('page-alertas')?.classList.contains('active'))   loadAlertasServicio();
       }
       _lastUnclaimedCount = unclaimedCount;
     }
-  }, 10000);
+  }, 8000);
 }

@@ -35,7 +35,6 @@ async function loadNotificaciones() {
       </div>
     </div>
   `).join('') || '<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
-}
 
   // Reiniciar el cronómetro para que actualice los nuevos elementos renderizados
   if (typeof startTimerUpdater === 'function') startTimerUpdater();

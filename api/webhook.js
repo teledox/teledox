@@ -1,5 +1,16 @@
 const { WA_VERIFY_TOKEN } = require('../src/config');
 const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
+const { esSi } = require('../src/utils/validaciones');
+
+// ¿El mensaje es una respuesta plausible al recordatorio de seguimiento pendiente?
+// medicamento → Sí/No · fin_tratamiento → 1/2/3
+function esRespuestaSeguimiento(respuestaPendiente, mensaje) {
+  const tipo = respuestaPendiente?.recordatorios?.tipo;
+  const m = (mensaje || '').trim().toLowerCase();
+  if (tipo === 'medicamento') return esSi(m) || /^no$/.test(m);
+  if (tipo === 'fin_tratamiento') return ['1', '2', '3'].includes(m);
+  return false;
+}
 
 function getFlows() {
   return {
@@ -91,14 +102,16 @@ module.exports = async function handler(req, res) {
     const pasoActual = sesion?.paso ?? 0;
     const enFlujoConsulta = pasoActual >= 1 && pasoActual <= 12;
 
-    if (!enFlujoConsulta) {
-      const pendiente = await buscarRespuestaPendiente(telefono);
-      if (pendiente?.respuesta) {
-        const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
-        if (resp) {
-          await enviar(telefono, resp);
-          return res.status(200).send('OK');
-        }
+    // Respuesta a un recordatorio de seguimiento. Tiene prioridad si el paciente no está
+    // en medio de una consulta, O si el mensaje es claramente una respuesta al recordatorio
+    // (Sí/No para medicamento, 1/2/3 para fin de tratamiento). Así un "Sí" al recordatorio
+    // no se confunde con la cédula aunque haya quedado una sesión vieja a medias.
+    const pendiente = await buscarRespuestaPendiente(telefono);
+    if (pendiente?.respuesta && (!enFlujoConsulta || esRespuestaSeguimiento(pendiente.respuesta, mensaje))) {
+      const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
+      if (resp) {
+        await enviar(telefono, resp);
+        return res.status(200).send('OK');
       }
     }
 

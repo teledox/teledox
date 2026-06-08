@@ -63,16 +63,59 @@ async function showPacienteDetalle(id) {
     </tr>`).join('')}</tbody></table>`
     : '<div class="empty-state">Sin consultas</div>';
 
-  const seguimientos = await supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&activo=eq.true`) || [];
+  const seguimientos = await supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&order=activo.desc,created_at.desc`) || [];
+  const segActivos = seguimientos.filter(s => s.activo);
+  const fmtCada = s => s.frecuencia_horas < 1 ? `cada ${Math.round(s.frecuencia_horas * 60)} min` : `cada ${s.frecuencia_horas}h`;
   document.getElementById('seguimientoList').innerHTML = seguimientos.length
-    ? seguimientos.map(s => `<div class="detail-item" style="margin-bottom:8px"><div class="detail-label">Medicamento</div><div class="detail-value">${s.medicamento || '—'}</div><div style="font-size:12px;color:#888;margin-top:4px">Cada ${s.frecuencia_horas}h · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div></div>`).join('')
-    : '<div class="empty-state">Sin seguimientos activos</div>';
+    ? `${segActivos.length ? `<div style="margin-bottom:10px"><button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="desactivarTodosSeguimientos('${id}')">🔕 Desactivar todos (${segActivos.length})</button></div>` : ''}
+      ${seguimientos.map(s => `<div class="detail-item" style="margin-bottom:8px;${s.activo ? '' : 'opacity:.55'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div>
+            <div class="detail-label">${s.tipo === 'fin_tratamiento' ? 'Cierre de tratamiento' : 'Medicamento'} ${s.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
+            <div class="detail-value">${s.medicamento || '—'}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px">${fmtCada(s)} · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div>
+          </div>
+          ${s.activo
+            ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorio('${s.id}','${id}')">🔕 Desactivar</button>`
+            : `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorio('${s.id}','${id}')">🔔 Reactivar</button>`}
+        </div>
+      </div>`).join('')}`
+    : '<div class="empty-state">Sin seguimientos</div>';
 
   showPage('paciente-detalle');
   document.querySelectorAll('#page-paciente-detalle .tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('#page-paciente-detalle .tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector('#page-paciente-detalle .tab-bar .tab').classList.add('active');
   document.getElementById('tab-datos').classList.add('active');
+}
+
+// ── Activar / desactivar recordatorios de seguimiento del bot ──────────────
+async function desactivarRecordatorio(recId, pacienteId) {
+  await supa('PATCH', 'recordatorios', { activo: false }, `?id=eq.${recId}`);
+  showToast('🔕 Seguimiento desactivado');
+  showPacienteDetalle(pacienteId);
+}
+
+async function reactivarRecordatorio(recId, pacienteId) {
+  const ahora = new Date();
+  const rec = (await supa('GET', 'recordatorios', null, `?id=eq.${recId}&limit=1`) || [])[0];
+  if (!rec) return;
+  const freq = rec.frecuencia_horas || 24;
+  const finFuturo = new Date(rec.fecha_fin) > ahora;
+  await supa('PATCH', 'recordatorios', {
+    activo: true,
+    fecha_proximo: new Date(ahora.getTime() + freq * 3600000).toISOString(),
+    fecha_fin: finFuturo ? rec.fecha_fin : new Date(ahora.getTime() + 86400000).toISOString()
+  }, `?id=eq.${recId}`);
+  showToast('🔔 Seguimiento reactivado');
+  showPacienteDetalle(pacienteId);
+}
+
+async function desactivarTodosSeguimientos(pacienteId) {
+  if (!confirm('¿Desactivar todos los seguimientos activos de este paciente?')) return;
+  await supa('PATCH', 'recordatorios', { activo: false }, `?paciente_id=eq.${pacienteId}&activo=eq.true`);
+  showToast('🔕 Seguimientos desactivados');
+  showPacienteDetalle(pacienteId);
 }
 
 // ── Editar datos personales del paciente (ej. corregir teléfono mal registrado) ──

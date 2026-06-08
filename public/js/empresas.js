@@ -118,7 +118,7 @@ function previewExcel() {
     try {
       const wb   = XLSX.read(e.target.result, { type: 'array' });
       const ws   = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
       const cedulas = extraerCedulas(data);
       document.getElementById('excelPreview').textContent =
         `${cedulas.length} cédula${cedulas.length !== 1 ? 's' : ''} detectada${cedulas.length !== 1 ? 's' : ''} — listas para cargar`;
@@ -130,10 +130,15 @@ function previewExcel() {
 }
 
 function extraerCedulas(data) {
-  return data
-    .flat()
-    .map(v => String(v ?? '').trim().replace(/\D/g, ''))
-    .filter(v => v.length >= 6 && v.length <= 13);
+  const cedulas = [];
+  data.flat().forEach(v => {
+    let c = String(v ?? '').trim().replace(/\D/g, '');
+    if (!c) return;
+    // Restaurar cero inicial si tiene 9 dígitos (Ecuador: 10 dígitos)
+    if (c.length === 9) c = '0' + c;
+    if (c.length >= 6 && c.length <= 13) cedulas.push(c);
+  });
+  return [...new Set(cedulas)]; // eliminar duplicados dentro del mismo archivo
 }
 
 async function subirCedulas() {
@@ -146,24 +151,36 @@ async function subirCedulas() {
     try {
       const wb      = XLSX.read(e.target.result, { type: 'array' });
       const ws      = wb.Sheets[wb.SheetNames[0]];
-      const data    = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      // raw:false convierte números a string conservando el formato de celda
+      const data    = XLSX.utils.sheet_to_json(ws, { header: 1, raw: false });
       const cedulas = extraerCedulas(data);
 
       if (!cedulas.length) { showToast('No se encontraron cédulas válidas'); return; }
 
-      // Upsert en lotes de 200
+      // Upsert en lotes de 200 con header correcto para ignorar duplicados
       const LOTE = 200;
+      let errores = 0;
       for (let i = 0; i < cedulas.length; i += LOTE) {
         const lote = cedulas.slice(i, i + LOTE).map(c => ({ empresa_id: empresaId, cedula: c }));
-        await supa('POST', 'empleados_b2b', lote,
-          '?on_conflict=empresa_id%2Ccedula&ignore_duplicates=true');
+        const r = await fetch(`${SUPA_URL}/rest/v1/empleados_b2b?on_conflict=empresa_id%2Ccedula`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPA_KEY,
+            'Authorization': `Bearer ${SUPA_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'resolution=ignore-duplicates,return=representation'
+          },
+          body: JSON.stringify(lote)
+        });
+        if (!r.ok) { errores++; console.error('Upsert error lote', i, await r.text()); }
       }
 
       document.getElementById('excelCedulas').value       = '';
       document.getElementById('excelPreview').textContent = '';
       await renderCedulas(empresaId);
       loadEmpresas();
-      showToast(`✓ ${cedulas.length} cédulas cargadas`);
+      if (errores) showToast(`⚠️ ${cedulas.length} cédulas procesadas con ${errores} error(es)`);
+      else showToast(`✓ ${cedulas.length} cédulas cargadas correctamente`);
     } catch (err) {
       console.error(err);
       showToast('Error al procesar el archivo');

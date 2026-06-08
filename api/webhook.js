@@ -100,7 +100,11 @@ module.exports = async function handler(req, res) {
 
     let sesion = await obtener(telefono);
     const pasoActual = sesion?.paso ?? 0;
-    const enFlujoConsulta = pasoActual >= 1 && pasoActual <= 12;
+
+    // Los botones/listas interactivas siempre pertenecen al flujo activo —
+    // nunca deben ser interceptados por el seguimiento de medicamentos.
+    const esInteractivo = msg.type === 'interactive';
+    const enFlujoConsulta = esInteractivo || (pasoActual >= 1 && pasoActual <= 89);
 
     // Respuesta a un recordatorio de seguimiento. Tiene prioridad si el paciente no está
     // en medio de una consulta, O si el mensaje es claramente una respuesta al recordatorio

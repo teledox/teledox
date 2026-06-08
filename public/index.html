@@ -591,7 +591,7 @@
             <button class="btn btn-sm btn-primary" onclick="document.getElementById('editEmpresaForm').style.display='none';document.getElementById('addEmpresaForm').style.display='block'">+ Nueva empresa</button>
           </div>
           <table class="table">
-            <thead><tr><th>Empresa</th><th style="text-align:center">Pacientes</th><th style="text-align:center">Empleados</th><th style="text-align:center">Código Call Center</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th>Empresa</th><th style="text-align:center">Pacientes</th><th style="text-align:center">Empleados</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody id="empresasBody"></tbody>
           </table>
         </div>
@@ -623,6 +623,37 @@
             </table>
           </div>
           <div id="cedulasCount" style="font-size:12px;color:#888;margin-top:0.5rem"></div>
+        </div>
+
+        <!-- Panel: Código de acceso Call Center -->
+        <div class="card" id="codigoPanel" style="display:none;border:2px solid #7c3aed">
+          <div class="card-header">
+            <span class="card-title">🔑 Código de acceso Call Center — <span id="codigoEmpresaNombre"></span></span>
+            <button class="btn btn-sm" onclick="cerrarCodigoPanel()">✕</button>
+          </div>
+          <input type="hidden" id="codigoEmpresaId" />
+          <p style="font-size:13px;color:#555;margin-bottom:1rem">
+            El operador del call center escribe este código en WhatsApp (en lugar de su cédula) para acceder al flujo de agendamiento múltiple de pacientes.
+          </p>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+            <div class="form-group" style="margin:0;flex:1;max-width:280px">
+              <label class="form-label">Código de acceso</label>
+              <input type="text" class="form-control" id="codigoInput" placeholder="Ej: PRIV2024"
+                style="text-transform:uppercase;letter-spacing:2px;font-weight:700;font-size:15px"
+                oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" maxlength="16"/>
+            </div>
+            <button class="btn btn-sm" style="background:#f3f0ff;color:#7c3aed;border-color:#7c3aed;margin-bottom:0" onclick="autoGenerarCodigo()">⚡ Auto-generar</button>
+          </div>
+          <div style="display:flex;gap:10px;margin-top:1rem;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed" onclick="guardarCodigo()">💾 Guardar código</button>
+            <button class="btn btn-danger" id="btnDesactivarCodigo" onclick="desactivarCodigo()" style="display:none">🚫 Desactivar</button>
+            <span id="codigoEstado" style="font-size:12px;color:#888"></span>
+          </div>
+          <div id="codigoActualBox" style="display:none;margin-top:1rem;background:#f3f0ff;border-radius:8px;padding:1rem">
+            <div style="font-size:11px;color:#7c3aed;font-weight:600;margin-bottom:4px">CÓDIGO ACTIVO</div>
+            <div style="font-size:22px;font-weight:700;color:#7c3aed;letter-spacing:4px" id="codigoActualText"></div>
+            <div style="font-size:12px;color:#888;margin-top:4px">El operador debe escribir este código exactamente en WhatsApp al iniciar sesión.</div>
+          </div>
         </div>
 
         <!-- Formulario: Crear empresa -->

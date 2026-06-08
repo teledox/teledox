@@ -18,13 +18,12 @@ async function loadEmpresas() {
       <td><strong>${e.nombre_empresa}</strong></td>
       <td style="text-align:center">${countsPac[e.id] || 0}</td>
       <td style="text-align:center">${countsEmp[e.id] || 0}</td>
-      <td style="text-align:center">
-        ${e.codigo_acceso
-          ? `<code style="background:#f0f6ff;padding:2px 8px;border-radius:4px;font-size:12px;color:#4f8ef7;font-weight:700">${e.codigo_acceso}</code>`
-          : `<button class="btn btn-sm" style="font-size:11px" onclick="generarCodigo('${e.id}')">+ Generar</button>`}
-      </td>
       <td>${e.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-red">Inactivo</span>'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn btn-sm" style="background:#f3f0ff;color:#7c3aed;border-color:#7c3aed"
+          onclick="abrirCodigoPanel('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}','${e.codigo_acceso || ''}')">
+          🔑 ${e.codigo_acceso ? '<span style=\'color:#7c3aed;font-weight:700\'>' + e.codigo_acceso + '</span>' : 'Código'}
+        </button>
         <button class="btn btn-sm" style="background:#f0f6ff;color:#4f8ef7;border-color:#4f8ef7"
           onclick="abrirCedulasPanel('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}')">📋 Cédulas</button>
         <button class="btn btn-sm" style="background:#fff0f0;color:#FF5A5F;border-color:#FF5A5F"
@@ -33,7 +32,7 @@ async function loadEmpresas() {
           onclick="eliminarEmpresa('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
       </td>
     </tr>
-  `).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
+  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';
 }
 
 async function saveEmpresa() {
@@ -205,6 +204,87 @@ async function eliminarCedula(id, cedula) {
   await renderCedulas(empresaId);
   loadEmpresas();
   showToast('✓ Cédula eliminada');
+}
+
+// ─── Panel de código call center ───────────────────────────────────────────
+
+function abrirCodigoPanel(empresaId, empresaNombre, codigoActual) {
+  document.getElementById('addEmpresaForm').style.display  = 'none';
+  document.getElementById('editEmpresaForm').style.display = 'none';
+  cerrarCedulasPanel();
+  document.getElementById('codigoEmpresaId').value      = empresaId;
+  document.getElementById('codigoEmpresaNombre').textContent = empresaNombre;
+  document.getElementById('codigoInput').value          = codigoActual || '';
+
+  const box    = document.getElementById('codigoActualBox');
+  const btnDes = document.getElementById('btnDesactivarCodigo');
+  const estado = document.getElementById('codigoEstado');
+  const texto  = document.getElementById('codigoActualText');
+
+  if (codigoActual) {
+    box.style.display    = 'block';
+    btnDes.style.display = 'inline-flex';
+    texto.textContent    = codigoActual;
+    estado.textContent   = '✅ Código activo — el bot reconoce este código para acceso call center';
+    estado.style.color   = '#16a34a';
+  } else {
+    box.style.display    = 'none';
+    btnDes.style.display = 'none';
+    estado.textContent   = 'Sin código activo';
+    estado.style.color   = '#aaa';
+  }
+
+  const panel = document.getElementById('codigoPanel');
+  panel.style.display = 'block';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cerrarCodigoPanel() {
+  document.getElementById('codigoPanel').style.display = 'none';
+}
+
+function autoGenerarCodigo() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const codigo = Array.from({length: 8}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+  document.getElementById('codigoInput').value = codigo;
+}
+
+async function guardarCodigo() {
+  const empresaId = document.getElementById('codigoEmpresaId').value;
+  const codigo    = document.getElementById('codigoInput').value.trim().toUpperCase();
+  if (!codigo || codigo.length < 4) { showToast('⚠️ El código debe tener al menos 4 caracteres'); return; }
+
+  await supa('PATCH', 'clientes_b2b', { codigo_acceso: codigo }, `?id=eq.${empresaId}`);
+
+  // Actualizar UI sin cerrar el panel
+  const box    = document.getElementById('codigoActualBox');
+  const btnDes = document.getElementById('btnDesactivarCodigo');
+  const estado = document.getElementById('codigoEstado');
+  const texto  = document.getElementById('codigoActualText');
+  box.style.display    = 'block';
+  btnDes.style.display = 'inline-flex';
+  texto.textContent    = codigo;
+  estado.textContent   = '✅ Código activo — el bot reconoce este código para acceso call center';
+  estado.style.color   = '#16a34a';
+
+  loadEmpresas();
+  showToast(`✓ Código activado: ${codigo}`);
+}
+
+async function desactivarCodigo() {
+  if (!confirm('¿Desactivar el código de acceso call center?\n\nEl bot dejará de reconocer este código.')) return;
+  const empresaId = document.getElementById('codigoEmpresaId').value;
+  await supa('PATCH', 'clientes_b2b', { codigo_acceso: null }, `?id=eq.${empresaId}`);
+
+  document.getElementById('codigoActualBox').style.display    = 'none';
+  document.getElementById('btnDesactivarCodigo').style.display = 'none';
+  document.getElementById('codigoInput').value                = '';
+  const estado = document.getElementById('codigoEstado');
+  estado.textContent = 'Código desactivado';
+  estado.style.color = '#aaa';
+
+  loadEmpresas();
+  showToast('✓ Código desactivado');
 }
 
 async function generarCodigo(empresaId) {

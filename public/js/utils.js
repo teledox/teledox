@@ -23,7 +23,7 @@ function _updateTimers() {
     var created = el.getAttribute('data-created');
     if (!created || created === 'undefined' || created === 'null') return;
     var ms = new Date(created).getTime();
-    if (!ms || isNaN(ms)) return;
+    if (isNaN(ms)) return;
     var elapsed = Math.max(0, Math.floor((now - ms) / 1000));
     var h = Math.floor(elapsed / 3600);
     var m = Math.floor((elapsed % 3600) / 60);
@@ -32,9 +32,11 @@ function _updateTimers() {
       ? h + 'h ' + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's'
       : m > 0 ? m + 'm ' + String(s).padStart(2,'0') + 's'
       : s + 's';
-    el.textContent = '⏱ ' + t;
     var min = (now - ms) / 60000;
-    el.style.color = min < 3 ? '#16a34a' : min < 10 ? '#ca8a04' : min < 20 ? '#ea580c' : '#dc2626';
+    var color = min < 3 ? '#16a34a' : min < 10 ? '#ca8a04' : min < 20 ? '#ea580c' : '#dc2626';
+    var icon = min < 3 ? '🟢' : min < 10 ? '🟡' : min < 20 ? '🟠' : '🔴';
+    el.textContent = icon + ' ' + t;
+    el.style.color = color;
     el.style.fontWeight = '700';
   });
 }

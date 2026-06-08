@@ -169,6 +169,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .receta-med-table td { font-size: 10px; padding: 5px 8px; border: 1px solid #e8ecf5; vertical-align: top; }
 .receta-med-table input { width: 100%; border: none; outline: none; font-size: 10px; background: transparent; }
 .receta-med-table select { width: 100%; border: none; outline: none; font-size: 10px; background: transparent; cursor: pointer; }
+.receta-med-table input[type=checkbox] { width: auto; cursor: pointer; accent-color: #16a34a; }
 .lab-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; border: 1px solid #FF5A5F; border-radius: 6px; overflow: hidden; margin-top: 8px; }
 .lab-col { border-right: 1px solid #FF5A5F; }
 .lab-col:last-child { border-right: none; }

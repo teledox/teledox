@@ -45,17 +45,22 @@ const FREQ_MED_OPCIONES = [
 ];
 
 // Estilos vienen de .receta-med-table input/select en styles.css
-function _medRowsHTML(meds, minFilas) {
+// conSeguimiento=true agrega la columna del checkbox de notificaciones (solo en el card de seguimiento)
+function _medRowsHTML(meds, minFilas, conSeguimiento) {
   const txt = (v, ph, cls, extra = '') => `<input class="${cls}" value="${v ?? ''}" placeholder="${ph}" ${extra} />`;
   const freq = (v) => `<select class="med-frecuencia"><option value="">Frecuencia...</option>${FREQ_MED_OPCIONES.map(([h, l]) => `<option value="${h}" ${v == h ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const filas = Math.max((meds || []).length, minFilas || 3);
   return Array.from({ length: filas }, (_, i) => {
     const m = (meds || [])[i] || {};
+    const segCell = conSeguimiento
+      ? `<td style="text-align:center"><input type="checkbox" class="med-seguimiento" title="Notificar seguimiento de este medicamento" ${m.seguimiento === false ? '' : 'checked'} /></td>`
+      : '';
     return `<tr>
       <td>${txt(m.nombre, 'Medicamento...', 'med-nombre', 'list="meds-comunes"')}</td>
       <td>${txt(m.dosis, 'Dosis...', 'med-dosis')}</td>
       <td>${freq(m.frecuencia_horas)}</td>
       <td>${txt(m.dias, 'días', 'med-dias', 'type="number" min="1"')}</td>
+      ${segCell}
     </tr>`;
   }).join('');
 }
@@ -64,12 +69,16 @@ function _leerMedRows(tbodyId) {
   return [...document.querySelectorAll(`#${tbodyId} tr`)].map(tr => {
     const nombre = tr.querySelector('.med-nombre')?.value.trim();
     if (!nombre) return null;
+    const segEl = tr.querySelector('.med-seguimiento');
     return {
       id: Date.now() + Math.random(),
       nombre,
       dosis: tr.querySelector('.med-dosis')?.value.trim() || '',
       frecuencia_horas: parseFloat(tr.querySelector('.med-frecuencia')?.value) || 8,
-      dias: parseInt(tr.querySelector('.med-dias')?.value) || 1
+      dias: parseInt(tr.querySelector('.med-dias')?.value) || 1,
+      // seguimiento: solo lo define el checkbox del card de seguimiento; si la fila no lo
+      // tiene (tabla del PDF), queda undefined para no pisar el valor elegido en el card.
+      seguimiento: segEl ? segEl.checked : undefined
     };
   }).filter(Boolean);
 }
@@ -79,8 +88,9 @@ function _leerMedRows(tbodyId) {
 function renderSeguimientoMeds() {
   const body = document.getElementById('seg-meds-body');
   if (!body) return;
-  body.innerHTML = _medRowsHTML(medicamentosData, 3);
-  body.oninput = sincronizarMedSeguimiento;   // mantener medicamentosData al día mientras escribe
+  body.innerHTML = _medRowsHTML(medicamentosData, 3, true);
+  body.oninput  = sincronizarMedSeguimiento;   // texto/selects
+  body.onchange = sincronizarMedSeguimiento;   // checkbox de notificaciones
 }
 
 function sincronizarMedSeguimiento() {
@@ -91,7 +101,7 @@ function sincronizarMedSeguimiento() {
 function addFilaSeguimiento() {
   sincronizarMedSeguimiento();
   const body = document.getElementById('seg-meds-body');
-  if (body) body.innerHTML = _medRowsHTML(medicamentosData, medicamentosData.length + 1);
+  if (body) body.innerHTML = _medRowsHTML(medicamentosData, medicamentosData.length + 1, true);
 }
 
 // ── Persistencia de datos de documentos (por consulta + tipo) ──────────────

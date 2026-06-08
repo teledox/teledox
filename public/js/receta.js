@@ -79,9 +79,14 @@ async function openReceta(consultaId, pacienteId) {
   if (typeof renderPreviewsGuardados === 'function') renderPreviewsGuardados();
 }
 
-// Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento
+// Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento.
+// El modal no tiene la columna de notificaciones, así que se conserva el 'seguimiento' por índice.
 function sincronizarMedicamentosDesdeModal() {
-  medicamentosData = _leerMedRows('rec-meds-body');
+  const prev = medicamentosData || [];
+  medicamentosData = _leerMedRows('rec-meds-body').map((m, i) => ({
+    ...m,
+    seguimiento: m.seguimiento ?? prev[i]?.seguimiento ?? true
+  }));
   if (typeof renderSeguimientoMeds === 'function') renderSeguimientoMeds();
 }
 
@@ -237,7 +242,8 @@ async function activarSeguimiento() {
     const ahora = new Date();
     let activado = false;
 
-    // 1. Seguimiento por medicamentos prescritos
+    // 1. Seguimiento por medicamentos prescritos (solo los que tienen la notificación activada)
+    const medsConSeg = medicamentosData.filter(m => m.seguimiento !== false);
     if (medicamentosData.length > 0) {
       let receta_id;
       const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
@@ -256,10 +262,10 @@ async function activarSeguimiento() {
         });
         receta_id = (res || [])[0]?.id;
       }
-      if (receta_id) {
+      if (receta_id && medsConSeg.length > 0) {
         const yaExisten = await supa('GET', 'recordatorios', null, `?receta_id=eq.${receta_id}&activo=eq.true&limit=1`);
         if (!yaExisten?.length) {
-          for (const med of medicamentosData) {
+          for (const med of medsConSeg) {
             await supa('POST', 'recordatorios', {
               receta_id, paciente_id: recetaPacienteId, telefono,
               medicamento: med.nombre, dosis: med.dosis || '',

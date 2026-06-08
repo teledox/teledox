@@ -169,7 +169,60 @@ async function guardarDatosDoc(tipo) {
   }
 }
 
-function abrirPlantillaReceta() {
+// ── Mini-preview inline de cada documento (card que queda en el apartado) ───
+const ABRIR_PLANTILLA = {
+  receta:        () => abrirPlantillaReceta,
+  certificado:   () => abrirPlantillaCertificado,
+  laboratorio:   () => abrirPlantillaLaboratorio,
+  historia:      () => abrirPlantillaHistoriaClinica,
+  interconsulta: () => abrirPlantillaInterconsulta
+};
+
+// Clona el doc-sheet "horneando" los valores actuales (cloneNode no copia los .value)
+function _snapshotSheet(sheet) {
+  const clone = sheet.cloneNode(true);
+  const live = sheet.querySelectorAll('input, textarea, select');
+  const cl = clone.querySelectorAll('input, textarea, select');
+  live.forEach((el, i) => {
+    const c = cl[i]; if (!c) return;
+    if (el.tagName === 'SELECT') { [...c.options].forEach(o => o.selected = (o.value === el.value)); c.value = el.value; }
+    else if (el.type === 'checkbox' || el.type === 'radio') { c.checked = el.checked; if (el.checked) c.setAttribute('checked', ''); else c.removeAttribute('checked'); }
+    else if (el.tagName === 'TEXTAREA') { c.textContent = el.value; }
+    else { c.setAttribute('value', el.value ?? ''); }
+  });
+  return clone;
+}
+
+function renderPreviewDoc(tipo) {
+  const slot = document.getElementById('preview-' + tipo);
+  const abrir = ABRIR_PLANTILLA[tipo]?.();
+  if (!slot || !abrir) return;
+  abrir(true);                                   // poblar el doc-sheet sin abrir el modal
+  const sheet = document.getElementById(DOC_SHEETS[tipo]);
+  if (!sheet) return;
+  const snap = _snapshotSheet(sheet);
+  snap.removeAttribute('id');
+  snap.querySelectorAll('input, textarea, select, button').forEach(el => { el.disabled = true; el.tabIndex = -1; });
+  slot.innerHTML = `
+    <div class="doc-preview-card">
+      <div class="doc-preview-head"><span>✓ Generada · guardada</span><button class="btn btn-sm" onclick="${abrir.name}()">✏️ Editar</button></div>
+      <div class="doc-preview-frame"><div class="doc-preview-scaled"></div></div>
+    </div>`;
+  slot.querySelector('.doc-preview-scaled').appendChild(snap);
+}
+
+// Re-pinta los previews de los documentos que ya tienen datos guardados (al abrir la consulta)
+function renderPreviewsGuardados() {
+  Object.keys(DOC_SHEETS).forEach(tipo => {
+    const slot = document.getElementById('preview-' + tipo);
+    if (slot) slot.innerHTML = '';
+  });
+  Object.keys(documentosGuardados || {}).forEach(tipo => {
+    if (DOC_SHEETS[tipo]) renderPreviewDoc(tipo);
+  });
+}
+
+function abrirPlantillaReceta(soloPreview) {
   const p = currentPacienteData || {}, c = currentConsultaData || {};
   document.getElementById('rec-numero').textContent = Date.now().toString().slice(-6);
   document.getElementById('rec-fecha-header').textContent = new Date().toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -193,10 +246,10 @@ function abrirPlantillaReceta() {
   document.getElementById('rec-indicaciones').value = document.getElementById('recetaIndicaciones').value || '';
   poblarDatosMedico('rec');
   restaurarDatosDoc('receta');
-  document.getElementById('modalReceta').classList.add('open');
+  if (!soloPreview) document.getElementById('modalReceta').classList.add('open');
 }
 
-function abrirPlantillaCertificado() {
+function abrirPlantillaCertificado(soloPreview) {
   const p = currentPacienteData || {}, c = currentConsultaData || {}, m = currentUser || {}, hoy = new Date();
   const fechaTexto = hoy.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
   document.getElementById('cert-lugar-fecha').textContent = `MediLyft; ${hoy.toLocaleDateString('es-EC')}`;
@@ -223,10 +276,10 @@ function abrirPlantillaCertificado() {
   actualizarDiasLetra(); actualizarHastaFecha();
   poblarDatosMedico('cert');
   restaurarDatosDoc('certificado');
-  document.getElementById('modalCertificado').classList.add('open');
+  if (!soloPreview) document.getElementById('modalCertificado').classList.add('open');
 }
 
-function abrirPlantillaLaboratorio() {
+function abrirPlantillaLaboratorio(soloPreview) {
   const p = currentPacienteData || {}, c = currentConsultaData || {};
   document.getElementById('lab-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
   document.getElementById('lab-edad').textContent = p.edad ? `${p.edad} años` : '—';
@@ -238,7 +291,7 @@ function abrirPlantillaLaboratorio() {
   document.getElementById('lab-instrucciones').value = '';
   poblarDatosMedico('lab');
   restaurarDatosDoc('laboratorio');
-  document.getElementById('modalLaboratorio').classList.add('open');
+  if (!soloPreview) document.getElementById('modalLaboratorio').classList.add('open');
 }
 
 async function generarDocumentoDesdeModalLaboratorio() {
@@ -250,6 +303,7 @@ async function generarDocumentoDesdeModalLaboratorio() {
     await guardarDatosDoc('laboratorio');
     actualizarCheckboxDocs();
     cerrarModal('modalLaboratorio');
+    renderPreviewDoc('laboratorio');
     showToast('✓ Pedido de Laboratorio generado — listo para enviar al paciente');
   } catch (e) {
     console.error('Error Pedido de Laboratorio:', e);
@@ -333,7 +387,7 @@ function actualizarHastaFecha() {
   }
 }
 
-function abrirPlantillaHistoriaClinica() {
+function abrirPlantillaHistoriaClinica(soloPreview) {
   const p = currentPacienteData || {};
   const apellidos = (p.apellidos || '').split(' ');
   const set = (id, val) => {
@@ -367,10 +421,10 @@ function abrirPlantillaHistoriaClinica() {
   ).join('');
   poblarDatosMedico('hc');
   restaurarDatosDoc('historia');
-  document.getElementById('modalHistoriaClinica').classList.add('open');
+  if (!soloPreview) document.getElementById('modalHistoriaClinica').classList.add('open');
 }
 
-function abrirPlantillaInterconsulta() {
+function abrirPlantillaInterconsulta(soloPreview) {
   const p = currentPacienteData || {};
   const c = currentConsultaData || {};
   const apellidos = (p.apellidos || '').split(' ');
@@ -404,7 +458,7 @@ function abrirPlantillaInterconsulta() {
   }
   poblarDatosMedico('inter');
   restaurarDatosDoc('interconsulta');
-  document.getElementById('modalInterconsulta').classList.add('open');
+  if (!soloPreview) document.getElementById('modalInterconsulta').classList.add('open');
 }
 
 async function generarDocumentoDesdeModalReceta() {
@@ -418,6 +472,7 @@ async function generarDocumentoDesdeModalReceta() {
     await guardarRecetaBD();
     actualizarCheckboxDocs();
     cerrarModal('modalReceta');
+    renderPreviewDoc('receta');
     showToast('✓ Receta Médica generada — lista para enviar al paciente');
   } catch (e) {
     console.error('Error Receta:', e);
@@ -434,6 +489,7 @@ async function generarDocumentoDesdeModalCertificado() {
     await guardarDatosDoc('certificado');
     actualizarCheckboxDocs();
     cerrarModal('modalCertificado');
+    renderPreviewDoc('certificado');
     showToast('✓ Certificado Médico generado — listo para enviar al paciente');
   } catch (e) {
     console.error('Error Certificado:', e);
@@ -450,6 +506,7 @@ async function generarDocumentoDesdeModalHC() {
     await guardarDatosDoc('historia');
     actualizarCheckboxDocs();
     cerrarModal('modalHistoriaClinica');
+    renderPreviewDoc('historia');
     showToast('✓ Historia Clínica generada — lista para enviar al paciente');
   } catch (e) {
     console.error('Error HC:', e);
@@ -466,6 +523,7 @@ async function generarDocumentoDesdeModalInterconsulta() {
     await guardarDatosDoc('interconsulta');
     actualizarCheckboxDocs();
     cerrarModal('modalInterconsulta');
+    renderPreviewDoc('interconsulta');
     showToast('✓ Interconsulta generada — lista para enviar al paciente');
   } catch (e) {
     console.error('Error Interconsulta:', e);

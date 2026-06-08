@@ -74,6 +74,9 @@ async function openReceta(consultaId, pacienteId) {
   documentosGuardados = {};
   const docsGuardados = await supa('GET', 'documentos_datos', null, `?consulta_id=eq.${consultaId}`);
   (docsGuardados || []).forEach(d => { documentosGuardados[d.tipo] = d.datos; });
+
+  // Re-pintar los mini-previews de los documentos ya generados/guardados
+  if (typeof renderPreviewsGuardados === 'function') renderPreviewsGuardados();
 }
 
 // Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento

@@ -138,6 +138,14 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .plantilla-modal-title { font-size: 15px; font-weight: 600; color: #1a1a1a; }
 .plantilla-modal-body { padding: 1.5rem; }
 .doc-sheet { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #1a1a1a; background: white; }
+
+/* Mini-preview inline de documentos generados */
+.doc-preview-slot:empty { display: none; }
+.doc-preview-card { margin-top: 10px; border: 1px solid #d1fae5; border-radius: 8px; overflow: hidden; }
+.doc-preview-head { display: flex; justify-content: space-between; align-items: center; padding: 6px 10px; background: #f0fff4; font-size: 12px; color: #16a34a; font-weight: 600; }
+.doc-preview-frame { position: relative; height: 320px; overflow: hidden; background: #fff; border-top: 1px solid #eee; }
+.doc-preview-scaled { width: 672px; padding: 16px; transform: scale(0.5); transform-origin: top left; pointer-events: none; }
+.doc-preview-scaled * { pointer-events: none; }
 .doc-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #FF5A5F; padding-bottom: 10px; margin-bottom: 12px; }
 .doc-logo-box { width: 50px; height: 50px; border: 2px solid #FF5A5F; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #FF5A5F; text-align: center; }
 .doc-org-name { font-size: 14px; font-weight: 700; color: #FF5A5F; }

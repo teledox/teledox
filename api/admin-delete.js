@@ -83,18 +83,40 @@ async function eliminarConsulta(consultaId) {
   }
 }
 
-// ── Eliminar paciente (CASCADE DELETE borra todo en cadena desde pacientes)
+// ── Eliminar paciente (borrado manual en cascada)
 async function eliminarPaciente(pacienteId) {
-  // Con CASCADE DELETE activo, borrar el paciente elimina en cadena:
-  // consultas → documentos, notificaciones, recetas → recordatorios
-  const deleted = await q('DELETE', 'pacientes', `?id=eq.${pacienteId}`);
+  // 1. Obtener consultas del paciente para borrar sus dependientes
+  const consultas = await q('GET', 'consultas', `?paciente_id=eq.${pacienteId}&select=id`);
+  const cIds = (consultas || []).map(c => c.id);
 
-  if (!Array.isArray(deleted) || deleted.length === 0) {
-    throw new Error(
-      'No se pudo eliminar el paciente. ' +
-      'Ejecuta el SQL de CASCADE DELETE en Supabase SQL Editor y vuelve a intentar.'
-    );
+  if (cIds.length) {
+    const inConsultas = `(${cIds.join(',')})`;
+    // Obtener recetas para borrar recordatorios
+    const recetas = await q('GET', 'recetas', `?consulta_id=in.${inConsultas}&select=id`);
+    const rIds = (recetas || []).map(r => r.id);
+    if (rIds.length) await q('DELETE', 'recordatorios', `?receta_id=in.(${rIds.join(',')})`);
+
+    await Promise.allSettled([
+      q('DELETE', 'recetas',        `?consulta_id=in.${inConsultas}`),
+      q('DELETE', 'documentos',     `?consulta_id=in.${inConsultas}`),
+      q('DELETE', 'notificaciones', `?consulta_id=in.${inConsultas}`),
+      q('DELETE', 'planillaje_b2b', `?consulta_id=in.${inConsultas}`),
+    ]);
+    await q('DELETE', 'consultas', `?paciente_id=eq.${pacienteId}`);
   }
+
+  // 2. Borrar tablas directamente vinculadas al paciente
+  await Promise.allSettled([
+    q('DELETE', 'enfermedades_cronicas', `?paciente_id=eq.${pacienteId}`),
+    q('DELETE', 'antecedentes',          `?paciente_id=eq.${pacienteId}`),
+    q('DELETE', 'documentos',            `?paciente_id=eq.${pacienteId}`),
+    q('DELETE', 'notificaciones',        `?paciente_id=eq.${pacienteId}`),
+    q('DELETE', 'seguimiento',           `?paciente_id=eq.${pacienteId}`),
+    q('DELETE', 'empleados_b2b',         `?cedula=eq.(SELECT cedula FROM pacientes WHERE id=eq.${pacienteId})`),
+  ]);
+
+  // 3. Finalmente borrar el paciente
+  await q('DELETE', 'pacientes', `?id=eq.${pacienteId}`);
 }
 
 // ── Handler principal ─────────────────────────────────────────────────────

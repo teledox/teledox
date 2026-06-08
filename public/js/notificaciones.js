@@ -13,7 +13,10 @@ async function loadNotificaciones() {
     <tr style="${n.leida ? '' : 'background:#fffbeb'}">
       <td><span style="font-size:12px;font-weight:600;color:${n.tipo === 'urgente' ? '#dc2626' : '#2563eb'}">${n.tipo === 'urgente' ? '⚠️ Urgente' : '📅 Nueva'}</span></td>
       <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
-      <td style="white-space:nowrap;font-size:12px;color:#888">${new Date(n.created_at).toLocaleString('es-EC')}</td>
+      <td style="white-space:nowrap;font-size:12px">
+        <span class="alerta-timer" data-created="${n.created_at}" style="font-weight:700;color:${getTimerColor(n.created_at)}">⏱ ${formatElapsedTime(n.created_at)}</span><br>
+        <span style="color:#aaa;font-size:11px">${new Date(n.created_at).toLocaleString('es-EC')}</span>
+      </td>
       <td>${n.leida ? '<span class="badge badge-gray">Leída</span>' : '<span class="badge badge-blue">Nueva</span>'}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">
         ${n.consulta_id && (currentUser?.rol === 'medico' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${n.consulta_id}');marcarLeida('${n.id}')">🩺 Atender</button>` : ''}
@@ -27,7 +30,9 @@ async function loadNotificaciones() {
       <div class="notif-tipo ${n.tipo === 'urgente' ? 'notif-urgente' : 'notif-nueva'}">${n.tipo === 'urgente' ? '⚠️ URGENTE' : '📅 NUEVA'}</div>
       <div class="notif-titulo">${n.titulo}</div>
       <div class="notif-msg">${n.mensaje}</div>
-      <div class="notif-time">${new Date(n.created_at).toLocaleString('es-EC')}</div>
+      <div class="notif-time">
+        <span class="alerta-timer" data-created="${n.created_at}" style="font-weight:700;color:${getTimerColor(n.created_at)}">⏱ ${formatElapsedTime(n.created_at)}</span>
+      </div>
     </div>
   `).join('') || '<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
 }

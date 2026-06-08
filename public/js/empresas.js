@@ -249,42 +249,63 @@ function autoGenerarCodigo() {
   document.getElementById('codigoInput').value = codigo;
 }
 
+async function _patchCodigo(empresaId, codigo) {
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const token = session?.access_token;
+  const r = await fetch('/api/empresa-codigo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ token, empresa_id: empresaId, codigo: codigo || null })
+  });
+  const result = await r.json();
+  if (!r.ok) throw new Error(result.error || `HTTP ${r.status}`);
+  return result;
+}
+
 async function guardarCodigo() {
   const empresaId = document.getElementById('codigoEmpresaId').value;
   const codigo    = document.getElementById('codigoInput').value.trim().toUpperCase();
   if (!codigo || codigo.length < 4) { showToast('⚠️ El código debe tener al menos 4 caracteres'); return; }
 
-  await supa('PATCH', 'clientes_b2b', { codigo_acceso: codigo }, `?id=eq.${empresaId}`);
+  try {
+    await _patchCodigo(empresaId, codigo);
 
-  // Actualizar UI sin cerrar el panel
-  const box    = document.getElementById('codigoActualBox');
-  const btnDes = document.getElementById('btnDesactivarCodigo');
-  const estado = document.getElementById('codigoEstado');
-  const texto  = document.getElementById('codigoActualText');
-  box.style.display    = 'block';
-  btnDes.style.display = 'inline-flex';
-  texto.textContent    = codigo;
-  estado.textContent   = '✅ Código activo — el bot reconoce este código para acceso call center';
-  estado.style.color   = '#16a34a';
+    const box    = document.getElementById('codigoActualBox');
+    const btnDes = document.getElementById('btnDesactivarCodigo');
+    const estado = document.getElementById('codigoEstado');
+    const texto  = document.getElementById('codigoActualText');
+    box.style.display    = 'block';
+    btnDes.style.display = 'inline-flex';
+    texto.textContent    = codigo;
+    estado.textContent   = '✅ Código activo — el bot reconoce este código para acceso call center';
+    estado.style.color   = '#16a34a';
 
-  loadEmpresas();
-  showToast(`✓ Código activado: ${codigo}`);
+    loadEmpresas();
+    showToast(`✓ Código activado: ${codigo}`);
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  }
 }
 
 async function desactivarCodigo() {
   if (!confirm('¿Desactivar el código de acceso call center?\n\nEl bot dejará de reconocer este código.')) return;
   const empresaId = document.getElementById('codigoEmpresaId').value;
-  await supa('PATCH', 'clientes_b2b', { codigo_acceso: null }, `?id=eq.${empresaId}`);
 
-  document.getElementById('codigoActualBox').style.display    = 'none';
-  document.getElementById('btnDesactivarCodigo').style.display = 'none';
-  document.getElementById('codigoInput').value                = '';
-  const estado = document.getElementById('codigoEstado');
-  estado.textContent = 'Código desactivado';
-  estado.style.color = '#aaa';
+  try {
+    await _patchCodigo(empresaId, null);
 
-  loadEmpresas();
-  showToast('✓ Código desactivado');
+    document.getElementById('codigoActualBox').style.display     = 'none';
+    document.getElementById('btnDesactivarCodigo').style.display  = 'none';
+    document.getElementById('codigoInput').value                  = '';
+    const estado = document.getElementById('codigoEstado');
+    estado.textContent = 'Código desactivado';
+    estado.style.color = '#aaa';
+
+    loadEmpresas();
+    showToast('✓ Código desactivado');
+  } catch (e) {
+    showToast('❌ ' + e.message);
+  }
 }
 
 async function generarCodigo(empresaId) {

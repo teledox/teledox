@@ -45,7 +45,7 @@ async function loadConsultas() {
         <td>${nivelBadge}</td>
         <td>${estadoBadge}</td>
         <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:170px">
-          ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>` : ''}
+          ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
           ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
           <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">📋 Docs</button>
           ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')" title="Marcar completada">✓</button>` : ''}
@@ -55,10 +55,15 @@ async function loadConsultas() {
   }).join('') || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:2rem">Sin consultas</td></tr>';
 }
 
-async function atenderConsulta(consultaId) {
+async function atenderConsulta(consultaId, btnEl) {
+  // Ocultar la tarjeta/fila de forma inmediata sin esperar red
+  const card = (btnEl || document.querySelector(`[onclick*="${consultaId}"]`))?.closest('.alerta-item, tr, [style*="border:2px solid #fee2e2"]');
+  if (card) card.style.display = 'none';
+
   const existing = await supa('GET', 'consultas', null, `?id=eq.${consultaId}&select=medico_id`);
   if (existing?.[0]?.medico_id) {
     showToast('⚠️ Esta consulta ya fue tomada por otro médico');
+    if (card) card.style.display = '';
     loadConsultas();
     if (typeof loadDashboard === 'function') loadDashboard();
     return;

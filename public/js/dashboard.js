@@ -34,7 +34,7 @@ async function loadDashboard() {
                 <div class="alerta-item-meta">${nivel} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
                 <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span>
               </div>
-              <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>
+              <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
             </div>`;
           }).join('')}
           ${sinMedico.length > 4 ? `<div style="text-align:center;padding-top:10px;font-size:12px;opacity:0.9">+ ${sinMedico.length - 4} más — <a href="#" onclick="showPage('alertas');return false;" style="color:white;font-weight:700;text-decoration:underline">Ver todas las alertas</a></div>` : ''}
@@ -52,7 +52,7 @@ async function loadDashboard() {
       <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion || '—'}</td>
       <td>${n===3?'<span class="badge badge-red">Grave</span>':n===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">
-        ${!c.medico_id && (currentUser.rol === 'medico' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>` : ''}
+        ${!c.medico_id && (currentUser.rol === 'medico' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
         ${(currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">Agendar</button>` : ''}
       </td>
     </tr>`;
@@ -103,7 +103,7 @@ async function loadAlertasServicio() {
             <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">${formatElapsedTime(c.created_at)}</span>
           </div>
         </div>
-        <button class="btn btn-sm btn-atender" style="font-size:13px;padding:10px 20px" onclick="atenderConsulta('${c.id}')">🩺 Atender</button>
+        <button class="btn btn-sm btn-atender" style="font-size:13px;padding:10px 20px" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
       </div>`;
   }).join('');
 }

@@ -53,12 +53,22 @@ function abrirPlantillaReceta() {
   document.getElementById('rec-peso').value = '';
   document.getElementById('rec-talla').value = '';
   document.getElementById('rec-medidas-no-farmacologicas').value = '';
-  const freqLabel = { 4: 'Cada 4h', 6: 'Cada 6h', 8: 'Cada 8h', 12: 'Cada 12h', 24: 'Una vez al día' };
-  const medInput = (val, placeholder) => `<input value="${val || ''}" placeholder="${placeholder}" style="width:100%;border:none;outline:none;font-size:10px;background:transparent" />`;
+  // Frecuencia como SELECT (valor = horas) → el bot la usa para programar recordatorios.
+  // Medicamento con datalist de sugerencias; días como número. Todos con clase para
+  // que sincronizarMedicamentosDesdeModal y generarPDF los lean sin depender del orden.
+  const FREQ_OPCIONES = [[4, 'Cada 4h'], [6, 'Cada 6h'], [8, 'Cada 8h'], [12, 'Cada 12h'], [24, 'Una vez al día']];
+  const baseStyle = 'width:100%;border:none;outline:none;font-size:10px;background:transparent';
+  const medText = (val, ph, cls, extra = '') => `<input class="${cls}" value="${val ?? ''}" placeholder="${ph}" style="${baseStyle}" ${extra} />`;
+  const medFreq = (val) => `<select class="med-frecuencia" style="${baseStyle}"><option value="">Frecuencia...</option>${FREQ_OPCIONES.map(([h, l]) => `<option value="${h}" ${val == h ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const filas = Math.max(medicamentosData.length, 5);
   document.getElementById('rec-meds-body').innerHTML = Array.from({ length: filas }, (_, i) => {
     const m = medicamentosData[i] || {};
-    return `<tr><td>${medInput(m.nombre, 'Medicamento...')}</td><td>${medInput(m.dosis, 'Dosis...')}</td><td>${medInput(freqLabel[m.frecuencia_horas], 'Frecuencia...')}</td><td>${medInput(m.dias, 'días')}</td></tr>`;
+    return `<tr>
+      <td>${medText(m.nombre, 'Medicamento...', 'med-nombre', 'list="meds-comunes"')}</td>
+      <td>${medText(m.dosis, 'Dosis...', 'med-dosis')}</td>
+      <td>${medFreq(m.frecuencia_horas)}</td>
+      <td>${medText(m.dias, 'días', 'med-dias', 'type="number" min="1"')}</td>
+    </tr>`;
   }).join('');
   document.getElementById('rec-indicaciones').value = document.getElementById('recetaIndicaciones').value || '';
   poblarDatosMedico('rec');

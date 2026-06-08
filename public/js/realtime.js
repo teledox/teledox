@@ -42,11 +42,15 @@ function startRealtime() {
   _rtChannels.forEach(ch => { try { supabaseClient.removeChannel(ch); } catch (_) {} });
   _rtChannels = [];
 
+  // Mostrar el banner global de inmediato al iniciar sesión (sin esperar a abrir el dashboard)
+  renderAlertasBanner();
+
   // ── Consultas → sincroniza con Pacientes automáticamente ───────────────
   const chConsultas = supabaseClient
     .channel('rt-consultas')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'consultas' }, () => {
       syncPacientesConsultas();
+      renderAlertasBanner();                       // banner global, en cualquier página
       if (_pageActive('alertas'))  loadAlertasServicio();
       if (_pageActive('metricas')) loadMetricas();
     })

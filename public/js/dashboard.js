@@ -1,3 +1,40 @@
+// Renderiza el banner global de "consultas sin médico". Visible en todas las
+// páginas (vive en .content). Se llama desde loadDashboard y desde realtime.
+// Si no se le pasa la lista ya filtrada, la consulta él mismo.
+async function renderAlertasBanner(sinMedicoPre) {
+  const banner = document.getElementById('servicioAlertasBanner');
+  if (!banner) return;
+  const esStaff = currentUser?.rol === 'medico' || currentUser?.rol === 'admin';
+  if (!esStaff) { banner.style.display = 'none'; return; }
+
+  let sinMedico = sinMedicoPre;
+  if (!sinMedico) {
+    const consultas = await supa('GET', 'consultas', null,
+      '?medico_id=is.null&estado=neq.completada&select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc');
+    sinMedico = (consultas || []).filter(c => !window._atendiendo?.has(c.id));
+  }
+
+  if (sinMedico.length === 0) { banner.style.display = 'none'; return; }
+  banner.style.display = 'block';
+  banner.innerHTML = `
+    <div class="alerta-servicio">
+      <div class="alerta-titulo">🔴 ${sinMedico.length} consulta${sinMedico.length > 1 ? 's' : ''} sin médico asignado — ¡Se requiere atención!</div>
+      ${sinMedico.slice(0, 4).map(c => {
+        const p = c.pacientes || {};
+        const nivel = c.nivel_sintomas === 3 ? '🔴 Grave' : c.nivel_sintomas === 2 ? '🟡 Medio' : '🟢 Leve';
+        return `<div class="alerta-item">
+          <div class="alerta-item-info">
+            <div class="alerta-item-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
+            <div class="alerta-item-meta">${nivel} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
+            <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span>
+          </div>
+          <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
+        </div>`;
+      }).join('')}
+      ${sinMedico.length > 4 ? `<div style="text-align:center;padding-top:10px;font-size:12px;opacity:0.9">+ ${sinMedico.length - 4} más — <a href="#" onclick="showPage('alertas');return false;" style="color:white;font-weight:700;text-decoration:underline">Ver todas las alertas</a></div>` : ''}
+    </div>`;
+}
+
 async function loadDashboard() {
   const [consultas, pacientes, notifs] = await Promise.all([
     supa('GET', 'consultas', null, '?select=*,pacientes(nombre,apellidos,clientes_b2b(nombre_empresa))&order=created_at.desc'),
@@ -17,32 +54,9 @@ async function loadDashboard() {
     <div class="stat-card stat-danger"><div class="stat-label">Alertas sin leer</div><div class="stat-value">${(notifs || []).length}</div></div>
   `;
 
-  // === Alertas de servicio para médicos/admins ===
-  const banner = document.getElementById('servicioAlertasBanner');
-  if (banner) {
-    if ((currentUser.rol === 'medico' || currentUser.rol === 'admin') && sinMedico.length > 0) {
-      banner.style.display = 'block';
-      banner.innerHTML = `
-        <div class="alerta-servicio">
-          <div class="alerta-titulo">🔴 ${sinMedico.length} consulta${sinMedico.length > 1 ? 's' : ''} sin médico asignado — ¡Se requiere atención!</div>
-          ${sinMedico.slice(0, 4).map(c => {
-            const p = c.pacientes || {};
-            const nivel = c.nivel_sintomas === 3 ? '🔴 Grave' : c.nivel_sintomas === 2 ? '🟡 Medio' : '🟢 Leve';
-            return `<div class="alerta-item">
-              <div class="alerta-item-info">
-                <div class="alerta-item-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
-                <div class="alerta-item-meta">${nivel} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
-                <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span>
-              </div>
-              <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
-            </div>`;
-          }).join('')}
-          ${sinMedico.length > 4 ? `<div style="text-align:center;padding-top:10px;font-size:12px;opacity:0.9">+ ${sinMedico.length - 4} más — <a href="#" onclick="showPage('alertas');return false;" style="color:white;font-weight:700;text-decoration:underline">Ver todas las alertas</a></div>` : ''}
-        </div>`;
-    } else {
-      banner.style.display = 'none';
-    }
-  }
+  // === Banner global de consultas sin médico (se renderiza aparte para
+  //     que también funcione en realtime sin importar la página activa) ===
+  renderAlertasBanner(sinMedico);
 
   document.getElementById('pendCount').textContent = pendientes.length;
   document.getElementById('pendBody').innerHTML = pendientes.slice(0, 5).map(c => {

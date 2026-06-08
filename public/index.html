@@ -92,6 +92,9 @@
 
     <div class="content">
 
+      <!-- BANNER GLOBAL: consultas sin médico (visible en todas las páginas) -->
+      <div id="servicioAlertasBanner" style="display:none;position:sticky;top:0;z-index:50;margin-bottom:1rem"></div>
+
       <!-- ALERTAS DE SERVICIO (para médicos) -->
       <div class="page" id="page-alertas">
         <div class="card">
@@ -111,7 +114,6 @@
 
       <!-- DASHBOARD -->
       <div class="page active" id="page-dashboard">
-        <div id="servicioAlertasBanner" style="display:none"></div>
         <div class="stats-grid" id="statsGrid"></div>
         <div class="two-col">
           <div class="card">
@@ -705,7 +707,17 @@
             <span class="doc-lbl" style="min-width:60px;margin-left:12px">Talla:</span><input class="doc-val-edit" id="rec-talla" placeholder="cm" style="max-width:90px" />
           </div>
         </div>
-        <div class="doc-section"><div class="doc-section-title">Medicamentos prescritos</div><table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead><tbody id="rec-meds-body"></tbody></table></div>
+        <div class="doc-section"><div class="doc-section-title">Medicamentos prescritos</div><table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Días</th></tr></thead><tbody id="rec-meds-body"></tbody></table>
+          <datalist id="meds-comunes">
+            <option value="Paracetamol"></option><option value="Ibuprofeno"></option><option value="Naproxeno"></option><option value="Diclofenaco"></option><option value="Ketorolaco"></option>
+            <option value="Amoxicilina"></option><option value="Amoxicilina + Ácido clavulánico"></option><option value="Azitromicina"></option><option value="Cefalexina"></option><option value="Ciprofloxacino"></option><option value="Clindamicina"></option><option value="Metronidazol"></option>
+            <option value="Omeprazol"></option><option value="Ranitidina"></option><option value="Hioscina"></option><option value="Loperamida"></option>
+            <option value="Loratadina"></option><option value="Cetirizina"></option><option value="Dexametasona"></option><option value="Prednisona"></option>
+            <option value="Salbutamol"></option><option value="Ambroxol"></option><option value="Bromhexina"></option>
+            <option value="Losartán"></option><option value="Enalapril"></option><option value="Metformina"></option><option value="Atorvastatina"></option>
+            <option value="Aciclovir"></option><option value="Nistatina"></option><option value="Tramadol"></option>
+          </datalist>
+        </div>
         <div class="doc-section"><div class="doc-section-title">Indicaciones</div><textarea class="doc-textarea" id="rec-indicaciones" placeholder="Indicaciones generales..."></textarea></div>
         <div class="doc-section"><div class="doc-section-title">Medidas no farmacológicas</div><textarea class="doc-textarea" id="rec-medidas-no-farmacologicas" placeholder="Ej: evitar irritantes, hidratación, reposo relativo..."></textarea></div>
         <div class="doc-firma-area">

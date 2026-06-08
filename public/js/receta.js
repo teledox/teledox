@@ -70,19 +70,15 @@ async function openReceta(consultaId, pacienteId) {
 
 // Sincroniza medicamentosData con la tabla editable del modal de Receta (para registrar seguimiento de tratamiento)
 function sincronizarMedicamentosDesdeModal() {
-  const freqAHoras = { 'Cada 4h': 4, 'Cada 6h': 6, 'Cada 8h': 8, 'Cada 12h': 12, 'Una vez al día': 24 };
   medicamentosData = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
-    const inputs = tr.querySelectorAll('input');
-    if (inputs.length < 4) return null;
-    const nombre = inputs[0].value.trim();
+    const nombre = tr.querySelector('.med-nombre')?.value.trim();
     if (!nombre) return null;
-    const freqTxt = inputs[2].value.trim();
-    const horasMatch = freqTxt.match(/(\d+)/);
-    const frecuencia_horas = freqAHoras[freqTxt] || (horasMatch ? parseInt(horasMatch[1]) : 8);
     return {
       id: Date.now() + Math.random(),
-      nombre, dosis: inputs[1].value.trim(),
-      frecuencia_horas, dias: parseInt(inputs[3].value) || 1
+      nombre,
+      dosis: tr.querySelector('.med-dosis')?.value.trim() || '',
+      frecuencia_horas: parseInt(tr.querySelector('.med-frecuencia')?.value) || 8,
+      dias: parseInt(tr.querySelector('.med-dias')?.value) || 1
     };
   }).filter(Boolean);
 }

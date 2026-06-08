@@ -69,9 +69,11 @@ async function generarRecetaPDF() {
 
   seccion('MEDICAMENTOS PRESCRITOS');
   const meds = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
-    const inputs = tr.querySelectorAll('input');
-    if (inputs.length < 4) return null;
-    return { nombre: inputs[0].value.trim(), dosis: inputs[1].value.trim(), frecuencia: inputs[2].value.trim(), dias: inputs[3].value.trim() };
+    const nombre = tr.querySelector('.med-nombre')?.value.trim();
+    if (!nombre) return null;
+    const frecSel = tr.querySelector('.med-frecuencia');
+    const frecuencia = frecSel?.value ? (frecSel.selectedOptions[0]?.textContent || '') : '';
+    return { nombre, dosis: tr.querySelector('.med-dosis')?.value.trim() || '', frecuencia, dias: tr.querySelector('.med-dias')?.value.trim() || '' };
   }).filter(m => m && m.nombre);
   if (!meds.length) {
     page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;

@@ -37,6 +37,10 @@ async function loadNotificaciones() {
   `).join('') || '<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';
 }
 
+  // Reiniciar el cronómetro para que actualice los nuevos elementos renderizados
+  if (typeof startTimerUpdater === 'function') startTimerUpdater();
+}
+
 async function marcarLeida(id) { await supa('PATCH', 'notificaciones', { leida: true }, `?id=eq.${id}`); loadNotificaciones(); }
 async function marcarTodasLeidas() { await supa('PATCH', 'notificaciones', { leida: true }, '?leida=eq.false'); loadNotificaciones(); showToast('✓ Todas marcadas como leídas'); }
 

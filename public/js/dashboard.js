@@ -137,4 +137,7 @@ async function loadAlertasServicio() {
         <button class="btn btn-sm btn-atender" style="font-size:13px;padding:10px 20px" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
       </div>`;
   }).join('');
+
+  // Reiniciar cronómetro para actualizar los nuevos elementos renderizados
+  if (typeof startTimerUpdater === 'function') startTimerUpdater();
 }

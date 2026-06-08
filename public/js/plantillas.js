@@ -56,7 +56,7 @@ function abrirPlantillaReceta() {
   // Frecuencia como SELECT (valor = horas) → el bot la usa para programar recordatorios.
   // Medicamento con datalist de sugerencias; días como número. Todos con clase para
   // que sincronizarMedicamentosDesdeModal y generarPDF los lean sin depender del orden.
-  const FREQ_OPCIONES = [[4, 'Cada 4h'], [6, 'Cada 6h'], [8, 'Cada 8h'], [12, 'Cada 12h'], [24, 'Una vez al día']];
+  const FREQ_OPCIONES = [[0.25, 'Cada 15 min (prueba)'], [4, 'Cada 4h'], [6, 'Cada 6h'], [8, 'Cada 8h'], [12, 'Cada 12h'], [24, 'Una vez al día']];
   const baseStyle = 'width:100%;border:none;outline:none;font-size:10px;background:transparent';
   const medText = (val, ph, cls, extra = '') => `<input class="${cls}" value="${val ?? ''}" placeholder="${ph}" style="${baseStyle}" ${extra} />`;
   const medFreq = (val) => `<select class="med-frecuencia" style="${baseStyle}"><option value="">Frecuencia...</option>${FREQ_OPCIONES.map(([h, l]) => `<option value="${h}" ${val == h ? 'selected' : ''}>${l}</option>`).join('')}</select>`;

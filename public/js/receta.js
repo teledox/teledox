@@ -77,7 +77,7 @@ function sincronizarMedicamentosDesdeModal() {
       id: Date.now() + Math.random(),
       nombre,
       dosis: tr.querySelector('.med-dosis')?.value.trim() || '',
-      frecuencia_horas: parseInt(tr.querySelector('.med-frecuencia')?.value) || 8,
+      frecuencia_horas: parseFloat(tr.querySelector('.med-frecuencia')?.value) || 8,
       dias: parseInt(tr.querySelector('.med-dias')?.value) || 1
     };
   }).filter(Boolean);

@@ -57,7 +57,8 @@ async function guardarCronica() {
     fecha_inicio: document.getElementById('cronicaFecha').value || null,
     notas: document.getElementById('cronicaNotas').value || null,
     medico_id: currentUser.id,
-    activo: true
+    activo: true,
+    proximo_seguimiento: new Date().toISOString()
   });
   document.getElementById('formCronica').style.display = 'none';
   document.getElementById('cronicaEnfermedad').value = '';

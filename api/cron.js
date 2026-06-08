@@ -1,10 +1,17 @@
 const { query } = require('../src/services/supabase');
 const { enviar } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
+const { obtener, guardar } = require('../src/services/sesiones');
+const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
+  }
+
+  const auth = req.headers.authorization || '';
+  if (!process.env.CRON_SECRET || auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).send('Unauthorized');
   }
 
   const ahora = new Date();
@@ -69,6 +76,49 @@ module.exports = async function handler(req, res) {
         procesados++;
       } catch (e) {
         console.error('Error procesando recordatorio:', r.id, e.message);
+        errores++;
+      }
+    }
+
+    // Chequeo proactivo diario de enfermedades crónicas
+    const cronicas = await query('GET', 'enfermedades_cronicas', null,
+      `?activo=eq.true&or=(proximo_seguimiento.is.null,proximo_seguimiento.lte.${ahora.toISOString()})&select=*,pacientes(nombre,apellidos,telefono)`
+    );
+
+    for (const c of cronicas || []) {
+      try {
+        const telefono = c.pacientes?.telefono;
+        if (!telefono) continue;
+
+        const enfDef = ENFERMEDADES[c.enfermedad];
+        if (!enfDef) continue;
+
+        // No interrumpir si el paciente ya está en una conversación activa
+        const sesion = await obtener(telefono);
+        if (sesion && sesion.paso !== 0) continue;
+
+        const paciente = c.pacientes || {};
+        const primeraPregunta = enfDef.pasos[0];
+        const mensaje = `🩺 *Seguimiento MediLyft — ${enfDef.nombre}*\n\nHola ${paciente.nombre || ''}! Es hora de su control diario.\n\n${primeraPregunta.pregunta}`;
+
+        await enviar(telefono, mensaje);
+
+        await guardar(telefono, 200, {
+          enfermedad_key: c.enfermedad,
+          enfermedad_id: c.id,
+          paciente_id: c.paciente_id,
+          paso_cronico: 1
+        });
+
+        const proximoSeguimiento = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+        await query('PATCH', 'enfermedades_cronicas', {
+          ultima_consulta: ahora.toISOString(),
+          proximo_seguimiento: proximoSeguimiento.toISOString()
+        }, `?id=eq.${c.id}`);
+
+        procesados++;
+      } catch (e) {
+        console.error('Error procesando crónica:', c.id, e.message);
         errores++;
       }
     }

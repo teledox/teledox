@@ -251,12 +251,12 @@ async function activarSeguimiento() {
     }
 
     // 2. Seguimiento por enfermedades crónicas del paciente
-    const cronicas = await supa('GET', 'paciente_cronicas', null,
+    const cronicas = await supa('GET', 'enfermedades_cronicas', null,
       `?paciente_id=eq.${recetaPacienteId}&activo=eq.true`);
     if (cronicas?.length > 0) {
       for (const c of cronicas) {
         const proxima = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
-        await supa('PATCH', 'paciente_cronicas', {
+        await supa('PATCH', 'enfermedades_cronicas', {
           ultima_consulta: ahora.toISOString(),
           proximo_seguimiento: proxima.toISOString()
         }, `?id=eq.${c.id}`);

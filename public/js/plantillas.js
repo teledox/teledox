@@ -239,12 +239,12 @@ function abrirPlantillaReceta(soloPreview) {
   document.getElementById('rec-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
   document.getElementById('rec-cedula').textContent = p.cedula || '—';
   document.getElementById('rec-edad').textContent = p.edad ? `${p.edad} años` : '—';
-  document.getElementById('rec-sexo').textContent = p.sexo ? p.sexo[0].toUpperCase() : '—';
+  document.getElementById('rec-sexo').value = p.sexo ? p.sexo[0].toUpperCase() : '';
   document.getElementById('rec-hoja').value = '1';
   document.getElementById('rec-atencion').textContent = recetaConsultaId ? recetaConsultaId.slice(-8).toUpperCase() : '—';
   const diag = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
   document.getElementById('rec-diagnostico').textContent = diag;
-  document.getElementById('rec-cie10').textContent = cie10Seleccionados.map(x => x.c).join(', ') || '—';
+  document.getElementById('rec-cie10').value = cie10Seleccionados.map(x => x.c).join(', ');
   const noRadio = document.querySelector('input[name="rec-alergias"][value="NO"]');
   if (noRadio) noRadio.checked = true;
   document.getElementById('rec-alergias-especificar').value = '';
@@ -274,7 +274,7 @@ function abrirPlantillaCertificado(soloPreview) {
   document.getElementById('cert-cedula').textContent = p.cedula || '—';
   document.getElementById('cert-hc').textContent = p.cedula || '—';
   document.getElementById('cert-diagnostico').textContent = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
-  document.getElementById('cert-cie10').textContent = cie10Seleccionados.map(x => x.c).join(', ') || '—';
+  document.getElementById('cert-cie10').value = cie10Seleccionados.map(x => x.c).join(', ');
   document.getElementById('cert-tipo-contingencia').value = '';
   document.getElementById('cert-aislamiento').checked = false;
   const siRadio = document.querySelector('input[name="cert-sintomas"][value="SI"]');

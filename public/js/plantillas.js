@@ -268,11 +268,11 @@ function abrirPlantillaCertificado(soloPreview) {
   const p = currentPacienteData || {}, c = currentConsultaData || {}, m = currentUser || {}, hoy = new Date();
   const fechaTexto = hoy.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
   document.getElementById('cert-lugar-fecha').textContent = `MediLyft; ${hoy.toLocaleDateString('es-EC')}`;
-  document.getElementById('cert-tel-emisor').textContent = m.telefono || '—';
+  document.getElementById('cert-tel-emisor').value = m.telefono || '';
   document.getElementById('cert-direccion-establecimiento').value = '';
   document.getElementById('cert-lugar-fecha-emision').textContent = `Quito, ${fechaTexto}`;
   document.getElementById('cert-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
-  document.getElementById('cert-direccion').textContent = (p.lugar_residencia || '—').toUpperCase();
+  document.getElementById('cert-direccion').value = (p.lugar_residencia || '').toUpperCase();
   document.getElementById('cert-telefono').textContent = p.telefono || '—';
   document.getElementById('cert-puesto-trabajo').value = p.ocupacion || '';
   document.getElementById('cert-empresa').textContent = (p.clientes_b2b?.nombre_empresa || '—').toUpperCase();
@@ -280,8 +280,8 @@ function abrirPlantillaCertificado(soloPreview) {
   document.getElementById('cert-hc').textContent = p.cedula || '—';
   document.getElementById('cert-diagnostico').textContent = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
   document.getElementById('cert-cie10').value = cie10Seleccionados.map(x => x.c).join(', ');
-  document.getElementById('cert-tipo-contingencia').value = '';
-  document.getElementById('cert-aislamiento').checked = false;
+  const absRadio = document.querySelector('input[name="cert-reposo-tipo"][value="ABSOLUTO"]');
+  if (absRadio) absRadio.checked = true;
   const siRadio = document.querySelector('input[name="cert-sintomas"][value="SI"]');
   if (siRadio) siRadio.checked = true;
   document.getElementById('cert-descripcion').value = c.sintomas_descripcion || '';

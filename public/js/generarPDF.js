@@ -440,12 +440,11 @@ async function generarCertificadoPDF() {
   seccion('C) MOTIVO DE AISLAMIENTO/ENFERMEDAD');
   campo('Diagnóstico', gV('cert-diagnostico'));
   campo('Código CIE-10', gV('cert-cie10'));
-  campo('Tipo de contingencia', gV('cert-tipo-contingencia'));
-  campo('Aislamiento/teletrabajo', gCB('cert-aislamiento') ? 'SÍ' : 'NO');
   campo('Presenta síntomas', gR('cert-sintomas'));
   page.drawText('Descripción de la enfermedad:', { x: 44, y, size: 9, font: bold, color: gris }); y -= 14;
   wrap(gV('cert-descripcion'));
   y -= 4;
+  campo('Reposo médico', gR('cert-reposo-tipo'));
   campo('Total de días concedidos', `${gV('cert-dias-num') || '—'} (${gV('cert-dias-letra') || '—'})`);
   campo('Desde', `${gV('cert-desde') || '—'} — ${gV('cert-desde-letra') || '—'}`);
   campo('Hasta', `${gV('cert-hasta') || '—'} — ${gV('cert-hasta-letra') || '—'}`);

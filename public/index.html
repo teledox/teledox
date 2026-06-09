@@ -898,7 +898,7 @@
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Nombre del establecimiento:</span><span class="doc-val" id="cert-establecimiento">MediLyft</span></div>
             <div class="doc-row"><span class="doc-lbl">Correo del médico:</span><span class="doc-val" id="cert-correo-medico">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Teléfono del emisor:</span><span class="doc-val" id="cert-tel-emisor">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Teléfono del emisor:</span><input class="doc-val-edit" id="cert-tel-emisor" placeholder="Teléfono del médico..." /></div>
             <div class="doc-row"><span class="doc-lbl">Dirección del establecimiento:</span><input class="doc-val-edit" id="cert-direccion-establecimiento" placeholder="Dirección..." /></div>
             <div class="doc-row" style="grid-column:span 2"><span class="doc-lbl">Lugar y fecha de emisión:</span><span class="doc-val" id="cert-lugar-fecha-emision">—</span></div>
           </div>
@@ -907,7 +907,7 @@
         <div class="doc-section"><div class="doc-section-title">B) Datos del paciente</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Apellidos y nombres:</span><span class="doc-val" id="cert-paciente">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Dirección domiciliaria:</span><span class="doc-val" id="cert-direccion">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Dirección domiciliaria:</span><input class="doc-val-edit" id="cert-direccion" placeholder="Dirección domiciliaria..." /></div>
             <div class="doc-row"><span class="doc-lbl">Número de teléfono:</span><span class="doc-val" id="cert-telefono">—</span></div>
             <div class="doc-row"><span class="doc-lbl">Puesto de trabajo:</span><input class="doc-val-edit" id="cert-puesto-trabajo" placeholder="Cargo del paciente..." /></div>
             <div class="doc-row"><span class="doc-lbl">Número de identificación:</span><span class="doc-val" id="cert-cedula">—</span></div>
@@ -920,11 +920,6 @@
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="cert-diagnostico">—</span></div>
             <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><input class="doc-val-edit" id="cert-cie10" placeholder="Ej: J06, R51" /></div>
-            <div class="doc-row"><span class="doc-lbl">Tipo de contingencia:</span><input class="doc-val-edit" id="cert-tipo-contingencia" placeholder="Ej: Enfermedad general" /></div>
-            <div class="doc-row">
-              <span class="doc-lbl">Enfermedad:</span>
-              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="checkbox" id="cert-aislamiento" style="accent-color:#FF5A5F"> Aislamiento/teletrabajo</label>
-            </div>
             <div class="doc-row">
               <span class="doc-lbl">Presenta síntomas:</span>
               <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-sintomas" value="SI" style="accent-color:#FF5A5F" checked> SI</label>
@@ -935,6 +930,10 @@
         </div>
 
         <div class="doc-section"><div class="doc-section-title">Reposo médico</div>
+          <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Tipo de reposo:</span>
+            <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-reposo-tipo" value="ABSOLUTO" style="accent-color:#FF5A5F" checked> Absoluto</label>
+            <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555;margin-left:10px"><input type="radio" name="cert-reposo-tipo" value="RELATIVO" style="accent-color:#FF5A5F"> Relativo</label>
+          </div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Total de días concedidos:</span><input type="number" class="cert-dias-num" id="cert-dias-num" min="1" max="365" value="1" oninput="actualizarDiasLetra()" /><input type="text" class="cert-dias-letra" id="cert-dias-letra" placeholder="UNO" readonly /></div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Desde:</span><input type="date" class="doc-val-edit" id="cert-desde" style="max-width:130px" oninput="actualizarHastaFecha()" /><input type="text" class="cert-dias-letra" id="cert-desde-letra" readonly placeholder="fecha en letra" /></div>
           <div class="cert-dias-row"><span class="doc-lbl" style="min-width:140px">Hasta:</span><input type="date" class="doc-val-edit" id="cert-hasta" style="max-width:130px" /><input type="text" class="cert-dias-letra" id="cert-hasta-letra" readonly placeholder="fecha en letra" /></div>

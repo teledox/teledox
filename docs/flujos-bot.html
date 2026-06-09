@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>flujos-bot.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> or <div class="page"></div> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<h1 id="-flujos-del-bot-de-whatsapp--medilyft">🤖 Flujos del bot de WhatsApp — MediLyft</h1>
+<blockquote>
+<p><strong>Cómo ver esto como diagramas:</strong> los bloques <code>```mermaid</code> se renderizan solos en
+GitHub y en VS Code (extensión <em>Markdown Preview Mermaid Support</em>). Para editar visual,
+pegá un bloque en <strong>https://mermaid.live</strong>. Para modificar un flujo: editá el texto del
+diagrama (las flechas <code>--&gt;</code> y los nodos) y listo.</p>
+<p>Este documento es la <strong>fuente de verdad legible</strong> de los flujos. Si cambiás el código,
+actualizá acá; si querés proponer un cambio, editá acá y lo implementamos.</p>
+</blockquote>
+<hr>
+<h2 id="️-mapa-de-ruteo-cómo-el-webhook-decide-qué-flujo-corre">🗺️ Mapa de ruteo (cómo el webhook decide qué flujo corre)</h2>
+<p>El bot guarda en cada sesión un número de <strong><code>paso</code></strong>. <code>api/webhook.js</code> mira ese número y
+deriva al flujo correspondiente <strong>por rangos</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Rango de <code>paso</code></th>
+<th>Flujo</th>
+<th>Archivo</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>0</code>–<code>12</code>, <code>39</code>, <code>41</code></td>
+<td>Consulta principal (registro paciente)</td>
+<td><code>flujo-consulta.js</code></td>
+</tr>
+<tr>
+<td><code>13</code>–<code>17</code></td>
+<td>Antecedentes médicos</td>
+<td><code>flujo-antecedentes.js</code></td>
+</tr>
+<tr>
+<td><code>50</code>–<code>62</code></td>
+<td>B2C (pago directo / seguro externo)</td>
+<td><code>flujo-b2c.js</code></td>
+</tr>
+<tr>
+<td><code>98</code></td>
+<td>Reagendar</td>
+<td><code>flujo-reagendar.js</code></td>
+</tr>
+<tr>
+<td><code>99</code></td>
+<td>&quot;Ya registrado&quot; (mensaje fijo)</td>
+<td><code>webhook.js</code></td>
+</tr>
+<tr>
+<td><code>200</code>+</td>
+<td>Enfermedades crónicas (cuestionarios)</td>
+<td><code>flujo-cronicas.js</code></td>
+</tr>
+<tr>
+<td><code>300</code>+</td>
+<td>Call center B2B (agente registra pacientes)</td>
+<td><code>flujo-callcenter.js</code></td>
+</tr>
+<tr>
+<td>(sin paso)</td>
+<td>Respuesta a recordatorio de seguimiento</td>
+<td><code>flujo-seguimiento.js</code></td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>⚠️ <strong>Esta numeración por rangos es la parte frágil del sistema</strong> — ver la sección
+<em>&quot;Deuda técnica&quot;</em> al final. Ya causó varios bugs (pasos que caían en el rango de otro
+flujo). Al agregar un paso nuevo, mantenelo <strong>dentro del rango de su flujo</strong>.</p>
+</blockquote>
+<hr>
+<h2 id="1--flujo-de-consulta-principal">1) 🏥 Flujo de consulta principal</h2>
+<p>Es la puerta de entrada. El paciente escribe <strong>hola</strong> y registra una teleconsulta.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  H([Escribe: hola]) --> P0["Paso 0\nPide cédula o código de acceso"]
+  P0 --> P1{"Paso 1\n¿Qué ingresó?"}
+
+  P1 -->|"Tiene letras + empresa válida"| CC["➡️ Call Center (paso 300)"]
+  P1 -->|"Tiene letras, sin empresa"| P1err["❌ Código no reconocido\n(vuelve a paso 1)"]
+  P1 -->|"10 dígitos (cédula)"| BUSCA{"Busca paciente\ny empleado B2B"}
+
+  BUSCA -->|"Paciente ya registrado"| P2["Paso 2\nConsentimiento de datos"]
+  BUSCA -->|"Cédula en empresa B2B"| CREA["Crea paciente sin pago"] --> P2
+  BUSCA -->|"No encontrado"| B2C["➡️ B2C (paso 50)"]
+
+  P2 -->|"No autoriza"| FIN1([Fin])
+  P2 -->|"Autoriza"| P3["Paso 3\nDescribe síntomas"]
+
+  P3 --> NIV{"Clasifica síntomas"}
+  NIV -->|"Nivel 3 (grave)"| EMER([🚨 Emergencia → 911\nalerta Telegram · Fin])
+  NIV -->|"Nivel 2 (medio)"| URG([⚠️ Atención urgente\ncrea consulta · Fin])
+  NIV -->|"Nivel 1 — datos ya completos"| P39{"Paso 39\n¿Usar o actualizar datos?"}
+  NIV -->|"Nivel 1 — faltan datos"| P4["Paso 4: Nombre"]
+
+  P39 -->|"Usar mis datos"| P11["Paso 11: Horario"]
+  P39 -->|"Actualizar"| P4
+
+  P4 --> P5P6{"¿Tiene apellidos?"}
+  P5P6 -->|"No"| P5["Paso 5: Apellidos"] --> P6["Paso 6: Edad"]
+  P5P6 -->|"Sí"| P6
+  P6 --> P7["Paso 7: Nacimiento"] --> P8["Paso 8: Correo"]
+  P8 --> P41{"Paso 41\n¿Usar este número o indicar otro?"}
+  P41 -->|"Usar este"| P10["Paso 10: Residencia"]
+  P41 -->|"Indicar otro"| P9["Paso 9: Teléfono"] --> P10
+  P10 --> P11
+  P11 --> P12{"Paso 12\nConfirmar datos"}
+  P12 -->|"Corregir"| P4
+  P12 -->|"Confirmar"| REG["Crea consulta + alerta médico"] --> ANT["➡️ Antecedentes (paso 13)"]
+</div></code></pre>
+<hr>
+<h2 id="2--antecedentes-médicos-pasos-1317">2) 📋 Antecedentes médicos (pasos 13–17)</h2>
+<p>Después de confirmar la consulta, el bot completa la historia clínica.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  P13["Paso 13: ¿Alergias?"] --> P14["Paso 14: Antecedentes patológicos"]
+  P14 --> P15["Paso 15: Antecedentes quirúrgicos"]
+  P15 --> P16["Paso 16: Antecedentes familiares"]
+  P16 --> P17["Paso 17: Medicamentos habituales"]
+  P17 --> FIN([Guarda antecedentes\nPaso 99 · Fin])
+</div></code></pre>
+<hr>
+<h2 id="3--flujo-b2c--pago-directo--seguro-externo-pasos-5062">3) 💳 Flujo B2C — pago directo / seguro externo (pasos 50–62)</h2>
+<p>Cuando la cédula <strong>no</strong> está en ninguna empresa afiliada.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  P50["Paso 50\n¿Seguro afiliado o pago directo?"] --> P51{"Paso 51: elección"}
+  P51 -->|"Mi seguro es afiliado"| P52{"Paso 52: nombre del seguro"}
+  P51 -->|"Pago directo $8"| P53["Paso 53: Nombre completo"]
+
+  P52 -->|"Seguro aliado"| P53
+  P52 -->|"No aliado"| P61{"Paso 61\n¿Continuar con pago directo?"}
+  P61 -->|"Sí"| P53
+  P61 -->|"No"| FINB([Fin])
+
+  P53 --> P54["Paso 54: Edad"] --> P55["Paso 55: Correo"]
+  P55 --> P62{"Paso 62\n¿Usar este número u otro?"}
+  P62 -->|"Usar este"| P57["Paso 57: Residencia"]
+  P62 -->|"Indicar otro"| P56["Paso 56: Teléfono"] --> P57
+  P57 --> P58["Paso 58: Síntomas"] --> P59["Paso 59: Horario"]
+  P59 --> P60["Paso 60\nEsperando comprobante de pago"]
+  P60 --> FINB2([Registra consulta · Fin])
+</div></code></pre>
+<hr>
+<h2 id="4--call-center-b2b-pasos-300">4) 🏢 Call Center B2B (pasos 300+)</h2>
+<p>Un agente autenticado con el <strong>código de empresa</strong> registra varios pacientes seguidos.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  P300["Paso 300\nBienvenida agente (empresa detectada)"] --> P301["Paso 301: Cédula del paciente"]
+  P301 --> EX{"¿Paciente existe?"}
+  EX -->|"Sí"| P302{"Paso 302\n¿Datos correctos?"}
+  EX -->|"No"| P303["Paso 303: Nombre"]
+  P302 -->|"Sí"| P306["Paso 306: Síntomas"]
+  P302 -->|"Ingresar datos"| P303
+  P303 --> P304["Paso 304: Teléfono"] --> P305["Paso 305: Correo"] --> P306
+  P306 --> NIVc{"Clasifica"}
+  NIVc -->|"Nivel 3"| EMERc([🚨 Emergencia → 911]) --> P309
+  NIVc -->|"Nivel 1-2"| P307{"Paso 307\n¿Confirmar registro?"}
+  P307 -->|"Corregir"| P301
+  P307 -->|"Confirmar"| REGc["Crea/actualiza paciente + consulta + alerta"] --> P309
+  P309{"Paso 309\n¿Otro paciente?"}
+  P309 -->|"Sí"| P301
+  P309 -->|"Finalizar"| FINc([Fin de sesión])
+</div></code></pre>
+<hr>
+<h2 id="5--enfermedades-crónicas-pasos-200">5) 🩺 Enfermedades crónicas (pasos 200+)</h2>
+<p>El cron diario (<code>api/cron.js</code>) inicia el cuestionario; el paciente responde por número.</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  CRON([Cron diario detecta\nseguimiento crónico vencido]) --> P200["Paso 200\nEnvía 1ª pregunta del cuestionario"]
+  P200 --> LOOP["Paso por cada pregunta\n(según enfermedad: HTA, diabetes, etc.)"]
+  LOOP --> EVAL{"Evalúa respuestas"}
+  EVAL -->|"Valores de riesgo"| ALERTA([⚠️ Alerta al médico])
+  EVAL -->|"Normal"| OKc([✅ Registrado · Fin])
+</div></code></pre>
+<hr>
+<h2 id="6--respuestas-a-recordatorios-de-seguimiento">6) 🔔 Respuestas a recordatorios de seguimiento</h2>
+<p>No usa <code>paso</code>: cuando hay un recordatorio pendiente (medicamento o fin de tratamiento),
+la respuesta del paciente se procesa aparte (<code>flujo-seguimiento.js</code>).</p>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  REM([Cron envía recordatorio]) --> TIPO{"Tipo de recordatorio"}
+  TIPO -->|"Medicamento: ¿ya tomó?"| MED{"Sí / No"}
+  MED -->|"Sí"| OKm([✅ Registrado])
+  MED -->|"No"| ALm([⚠️ Alerta incumplimiento])
+  TIPO -->|"Fin de tratamiento: ¿cómo se siente?"| FT{"1 / 2 / 3"}
+  FT -->|"1 Mejor"| EXITO([🎉 Caso exitoso])
+  FT -->|"2 Aún con síntomas"| REAG1["➡️ Reagendar (paso 98)"]
+  FT -->|"3 Peor"| REAG2["➡️ Reagendar (paso 98) + alerta"]
+</div></code></pre>
+<hr>
+<h2 id="7--reagendar-paso-98">7) 📅 Reagendar (paso 98)</h2>
+<pre><code class="language-mermaid"><div class="mermaid">flowchart TD
+  P98{"Paso 98\n¿Desea agendar consulta?"} -->|"Sí"| SINT["Paso 3: pide síntomas\n(reentra al flujo de consulta)"]
+  P98 -->|"No"| FINr([Fin])
+</div></code></pre>
+<hr>
+<h2 id="-deuda-técnica--sobre-la-numeración-por-pasos">🧱 Deuda técnica — sobre la numeración por pasos</h2>
+<p>La numeración por <strong>rangos numéricos</strong> (<code>paso 50–89 = B2C</code>, <code>200+ = crónicas</code>, etc.) es
+el punto más frágil del bot. Ya generó varios bugs reales: pasos que &quot;caían&quot; en el rango
+de otro flujo y eran interceptados por el flujo equivocado (ej. el paso de confirmar
+teléfono colisionaba con B2C; pasos <code>529</code>/<code>551</code> los robaba el flujo de crónicas).</p>
+<p><strong>Por qué es frágil:</strong> el ruteo está hardcodeado por rangos repartidos en <code>webhook.js</code>,
+no hay una definición central de estados, y agregar un paso en el número equivocado
+<strong>rompe en silencio</strong>.</p>
+<p><strong>Propuesta de mejora (a futuro):</strong> reemplazar el número por un estado con <strong>nombre</strong>:
+guardar en la sesión <code>{ flujo: 'consulta', paso: 'telefono' }</code> en vez de <code>paso: 41</code>. El
+webhook derivaría por <strong><code>flujo</code></strong> (nombre), no por rango numérico — eliminando las
+colisiones de raíz. Es un refactor grande (toca todos los flujos), así que conviene
+hacerlo por etapas y con este documento como guía.</p>
+
+</body>
+</html>

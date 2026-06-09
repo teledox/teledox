@@ -3,7 +3,7 @@ const { crear: crearPaciente, buscarPorCedula } = require('../services/pacientes
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 const { guardar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { clasificarSintomas, esSi } = require('../utils/validaciones');
+const { clasificarSintomas, esSi, inferirSexo } = require('../utils/validaciones');
 
 // Buscar empresa por codigo_acceso
 async function buscarEmpresaPorCodigo(codigo) {
@@ -77,6 +77,22 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   } else if (paso === 303) {
     datos.cc_nombre = mensaje.trim();
     return {
+      respuesta: `🎂 Ingrese la *edad* del paciente:`,
+      paso: 308, datos, terminar: false
+    };
+
+  // ── Paso 308: edad del paciente ──────────────────────────────────────────
+  } else if (paso === 308) {
+    datos.cc_edad = mensaje.replace(/\D/g, '').trim();
+    return {
+      respuesta: `📅 Ingrese la *fecha de nacimiento* del paciente (ej: 15/03/1990):`,
+      paso: 310, datos, terminar: false
+    };
+
+  // ── Paso 310: fecha de nacimiento ────────────────────────────────────────
+  } else if (paso === 310) {
+    datos.cc_nacimiento = mensaje.trim();
+    return {
       respuesta: `📱 Ingrese el *número de teléfono* del paciente:`,
       paso: 304, datos, terminar: false
     };
@@ -99,6 +115,14 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   // ── Paso 305: correo del paciente ────────────────────────────────────────
   } else if (paso === 305) {
     datos.cc_correo = /^no$/i.test(mensaje.trim()) ? '' : mensaje.trim();
+    return {
+      respuesta: `📍 Ingrese el *lugar de residencia* del paciente (ciudad y barrio):`,
+      paso: 311, datos, terminar: false
+    };
+
+  // ── Paso 311: lugar de residencia ────────────────────────────────────────
+  } else if (paso === 311) {
+    datos.cc_residencia = mensaje.trim();
     return {
       respuesta: `🩺 Describa los *síntomas* del paciente:`,
       paso: 306, datos, terminar: false
@@ -123,7 +147,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
     }
 
     return {
-      respuesta: `📋 *Resumen de la consulta:*\n\n👤 *Paciente:* ${datos.cc_nombre}\n🪪 *Cédula:* ${datos.cc_cedula}\n📱 *Tel:* ${datos.cc_telefono || '—'}\n🩺 *Síntomas:* ${datos.cc_sintomas}\n🏢 *Empresa:* ${empresa}\n\n¿Confirma el registro?`,
+      respuesta: `📋 *Resumen de la consulta:*\n\n👤 *Paciente:* ${datos.cc_nombre}\n🪪 *Cédula:* ${datos.cc_cedula}\n🎂 *Edad:* ${datos.cc_edad || '—'}\n📅 *Nacimiento:* ${datos.cc_nacimiento || '—'}\n📱 *Tel:* ${datos.cc_telefono || '—'}\n📧 *Correo:* ${datos.cc_correo || '—'}\n📍 *Residencia:* ${datos.cc_residencia || '—'}\n🩺 *Síntomas:* ${datos.cc_sintomas}\n🏢 *Empresa:* ${empresa}\n\n¿Confirma el registro?`,
       paso: 307, datos, terminar: false,
       botones: [
         { id: 'confirmar', titulo: '✅ Confirmar' },
@@ -135,7 +159,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   } else if (paso === 307) {
     if (mensaje === 'corregir' || mensaje === '✏️ Corregir') {
       // Reiniciar datos del paciente pero mantener autenticación
-      datos.cc_cedula = datos.cc_nombre = datos.cc_telefono = datos.cc_correo = datos.cc_sintomas = '';
+      datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
       datos.cc_paciente_id = null;
       return {
         respuesta: `📋 Ingrese la *cédula* del paciente nuevamente:`,
@@ -154,8 +178,12 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
         cedula:          datos.cc_cedula,
         nombre,
         apellidos,
+        edad:            datos.cc_edad || null,
+        fecha_nacimiento: datos.cc_nacimiento || null,
+        sexo:            inferirSexo(datos.cc_nombre),
         correo:          datos.cc_correo || '',
         telefono:        datos.cc_telefono || '',
+        lugar_residencia: datos.cc_residencia || '',
         cliente_b2b_id:  empresaId
       });
       pacienteId = nuevo?.id || null;
@@ -192,7 +220,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   } else if (paso === 309) {
     if (esSi(mensaje)) {
       // Limpiar datos del paciente anterior, mantener autenticación empresa
-      datos.cc_cedula = datos.cc_nombre = datos.cc_telefono = datos.cc_correo = datos.cc_sintomas = '';
+      datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
       datos.cc_paciente_id = null;
       datos.cc_nivel = 1;
       await guardar(telefono, 301, datos);

@@ -47,4 +47,22 @@ function tieneApellidos(texto) {
   return texto.trim().split(/\s+/).length >= 3;
 }
 
-module.exports = { validarCedula, clasificarSintomas, esSi, tieneApellidos };
+// Infiere el sexo (M/F) a partir del primer nombre. Heurística: diccionario de nombres
+// comunes (sobre todo masculinos terminados en consonante) + regla de terminación
+// (a → F, o → M). Devuelve 'M', 'F' o null (desconocido → el médico lo ajusta en el panel).
+const NOMBRES_M = new Set(['jose','juan','luis','carlos','jorge','andres','sebastian','nicolas','mateo','matias','samuel','daniel','gabriel','rafael','manuel','miguel','angel','david','javier','ismael','israel','joel','abel','noe','emanuel','ezequiel','isaias','jeremias','tobias','josue','elias','adrian','fabian','cristian','christian','kevin','brayan','bryan','dylan','jefferson','marlon','edison','wilson','nelson','byron','milton','dario','ariel','said','steven','alexander','jhon','jonathan']);
+const NOMBRES_F = new Set(['maria','ana','carmen','rosa','luz','isabel','raquel','ruth','esther','abigail','ines','soledad','dolores','pilar','mercedes','lourdes','milagros','flor','nube','noemi','beatriz','consuelo','guadalupe','jazmin','jasmin','yadira','jenifer','jennifer','genesis','nicole','dayana','estefania','michelle','ashley','britany','briggite','solange','yomira','thalia','heidi','ingrid','katherin','katherine','karen','lisbeth','meliza']);
+
+function inferirSexo(nombreCompleto) {
+  const primer = String(nombreCompleto || '').trim().toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '').split(/\s+/)[0];
+  if (!primer) return null;
+  if (NOMBRES_M.has(primer)) return 'M';
+  if (NOMBRES_F.has(primer)) return 'F';
+  const ult = primer.slice(-1);
+  if (ult === 'a') return 'F';
+  if (ult === 'o') return 'M';
+  return null;
+}
+
+module.exports = { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo };

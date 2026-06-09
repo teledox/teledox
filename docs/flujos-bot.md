@@ -129,7 +129,8 @@ flowchart TD
   EX -->|"No"| P303["Paso 303: Nombre"]
   P302 -->|"Sí"| P306["Paso 306: Síntomas"]
   P302 -->|"Ingresar datos"| P303
-  P303 --> P304["Paso 304: Teléfono"] --> P305["Paso 305: Correo"] --> P306
+  P303 --> P308["Paso 308: Edad"] --> P310["Paso 310: Nacimiento"] --> P304["Paso 304: Teléfono"]
+  P304 --> P305["Paso 305: Correo"] --> P311["Paso 311: Residencia"] --> P306
   P306 --> NIVc{"Clasifica"}
   NIVc -->|"Nivel 3"| EMERc([🚨 Emergencia → 911]) --> P309
   NIVc -->|"Nivel 1-2"| P307{"Paso 307\n¿Confirmar registro?"}

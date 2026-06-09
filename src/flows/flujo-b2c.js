@@ -2,7 +2,7 @@ const { crear: crearConsulta, crearNotificacion } = require('../services/consult
 const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { clasificarSintomas, esSi } = require('../utils/validaciones');
+const { clasificarSintomas, esSi, inferirSexo } = require('../utils/validaciones');
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_KEY;
@@ -231,6 +231,8 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
             cedula: datos.cedula || '',
             nombre,
             apellidos,
+            edad: datos.edad || null,
+            sexo: inferirSexo(datos.nombreCompleto || nombre),
             correo: datos.correo || '',
             telefono: datos.telefonoContacto || telefono,
             lugar_residencia: datos.lugar_residencia || '',

@@ -44,7 +44,8 @@ async function showPacienteDetalle(id) {
     ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarPaciente('${pac.id}','${(pac.nombre+' '+(pac.apellidos||'')).trim().replace(/'/g,"\\'")}')">🗑 Eliminar paciente</button>` : ''}
   `;
   document.getElementById('detailGrid').innerHTML = [
-    ['Edad', pac.edad || '—'], ['Nacimiento', pac.fecha_nacimiento || '—'], ['Correo', pac.correo || '—'],
+    ['Edad', pac.edad || '—'], ['Sexo', pac.sexo === 'M' ? 'Masculino' : pac.sexo === 'F' ? 'Femenino' : '—'],
+    ['Nacimiento', pac.fecha_nacimiento || '—'], ['Correo', pac.correo || '—'],
     ['Teléfono', pac.telefono || '—'], ['Residencia', pac.lugar_residencia || '—'], ['Empresa', pac.clientes_b2b?.nombre_empresa || '—']
   ].map(([l, v]) => `<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
 
@@ -130,6 +131,13 @@ function mostrarEditorPaciente(id) {
     ${campo('Apellidos', 'apellidos')}
     ${campo('Cédula', 'cedula')}
     ${campo('Edad', 'edad', 'number')}
+    <div class="detail-item"><div class="detail-label">Sexo</div>
+      <select class="form-control" id="edit-pac-sexo">
+        <option value="" ${!pac.sexo ? 'selected' : ''}>—</option>
+        <option value="M" ${pac.sexo === 'M' ? 'selected' : ''}>Masculino</option>
+        <option value="F" ${pac.sexo === 'F' ? 'selected' : ''}>Femenino</option>
+      </select>
+    </div>
     ${campo('Nacimiento', 'fecha_nacimiento', 'date')}
     ${campo('Correo', 'correo', 'email')}
     ${campo('Teléfono (con código de país, ej: 593987654321)', 'telefono', 'tel')}
@@ -149,6 +157,7 @@ async function guardarDatosPaciente(id) {
     apellidos: val('apellidos') || null,
     cedula: val('cedula') || null,
     edad: val('edad') ? parseInt(val('edad')) : null,
+    sexo: val('sexo') || null,
     fecha_nacimiento: val('fecha_nacimiento') || null,
     correo: val('correo') || null,
     telefono: val('telefono').replace(/[^\d+]/g, '') || null,

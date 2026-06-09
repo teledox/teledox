@@ -57,3 +57,6 @@ CREATE TABLE documentos_datos (
 );
 
 CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);
+
+-- Sexo del paciente (M/F) — se infiere del nombre al registrar y es editable en el panel
+-- ALTER TABLE pacientes ADD COLUMN IF NOT EXISTS sexo VARCHAR(1);

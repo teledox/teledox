@@ -4,7 +4,7 @@ const { buscarEmpresaPorCodigo } = require('./flujo-callcenter');
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { validarCedula, clasificarSintomas, esSi, tieneApellidos } = require('../utils/validaciones');
+const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo } = require('../utils/validaciones');
 const { procesarB2C } = require('./flujo-b2c');
 
 const SUPA_URL = process.env.SUPABASE_URL;
@@ -284,6 +284,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
         apellidos: datos.apellidos,
         edad: datos.edad,
         fecha_nacimiento: datos.fecha_nacimiento,
+        sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
         correo: datos.correo,
         telefono: datos.telefono,
         lugar_residencia: datos.lugar_residencia,

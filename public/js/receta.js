@@ -30,9 +30,11 @@ async function openReceta(consultaId, pacienteId) {
   pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
   actualizarCheckboxDocs();
   const btnEnviar = document.getElementById('btnEnviarDocs');
-  if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '📤 Enviar documentos y activar seguimiento'; btnEnviar.style.background = ''; btnEnviar.style.borderColor = ''; }
+  if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '📤 Enviar documentos al paciente'; btnEnviar.style.background = '#FF5A5F'; btnEnviar.style.borderColor = '#FF5A5F'; }
   const btnSeg = document.getElementById('btnActivarSeguimiento');
-  if (btnSeg) { btnSeg.disabled = false; btnSeg.textContent = '🔔 Activar seguimiento'; btnSeg.style.background = ''; btnSeg.style.borderColor = ''; }
+  if (btnSeg) { btnSeg.disabled = false; btnSeg.textContent = '🔔 Activar seguimiento de tratamiento'; btnSeg.style.background = '#f97316'; btnSeg.style.borderColor = '#f97316'; }
+  const btnCronica = document.getElementById('btnActivarCronica');
+  if (btnCronica) { btnCronica.disabled = false; btnCronica.textContent = '🏥 Activar seguimiento crónico'; btnCronica.style.background = '#2563eb'; btnCronica.style.borderColor = '#2563eb'; }
   ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cie10Dropdown').style.display = 'none';
@@ -223,7 +225,7 @@ async function enviarDocumentos() {
   }
 }
 
-// ── BOTÓN 2: Activar seguimiento al paciente ─────────────────────────────
+// ── BOTÓN 2: Activar seguimiento de TRATAMIENTO (medicamentos) ───────────
 async function activarSeguimiento() {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico primero'); return; }
@@ -234,78 +236,88 @@ async function activarSeguimiento() {
     : null;
   if (!telefono) { alert('El paciente no tiene número de teléfono registrado'); return; }
 
-  // Leer los medicamentos directo del card de seguimiento (sin depender del PDF)
   if (typeof sincronizarMedSeguimiento === 'function') sincronizarMedSeguimiento();
 
-  showToast('⏳ Activando seguimiento...');
+  const medsConSeg = medicamentosData.filter(m => m.seguimiento !== false);
+  if (!medicamentosData.length || !medsConSeg.length) {
+    showToast('⚠️ No hay medicamentos con seguimiento activado. Agrega medicamentos en la sección de seguimiento.');
+    return;
+  }
+
+  showToast('⏳ Activando seguimiento de tratamiento...');
   try {
     const ahora = new Date();
-    let activado = false;
+    let receta_id;
+    const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
+    if (existing?.length > 0) {
+      receta_id = existing[0].id;
+      await supa('PATCH', 'recetas', { seguimiento_activo: true }, `?id=eq.${receta_id}`);
+    } else {
+      const res = await supa('POST', 'recetas', {
+        consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
+        medicamentos: medicamentosData, diagnostico,
+        cie10_codigos: cie10Seleccionados,
+        indicaciones: document.getElementById('recetaIndicaciones').value,
+        seguimiento_activo: true,
+        fecha_inicio: ahora.toISOString(),
+        fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
+      });
+      receta_id = (res || [])[0]?.id;
+    }
 
-    // 1. Seguimiento por medicamentos prescritos (solo los que tienen la notificación activada)
-    const medsConSeg = medicamentosData.filter(m => m.seguimiento !== false);
-    if (medicamentosData.length > 0) {
-      let receta_id;
-      const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
-      if (existing?.length > 0) {
-        receta_id = existing[0].id;
-        await supa('PATCH', 'recetas', { seguimiento_activo: true }, `?id=eq.${receta_id}`);
-      } else {
-        const res = await supa('POST', 'recetas', {
-          consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
-          medicamentos: medicamentosData, diagnostico,
-          cie10_codigos: cie10Seleccionados,
-          indicaciones: document.getElementById('recetaIndicaciones').value,
-          seguimiento_activo: true,
-          fecha_inicio: ahora.toISOString(),
-          fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
-        });
-        receta_id = (res || [])[0]?.id;
+    if (receta_id) {
+      const yaExisten = await supa('GET', 'recordatorios', null, `?receta_id=eq.${receta_id}&activo=eq.true&limit=1`);
+      if (yaExisten?.length) {
+        showToast('ℹ️ El seguimiento de tratamiento ya estaba activo');
+        return;
       }
-      if (receta_id && medsConSeg.length > 0) {
-        const yaExisten = await supa('GET', 'recordatorios', null, `?receta_id=eq.${receta_id}&activo=eq.true&limit=1`);
-        if (!yaExisten?.length) {
-          for (const med of medsConSeg) {
-            await supa('POST', 'recordatorios', {
-              receta_id, paciente_id: recetaPacienteId, telefono,
-              medicamento: med.nombre, dosis: med.dosis || '',
-              frecuencia_horas: med.frecuencia_horas,
-              fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),
-              fecha_fin: new Date(ahora.getTime() + med.dias * 86400000).toISOString(),
-              activo: true, tipo: 'medicamento'
-            });
-          }
-          activado = true;
-        } else {
-          showToast('ℹ️ Seguimiento por tratamiento ya estaba activo');
-        }
+      for (const med of medsConSeg) {
+        await supa('POST', 'recordatorios', {
+          receta_id, paciente_id: recetaPacienteId, telefono,
+          medicamento: med.nombre, dosis: med.dosis || '',
+          frecuencia_horas: med.frecuencia_horas,
+          fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),
+          fecha_fin: new Date(ahora.getTime() + med.dias * 86400000).toISOString(),
+          activo: true, tipo: 'medicamento'
+        });
       }
     }
 
-    // 2. Seguimiento por enfermedades crónicas del paciente
+    showToast('✓ Seguimiento de tratamiento activado — el bot enviará recordatorios al paciente');
+    const btn = document.getElementById('btnActivarSeguimiento');
+    if (btn) { btn.textContent = '✓ Tratamiento activo'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
+  } catch (e) {
+    console.error('Error activando seguimiento de tratamiento:', e);
+    showToast(`Error: ${e.message}`);
+  }
+}
+
+// ── BOTÓN 3: Activar seguimiento de ENFERMEDAD CRÓNICA ───────────────────
+async function activarSeguimientoCronico() {
+  showToast('⏳ Activando seguimiento de enfermedad crónica...');
+  try {
+    const ahora = new Date();
     const cronicas = await supa('GET', 'enfermedades_cronicas', null,
       `?paciente_id=eq.${recetaPacienteId}&activo=eq.true`);
-    if (cronicas?.length > 0) {
-      for (const c of cronicas) {
-        const proxima = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
-        await supa('PATCH', 'enfermedades_cronicas', {
-          ultima_consulta: ahora.toISOString(),
-          proximo_seguimiento: proxima.toISOString()
-        }, `?id=eq.${c.id}`);
-      }
-      activado = true;
-    }
 
-    if (!activado) {
-      showToast('⚠️ Sin medicamentos ni enfermedades crónicas registradas para activar seguimiento');
+    if (!cronicas?.length) {
+      showToast('⚠️ El paciente no tiene enfermedades crónicas registradas. Agrégalas en su ficha de paciente.');
       return;
     }
 
-    showToast('✓ Seguimiento activado — el bot contactará al paciente automáticamente');
-    const btn = document.getElementById('btnActivarSeguimiento');
-    if (btn) { btn.textContent = '✓ Seguimiento activo'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
+    for (const c of cronicas) {
+      const proxima = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+      await supa('PATCH', 'enfermedades_cronicas', {
+        ultima_consulta: ahora.toISOString(),
+        proximo_seguimiento: proxima.toISOString()
+      }, `?id=eq.${c.id}`);
+    }
+
+    showToast(`✓ Seguimiento crónico activado para ${cronicas.length} enfermedad(es) — el bot contactará al paciente periódicamente`);
+    const btn = document.getElementById('btnActivarCronica');
+    if (btn) { btn.textContent = '✓ Seguimiento crónico activo'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   } catch (e) {
-    console.error('Error activando seguimiento:', e);
+    console.error('Error activando seguimiento crónico:', e);
     showToast(`Error: ${e.message}`);
   }
 }

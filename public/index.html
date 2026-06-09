@@ -373,14 +373,46 @@
             Los documentos seleccionados llegarán en PDF no editable al WhatsApp del paciente al momento de hacer clic en <strong>Enviar</strong>.
           </div>
         </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap;align-items:center">
-          <button class="btn" onclick="showPage('consultas');loadConsultas()">Cancelar</button>
-          <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316">
-            🔔 Activar seguimiento
-          </button>
-          <button class="btn btn-primary" id="btnEnviarDocs" onclick="enviarDocumentos()" style="background:#FF5A5F;border-color:#FF5A5F">
-            📤 Enviar documentos al paciente
-          </button>
+        <!-- Botones de acción — separados claramente por función -->
+        <div style="margin-top:1.5rem">
+
+          <!-- Fila 1: Enviar documentos -->
+          <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:1rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#dc2626">📤 Enviar documentos por WhatsApp</div>
+              <div style="font-size:12px;color:#888;margin-top:2px">Envía al paciente los documentos seleccionados arriba (receta, certificado, pedido de lab, etc.)</div>
+            </div>
+            <button class="btn btn-primary" id="btnEnviarDocs" onclick="enviarDocumentos()" style="background:#FF5A5F;border-color:#FF5A5F;white-space:nowrap">
+              📤 Enviar documentos al paciente
+            </button>
+          </div>
+
+          <!-- Fila 2: Seguimiento de tratamiento (medicamentos) -->
+          <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:1rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#ea580c">🔔 Seguimiento de tratamiento (medicamentos)</div>
+              <div style="font-size:12px;color:#888;margin-top:2px">El bot enviará recordatorios de medicamentos al paciente según la frecuencia indicada arriba</div>
+            </div>
+            <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316;white-space:nowrap">
+              🔔 Activar seguimiento de tratamiento
+            </button>
+          </div>
+
+          <!-- Fila 3: Seguimiento enfermedad crónica -->
+          <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:1rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#2563eb">🏥 Seguimiento de enfermedad crónica</div>
+              <div style="font-size:12px;color:#888;margin-top:2px">Activa el seguimiento periódico para pacientes con enfermedades crónicas (hipertensión, diabetes, etc.)</div>
+            </div>
+            <button class="btn btn-primary" id="btnActivarCronica" onclick="activarSeguimientoCronico()" style="background:#2563eb;border-color:#2563eb;white-space:nowrap">
+              🏥 Activar seguimiento crónico
+            </button>
+          </div>
+
+          <!-- Cancelar -->
+          <div style="display:flex;justify-content:flex-end;margin-top:0.5rem">
+            <button class="btn" onclick="showPage('consultas');loadConsultas()">✕ Cancelar</button>
+          </div>
         </div>
       </div>
 

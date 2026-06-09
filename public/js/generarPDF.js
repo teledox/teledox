@@ -1,3 +1,18 @@
+// Sanitiza texto para pdf-lib (fuentes estándar = WinAnsi). Caracteres fuera de
+// Latin-1 (emoji, comillas/guiones tipográficos, espacios raros de copiar/pegar)
+// hacen que drawText lance error y rompa la generación. Acá se normalizan o eliminan.
+function _pdfSafe(s) {
+  return String(s == null ? '' : s)
+    .normalize('NFC')
+    .replace(/[‘’‚‹›]/g, "'")
+    .replace(/[“”„«»]/g, '"')
+    .replace(/[–—−]/g, '-')
+    .replace(/…/g, '...')
+    .replace(/[     ]/g, ' ')
+    .replace(/[​-‍﻿]/g, '')
+    .replace(/[^\x09\x0A\x0D\x20-\x7E¡-ÿ]/g, '');
+}
+
 async function generarRecetaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
   const doc = await PDFDocument.create();
@@ -10,8 +25,8 @@ async function generarRecetaPDF() {
 
   const page = doc.addPage([595, 842]);
   const { width, height } = page.getSize();
-  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
-  const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
+  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
+  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
 
   page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
   page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
@@ -73,7 +88,7 @@ async function generarRecetaPDF() {
     if (!nombre) return null;
     const frecSel = tr.querySelector('.med-frecuencia');
     const frecuencia = frecSel?.value ? (frecSel.selectedOptions[0]?.textContent || '') : '';
-    return { nombre, dosis: tr.querySelector('.med-dosis')?.value.trim() || '', frecuencia, dias: tr.querySelector('.med-dias')?.value.trim() || '' };
+    return { nombre: _pdfSafe(nombre), dosis: _pdfSafe(tr.querySelector('.med-dosis')?.value.trim() || ''), frecuencia: _pdfSafe(frecuencia), dias: _pdfSafe(tr.querySelector('.med-dias')?.value.trim() || '') };
   }).filter(m => m && m.nombre);
   if (!meds.length) {
     page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
@@ -118,8 +133,8 @@ async function generarHistoriaClinicaPDF() {
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
-  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
-  const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
+  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
+  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
   const gCB = ids => ids.filter(id => { const el = document.getElementById(id); return el && el.checked; }).map(id => id.replace(/^hcaf-/,'').replace(/-/g,' ')).join(', ') || '—';
 
   function buildPage() {
@@ -291,8 +306,8 @@ async function generarInterconsultaPDF() {
 
   const page = doc.addPage([595, 842]);
   const { width, height } = page.getSize();
-  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
-  const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
+  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
+  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
 
   page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
   page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
@@ -374,8 +389,8 @@ async function generarCertificadoPDF() {
 
   const page = doc.addPage([595, 842]);
   const { width, height } = page.getSize();
-  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
-  const gR = name => document.querySelector(`input[name="${name}"]:checked`)?.value || '—';
+  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
+  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
   const gCB = id => document.getElementById(id)?.checked || false;
 
   page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
@@ -462,7 +477,7 @@ async function generarPedidoPDF() {
   const negro  = rgb(0, 0, 0);
   const blanco = rgb(1, 1, 1);
 
-  const gV = id => { const el = document.getElementById(id); return el ? (el.value || el.textContent || '').trim() : ''; };
+  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
 
   page.drawRectangle({ x: 0, y: height - 80, width, height: 80, color: azul });
   page.drawText('MEDILYFT', { x: 40, y: height - 45, size: 22, font: bold, color: blanco });

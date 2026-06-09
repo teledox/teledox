@@ -204,21 +204,26 @@ function _snapshotSheet(sheet) {
 }
 
 function renderPreviewDoc(tipo) {
-  const slot = document.getElementById('preview-' + tipo);
-  const abrir = ABRIR_PLANTILLA[tipo]?.();
-  if (!slot || !abrir) return;
-  abrir(true);                                   // poblar el doc-sheet sin abrir el modal
-  const sheet = document.getElementById(DOC_SHEETS[tipo]);
-  if (!sheet) return;
-  const snap = _snapshotSheet(sheet);
-  snap.removeAttribute('id');
-  snap.querySelectorAll('input, textarea, select, button').forEach(el => { el.disabled = true; el.tabIndex = -1; });
-  slot.innerHTML = `
-    <div class="doc-preview-card">
-      <div class="doc-preview-head"><span>✓ Generada · guardada</span><button class="btn btn-sm" onclick="${abrir.name}()">✏️ Editar</button></div>
-      <div class="doc-preview-frame"><div class="doc-preview-scaled"></div></div>
-    </div>`;
-  slot.querySelector('.doc-preview-scaled').appendChild(snap);
+  // El preview NUNCA debe romper la generación/guardado del documento.
+  try {
+    const slot = document.getElementById('preview-' + tipo);
+    const abrir = ABRIR_PLANTILLA[tipo]?.();
+    if (!slot || !abrir) return;
+    abrir(true);                                   // poblar el doc-sheet sin abrir el modal
+    const sheet = document.getElementById(DOC_SHEETS[tipo]);
+    if (!sheet) return;
+    const snap = _snapshotSheet(sheet);
+    snap.removeAttribute('id');
+    snap.querySelectorAll('input, textarea, select, button').forEach(el => { el.disabled = true; el.tabIndex = -1; });
+    slot.innerHTML = `
+      <div class="doc-preview-card">
+        <div class="doc-preview-head"><span>✓ Generada · guardada</span><button class="btn btn-sm" onclick="${abrir.name}()">✏️ Editar</button></div>
+        <div class="doc-preview-frame"><div class="doc-preview-scaled"></div></div>
+      </div>`;
+    slot.querySelector('.doc-preview-scaled').appendChild(snap);
+  } catch (e) {
+    console.error('Error al renderizar preview de', tipo, e);
+  }
 }
 
 // Re-pinta los previews de los documentos que ya tienen datos guardados (al abrir la consulta)

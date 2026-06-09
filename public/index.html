@@ -499,7 +499,13 @@
       <!-- USUARIOS -->
       <div class="page" id="page-usuarios">
         <div class="card">
-          <div class="card-header"><span class="card-title">Usuarios del sistema</span><button class="btn btn-sm btn-primary" onclick="document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button></div>
+          <div class="card-header">
+            <span class="card-title">Usuarios del sistema</span>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-sm" style="background:#f3f0ff;color:#7c3aed;border-color:#7c3aed;display:none" id="btnAdminPassword" onclick="abrirCambiarPassword()">🔐 Cambiar contraseña</button>
+              <button class="btn btn-sm btn-primary" onclick="document.getElementById('editUserForm').style.display='none';document.getElementById('addUserForm').style.display='block'">+ Agregar usuario</button>
+            </div>
+          </div>
           <table class="table"><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Especialidad</th><th>Reg. MSP</th><th>Firma</th><th>Estado</th><th></th></tr></thead><tbody id="usuariosBody"></tbody></table>
         </div>
         <!-- MODAL EDITAR USUARIO -->
@@ -546,26 +552,65 @@
           </div>
           <button class="btn btn-primary" onclick="saveUser()">Guardar usuario</button>
         </div>
+
+        <!-- Cambiar contraseña — solo visible para admin -->
+        <div class="card" id="cardCambiarPassword" style="display:none;border:2px solid #7c3aed">
+          <div class="card-header">
+            <span class="card-title">🔐 Cambiar contraseña de usuario</span>
+            <button class="btn btn-sm" onclick="document.getElementById('cardCambiarPassword').style.display='none'">✕</button>
+          </div>
+          <p style="font-size:13px;color:#555;margin-bottom:1rem">Selecciona el usuario y establece su nueva contraseña. Solo el administrador puede realizar esta acción.</p>
+          <div style="max-width:420px">
+            <div class="form-group">
+              <label class="form-label">Usuario</label>
+              <select class="form-control" id="passUsuarioSelect"></select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nueva contraseña</label>
+              <input type="password" class="form-control" id="adminNewPass" placeholder="Mínimo 6 caracteres" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmar contraseña</label>
+              <input type="password" class="form-control" id="adminConfirmPass" placeholder="Repite la contraseña" />
+            </div>
+            <button class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed" onclick="adminCambiarPassword()">🔐 Actualizar contraseña</button>
+          </div>
+        </div>
       </div>
 
       <!-- PERFIL -->
       <div class="page" id="page-perfil">
         <div class="card"><div class="card-header"><span class="card-title">Mi perfil</span></div><div id="perfilContent"></div></div>
         <div class="card">
-          <div class="card-header"><span class="card-title">Firma digital y sello</span></div>
+          <div class="card-header"><span class="card-title">✍️ Firma digital y sello</span></div>
           <div class="two-col">
-            <div><p style="font-size:13px;color:#888;margin-bottom:1rem">Firma digital en PNG con fondo transparente.</p><div class="upload-area" onclick="document.getElementById('firmaInput').click()"><div id="firmaPreview">📝 Clic para subir firma digital</div></div><input type="file" id="firmaInput" accept="image/*" style="display:none" onchange="previewFirma(this,'firmaPreview','firma')" /></div>
-            <div><p style="font-size:13px;color:#888;margin-bottom:1rem">Sello médico en PNG.</p><div class="upload-area" onclick="document.getElementById('selloInput').click()"><div id="selloPreview">🔵 Clic para subir sello médico</div></div><input type="file" id="selloInput" accept="image/*" style="display:none" onchange="previewFirma(this,'selloPreview','sello')" /></div>
+            <!-- Firma -->
+            <div>
+              <p style="font-size:13px;color:#888;margin-bottom:0.5rem">Firma digital en PNG con fondo transparente.</p>
+              <div class="upload-area" id="firmaUploadArea" onclick="document.getElementById('firmaInput').click()" style="cursor:pointer">
+                <div id="firmaPreview">📝 Clic para subir firma digital</div>
+              </div>
+              <input type="file" id="firmaInput" accept="image/*" style="display:none" onchange="previewFirma(this,'firmaPreview','firma')" />
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="document.getElementById('firmaInput').click()">⬆️ Subir nueva</button>
+                <button class="btn btn-sm btn-danger" id="btnEliminarFirma" onclick="eliminarFirmaOSello('firma')" style="display:none">🗑 Eliminar</button>
+              </div>
+            </div>
+            <!-- Sello -->
+            <div>
+              <p style="font-size:13px;color:#888;margin-bottom:0.5rem">Sello médico en PNG.</p>
+              <div class="upload-area" id="selloUploadArea" onclick="document.getElementById('selloInput').click()" style="cursor:pointer">
+                <div id="selloPreview">🔵 Clic para subir sello médico</div>
+              </div>
+              <input type="file" id="selloInput" accept="image/*" style="display:none" onchange="previewFirma(this,'selloPreview','sello')" />
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="document.getElementById('selloInput').click()">⬆️ Subir nueva</button>
+                <button class="btn btn-sm btn-danger" id="btnEliminarSello" onclick="eliminarFirmaOSello('sello')" style="display:none">🗑 Eliminar</button>
+              </div>
+            </div>
           </div>
-          <div class="divider"></div>
-          <button class="btn btn-primary" onclick="saveFirma()">Guardar firma y sello</button>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Cambiar contraseña</span></div>
-          <div style="max-width:400px">
-            <div class="form-group"><label class="form-label">Nueva contraseña</label><input type="password" class="form-control" id="newPassChange" /></div>
-            <div class="form-group"><label class="form-label">Confirmar contraseña</label><input type="password" class="form-control" id="confirmPassChange" /></div>
-            <button class="btn btn-primary" onclick="changePassword()">Actualizar contraseña</button>
+          <div style="margin-top:1rem">
+            <button class="btn btn-primary" onclick="saveFirma()">💾 Guardar firma y sello</button>
           </div>
         </div>
       </div>

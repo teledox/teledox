@@ -1,4 +1,8 @@
 async function loadUsuarios() {
+  // Mostrar botón de cambiar contraseña solo para admin
+  const btnPass = document.getElementById('btnAdminPassword');
+  if (btnPass) btnPass.style.display = currentUser?.rol === 'admin' ? 'inline-flex' : 'none';
+
   const users = await supa('GET', 'usuarios', null, '?order=created_at.desc') || [];
   document.getElementById('usuariosBody').innerHTML = users.map(u => `
     <tr>
@@ -93,6 +97,38 @@ async function updateUser() {
 async function toggleUser(id, activo) {
   await supa('PATCH', 'usuarios', { activo: !activo }, `?id=eq.${id}`);
   loadUsuarios();
+}
+
+// ── Cambiar contraseña (solo admin) ─────────────────────────────────────
+async function abrirCambiarPassword() {
+  if (currentUser?.rol !== 'admin') return;
+  const users = await supa('GET', 'usuarios', null, '?activo=eq.true&order=nombre.asc&select=id,nombre,apellidos,correo,rol') || [];
+  const select = document.getElementById('passUsuarioSelect');
+  select.innerHTML = users
+    .filter(u => u.id !== currentUser.id) // admin no puede cambiarse su propia contraseña aquí
+    .map(u => `<option value="${u.id}">${u.nombre} ${u.apellidos} (${u.rol})</option>`)
+    .join('');
+  document.getElementById('adminNewPass').value     = '';
+  document.getElementById('adminConfirmPass').value = '';
+  const card = document.getElementById('cardCambiarPassword');
+  card.style.display = 'block';
+  card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function adminCambiarPassword() {
+  if (currentUser?.rol !== 'admin') return;
+  const userId  = document.getElementById('passUsuarioSelect').value;
+  const np      = document.getElementById('adminNewPass').value;
+  const cp      = document.getElementById('adminConfirmPass').value;
+  if (!np || np.length < 6)    { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return; }
+  if (np !== cp)                { showToast('⚠️ Las contraseñas no coinciden'); return; }
+  if (!userId)                  { showToast('⚠️ Selecciona un usuario'); return; }
+
+  await supa('PATCH', 'usuarios', { password_hash: np }, `?id=eq.${userId}`);
+  document.getElementById('adminNewPass').value     = '';
+  document.getElementById('adminConfirmPass').value = '';
+  document.getElementById('cardCambiarPassword').style.display = 'none';
+  showToast('✓ Contraseña actualizada correctamente');
 }
 
 async function eliminarUsuario(id, nombre) {

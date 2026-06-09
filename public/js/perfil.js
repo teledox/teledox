@@ -36,8 +36,22 @@ async function loadPerfil() {
     </div>
     <button class="btn btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="saveDatosPersonales()">Guardar datos personales</button>`;
 
-  if (currentUser.firma_digital) document.getElementById('firmaPreview').innerHTML = `<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
-  if (currentUser.sello) document.getElementById('selloPreview').innerHTML = `<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
+  // Firma
+  const btnElimFirma = document.getElementById('btnEliminarFirma');
+  if (currentUser.firma_digital) {
+    document.getElementById('firmaPreview').innerHTML = `<img src="${currentUser.firma_digital}" style="max-height:80px;max-width:100%" />`;
+    if (btnElimFirma) btnElimFirma.style.display = 'inline-flex';
+  } else {
+    if (btnElimFirma) btnElimFirma.style.display = 'none';
+  }
+  // Sello
+  const btnElimSello = document.getElementById('btnEliminarSello');
+  if (currentUser.sello) {
+    document.getElementById('selloPreview').innerHTML = `<img src="${currentUser.sello}" style="max-height:80px;max-width:100%" />`;
+    if (btnElimSello) btnElimSello.style.display = 'inline-flex';
+  } else {
+    if (btnElimSello) btnElimSello.style.display = 'none';
+  }
 }
 
 async function saveDatosPersonales() {
@@ -68,17 +82,28 @@ async function saveFirma() {
   await supa('PATCH', 'usuarios', update, `?id=eq.${currentUser.id}`);
   currentUser = { ...currentUser, ...update };
   saveSession(currentUser);
+  loadPerfil();
   showToast('✓ Firma y sello guardados');
 }
 
-async function changePassword() {
-  const np = document.getElementById('newPassChange').value;
-  const cp = document.getElementById('confirmPassChange').value;
-  if (!np || np !== cp) { alert('Las contraseñas no coinciden'); return; }
-  await supa('PATCH', 'usuarios', { password_hash: np }, `?id=eq.${currentUser.id}`);
-  currentUser.password_hash = np;
+async function eliminarFirmaOSello(tipo) {
+  const campo    = tipo === 'firma' ? 'firma_digital' : 'sello';
+  const nombre   = tipo === 'firma' ? 'firma digital' : 'sello médico';
+  const previewId = tipo === 'firma' ? 'firmaPreview' : 'selloPreview';
+  const btnId     = tipo === 'firma' ? 'btnEliminarFirma' : 'btnEliminarSello';
+
+  if (!confirm(`¿Eliminar la ${nombre}?\n\nDeberás subir una nueva para usarla en documentos.`)) return;
+
+  await supa('PATCH', 'usuarios', { [campo]: null }, `?id=eq.${currentUser.id}`);
+  currentUser = { ...currentUser, [campo]: null };
+  if (tipo === 'firma') firmaData.firma = null;
+  else firmaData.sello = null;
   saveSession(currentUser);
-  document.getElementById('newPassChange').value = '';
-  document.getElementById('confirmPassChange').value = '';
-  showToast('✓ Contraseña actualizada');
+
+  const preview = document.getElementById(previewId);
+  if (preview) preview.innerHTML = tipo === 'firma' ? '📝 Clic para subir firma digital' : '🔵 Clic para subir sello médico';
+  const btn = document.getElementById(btnId);
+  if (btn) btn.style.display = 'none';
+
+  showToast(`✓ ${nombre.charAt(0).toUpperCase() + nombre.slice(1)} eliminada`);
 }

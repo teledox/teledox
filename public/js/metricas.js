@@ -1,3 +1,6 @@
+// Datos globales para exportación
+let _kpiData = {};
+
 function setPeriodoActivo(periodo) {
   document.querySelectorAll('.periodo-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.periodo === periodo);
@@ -164,6 +167,12 @@ async function loadMetricas(periodo) {
     }
 
     // ── Ranking por médico ─────────────────────────────────────────────────
+    // Guardar datos globalmente para exportación
+    _kpiData = { periodo, periodoLabel, total, graves, medios, leves, completadas, enAtencion, pendientes,
+      exitosos, sinMejora: respuestas.filter(r => r.se_siente_mejor === false).length,
+      tasa, recetasActivas: recetas.filter(r => r.seguimiento_activo).length,
+      totalRecetas: recetas.length, porEmpresa, tiempos, avgGeneral, minResp, maxResp, mediana };
+
     const porMedico = medicos.map(m => ({
       nombre: `Dr. ${m.nombre} ${m.apellidos}`,
       esp: m.especialidad || 'Medicina General',
@@ -193,6 +202,7 @@ async function loadMetricas(periodo) {
         : '<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Sin consultas atendidas en el período seleccionado</div>';
     }
 
+    _kpiData.porMedico = porMedico;
     const medicoTablaEl = document.getElementById('medicoTabla');
     if (medicoTablaEl) {
       medicoTablaEl.innerHTML = porMedico.length
@@ -226,4 +236,169 @@ async function loadMetricas(periodo) {
     const mt = document.getElementById('medicoTabla');
     if (mt) mt.innerHTML = `<tr><td colspan="5" style="color:#dc2626;padding:1rem">⚠️ Error al cargar datos</td></tr>`;
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  EXPORTACIÓN A EXCEL
+// ═══════════════════════════════════════════════════════════════════════════
+
+function _descargarExcel(wb, nombre) {
+  const periodo = _kpiData.periodo || 'mes';
+  const fecha   = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `MediLyft_${nombre}_${periodo}_${fecha}.xlsx`);
+}
+
+function _sheetDesde(filas, cabeceras) {
+  const ws = XLSX.utils.aoa_to_sheet([cabeceras, ...filas]);
+  // Ancho automático
+  const anchos = cabeceras.map((h, i) => ({
+    wch: Math.max(h.length, ...filas.map(f => String(f[i] ?? '').length)) + 2
+  }));
+  ws['!cols'] = anchos;
+  return ws;
+}
+
+// ── Exportar sección individual ───────────────────────────────────────────
+function exportarSeccion(seccion) {
+  if (!_kpiData.periodo) { showToast('⚠️ Carga primero las métricas'); return; }
+  const d  = _kpiData;
+  const wb = XLSX.utils.book_new();
+
+  if (seccion === 'kpi-distribucion') {
+    const ws = _sheetDesde([
+      ['Leves',    d.leves,    d.total > 0 ? Math.round(d.leves/d.total*100)+'%' : '0%'],
+      ['Medios',   d.medios,   d.total > 0 ? Math.round(d.medios/d.total*100)+'%' : '0%'],
+      ['Graves',   d.graves,   d.total > 0 ? Math.round(d.graves/d.total*100)+'%' : '0%'],
+      ['En atención', d.enAtencion, d.total > 0 ? Math.round(d.enAtencion/d.total*100)+'%' : '0%'],
+      ['Pendientes',  d.pendientes, d.total > 0 ? Math.round(d.pendientes/d.total*100)+'%' : '0%'],
+      ['Total',    d.total,    '100%'],
+    ], ['Nivel', 'Consultas', 'Porcentaje']);
+    XLSX.utils.book_append_sheet(wb, ws, 'Distribución');
+  }
+
+  else if (seccion === 'kpi-principales') {
+    const ws = _sheetDesde([
+      ['Total consultas ('+(d.periodoLabel||'')+')',   d.total],
+      ['Completadas',                                   d.completadas],
+      ['En atención',                                   d.enAtencion],
+      ['Pendientes sin atender',                        d.pendientes],
+      ['Tasa de resolución',                            d.tasa+'%'],
+      ['Recetas con seguimiento activo',                d.recetasActivas],
+      ['Total recetas',                                 d.totalRecetas],
+      ['Seguimientos exitosos',                         d.exitosos],
+      ['Sin mejoría',                                   d.sinMejora],
+      ['Emergencias (graves)',                          d.graves],
+    ], ['KPI', 'Valor']);
+    XLSX.utils.book_append_sheet(wb, ws, 'KPIs principales');
+  }
+
+  else if (seccion === 'kpi-seguimiento') {
+    const ws = _sheetDesde([
+      ['Seguimientos exitosos', d.exitosos],
+      ['Sin mejoría',           d.sinMejora],
+      ['Recetas activas',       d.totalRecetas],
+      ['Con seguimiento activo', d.recetasActivas],
+    ], ['Indicador', 'Valor']);
+    XLSX.utils.book_append_sheet(wb, ws, 'Seguimiento');
+  }
+
+  else if (seccion === 'kpi-medicos') {
+    const filas = (d.porMedico || []).map((m, i) => [
+      i+1, m.nombre, m.esp, m.total, m.completadas, m.graves,
+      m.total > 0 ? Math.round(m.completadas/m.total*100)+'%' : '0%'
+    ]);
+    const ws = _sheetDesde(filas, ['#', 'Médico', 'Especialidad', 'Total', 'Completadas', 'Graves', 'Resolución']);
+    XLSX.utils.book_append_sheet(wb, ws, 'Médicos');
+  }
+
+  else if (seccion === 'kpi-tiempos') {
+    function fmtMin(min) {
+      if (min === null || min === undefined || isNaN(min)) return '—';
+      if (min < 1) return Math.round(min*60)+'s';
+      if (min < 60) return Math.round(min)+' min';
+      return Math.floor(min/60)+'h '+Math.round(min%60)+'m';
+    }
+    const ws = _sheetDesde([
+      ['Promedio general',  fmtMin(d.avgGeneral)],
+      ['Tiempo mínimo',     fmtMin(d.minResp)],
+      ['Mediana',           fmtMin(d.mediana)],
+      ['Tiempo máximo',     fmtMin(d.maxResp)],
+      ['Consultas medidas', (d.tiempos||[]).length],
+    ], ['Métrica', 'Valor']);
+    XLSX.utils.book_append_sheet(wb, ws, 'Tiempo de respuesta');
+  }
+
+  else if (seccion === 'kpi-empresas') {
+    const filas = Object.entries(d.porEmpresa || {}).map(([emp, data]) => {
+      const tasa = data.total > 0 ? Math.round(data.completadas/data.total*100) : 0;
+      return [emp, data.total, data.completadas, data.graves, tasa+'%'];
+    }).sort((a,b) => b[1] - a[1]);
+    const ws = _sheetDesde(filas, ['Empresa', 'Total consultas', 'Completadas', 'Emergencias', 'Tasa resolución']);
+    XLSX.utils.book_append_sheet(wb, ws, 'Por empresa');
+  }
+
+  _descargarExcel(wb, seccion.replace('kpi-', ''));
+  showToast('✓ Excel exportado');
+}
+
+// ── Exportar TODAS las secciones en un solo archivo ───────────────────────
+function exportarTodoKPI() {
+  if (!_kpiData.periodo) { showToast('⚠️ Carga primero las métricas'); return; }
+  const d  = _kpiData;
+  const wb = XLSX.utils.book_new();
+
+  function fmtMin(min) {
+    if (min === null || min === undefined || isNaN(min)) return '—';
+    if (min < 1) return Math.round(min*60)+'s';
+    if (min < 60) return Math.round(min)+' min';
+    return Math.floor(min/60)+'h '+Math.round(min%60)+'m';
+  }
+
+  // Hoja 1: Resumen general
+  XLSX.utils.book_append_sheet(wb, _sheetDesde([
+    ['Total consultas ('+d.periodoLabel+')',  d.total],
+    ['Completadas',                            d.completadas],
+    ['En atención',                            d.enAtencion],
+    ['Pendientes',                             d.pendientes],
+    ['Tasa de resolución',                     d.tasa+'%'],
+    ['Leves',                                  d.leves],
+    ['Medios',                                 d.medios],
+    ['Graves',                                 d.graves],
+    ['Seguimientos exitosos',                  d.exitosos],
+    ['Sin mejoría en seguimiento',             d.sinMejora],
+    ['Recetas con seguimiento activo',         d.recetasActivas],
+    ['Total recetas',                          d.totalRecetas],
+    ['Tiempo respuesta promedio',              fmtMin(d.avgGeneral)],
+    ['Tiempo respuesta mínimo',                fmtMin(d.minResp)],
+    ['Tiempo respuesta mediana',               fmtMin(d.mediana)],
+    ['Tiempo respuesta máximo',                fmtMin(d.maxResp)],
+  ], ['KPI', 'Valor']), 'Resumen general');
+
+  // Hoja 2: Por médico
+  const filasMed = (d.porMedico || []).map((m, i) => [
+    i+1, m.nombre, m.esp, m.total, m.completadas, m.graves,
+    m.total > 0 ? Math.round(m.completadas/m.total*100)+'%' : '0%'
+  ]);
+  XLSX.utils.book_append_sheet(wb, _sheetDesde(filasMed,
+    ['#', 'Médico', 'Especialidad', 'Total', 'Completadas', 'Graves', 'Resolución']), 'Por médico');
+
+  // Hoja 3: Por empresa B2B
+  const filasEmp = Object.entries(d.porEmpresa || {}).map(([emp, data]) => {
+    const tasa = data.total > 0 ? Math.round(data.completadas/data.total*100) : 0;
+    return [emp, data.total, data.completadas, data.graves, tasa+'%'];
+  }).sort((a,b) => b[1] - a[1]);
+  XLSX.utils.book_append_sheet(wb, _sheetDesde(filasEmp,
+    ['Empresa', 'Total consultas', 'Completadas', 'Emergencias', 'Tasa resolución']), 'Por empresa');
+
+  // Hoja 4: Distribución por nivel
+  XLSX.utils.book_append_sheet(wb, _sheetDesde([
+    ['Leves',       d.leves,       d.total > 0 ? Math.round(d.leves/d.total*100)+'%'       : '0%'],
+    ['Medios',      d.medios,      d.total > 0 ? Math.round(d.medios/d.total*100)+'%'      : '0%'],
+    ['Graves',      d.graves,      d.total > 0 ? Math.round(d.graves/d.total*100)+'%'      : '0%'],
+    ['En atención', d.enAtencion,  d.total > 0 ? Math.round(d.enAtencion/d.total*100)+'%' : '0%'],
+    ['Pendientes',  d.pendientes,  d.total > 0 ? Math.round(d.pendientes/d.total*100)+'%' : '0%'],
+  ], ['Nivel', 'Consultas', 'Porcentaje']), 'Distribución por nivel');
+
+  _descargarExcel(wb, 'KPIs_completo');
+  showToast('✓ Reporte completo exportado a Excel');
 }

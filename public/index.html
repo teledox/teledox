@@ -617,44 +617,87 @@
 
       <!-- MÉTRICAS -->
       <div class="page" id="page-metricas">
+        <!-- Header con período y exportación global -->
         <div class="card" style="margin-bottom:1rem;padding:1rem 1.25rem">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <span class="card-title">Período de análisis</span>
-            <div class="periodo-filter">
-              <button class="periodo-btn" data-periodo="dia" onclick="setPeriodoActivo('dia')">Hoy</button>
-              <button class="periodo-btn" data-periodo="semana" onclick="setPeriodoActivo('semana')">Esta semana</button>
-              <button class="periodo-btn active" data-periodo="mes" onclick="setPeriodoActivo('mes')">Este mes</button>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+              <div class="periodo-filter">
+                <button class="periodo-btn" data-periodo="dia" onclick="setPeriodoActivo('dia')">Hoy</button>
+                <button class="periodo-btn" data-periodo="semana" onclick="setPeriodoActivo('semana')">Esta semana</button>
+                <button class="periodo-btn active" data-periodo="mes" onclick="setPeriodoActivo('mes')">Este mes</button>
+              </div>
+              <button class="btn btn-sm" style="background:#16a34a;color:white;border-color:#16a34a;gap:5px" onclick="exportarTodoKPI()">
+                📊 Exportar todo a Excel
+              </button>
             </div>
           </div>
         </div>
+
+        <!-- Resumen stats -->
         <div class="stats-grid" id="metricStats"></div>
-        <div class="two-col">
-          <div class="card"><div class="card-header"><span class="card-title">Distribución por nivel</span></div><div id="nivelChart" style="padding:1rem 0"></div></div>
-          <div class="card"><div class="card-header"><span class="card-title">KPIs principales</span></div><div id="kpiContent"></div></div>
-        </div>
-        <div class="card"><div class="card-header"><span class="card-title">Seguimientos de tratamiento</span></div><div id="seguimientoStats"></div></div>
-        <!-- Ranking por médico -->
+
+        <!-- Distribución + KPIs -->
         <div class="two-col">
           <div class="card">
-            <div class="card-header"><span class="card-title">🏆 Ranking de médicos</span></div>
+            <div class="card-header">
+              <span class="card-title">Distribución por nivel</span>
+              <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0" onclick="exportarSeccion('kpi-distribucion')">⬇️ Excel</button>
+            </div>
+            <div id="nivelChart" style="padding:1rem 0"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">KPIs principales</span>
+              <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0" onclick="exportarSeccion('kpi-principales')">⬇️ Excel</button>
+            </div>
+            <div id="kpiContent"></div>
+          </div>
+        </div>
+
+        <!-- Seguimientos -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Seguimientos de tratamiento</span>
+            <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0" onclick="exportarSeccion('kpi-seguimiento')">⬇️ Excel</button>
+          </div>
+          <div id="seguimientoStats"></div>
+        </div>
+
+        <!-- Ranking médicos -->
+        <div class="two-col">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🏆 Ranking de médicos</span>
+              <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0" onclick="exportarSeccion('kpi-medicos')">⬇️ Excel</button>
+            </div>
             <div id="medicoRanking"><div style="color:#aaa;text-align:center;padding:1.5rem;font-size:13px">Cargando...</div></div>
           </div>
           <div class="card">
-            <div class="card-header"><span class="card-title">📊 Detalle por médico</span></div>
+            <div class="card-header">
+              <span class="card-title">📊 Detalle por médico</span>
+            </div>
             <table class="table">
               <thead><tr><th>Médico</th><th style="text-align:center">Total</th><th style="text-align:center">Complet.</th><th style="text-align:center">Graves</th><th style="text-align:center">Resol.</th></tr></thead>
               <tbody id="medicoTabla"><tr><td colspan="5" style="text-align:center;color:#aaa;padding:1.5rem">Cargando...</td></tr></tbody>
             </table>
           </div>
         </div>
-        <!-- Tiempo de respuesta -->
+
+        <!-- Tiempo de respuesta + B2B -->
         <div class="two-col">
           <div class="card">
-            <div class="card-header"><span class="card-title">⏱ Tiempo de respuesta promedio</span><span style="font-size:11px;color:#aaa">Desde consulta hasta primer médico en atender</span></div>
+            <div class="card-header">
+              <span class="card-title">⏱ Tiempo de respuesta</span>
+              <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0" onclick="exportarSeccion('kpi-tiempos')">⬇️ Excel</button>
+            </div>
             <div id="tiempoRespuestaStats"><div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">Cargando...</div></div>
           </div>
           <div class="card">
-            <div class="card-header"><span class="card-title">🏢 Respuesta por empresa B2B</span></div>
+            <div class="card-header">
+              <span class="card-title">🏢 Consultas por empresa B2B</span>
+              <button class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border-color:#bbf7d0" onclick="exportarSeccion('kpi-empresas')">⬇️ Excel</button>
+            </div>
             <div id="tiempoRespuestaB2B"><div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">Cargando...</div></div>
           </div>
         </div>

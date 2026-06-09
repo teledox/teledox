@@ -4,7 +4,7 @@ const { buscarEmpresaPorCodigo } = require('./flujo-callcenter');
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo } = require('../utils/validaciones');
+const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, separarNombre } = require('../utils/validaciones');
 const { procesarB2C } = require('./flujo-b2c');
 
 const SUPA_URL = process.env.SUPABASE_URL;
@@ -188,7 +188,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
           ]
         };
       }
-      respuesta = `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nNecesitamos completar sus datos:\n\n👤 *Nombre y apellidos completos:*`;
+      respuesta = `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nNecesitamos completar sus datos:\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
       nuevoPaso = 4;
     }
 
@@ -200,27 +200,28 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
         paso: 11, datos, terminar: false
       };
     } else {
-      respuesta = `Entendido, actualicemos sus datos.\n\n👤 *Nombre y apellidos completos:*`;
+      respuesta = `Entendido, actualicemos sus datos.\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
       nuevoPaso = 4;
     }
 
   } else if (paso === 4) {
     datos.nombreCompleto = mensaje.trim();
     if (tieneApellidos(datos.nombreCompleto)) {
-      const partes = datos.nombreCompleto.split(/\s+/);
-      datos.nombre = partes[0];
-      datos.apellidos = partes.slice(1).join(' ');
+      // Convención ecuatoriana: los dos últimos términos son apellidos
+      const { nombre, apellidos } = separarNombre(datos.nombreCompleto);
+      datos.nombre = nombre;
+      datos.apellidos = apellidos;
       respuesta = `*Edad:*`;
       nuevoPaso = 6;
     } else {
       datos.nombre = datos.nombreCompleto;
-      respuesta = `*Apellidos completos:*`;
+      respuesta = `Por favor indique sus *dos apellidos* (paterno y materno):`;
       nuevoPaso = 5;
     }
 
   } else if (paso === 5) {
-    datos.apellidos = mensaje;
-    datos.nombreCompleto = `${datos.nombre} ${datos.apellidos}`;
+    datos.apellidos = mensaje.trim();
+    datos.nombreCompleto = `${datos.nombre} ${datos.apellidos}`.trim();
     respuesta = `*Edad:*`;
     nuevoPaso = 6;
 
@@ -311,7 +312,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       };
     } else {
       datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, empresa_id: datos.empresa_id, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
-      respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos:*`;
+      respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
       nuevoPaso = 4;
     }
   }

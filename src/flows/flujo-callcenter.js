@@ -3,7 +3,7 @@ const { crear: crearPaciente, buscarPorCedula } = require('../services/pacientes
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
 const { guardar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { clasificarSintomas, esSi, inferirSexo } = require('../utils/validaciones');
+const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
 
 // Buscar empresa por codigo_acceso
 async function buscarEmpresaPorCodigo(codigo) {
@@ -169,9 +169,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
 
     // Crear o actualizar paciente
     let pacienteId = datos.cc_paciente_id;
-    const partes   = datos.cc_nombre.trim().split(/\s+/);
-    const nombre   = partes[0] || '';
-    const apellidos = partes.slice(1).join(' ') || '';
+    const { nombre, apellidos } = separarNombre(datos.cc_nombre);
 
     if (!pacienteId) {
       const nuevo = await crearPaciente({

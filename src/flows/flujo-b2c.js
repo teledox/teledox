@@ -2,7 +2,7 @@ const { crear: crearConsulta, crearNotificacion } = require('../services/consult
 const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { clasificarSintomas, esSi, inferirSexo } = require('../utils/validaciones');
+const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_KEY;
@@ -220,9 +220,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       // 1. Crear o reutilizar paciente en BD
       let pacienteId = datos.paciente_id || null;
       if (!pacienteId) {
-        const partes = (datos.nombreCompleto || '').trim().split(/\s+/);
-        const nombre = partes[0] || '';
-        const apellidos = partes.slice(1).join(' ') || '';
+        const { nombre, apellidos } = separarNombre(datos.nombreCompleto);
         const existente = await buscarPorCedula(datos.cedula);
         if (existente) {
           pacienteId = existente.id;

@@ -47,6 +47,15 @@ function tieneApellidos(texto) {
   return texto.trim().split(/\s+/).length >= 3;
 }
 
+// Separa un nombre completo en nombres y apellidos según la convención ecuatoriana:
+// los DOS últimos términos son apellidos, el resto son nombres.
+function separarNombre(completo) {
+  const p = String(completo || '').trim().split(/\s+/).filter(Boolean);
+  if (p.length <= 1) return { nombre: p[0] || '', apellidos: '' };
+  if (p.length === 2) return { nombre: p[0], apellidos: p[1] };
+  return { nombre: p.slice(0, -2).join(' '), apellidos: p.slice(-2).join(' ') };
+}
+
 // Infiere el sexo (M/F) a partir del primer nombre. Heurística: diccionario de nombres
 // comunes (sobre todo masculinos terminados en consonante) + regla de terminación
 // (a → F, o → M). Devuelve 'M', 'F' o null (desconocido → el médico lo ajusta en el panel).
@@ -65,4 +74,4 @@ function inferirSexo(nombreCompleto) {
   return null;
 }
 
-module.exports = { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo };
+module.exports = { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, separarNombre };

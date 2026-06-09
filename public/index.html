@@ -833,6 +833,7 @@
 
 <div class="alert-new" id="toastAlert"></div>
 <div id="printRoot"></div>
+<datalist id="cie10-list"></datalist>
 
 <!-- MODAL RECETA -->
 <div class="plantilla-modal-overlay" id="modalReceta">
@@ -850,7 +851,7 @@
             <div class="doc-row"><span class="doc-lbl">N° Hoja:</span><input class="doc-val-edit" id="rec-hoja" placeholder="1" /></div>
             <div class="doc-row"><span class="doc-lbl">N° Atención:</span><span class="doc-val" id="rec-atencion">—</span></div>
             <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="rec-diagnostico">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">CIE-10:</span><input class="doc-val-edit" id="rec-cie10" placeholder="Ej: J06, R51" /></div>
+            <div class="doc-row"><span class="doc-lbl">CIE-10:</span><input class="doc-val-edit" id="rec-cie10" list="cie10-list" placeholder="Ej: J06, R51" /></div>
           </div>
           <div class="doc-row" style="margin-top:6px">
             <span class="doc-lbl">Alergias:</span>
@@ -919,7 +920,7 @@
         <div class="doc-section"><div class="doc-section-title">C) Motivo de aislamiento/enfermedad</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="cert-diagnostico">—</span></div>
-            <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><input class="doc-val-edit" id="cert-cie10" placeholder="Ej: J06, R51" /></div>
+            <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><input class="doc-val-edit" id="cert-cie10" list="cie10-list" placeholder="Ej: J06, R51" /></div>
             <div class="doc-row">
               <span class="doc-lbl">Presenta síntomas:</span>
               <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-sintomas" value="SI" style="accent-color:#FF5A5F" checked> SI</label>
@@ -1144,7 +1145,7 @@
             <span class="hc-dx-num">1.</span>
             <input class="hc-dx-input" id="hc-dx-1" placeholder="Diagnóstico 1..."/>
             <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
-            <input class="hc-dx-input" id="hc-dx-cie-1" style="max-width:70px" placeholder="Ej: J06"/>
+            <input class="hc-dx-input" id="hc-dx-cie-1" list="cie10-list" style="max-width:70px" placeholder="Ej: J06"/>
             <div class="hc-dx-tipos">
               <label><input type="radio" name="hc-dx-tipo-1" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
               <label><input type="radio" name="hc-dx-tipo-1" value="DEF" style="accent-color:#16a34a"> DEF</label>
@@ -1154,7 +1155,7 @@
             <span class="hc-dx-num">2.</span>
             <input class="hc-dx-input" id="hc-dx-2" placeholder="Diagnóstico 2..."/>
             <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
-            <input class="hc-dx-input" id="hc-dx-cie-2" style="max-width:70px" placeholder="Ej: J06"/>
+            <input class="hc-dx-input" id="hc-dx-cie-2" list="cie10-list" style="max-width:70px" placeholder="Ej: J06"/>
             <div class="hc-dx-tipos">
               <label><input type="radio" name="hc-dx-tipo-2" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
               <label><input type="radio" name="hc-dx-tipo-2" value="DEF" style="accent-color:#16a34a"> DEF</label>
@@ -1164,7 +1165,7 @@
             <span class="hc-dx-num">3.</span>
             <input class="hc-dx-input" id="hc-dx-3" placeholder="Diagnóstico 3..."/>
             <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
-            <input class="hc-dx-input" id="hc-dx-cie-3" style="max-width:70px" placeholder="Ej: J06"/>
+            <input class="hc-dx-input" id="hc-dx-cie-3" list="cie10-list" style="max-width:70px" placeholder="Ej: J06"/>
             <div class="hc-dx-tipos">
               <label><input type="radio" name="hc-dx-tipo-3" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
               <label><input type="radio" name="hc-dx-tipo-3" value="DEF" style="accent-color:#16a34a"> DEF</label>
@@ -1174,7 +1175,7 @@
             <span class="hc-dx-num">4.</span>
             <input class="hc-dx-input" id="hc-dx-4" placeholder="Diagnóstico 4..."/>
             <span style="font-size:10px;color:#888;margin-right:4px">CIE:</span>
-            <input class="hc-dx-input" id="hc-dx-cie-4" style="max-width:70px" placeholder="Ej: J06"/>
+            <input class="hc-dx-input" id="hc-dx-cie-4" list="cie10-list" style="max-width:70px" placeholder="Ej: J06"/>
             <div class="hc-dx-tipos">
               <label><input type="radio" name="hc-dx-tipo-4" value="PRE" checked style="accent-color:#FF5A5F"> PRE</label>
               <label><input type="radio" name="hc-dx-tipo-4" value="DEF" style="accent-color:#16a34a"> DEF</label>

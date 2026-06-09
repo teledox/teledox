@@ -20,6 +20,14 @@ const CIE10 = [
 
 let _pacData = {};
 
+// Datalist global de códigos CIE-10 para autocompletar en receta, certificado e historia clínica
+function _poblarDatalistCIE10() {
+  const dl = document.getElementById('cie10-list');
+  if (!dl || dl.children.length) return;
+  dl.innerHTML = CIE10.map(x => `<option value="${x.c}">${x.c} — ${x.n}</option>`).join('');
+}
+window.addEventListener('load', _poblarDatalistCIE10);
+
 async function openReceta(consultaId, pacienteId) {
   recetaConsultaId = consultaId;
   recetaPacienteId = pacienteId;

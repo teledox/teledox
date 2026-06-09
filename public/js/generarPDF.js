@@ -82,7 +82,6 @@ async function generarRecetaPDF() {
   campoDoble('Peso', gV('rec-peso') ? `${gV('rec-peso')} kg` : '—', 'Talla', gV('rec-talla') ? `${gV('rec-talla')} cm` : '—');
   y -= 4;
 
-  seccion('MEDICAMENTOS PRESCRITOS');
   const meds = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
     const nombre = tr.querySelector('.med-nombre')?.value.trim();
     if (!nombre) return null;
@@ -90,20 +89,47 @@ async function generarRecetaPDF() {
     const frecuencia = frecSel?.value ? (frecSel.selectedOptions[0]?.textContent || '') : '';
     return { nombre: _pdfSafe(nombre), dosis: _pdfSafe(tr.querySelector('.med-dosis')?.value.trim() || ''), frecuencia: _pdfSafe(frecuencia), dias: _pdfSafe(tr.querySelector('.med-dias')?.value.trim() || '') };
   }).filter(m => m && m.nombre);
-  if (!meds.length) {
-    page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
-  } else {
-    meds.forEach((m, i) => {
-      page.drawText(`${i + 1}. ${m.nombre}`, { x: 44, y, size: 9, font: bold, color: negro }); y -= 13;
-      const detalle = [m.dosis, m.frecuencia, m.dias ? `${m.dias} día(s)` : ''].filter(Boolean).join(' · ');
-      page.drawText(detalle, { x: 54, y, size: 9, font: normal, color: gris }); y -= 16;
-    });
-  }
-  y -= 4;
 
-  seccion('INDICACIONES');
-  wrap(gV('rec-indicaciones'));
-  y -= 4;
+  // MEDICINAS e INDICACIONES en dos columnas (facilidad de lectura para el paciente)
+  const colGap = 18;
+  const leftX = 44, rightX = width / 2 + colGap / 2;
+  const colW = (width - 88 - colGap) / 2;
+
+  function colHeader(titulo, x) {
+    page.drawRectangle({ x: x - 4, y: y - 4, width: colW + 8, height: 18, color: rgb(0.99, 0.95, 0.95) });
+    page.drawText(titulo, { x, y, size: 10, font: bold, color: brand });
+  }
+  colHeader('MEDICINAS', leftX);
+  colHeader('INDICACIONES', rightX);
+  const colStartY = y - 24;
+
+  // Dibuja una columna de items numerados con wrapping; devuelve la y final
+  function drawColumn(items, x, startY) {
+    let cy = startY;
+    (items.length ? items : ['—']).forEach((txt, i) => {
+      const palabras = `${i + 1}. ${txt}`.split(' '); let linea = '';
+      for (const p of palabras) {
+        const test = linea ? `${linea} ${p}` : p;
+        if (normal.widthOfTextAtSize(test, 9) > colW && linea) {
+          page.drawText(linea, { x, y: cy, size: 9, font: normal, color: negro }); cy -= 12; linea = p;
+        } else linea = test;
+      }
+      if (linea) { page.drawText(linea, { x, y: cy, size: 9, font: normal, color: negro }); cy -= 12; }
+      cy -= 4;
+    });
+    return cy;
+  }
+
+  const medItems = meds.map(m => {
+    const extra = [m.dosis, m.frecuencia, m.dias ? `${m.dias} día(s)` : ''].filter(Boolean).join(', ');
+    return extra ? `${m.nombre} (${extra})` : m.nombre;
+  });
+  const indicTxt = gV('rec-indicaciones');
+  const indicItems = indicTxt ? indicTxt.split(/\r?\n/).map(s => s.trim()).filter(Boolean) : [];
+
+  const yLeft  = drawColumn(medItems, leftX, colStartY);
+  const yRight = drawColumn(indicItems, rightX, colStartY);
+  y = Math.min(yLeft, yRight) - 6;
 
   seccion('MEDIDAS NO FARMACOLÓGICAS');
   wrap(gV('rec-medidas-no-farmacologicas'));

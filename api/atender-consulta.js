@@ -65,8 +65,9 @@ module.exports = async function handler(req, res) {
           'Prefer':        'return=minimal'
         },
         body: JSON.stringify({
-          medico_id: medicoId,
-          estado:    'en_atencion'
+          medico_id:   medicoId,
+          estado:      'en_atencion',
+          atendido_at: new Date().toISOString()
         })
       }
     );

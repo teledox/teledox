@@ -25,7 +25,7 @@ async function loadMetricas(periodo) {
     // Queries separadas para aislar errores — si una falla, las demás continúan
     const [consultasRaw, pacientesRaw, recetasRaw, respuestasRaw, medicosRaw] = await Promise.all([
       supa('GET', 'consultas', null,
-        `?select=id,nivel_sintomas,estado,created_at,medico_id,pacientes(clientes_b2b(nombre_empresa))&created_at=gte.${desde}`),
+        `?select=id,nivel_sintomas,estado,created_at,atendido_at,medico_id,pacientes(clientes_b2b(nombre_empresa))&created_at=gte.${desde}`),
       supa('GET', 'pacientes', null, '?select=count'),
       supa('GET', 'recetas',   null, '?select=id,seguimiento_activo'),
       supa('GET', 'seguimiento_respuestas', null, '?select=se_siente_mejor').catch(() => []),
@@ -97,7 +97,7 @@ async function loadMetricas(periodo) {
             </div>`).join('')}
       </div>`;
 
-    // ── Tiempo de respuesta (usando updated_at como proxy de atención) ─────
+    // ── Tiempo de respuesta (desde creación hasta que médico hizo clic en Atender) ─────
     function formatMinutes(min) {
       if (min === null || min === undefined || isNaN(min)) return '—';
       if (min < 1)  return `${Math.round(min * 60)}s`;
@@ -105,34 +105,58 @@ async function loadMetricas(periodo) {
       return `${Math.floor(min/60)}h ${Math.round(min%60)}m`;
     }
 
-    // Usar consultas completadas o en atención con updated_at como proxy
-    const atendidas  = all.filter(c => (c.estado === 'completada' || c.estado === 'en_atencion') && c.updated_at && c.created_at);
-    const tiempos    = atendidas.map(c => (new Date(c.updated_at) - new Date(c.created_at)) / 60000).filter(t => t > 0 && t < 1440); // max 24h
-    const avgGeneral = tiempos.length ? tiempos.reduce((a,b) => a+b, 0) / tiempos.length : null;
+    // Solo consultas que tienen atendido_at registrado (cuando médico presionó Atender)
+    const atendidas = all.filter(c => c.atendido_at && c.created_at);
+    const tiempos   = atendidas
+      .map(c => (new Date(c.atendido_at) - new Date(c.created_at)) / 60000)
+      .filter(t => t >= 0 && t < 1440); // descartar negativos y >24h (datos corruptos)
+
+    const avgGeneral = tiempos.length ? tiempos.reduce((a,b) => a+b,0) / tiempos.length : null;
     const minResp    = tiempos.length ? Math.min(...tiempos) : null;
     const maxResp    = tiempos.length ? Math.max(...tiempos) : null;
     const sorted     = [...tiempos].sort((a,b) => a-b);
-    const mediana    = sorted.length ? (sorted.length % 2 === 0
-      ? (sorted[sorted.length/2-1] + sorted[sorted.length/2]) / 2
-      : sorted[Math.floor(sorted.length/2)]) : null;
+    const mediana    = sorted.length
+      ? (sorted.length % 2 === 0
+          ? (sorted[sorted.length/2-1] + sorted[sorted.length/2]) / 2
+          : sorted[Math.floor(sorted.length/2)])
+      : null;
+
+    // Distribución de tiempos en rangos
+    const rangos = [
+      { label: '< 5 min',   count: tiempos.filter(t => t < 5).length,            color: '#16a34a' },
+      { label: '5–15 min',  count: tiempos.filter(t => t >= 5  && t < 15).length, color: '#ca8a04' },
+      { label: '15–30 min', count: tiempos.filter(t => t >= 15 && t < 30).length, color: '#ea580c' },
+      { label: '> 30 min',  count: tiempos.filter(t => t >= 30).length,           color: '#dc2626' },
+    ];
 
     const trEl = document.getElementById('tiempoRespuestaStats');
     if (trEl) {
       const color = avgGeneral === null ? '#aaa' : avgGeneral < 5 ? '#16a34a' : avgGeneral < 15 ? '#ca8a04' : '#dc2626';
-      trEl.innerHTML = atendidas.length ? `
+      trEl.innerHTML = tiempos.length ? `
         <div style="text-align:center;padding:1rem 0;margin-bottom:1rem">
-          <div style="font-size:42px;font-weight:700;color:${color}">${formatMinutes(avgGeneral)}</div>
-          <div style="font-size:12px;color:#888;margin-top:4px">Promedio de tiempo hasta atención</div>
-          <div style="font-size:11px;color:#aaa;margin-top:2px">Basado en ${atendidas.length} consulta${atendidas.length!==1?'s':''}</div>
+          <div style="font-size:44px;font-weight:700;color:${color}">${formatMinutes(avgGeneral)}</div>
+          <div style="font-size:12px;color:#888;margin-top:4px">Tiempo promedio de espera del paciente</div>
+          <div style="font-size:11px;color:#aaa;margin-top:2px">Desde que solicita hasta que un médico atiende · ${tiempos.length} consulta${tiempos.length!==1?'s':''}</div>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1rem">
           ${[['Mínimo',minResp,'#16a34a'],['Mediana',mediana,'#2563eb'],['Máximo',maxResp,'#dc2626']].map(([l,v,c]) => `
             <div style="background:#f9f9f9;border-radius:8px;padding:10px;text-align:center">
-              <div style="font-size:17px;font-weight:700;color:${c}">${formatMinutes(v)}</div>
+              <div style="font-size:18px;font-weight:700;color:${c}">${formatMinutes(v)}</div>
               <div style="font-size:11px;color:#888;margin-top:2px">${l}</div>
             </div>`).join('')}
+        </div>
+        <div style="font-size:12px;color:#555;font-weight:600;margin-bottom:6px">Distribución por rango</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+          ${rangos.map(r => `
+            <div style="text-align:center;padding:8px 4px;background:#f9f9f9;border-radius:8px;border-top:3px solid ${r.color}">
+              <div style="font-size:20px;font-weight:700;color:${r.color}">${r.count}</div>
+              <div style="font-size:10px;color:#888;margin-top:2px">${r.label}</div>
+            </div>`).join('')}
         </div>`
-        : '<div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">Sin consultas atendidas en el período.</div>';
+        : `<div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">
+            ⏱ Sin datos de tiempo de espera en este período.<br>
+            <span style="font-size:12px">Se registra automáticamente cuando un médico hace clic en <strong>Atender</strong>.</span>
+           </div>`;
     }
 
     // ── Respuesta por empresa B2B ──────────────────────────────────────────
@@ -168,10 +192,7 @@ async function loadMetricas(periodo) {
 
     // ── Ranking por médico ─────────────────────────────────────────────────
     // Guardar datos globalmente para exportación
-    _kpiData = { periodo, periodoLabel, total, graves, medios, leves, completadas, enAtencion, pendientes,
-      exitosos, sinMejora: respuestas.filter(r => r.se_siente_mejor === false).length,
-      tasa, recetasActivas: recetas.filter(r => r.seguimiento_activo).length,
-      totalRecetas: recetas.length, porEmpresa, tiempos, avgGeneral, minResp, maxResp, mediana };
+    // _kpiData se completa después de calcular tiempos (más abajo)
 
     const porMedico = medicos.map(m => ({
       nombre: `Dr. ${m.nombre} ${m.apellidos}`,
@@ -202,6 +223,10 @@ async function loadMetricas(periodo) {
         : '<div style="text-align:center;color:#aaa;padding:1.5rem;font-size:13px">Sin consultas atendidas en el período seleccionado</div>';
     }
 
+    _kpiData = { periodo, periodoLabel, total, graves, medios, leves, completadas, enAtencion, pendientes,
+      exitosos, sinMejora: respuestas.filter(r => r.se_siente_mejor === false).length,
+      tasa, recetasActivas: recetas.filter(r => r.seguimiento_activo).length,
+      totalRecetas: recetas.length, porEmpresa, tiempos, avgGeneral, minResp, maxResp, mediana };
     _kpiData.porMedico = porMedico;
     const medicoTablaEl = document.getElementById('medicoTabla');
     if (medicoTablaEl) {

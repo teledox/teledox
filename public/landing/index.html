@@ -37,7 +37,7 @@
       width:38px;height:38px;border-radius:10px;
       background:var(--red);display:flex;align-items:center;justify-content:center;font-size:20px
     }
-    .logo-name{font-size:19px;font-weight:800;color:var(--dark);letter-spacing:-.4px}
+    .logo-name{font-size:19px;font-weight:800;color:var(--red);letter-spacing:-.4px}
     .logo-name em{color:var(--red);font-style:normal}
     nav ul{list-style:none;display:flex;gap:30px;align-items:center}
     nav ul a{text-decoration:none;color:var(--gray);font-size:14px;font-weight:500;transition:color .2s}
@@ -56,19 +56,6 @@
       transition:background .2s,box-shadow .2s
     }
     .btn-nav:hover{background:var(--red-dark);box-shadow:0 6px 20px rgba(240,82,82,.4)}
-
-    /* ── BOTÓN WA FLOTANTE ── */
-    .wa-float{
-      position:fixed;bottom:28px;right:28px;z-index:999;
-      display:flex;align-items:center;gap:10px;
-      background:#25D366;color:#fff;
-      padding:14px 22px;border-radius:50px;
-      font-size:15px;font-weight:700;text-decoration:none;
-      box-shadow:0 8px 28px rgba(37,211,102,.4);
-      transition:transform .2s,box-shadow .2s
-    }
-    .wa-float:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(37,211,102,.5)}
-    .wa-float svg{width:22px;height:22px;flex-shrink:0}
 
     /* ── HERO ── */
     .hero{
@@ -115,15 +102,6 @@
       transition:background .2s,transform .15s,box-shadow .2s
     }
     .btn-primary:hover{background:var(--red-dark);transform:translateY(-2px);box-shadow:0 14px 40px rgba(240,82,82,.4)}
-    .btn-wa{
-      background:#25D366;color:#fff;
-      padding:16px 32px;border-radius:13px;
-      font-size:16px;font-weight:700;text-decoration:none;
-      display:inline-flex;align-items:center;gap:10px;
-      box-shadow:0 10px 32px rgba(37,211,102,.25);
-      transition:background .2s,transform .15s
-    }
-    .btn-wa:hover{background:#1EA955;transform:translateY(-2px)}
     .btn-ghost{
       background:transparent;color:var(--dark);
       padding:16px 32px;border-radius:13px;
@@ -141,20 +119,34 @@
     .trust-sep{width:4px;height:4px;border-radius:50%;background:#d1d5db}
 
     /* ── PROBLEMA ── */
-    .problem-section{padding:110px 24px;background:var(--slate);text-align:center}
-    .eyebrow{color:rgba(255,255,255,.38);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
-    .problem-section h2{color:#fff;font-size:clamp(26px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;max-width:760px;margin:0 auto}
-    .problem-section p{color:rgba(255,255,255,.52);font-size:18px;line-height:1.7;max-width:540px;margin:20px auto 0}
+    .problem-section{padding:110px 24px;background:var(--red-light);text-align:center;position:relative;overflow:hidden}
+    .problem-section::before{
+      content:'';position:absolute;top:-60px;left:-110px;
+      width:480px;height:480px;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500' fill='none'%3E%3Crect x='40' y='30' width='390' height='340' rx='80' ry='80' stroke='%23F05252' stroke-width='32' fill='none'/%3E%3Cpath d='M160 368 Q140 430 105 460 Q175 445 210 368 Z' fill='%23F05252'/%3E%3Cpath d='M 310 80 C 370 80, 410 120, 415 175 C 420 230, 395 268, 355 285 C 355 295, 360 308, 365 320 C 330 315, 310 300, 295 288 C 260 295, 235 285, 220 262 C 205 238, 205 205, 218 180 C 232 152, 265 118, 310 80 Z' stroke='%23F05252' stroke-width='26' stroke-linejoin='round' stroke-linecap='round' fill='none'/%3E%3Cpath d='M 295 288 C 285 308, 278 328, 275 348' stroke='%23F05252' stroke-width='26' stroke-linecap='round' fill='none'/%3E%3Cpath d='M 220 230 Q 200 238, 208 255' stroke='%23F05252' stroke-width='22' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") no-repeat center/contain;
+      opacity:.07;transform:rotate(-12deg);pointer-events:none
+    }
+    .problem-section::after{
+      content:'';position:absolute;bottom:-80px;right:-90px;
+      width:380px;height:380px;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 500 500' fill='none'%3E%3Crect x='40' y='30' width='390' height='340' rx='80' ry='80' stroke='%23F05252' stroke-width='32' fill='none'/%3E%3Cpath d='M160 368 Q140 430 105 460 Q175 445 210 368 Z' fill='%23F05252'/%3E%3Cpath d='M 310 80 C 370 80, 410 120, 415 175 C 420 230, 395 268, 355 285 C 355 295, 360 308, 365 320 C 330 315, 310 300, 295 288 C 260 295, 235 285, 220 262 C 205 238, 205 205, 218 180 C 232 152, 265 118, 310 80 Z' stroke='%23F05252' stroke-width='26' stroke-linejoin='round' stroke-linecap='round' fill='none'/%3E%3Cpath d='M 295 288 C 285 308, 278 328, 275 348' stroke='%23F05252' stroke-width='26' stroke-linecap='round' fill='none'/%3E%3Cpath d='M 220 230 Q 200 238, 208 255' stroke='%23F05252' stroke-width='22' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") no-repeat center/contain;
+      opacity:.06;transform:rotate(10deg);pointer-events:none
+    }
+    .problem-section > *{position:relative;z-index:1}
+    .eyebrow{color:var(--red);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:18px}
+    .problem-section h2{color:var(--dark);font-size:clamp(26px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;max-width:760px;margin:0 auto}
+    .problem-section p{color:var(--gray);font-size:18px;line-height:1.7;max-width:540px;margin:20px auto 0}
     .pain-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:56px;max-width:860px;margin-left:auto;margin-right:auto}
     .pain-card{
-      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+      background:#fff;border:1.5px solid rgba(240,82,82,.1);
       border-radius:16px;padding:26px 22px;min-width:190px;flex:1;text-align:left;
-      transition:background .2s,border-color .2s
+      box-shadow:0 4px 16px rgba(240,82,82,.06);
+      transition:border-color .2s,transform .2s,box-shadow .2s
     }
-    .pain-card:hover{background:rgba(240,82,82,.08);border-color:rgba(240,82,82,.25)}
+    .pain-card:hover{border-color:var(--red);transform:translateY(-3px);box-shadow:0 8px 28px rgba(240,82,82,.12)}
     .pain-icon{font-size:26px;margin-bottom:12px}
-    .pain-title{color:#fff;font-size:15px;font-weight:700;margin-bottom:6px}
-    .pain-desc{color:rgba(255,255,255,.44);font-size:13px;line-height:1.55}
+    .pain-title{color:var(--dark);font-size:15px;font-weight:700;margin-bottom:6px}
+    .pain-desc{color:var(--gray);font-size:13px;line-height:1.55}
 
     /* ── SOLUCIÓN ── */
     .solution-section{padding:110px 24px}
@@ -178,54 +170,55 @@
 
     /* ── SMART TRACKING ── */
     .tracking-section{
-      padding:110px 24px;background:var(--dark);position:relative;overflow:hidden
+      padding:110px 24px;background:var(--gray-light);position:relative;overflow:hidden
     }
     .tracking-section::before{
       content:'';position:absolute;top:-200px;left:-200px;
       width:600px;height:600px;border-radius:50%;
-      background:radial-gradient(circle,rgba(240,82,82,.1),transparent 65%);pointer-events:none
+      background:radial-gradient(circle,rgba(240,82,82,.08),transparent 65%);pointer-events:none
     }
     .tracking-section::after{
       content:'';position:absolute;bottom:-150px;right:-150px;
       width:500px;height:500px;border-radius:50%;
-      background:radial-gradient(circle,rgba(13,148,136,.1),transparent 65%);pointer-events:none
+      background:radial-gradient(circle,rgba(13,148,136,.08),transparent 65%);pointer-events:none
     }
-    .tracking-inner{max-width:1080px;margin:0 auto;display:flex;gap:72px;align-items:center;flex-wrap:wrap;position:relative;z-index:1}
-    .tracking-copy{flex:1;min-width:300px}
+    .tracking-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:56px;position:relative;z-index:1}
+    .tracking-copy{max-width:720px;text-align:center}
     .tracking-copy .eyebrow{color:var(--red);opacity:1;letter-spacing:2px}
-    .tracking-copy h2{color:#fff;font-size:clamp(28px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.08}
-    .tracking-copy p{color:rgba(255,255,255,.57);font-size:17px;line-height:1.7;margin-top:18px;max-width:440px}
-    .tracking-items{margin-top:38px;display:flex;flex-direction:column;gap:18px}
+    .tracking-copy h2{color:var(--dark);font-size:clamp(28px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.08}
+    .tracking-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin:18px auto 0;max-width:560px}
+    .tracking-items{margin:38px auto 0;display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:20px;text-align:left;max-width:760px}
     .tracking-item{display:flex;gap:14px;align-items:flex-start}
     .t-check{
       width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:2px;
-      background:rgba(13,148,136,.15);display:flex;align-items:center;justify-content:center;
+      background:rgba(13,148,136,.12);display:flex;align-items:center;justify-content:center;
       color:var(--teal);font-size:13px;font-weight:800
     }
-    .t-title{color:#fff;font-size:15px;font-weight:700;margin-bottom:3px}
-    .t-desc{color:rgba(255,255,255,.48);font-size:13px;line-height:1.55}
-    .tracking-visual{flex:1;min-width:300px;display:flex;flex-direction:column;gap:12px}
+    .t-title{color:var(--dark);font-size:15px;font-weight:700;margin-bottom:3px}
+    .t-desc{color:var(--gray);font-size:13px;line-height:1.55}
+    .tracking-visual{width:100%;max-width:800px;display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:14px}
     .track-card{
-      background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+      background:#fff;border:1.5px solid rgba(0,0,0,.05);
       border-radius:16px;padding:20px 22px;
-      transition:background .25s,border-color .25s
+      box-shadow:0 4px 16px rgba(0,0,0,.05);
+      transition:border-color .25s,transform .2s,box-shadow .25s
     }
-    .track-card:hover{background:rgba(240,82,82,.08);border-color:rgba(240,82,82,.25)}
+    .track-card:hover{border-color:rgba(240,82,82,.3);transform:translateY(-3px);box-shadow:0 8px 26px rgba(240,82,82,.1)}
     .track-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-    .track-label{color:rgba(255,255,255,.38);font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+    .track-label{color:var(--gray-mid,#9CA3AF);font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
     .track-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px}
-    .s-green{background:rgba(13,148,136,.15);color:#2DD4BF}
-    .s-red{background:rgba(240,82,82,.15);color:#F87171}
-    .s-amber{background:rgba(245,158,11,.15);color:#FBBF24}
-    .track-title{color:#fff;font-size:14px;font-weight:600;margin-bottom:8px}
-    .track-bar-bg{height:5px;border-radius:100px;background:rgba(255,255,255,.08)}
+    .s-green{background:rgba(13,148,136,.12);color:#0D9488}
+    .s-red{background:rgba(240,82,82,.12);color:#D93333}
+    .s-amber{background:rgba(245,158,11,.14);color:#B45309}
+    .track-title{color:var(--dark);font-size:14px;font-weight:600;margin-bottom:8px}
+    .track-bar-bg{height:5px;border-radius:100px;background:rgba(0,0,0,.07)}
     .track-bar-fill{height:5px;border-radius:100px}
-    .track-meta{margin-top:7px;font-size:11px;color:rgba(255,255,255,.3)}
+    .track-meta{margin-top:7px;font-size:11px;color:var(--gray)}
 
     /* ── CRÓNICAS ── */
     .chronic-section{padding:110px 24px;background:var(--gray-light)}
-    .chronic-inner{max-width:1080px;margin:0 auto;display:flex;gap:72px;align-items:center;flex-wrap:wrap}
-    .chronic-visual{flex:1;min-width:300px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .chronic-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column-reverse;align-items:center;gap:56px}
+    .chronic-visual{width:100%;max-width:640px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .chronic-card{
       background:#fff;border-radius:18px;padding:24px 20px;
       box-shadow:0 4px 18px rgba(0,0,0,.06);
@@ -235,9 +228,9 @@
     .c-icon{font-size:28px;margin-bottom:10px}
     .c-title{font-size:14px;font-weight:700;margin-bottom:6px}
     .c-desc{font-size:13px;color:var(--gray);line-height:1.5}
-    .chronic-copy{flex:1;min-width:300px}
+    .chronic-copy{max-width:700px;text-align:center}
     .chronic-copy h2{font-size:clamp(26px,4vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.1}
-    .chronic-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin-top:16px}
+    .chronic-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin:16px auto 0;max-width:580px}
 
     /* ── CÓMO FUNCIONA ── */
     .how-section{padding:110px 24px}
@@ -255,19 +248,6 @@
     .step h3{font-size:14px;font-weight:700;margin-bottom:7px}
     .step p{font-size:13px;color:var(--gray);line-height:1.6}
 
-    /* ── SEGUROS STRIP ── */
-    .insurers-strip{padding:72px 24px;text-align:center;border-top:1px solid #e5e7eb}
-    .ins-note{color:var(--gray);font-size:14px;margin-bottom:32px;font-weight:500}
-    .ins-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;max-width:680px;margin:0 auto}
-    .ins-chip{
-      padding:9px 18px;border-radius:100px;
-      background:var(--gray-light);color:var(--dark);
-      font-size:13px;font-weight:600;
-      border:1.5px solid transparent;
-      transition:border-color .2s,background .2s,color .2s
-    }
-    .ins-chip:hover{border-color:var(--red);background:var(--red-light);color:var(--red)}
-
     /* ── CTA FINAL ── */
     .final-section{
       padding:130px 24px;text-align:center;
@@ -280,15 +260,16 @@
     .final-section p{color:var(--gray);font-size:18px;margin-top:18px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.6}
 
     /* ── FOOTER ── */
-    footer{background:var(--dark);padding:52px 52px 32px}
-    .footer-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:36px;margin-bottom:44px}
-    .footer-brand p{color:rgba(255,255,255,.42);font-size:14px;line-height:1.65;max-width:240px;margin-top:12px}
-    .footer-col h4{color:#fff;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
+    footer{background:var(--gray-light);padding:52px 52px 32px;border-top:1px solid #e5e7eb}
+    .footer-top{display:flex;justify-content:center;flex-wrap:wrap;gap:72px;margin-bottom:44px;text-align:center}
+    .footer-brand{display:flex;flex-direction:column;align-items:center}
+    .footer-brand p{color:var(--gray);font-size:14px;line-height:1.65;max-width:240px;margin-top:12px}
+    .footer-col h4{color:var(--dark);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
     .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
-    .footer-col ul a{color:rgba(255,255,255,.42);font-size:14px;text-decoration:none;transition:color .2s}
-    .footer-col ul a:hover{color:#fff}
-    .footer-bottom{border-top:1px solid rgba(255,255,255,.07);padding-top:26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
-    .footer-bottom p{color:rgba(255,255,255,.26);font-size:12px}
+    .footer-col ul a{color:var(--gray);font-size:14px;text-decoration:none;transition:color .2s}
+    .footer-col ul a:hover{color:var(--red)}
+    .footer-bottom{border-top:1px solid #e5e7eb;padding-top:26px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+    .footer-bottom p{color:var(--gray-mid,#9CA3AF);font-size:12px}
 
     /* ── FADE UP ── */
     .fade-up{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s ease}
@@ -299,6 +280,8 @@
       nav{padding:14px 18px}
       nav ul{display:none}
       .chronic-visual{grid-template-columns:1fr}
+      .tracking-items{grid-template-columns:1fr}
+      .tracking-visual{grid-template-columns:1fr}
       footer{padding:40px 22px 26px}
       .step:not(:last-child)::after{display:none}
     }
@@ -321,34 +304,16 @@
     <li><a href="seguros.html" class="page-link">Seguros</a></li>
   </ul>
   <div class="nav-right">
-    <a href="https://wa.me/593979076453" target="_blank" class="btn-nav" style="background:#25D366;box-shadow:0 4px 14px rgba(37,211,102,.3)">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      WhatsApp
-    </a>
-    <a href="#consulta" class="btn-nav">Agendar consulta</a>
+    <a href="https://wa.me/593979076453" target="_blank" class="btn-nav">Agendar consulta</a>
   </div>
 </nav>
 
-<!-- ── WA FLOTANTE ── -->
-<a href="https://wa.me/593979076453" target="_blank" class="wa-float">
-  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-  Escríbenos
-</a>
-
 <!-- ── HERO ── -->
 <section class="hero">
-  <div class="badge fade-up">
-    <span class="badge-dot"></span>
-    Telemedicina con seguimiento inteligente
-  </div>
   <h1 class="fade-up">Tu médico en línea.<br/><span class="red">Tu tratamiento,</span><br/><span class="teal">garantizado.</span></h1>
   <p class="hero-sub fade-up">Consulta médica online con historia clínica digital, Smart Tracking post-consulta y control especializado de enfermedades crónicas.</p>
   <div class="hero-actions fade-up">
-    <a href="#consulta" class="btn-primary">Agendar mi consulta →</a>
-    <a href="https://wa.me/593979076453" target="_blank" class="btn-wa">
-      <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-      Consultar por WhatsApp
-    </a>
+    <a href="https://wa.me/593979076453" target="_blank" class="btn-primary">Agendar mi consulta →</a>
   </div>
   <div class="hero-trust fade-up">
     <div class="trust-pill">📋 Historia clínica digital</div>
@@ -500,21 +465,7 @@
       <h2>Una crónica necesita atención continua,<br/>no episódica.</h2>
       <p>Las enfermedades crónicas no tienen fin de episodio. MediLyft tiene un protocolo de seguimiento inteligente que se adapta a tu condición, detecta descompensaciones antes de que se conviertan en emergencias.</p>
       <p style="margin-top:14px">Tu médico siempre tiene el contexto completo. Cada consulta es una conversación que continúa, no que empieza de cero.</p>
-      <a href="#consulta" class="btn-primary" style="margin-top:32px;display:inline-flex">Iniciar control de mi crónica →</a>
-    </div>
-  </div>
-</section>
-
-<!-- ── SEGUROS STRIP ── -->
-<section class="insurers-strip">
-  <div class="section-center fade-up">
-    <div class="eyebrow-red">Seguros aliados</div>
-    <h2 class="section-title" style="font-size:clamp(22px,3.5vw,36px)">Tu seguro puede cubrir tu consulta</h2>
-    <p class="ins-note" style="margin-top:10px">Consulta con tu aseguradora. <a href="seguros.html" style="color:var(--red);font-weight:600;text-decoration:none">Ver información para aseguradoras →</a></p>
-    <div class="ins-grid">
-      <div class="ins-chip">VitalDent</div><div class="ins-chip">Seguros Aliados</div><div class="ins-chip">Bupa</div>
-      <div class="ins-chip">MetLife</div><div class="ins-chip">EquiVida</div><div class="ins-chip">Integral</div>
-      <div class="ins-chip">Panamericana</div><div class="ins-chip">Latina Seguros</div><div class="ins-chip">Sucre</div><div class="ins-chip">QBE</div>
+      <a href="https://wa.me/593979076453" target="_blank" class="btn-primary" style="margin-top:32px;display:inline-flex">Iniciar control de mi crónica →</a>
     </div>
   </div>
 </section>
@@ -525,11 +476,7 @@
     <h2>¿Y si nunca más te dejaran solo con un diagnóstico?</h2>
     <p>MediLyft no te suelta hasta que estés bien. Eso es lo que nos diferencia.</p>
     <div class="hero-actions" style="margin-top:44px">
-      <a href="#consulta" class="btn-primary">Agendar mi primera consulta →</a>
-      <a href="https://wa.me/593979076453" target="_blank" class="btn-wa">
-        <svg viewBox="0 0 24 24" fill="currentColor" style="width:18px;height:18px"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-        Consultar por WhatsApp
-      </a>
+      <a href="https://wa.me/593979076453" target="_blank" class="btn-primary">Agendar mi primera consulta →</a>
     </div>
   </div>
 </section>
@@ -538,8 +485,8 @@
 <footer>
   <div class="footer-top">
     <div class="footer-brand">
-      <a href="index.html" class="logo"><img src="./logo.svg" alt="MediLyft" style="height:34px" onerror="this.style.display='none'"/><span class="logo-name" style="color:#fff">Medi<em>Lyft</em></span></a>
-      <p>Telemedicina con seguimiento inteligente. Para que tu tratamiento funcione de verdad.</p>
+      <a href="index.html" class="logo"><img src="./logo.svg" alt="MediLyft" style="height:34px" onerror="this.style.display='none'"/><span class="logo-name">Medi<em>Lyft</em></span></a>
+      <p>Para que tu tratamiento funcione de verdad.</p>
     </div>
     <div class="footer-col"><h4>Pacientes</h4><ul><li><a href="#como-funciona">Cómo funciona</a></li><li><a href="#smart-tracking">Smart Tracking</a></li><li><a href="#cronicas">Enfermedades crónicas</a></li></ul></div>
     <div class="footer-col"><h4>Soluciones</h4><ul><li><a href="empresas.html">Para empresas</a></li><li><a href="seguros.html">Para aseguradoras</a></li></ul></div>

@@ -36,7 +36,7 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
         'seguimiento', '🔁 Paciente con síntomas persistentes',
         `${paciente.nombre} ${paciente.apellidos || ''} mejoró parcialmente pero aún presenta síntomas (medicamento: ${recordatorio.medicamento || '—'}).`,
         paciente.id, recordatorio?.consulta_id || null,
-        { origen: 'seguimiento', categoria: 'medio', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente' }
+        { origen: 'seguimiento', categoria: 'medio', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente', seguimiento_respuesta_id: r.id }
       );
       return `👨‍⚕️ Gracias por contarnos. Hemos registrado que aún presenta síntomas.\n\nUn médico revisará su caso y, si lo considera necesario, le contactaremos para agendar una *consulta de seguimiento*.\n\nSi en cualquier momento desea atención, escríbanos *hola*. 💙`;
 
@@ -46,7 +46,7 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
         'seguimiento', '🔴 Paciente sin mejoría',
         `${paciente.nombre} ${paciente.apellidos || ''} indica que NO mejoró o empeoró (medicamento: ${recordatorio.medicamento || '—'}).`,
         paciente.id, recordatorio?.consulta_id || null,
-        { origen: 'seguimiento', categoria: 'grave', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente' }
+        { origen: 'seguimiento', categoria: 'grave', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente', seguimiento_respuesta_id: r.id }
       );
       return `😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad.\n\nLe contactaremos en breve. Si los síntomas son graves, *llame al 911* o escríbanos *hola*. 💙`;
 

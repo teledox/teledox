@@ -82,3 +82,16 @@ CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);
 -- y marcada con origen='seguimiento_aprobado' (consultas normales: origen NULL)
 -- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS origen VARCHAR(30);
 -- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS consulta_seguimiento_de UUID REFERENCES consultas(id);
+
+-- ── Timeline de seguimiento dentro de la ficha de cada consulta ───────────
+-- Hoy recordatorios/seguimiento_respuestas no saben a qué consulta pertenecen
+-- (recordatorio?.consulta_id siempre era null). Esto los enlaza:
+--   recordatorios.consulta_id          -> se llena al crear el recordatorio (receta.js)
+--   seguimiento_respuestas.consulta_id -> se copia del recordatorio al enviar el check-in (cron.js)
+--   notificaciones.seguimiento_respuesta_id -> enlaza la alerta con el mensaje que la disparó
+-- Solo aplica hacia adelante: recordatorios/respuestas viejos quedan en NULL y
+-- simplemente no aparecen en el timeline de su consulta (no rompe nada).
+-- ALTER TABLE recordatorios ADD COLUMN IF NOT EXISTS consulta_id UUID REFERENCES consultas(id);
+-- ALTER TABLE seguimiento_respuestas ADD COLUMN IF NOT EXISTS consulta_id UUID REFERENCES consultas(id);
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS seguimiento_respuesta_id UUID REFERENCES seguimiento_respuestas(id);
+-- CREATE INDEX IF NOT EXISTS idx_seguimiento_respuestas_consulta ON seguimiento_respuestas(consulta_id);

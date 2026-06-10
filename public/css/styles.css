@@ -343,3 +343,39 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 @media (max-width: 900px) {
   .alertas-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Timeline de seguimiento dentro de la ficha del paciente ─────────────── */
+.seg-detalle-row td { background: #fafafa; padding: 10px 14px; }
+.seg-timeline { display: flex; flex-direction: column; gap: 6px; }
+.seg-item {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: white; border-radius: 8px; padding: 8px 12px;
+  border-left: 3px solid #e5e7eb; font-size: 12px;
+}
+.seg-item-fecha     { color: #aaa; font-size: 11px; min-width: 90px; }
+.seg-item-pregunta  { color: #555; font-weight: 600; min-width: 160px; }
+.seg-item-respuesta { font-weight: 600; }
+
+.seg-verde    { border-left-color: #16a34a; }
+.seg-verde    .seg-item-respuesta { color: #16a34a; }
+.seg-amarillo { border-left-color: #ca8a04; }
+.seg-amarillo .seg-item-respuesta { color: #ca8a04; }
+.seg-rojo     { border-left-color: #dc2626; }
+.seg-rojo     .seg-item-respuesta { color: #dc2626; }
+.seg-naranja  { border-left-color: #ea580c; }
+.seg-naranja  .seg-item-respuesta { color: #ea580c; }
+.seg-gris     { border-left-color: #d1d5db; }
+.seg-gris     .seg-item-respuesta { color: #9ca3af; }
+
+.seg-alerta-badge {
+  font-size: 10px; font-weight: 700; border-radius: 6px;
+  padding: 2px 8px; white-space: nowrap; margin-left: auto;
+}
+.seg-alerta-badge.seg-pendiente { background: #fef9c3; color: #ca8a04; }
+.seg-alerta-badge.seg-aprobada  { background: #dcfce7; color: #16a34a; }
+.seg-alerta-badge.seg-rechazada { background: #f3f4f6; color: #6b7280; }
+
+@media (max-width: 700px) {
+  .seg-item { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .seg-alerta-badge { margin-left: 0; }
+}

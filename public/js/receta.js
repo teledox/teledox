@@ -282,6 +282,7 @@ async function activarSeguimiento() {
       for (const med of medsConSeg) {
         await supa('POST', 'recordatorios', {
           receta_id, paciente_id: recetaPacienteId, telefono,
+          consulta_id: recetaConsultaId,
           medicamento: med.nombre, dosis: med.dosis || '',
           frecuencia_horas: med.frecuencia_horas,
           fecha_proximo: new Date(ahora.getTime() + med.frecuencia_horas * 3600000).toISOString(),

@@ -50,6 +50,7 @@ module.exports = async function handler(req, res) {
           recordatorio_id: r.id,
           paciente_id: r.paciente_id,
           receta_id: r.receta_id,
+          consulta_id: r.consulta_id || null,
           pregunta: mensaje
         });
 
@@ -66,6 +67,7 @@ module.exports = async function handler(req, res) {
             await query('POST', 'recordatorios', {
               receta_id: r.receta_id,
               paciente_id: r.paciente_id,
+              consulta_id: r.consulta_id || null,
               telefono: r.telefono,
               medicamento: r.medicamento,
               dosis: r.dosis,

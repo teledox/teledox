@@ -51,8 +51,87 @@ async function showPacienteDetalle(id) {
 
   const consultas = await supa('GET', 'consultas', null, `?paciente_id=eq.${id}&order=created_at.desc`) || [];
   const totalC = consultas.length;
+
+  // ── Timeline de seguimiento por consulta (mensajes enviados + respuestas) ──
+  const consultaIds = consultas.map(c => c.id);
+  const segPorConsulta = {};
+  if (consultaIds.length) {
+    const segs = await supa('GET', 'seguimiento_respuestas', null,
+      `?consulta_id=in.(${consultaIds.join(',')})&select=*&order=created_at.asc`) || [];
+    const segIds = segs.map(s => s.id);
+    const alertaPorSeg = {};
+    if (segIds.length) {
+      const alertas = await supa('GET', 'notificaciones', null,
+        `?seguimiento_respuesta_id=in.(${segIds.join(',')})&select=seguimiento_respuesta_id,estado_validacion,medico_validador:usuarios!notificaciones_medico_validador_id_fkey(nombre,apellidos)`) || [];
+      alertas.forEach(a => { alertaPorSeg[a.seguimiento_respuesta_id] = a; });
+    }
+    segs.forEach(s => {
+      s._alerta = alertaPorSeg[s.id] || null;
+      (segPorConsulta[s.consulta_id] || (segPorConsulta[s.consulta_id] = [])).push(s);
+    });
+  }
+
+  const segEstadoInfo = s => {
+    if (s.respuesta == null) return { cls: 'seg-gris', label: '⏳ Sin respuesta' };
+    if (s.tomo_medicamento === false) return { cls: 'seg-naranja', label: '⚠️ No tomó el medicamento' };
+    if (s.tomo_medicamento === true)  return { cls: 'seg-verde',   label: '✅ Tomó el medicamento' };
+    if (s.respuesta === '3') return { cls: 'seg-rojo',     label: '🔴 No mejoró / empeoró' };
+    if (s.respuesta === '2') return { cls: 'seg-amarillo', label: '🟡 Mejoró, persisten síntomas' };
+    if (s.se_siente_mejor === true || s.respuesta === '1' || s.respuesta === 'curado')
+      return { cls: 'seg-verde', label: '✅ Se siente mejor / Curado' };
+    return { cls: 'seg-gris', label: s.respuesta };
+  };
+
+  const segPreguntaLabel = s => {
+    const p = s.pregunta || '';
+    if (/tomar su medicamento/i.test(p)) return '💊 Control de medicamento';
+    if (/tratamiento.*finalizado/i.test(p)) return '🏥 Cierre de tratamiento';
+    return '🔁 Mensaje de seguimiento';
+  };
+
+  const segAlertaBadge = s => {
+    const a = s._alerta;
+    if (!a) return '';
+    const m = a.medico_validador;
+    const medNombre = m ? ` — Dr. ${m.nombre || ''} ${m.apellidos || ''}`.trim() : '';
+    if (a.estado_validacion === 'aprobada')  return `<span class="seg-alerta-badge seg-aprobada">✅ Aprobada${medNombre}</span>`;
+    if (a.estado_validacion === 'rechazada') return `<span class="seg-alerta-badge seg-rechazada">❌ Rechazada${medNombre}</span>`;
+    return `<span class="seg-alerta-badge seg-pendiente">⏳ Pendiente de revisión médica</span>`;
+  };
+
+  const segBadge = c => {
+    const segs = segPorConsulta[c.id];
+    if (!segs || !segs.length) return '<span style="color:#ccc">—</span>';
+    const cls = segs.some(s => s.respuesta === '3' || s.tomo_medicamento === false) ? 'badge-red'
+              : segs.some(s => s.respuesta === '2') ? 'badge-yellow'
+              : segs.some(s => s.respuesta == null) ? 'badge-gray'
+              : 'badge-green';
+    return `<span class="badge ${cls}" style="cursor:pointer" onclick="toggleSeguimientoDetalle('${c.id}')" title="Ver mensajes de seguimiento">🔁 ${segs.length}</span>`;
+  };
+
+  const segDetalle = (c, colspan) => {
+    const segs = segPorConsulta[c.id];
+    if (!segs || !segs.length) return '';
+    return `<tr class="seg-detalle-row" id="seg-detalle-${c.id}" style="display:none">
+      <td colspan="${colspan}">
+        <div class="seg-timeline">
+          ${segs.map(s => {
+            const info = segEstadoInfo(s);
+            return `<div class="seg-item ${info.cls}">
+              <div class="seg-item-fecha">${new Date(s.created_at).toLocaleString('es-EC',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+              <div class="seg-item-pregunta" title="${(s.pregunta || '').replace(/"/g,'&quot;')}">${segPreguntaLabel(s)}</div>
+              <div class="seg-item-respuesta">${info.label}</div>
+              ${segAlertaBadge(s)}
+            </div>`;
+          }).join('')}
+        </div>
+      </td>
+    </tr>`;
+  };
+
+  const colspanConsultas = esAdmin ? 8 : 7;
   document.getElementById('patConsultas').innerHTML = consultas.length ? `
-    <table class="table"><thead><tr><th style="text-align:center;width:40px">#</th><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th>${esAdmin ? '<th></th>' : ''}</tr></thead>
+    <table class="table"><thead><tr><th style="text-align:center;width:40px">#</th><th>Fecha</th><th>Síntomas</th><th>Diagnóstico</th><th>Nivel</th><th>Estado</th><th>Seguimiento</th>${esAdmin ? '<th></th>' : ''}</tr></thead>
     <tbody>${consultas.map((c, i) => `<tr>
       <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa">${totalC - i}</td>
       <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
@@ -60,8 +139,9 @@ async function showPacienteDetalle(id) {
       <td>${c.diagnostico || '—'}</td>
       <td>${c.nivel_sintomas === 3 ? '<span class="badge badge-red">Grave</span>' : c.nivel_sintomas === 2 ? '<span class="badge badge-yellow">Medio</span>' : '<span class="badge badge-green">Leve</span>'}</td>
       <td><span class="badge badge-gray">${c.estado}</span></td>
+      <td>${segBadge(c)}</td>
       ${esAdmin ? `<td><button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarConsultaDesdeDetalle('${c.id}','${id}')">🗑</button></td>` : ''}
-    </tr>`).join('')}</tbody></table>`
+    </tr>${segDetalle(c, colspanConsultas)}`).join('')}</tbody></table>`
     : '<div class="empty-state">Sin consultas</div>';
 
   const seguimientos = await supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&order=activo.desc,created_at.desc`) || [];
@@ -88,6 +168,12 @@ async function showPacienteDetalle(id) {
   document.querySelectorAll('#page-paciente-detalle .tab-content').forEach(t => t.classList.remove('active'));
   document.querySelector('#page-paciente-detalle .tab-bar .tab').classList.add('active');
   document.getElementById('tab-datos').classList.add('active');
+}
+
+// Muestra/oculta la línea de tiempo de seguimiento de una consulta
+function toggleSeguimientoDetalle(consultaId) {
+  const row = document.getElementById(`seg-detalle-${consultaId}`);
+  if (row) row.style.display = row.style.display === 'none' ? '' : 'none';
 }
 
 // ── Activar / desactivar recordatorios de seguimiento del bot ──────────────

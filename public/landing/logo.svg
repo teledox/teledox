@@ -1,26 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
   <!-- Burbuja de chat redondeada -->
-  <rect x="40" y="30" width="390" height="340" rx="80" ry="80" stroke="#F05252" stroke-width="32" fill="none"/>
-  <!-- Cola de la burbuja (abajo centro-izquierda) -->
-  <path d="M160 368 Q140 430 105 460 Q175 445 210 368 Z" fill="#F05252"/>
+  <rect x="92" y="68" width="328" height="330" rx="88" ry="88" stroke="#F05252" stroke-width="52" fill="none"/>
+  <!-- Cola de la burbuja (abajo, apuntando a la derecha) -->
+  <path d="M218 396 L218 468 Q218 480 230 471 L320 398 Z" fill="#F05252"/>
 
-  <!-- Perfil de rostro humano (mirando a la izquierda) -->
-  <!-- Cabeza / cráneo -->
+  <!-- Perfil de rostro humano mirando a la derecha -->
   <path d="
-    M 310 80
-    C 370 80, 410 120, 415 175
-    C 420 230, 395 268, 355 285
-    C 355 295, 360 308, 365 320
-    C 330 315, 310 300, 295 288
-    C 260 295, 235 285, 220 262
-    C 205 238, 205 205, 218 180
-    C 232 152, 265 118, 310 80
-    Z
-  " stroke="#F05252" stroke-width="26" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
-
-  <!-- Cuello -->
-  <path d="M 295 288 C 285 308, 278 328, 275 348" stroke="#F05252" stroke-width="26" stroke-linecap="round" fill="none"/>
-
-  <!-- Nariz (punta del perfil) -->
-  <path d="M 220 230 Q 200 238, 208 255" stroke="#F05252" stroke-width="22" stroke-linecap="round" fill="none"/>
+    M 232 164
+    C 288 158, 316 190, 319 230
+    C 321 254, 330 270, 344 284
+    Q 351 292, 342 297
+    Q 333 302, 337 312
+    Q 345 321, 334 330
+    C 324 343, 308 350, 298 352
+    C 283 372, 280 390, 283 400
+  " stroke="#F05252" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

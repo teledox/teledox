@@ -91,6 +91,7 @@ async function openReceta(consultaId, pacienteId) {
   // Timeline de seguimiento de esta consulta + enfermedades crónicas del paciente
   if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
   if (typeof renderCronicasConsulta === 'function') renderCronicasConsulta();
+  if (typeof renderSeguimientoLab === 'function') renderSeguimientoLab();
 }
 
 // ── Timeline de seguimiento de esta consulta (mensajes enviados + respuestas) ──
@@ -169,6 +170,82 @@ async function renderCronicasConsulta() {
       </div>
       <span class="badge badge-green">Activo</span>
     </div>`).join('');
+}
+
+// ── Seguimiento de examen de laboratorio (recordatorios 48h/día3/día5/día7) ──
+const LAB_ESTADO_LABEL = {
+  pendiente: { cls: 'badge-yellow', label: '⏳ Pendiente' },
+  confirmado: { cls: 'badge-green', label: '✅ Examen realizado' },
+  sin_examen: { cls: 'badge-red', label: '🔴 Sin respuesta tras 4 intentos' }
+};
+
+function segLabRespuestaLabel(r) {
+  if (r.respuesta === 'si') return '✅ Respondió: Sí';
+  if (r.respuesta === 'no') return '❌ Respondió: No';
+  return '⏳ Sin respuesta';
+}
+
+async function renderSeguimientoLab() {
+  const el = document.getElementById('segLaboratorioInfo');
+  if (!el) return;
+
+  const seguimientos = await supa('GET', 'seguimiento_laboratorio', null,
+    `?consulta_id=eq.${recetaConsultaId}&order=created_at.desc&limit=1`) || [];
+  const seguimiento = seguimientos[0];
+
+  if (!seguimiento) {
+    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin seguimiento de examen de laboratorio para esta consulta. Use el botón para iniciarlo.</div>';
+    return;
+  }
+
+  const respuestas = await supa('GET', 'seguimiento_laboratorio_respuestas', null,
+    `?seguimiento_id=eq.${seguimiento.id}&order=created_at.asc`) || [];
+
+  const estado = LAB_ESTADO_LABEL[seguimiento.estado] || { cls: 'badge-gray', label: seguimiento.estado };
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px">
+      <div>
+        <strong>Intentos enviados: ${seguimiento.intento || 0}/4</strong>
+        ${seguimiento.activo && seguimiento.proximo_envio ? `<div style="font-size:11px;color:#888">Próx. recordatorio: ${new Date(seguimiento.proximo_envio).toLocaleString('es-EC')}</div>` : ''}
+      </div>
+      <span class="badge ${estado.cls}">${estado.label}</span>
+    </div>
+    ${respuestas.length ? `<div class="seg-timeline" style="margin-top:8px">${respuestas.map(r => `
+      <div class="seg-item">
+        <div class="seg-item-fecha">${new Date(r.created_at).toLocaleString('es-EC',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+        <div class="seg-item-pregunta">🧪 Intento ${r.intento}</div>
+        <div class="seg-item-respuesta">${segLabRespuestaLabel(r)}</div>
+      </div>`).join('')}</div>` : ''}
+  `;
+}
+
+// ── Botón: enviar/reenviar manualmente el recordatorio de seguimiento de laboratorio ──
+async function enviarSeguimientoLab() {
+  if (!_pacData?.telefono) { showToast('⚠️ El paciente no tiene número de teléfono registrado'); return; }
+
+  showToast('⏳ Enviando seguimiento de examen de laboratorio...');
+  const btn = document.getElementById('btnEnviarSeguimientoLab');
+  if (btn) btn.disabled = true;
+  try {
+    const res = await fetch('/api/enviar-seguimiento-lab', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ consulta_id: recetaConsultaId, paciente_id: recetaPacienteId })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast(`⚠️ Error: ${data.error || 'No se pudo enviar el seguimiento'}`);
+    } else {
+      showToast(`✓ Recordatorio de laboratorio enviado al paciente (intento ${data.intento}/4)`);
+    }
+  } catch (e) {
+    console.error('Error enviando seguimiento de laboratorio:', e);
+    showToast(`Error: ${e.message}`);
+  } finally {
+    if (btn) btn.disabled = false;
+    renderSeguimientoLab();
+  }
 }
 
 // Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento.

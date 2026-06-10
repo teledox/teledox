@@ -85,9 +85,8 @@ module.exports = async function handler(req, res) {
         mensaje = ir.list_reply?.id || ir.list_reply?.title || '';
       }
     } else {
-      // Imagen u otro tipo — solo en paso 60 (comprobante de pago), paso 96
-      // (comprobante seguimiento aprobado) y paso 150 (resultado de examen
-      // de laboratorio) se acepta
+      // Imagen u otro tipo — solo en paso 60 (comprobante de pago) y paso 150
+      // (resultado de examen de laboratorio) se acepta
       mensaje = '__media__';
     }
 

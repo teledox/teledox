@@ -3,6 +3,7 @@ const { enviar } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
 const { obtener, guardar } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
+const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratorio');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -131,47 +132,14 @@ module.exports = async function handler(req, res) {
     }
 
     // Seguimiento de exámenes de laboratorio (48h, día 3, día 5, día 7)
-    const OFFSETS_LAB_H = [48, 72, 120, 168];
     const seguimientosLab = await query('GET', 'seguimiento_laboratorio', null,
       `?activo=eq.true&proximo_envio=lte.${ahora.toISOString()}&select=*,pacientes(nombre,apellidos,telefono)`
     );
 
     for (const s of seguimientosLab || []) {
       try {
-        const telefonoPaciente = s.pacientes?.telefono;
-        if (!telefonoPaciente) continue;
-        const soloDigLab = String(telefonoPaciente).replace(/\D/g, '');
-        if (!soloDigLab || soloDigLab.length < 7) continue;
-        const telefono = `whatsapp:+${soloDigLab.startsWith('0') ? '593' + soloDigLab.slice(1) : soloDigLab}`;
-
-        const paciente = s.pacientes || {};
-        const intentoActual = (s.intento || 0) + 1;
-        const mensaje = `🧪 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Le recordamos que el médico le solicitó un examen de laboratorio.\n\n¿Ya se realizó el examen?\n\nResponda *Sí* o *No*`;
-
-        await enviar(telefono, mensaje);
-
-        await query('POST', 'seguimiento_laboratorio_respuestas', {
-          seguimiento_id: s.id,
-          paciente_id: s.paciente_id,
-          consulta_id: s.consulta_id,
-          intento: intentoActual,
-          pregunta: mensaje
-        });
-
-        if (intentoActual < OFFSETS_LAB_H.length) {
-          const proximoEnvio = new Date(new Date(s.created_at).getTime() + OFFSETS_LAB_H[intentoActual] * 3600000);
-          await query('PATCH', 'seguimiento_laboratorio', {
-            intento: intentoActual,
-            proximo_envio: proximoEnvio.toISOString()
-          }, `?id=eq.${s.id}`);
-        } else {
-          await query('PATCH', 'seguimiento_laboratorio', {
-            intento: intentoActual,
-            activo: false,
-            estado: 'sin_examen'
-          }, `?id=eq.${s.id}`);
-        }
-
+        if (!s.pacientes?.telefono) continue;
+        await enviarRecordatorioLab(s, s.pacientes);
         procesados++;
       } catch (e) {
         console.error('Error procesando seguimiento de laboratorio:', s.id, e.message);

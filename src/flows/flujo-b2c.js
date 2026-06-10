@@ -1,4 +1,4 @@
-const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
+const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('../services/consultas');
 const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
@@ -10,6 +10,11 @@ const SUPA_KEY = process.env.SUPABASE_KEY;
 const SEGUROS_ALIADOS = [
   'vitaldent', 'seguros aliados', 'bupa', 'metlife', 'equivida',
   'integral', 'panamericana', 'latina seguros', 'sucre', 'qbe'
+];
+
+const BOTONES_PAGO = [
+  { id: 'transferencia', titulo: '🏦 Transferencia' },
+  { id: 'tarjeta',       titulo: '💳 Con tarjeta'   },
 ];
 
 async function registrarFacturacionB2C(datos) {
@@ -69,11 +74,6 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
     }],
     botonTexto: '📋 Seleccionar'
   };
-
-  const BOTONES_PAGO = [
-    { id: 'transferencia', titulo: '🏦 Transferencia' },
-    { id: 'tarjeta',       titulo: '💳 Con tarjeta'   },
-  ];
 
   // Paso 50: preguntar si tiene seguro o pago directo
   if (paso === 50) {
@@ -249,12 +249,14 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       });
 
       // 3. Crear notificación en el panel
+      const esAliado = datos.modalidad === 'b2b_externo';
       await crearNotificacion(
         'nueva_consulta',
-        '💰 Nuevo pago B2C',
-        `${datos.nombreCompleto} registró teleconsulta (pago directo $8.00)`,
+        esAliado ? '🏥 Nuevo pago — Seguro aliado' : '💰 Nuevo pago B2C',
+        `${datos.nombreCompleto} registró teleconsulta (${esAliado ? `seguro: ${datos.seguro_nombre}` : 'pago directo $8.00'})`,
         pacienteId,
-        consulta?.id
+        consulta?.id,
+        { origen: esAliado ? 'b2b' : 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: esAliado ? 'PAGO SEGURO' : 'PAGO' }
       );
 
       // 4. Registrar en facturacion_b2c
@@ -277,4 +279,4 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
   return { respuesta, paso: nuevoPaso, datos, terminar: false };
 }
 
-module.exports = { procesarB2C };
+module.exports = { procesarB2C, BOTONES_PAGO, registrarFacturacionB2C };

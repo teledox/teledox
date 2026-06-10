@@ -98,46 +98,151 @@ async function loadDashboard() {
 }
 
 async function loadAlertasServicio() {
-  let consultas = await supa('GET', 'consultas', null,
-    '?select=*,pacientes(nombre,apellidos,cedula,clientes_b2b(nombre_empresa))&medico_id=is.null&estado=neq.completada&order=nivel_sintomas.desc,created_at.asc') || [];
-  consultas = consultas.filter(c => !window._atendiendo?.has(c.id));
   const el = document.getElementById('alertasServicioList');
   if (!el) return;
 
+  let consultas = await supa('GET', 'consultas', null,
+    '?select=*,pacientes(nombre,apellidos,cedula,telefono,correo,lugar_residencia,clientes_b2b(nombre_empresa))&medico_id=is.null&estado=neq.completada&order=nivel_sintomas.desc,created_at.asc') || [];
+  consultas = consultas.filter(c => !window._atendiendo?.has(c.id));
+
+  // Etiquetas (PAGO / PAGO SEGURO / AFILIADO / EMPLEADO CON CÓDIGO) por consulta
+  let etiquetas = {};
+  const ids = consultas.map(c => c.id);
+  if (ids.length) {
+    const notifs = await supa('GET', 'notificaciones', null,
+      `?consulta_id=in.(${ids.join(',')})&select=consulta_id,etiqueta&order=created_at.desc`) || [];
+    notifs.forEach(n => { if (n.etiqueta && !etiquetas[n.consulta_id]) etiquetas[n.consulta_id] = n.etiqueta; });
+  }
+
+  const consultasB2B = consultas.filter(c => c.pacientes?.clientes_b2b);
+  const consultasB2C = consultas.filter(c => !c.pacientes?.clientes_b2b);
+
+  let seguimientos = await supa('GET', 'notificaciones', null,
+    '?origen=eq.seguimiento&estado_validacion=eq.pendiente&select=*,pacientes(nombre,apellidos,cedula,telefono,correo,lugar_residencia)&order=created_at.asc') || [];
+  const rango = { grave: 0, medio: 1, leve: 2 };
+  seguimientos.sort((a, b) => (rango[a.categoria] ?? 3) - (rango[b.categoria] ?? 3));
+
   // Update badge
   const badge = document.getElementById('alertasBadge');
+  const total = consultasB2B.length + consultasB2C.length + seguimientos.length;
   if (badge) {
-    badge.textContent = consultas.length;
-    badge.style.display = consultas.length > 0 ? 'inline-flex' : 'none';
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'inline-flex' : 'none';
   }
 
-  if (!consultas.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:3rem">✅ No hay consultas pendientes de atención en este momento.<br><span style="font-size:13px">Las nuevas consultas aparecerán aquí automáticamente.</span></div>';
-    return;
-  }
+  const nivelBadge = n => n === 3
+    ? '<span class="badge badge-red">🔴 Grave</span>'
+    : n === 2 ? '<span class="badge badge-yellow">🟡 Medio</span>'
+              : '<span class="badge badge-green">🟢 Leve</span>';
 
-  el.innerHTML = consultas.map(c => {
+  const catBadge = c => c === 'grave'
+    ? '<span class="badge badge-red">🔴 Grave</span>'
+    : c === 'medio' ? '<span class="badge badge-yellow">🟡 Medio</span>'
+                     : '<span class="badge badge-green">🟢 Leve</span>';
+
+  const tag = etiqueta => etiqueta ? `<span class="alerta-tag">${etiqueta}</span>` : '';
+
+  const datosContacto = p => `
+    <div class="alerta-datos">
+      📱 ${p.telefono || '—'} &nbsp;·&nbsp; ✉️ ${p.correo || '—'} &nbsp;·&nbsp; 📍 ${p.lugar_residencia || '—'}
+    </div>`;
+
+  const cardConsulta = c => {
     const p = c.pacientes || {};
-    const nivel = c.nivel_sintomas === 3
-      ? '<span class="badge badge-red">🔴 Grave</span>'
-      : c.nivel_sintomas === 2
-        ? '<span class="badge badge-yellow">🟡 Medio</span>'
-        : '<span class="badge badge-green">🟢 Leve</span>';
     return `
-      <div style="background:white;border-radius:12px;border:2px solid #fee2e2;padding:1rem 1.25rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:16px">
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:700;color:#1a1a1a">${p.nombre || '—'} ${p.apellidos || ''}</div>
-          <div style="font-size:12px;color:#888;margin-top:2px">Cédula: ${p.cedula || '—'} · ${p.clientes_b2b?.nombre_empresa || 'Paciente B2C'}</div>
-          <div style="font-size:12px;color:#888;margin-top:2px;max-width:500px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.sintomas_descripcion || '—'}</div>
-          <div style="display:flex;align-items:center;gap:12px;margin-top:8px">
-            ${nivel}
-            <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">${formatElapsedTime(c.created_at)}</span>
+      <div class="alerta-card">
+        <div class="alerta-card-head">
+          <div>
+            <div class="alerta-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
+            <div class="alerta-sub">Cédula: ${p.cedula || '—'} ${p.clientes_b2b?.nombre_empresa ? `· ${p.clientes_b2b.nombre_empresa}` : ''}</div>
+          </div>
+          ${tag(etiquetas[c.id])}
+        </div>
+        <div class="alerta-sintoma">${c.sintomas_descripcion || '—'}</div>
+        ${datosContacto(p)}
+        <div class="alerta-card-foot">
+          <div style="display:flex;align-items:center;gap:10px">
+            ${nivelBadge(c.nivel_sintomas)}
+            <span class="alerta-timer" data-created="${c.created_at}" style="font-size:12px;font-weight:700">${formatElapsedTime(c.created_at)}</span>
+          </div>
+          <button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
+        </div>
+      </div>`;
+  };
+
+  const cardSeguimiento = n => {
+    const p = n.pacientes || {};
+    return `
+      <div class="alerta-card">
+        <div class="alerta-card-head">
+          <div>
+            <div class="alerta-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
+            <div class="alerta-sub">Cédula: ${p.cedula || '—'}</div>
+          </div>
+          ${tag(n.etiqueta)}
+        </div>
+        <div class="alerta-sintoma">${n.mensaje || '—'}</div>
+        ${datosContacto(p)}
+        <div class="alerta-card-foot">
+          ${catBadge(n.categoria)}
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-success" onclick="decidirSeguimiento('${n.id}','aprobada',this)">✅ Aprobar</button>
+            <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="decidirSeguimiento('${n.id}','rechazada',this)">❌ Rechazar</button>
           </div>
         </div>
-        <button class="btn btn-sm btn-atender" style="font-size:13px;padding:10px 20px" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
       </div>`;
-  }).join('');
+  };
 
-  // Reiniciar cronómetro para actualizar los nuevos elementos renderizados
+  const seccion = (titulo, items, renderFn, emptyMsg) => `
+    <div class="alertas-section">
+      <h3 class="alertas-section-title">${titulo} <span class="alertas-count">${items.length}</span></h3>
+      <div class="alertas-list">
+        ${items.length ? items.map(renderFn).join('') : `<div class="empty-state">${emptyMsg}</div>`}
+      </div>
+    </div>`;
+
+  el.innerHTML = `
+    <div class="alertas-grid">
+      <div class="alertas-col">
+        ${seccion('🏢 Consultas B2B', consultasB2B, cardConsulta, '✅ Sin pendientes')}
+        ${seccion('👤 Consultas B2C', consultasB2C, cardConsulta, '✅ Sin pendientes')}
+      </div>
+      <div class="alertas-col">
+        ${seccion('🔁 Consultas de seguimiento', seguimientos, cardSeguimiento, '✅ Sin seguimientos pendientes')}
+      </div>
+    </div>`;
+
   if (typeof startTimerUpdater === 'function') startTimerUpdater();
+}
+
+// Médico aprueba/rechaza una solicitud de seguimiento
+async function decidirSeguimiento(notificacionId, decision, btnEl) {
+  const card = btnEl?.closest('.alerta-card');
+  if (card) card.style.opacity = '0.5';
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+
+    const res = await fetch('/api/seguimiento-decision', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, notificacion_id: notificacionId, decision })
+    });
+    const result = await res.json();
+
+    if (!res.ok) {
+      showToast('❌ ' + (result.error || 'Error al procesar'));
+      if (card) card.style.opacity = '';
+      return;
+    }
+
+    showToast(decision === 'aprobada' ? '✅ Solicitud enviada al paciente por WhatsApp' : '🚫 Marcado como rechazado');
+    if (card) card.remove();
+    loadAlertasServicio();
+
+  } catch (e) {
+    showToast('❌ Error de conexión');
+    if (card) card.style.opacity = '';
+  }
 }

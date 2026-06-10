@@ -265,3 +265,81 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .alerta-timer { animation: timerPulse 2s ease-in-out infinite; }
 /* Parpadeo rápido cuando lleva más de 20 min */
 .alerta-timer[style*="dc2626"] { animation: timerBlink 1s step-end infinite; }
+
+/* ── Panel de Alertas de servicio: grilla B2B / B2C / Seguimiento ────────── */
+.alertas-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.alertas-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+}
+.alertas-section {
+  background: #fafafa;
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.alertas-section-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.alertas-count {
+  background: #FF5A5F;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.alertas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 480px;
+  overflow-y: auto;
+}
+.alerta-card {
+  background: white;
+  border-radius: 10px;
+  border: 2px solid #fee2e2;
+  padding: 12px 14px;
+}
+.alerta-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+.alerta-nombre { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+.alerta-sub    { font-size: 11px; color: #888; margin-top: 2px; }
+.alerta-sintoma {
+  font-size: 12px; color: #555; margin-top: 6px;
+  max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.alerta-datos { font-size: 11px; color: #999; margin-top: 4px; }
+.alerta-card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 10px;
+}
+.alerta-tag {
+  background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;
+  font-size: 10px; font-weight: 700; border-radius: 6px;
+  padding: 2px 8px; white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .alertas-grid { grid-template-columns: 1fr; }
+}

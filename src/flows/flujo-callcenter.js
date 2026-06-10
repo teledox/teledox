@@ -1,6 +1,6 @@
 const { query } = require('../services/supabase');
 const { crear: crearPaciente, buscarPorCedula } = require('../services/pacientes');
-const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
+const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('../services/consultas');
 const { guardar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
@@ -200,7 +200,8 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
       `📅 Consulta B2B — ${empresa}`,
       `${datos.cc_nombre} (${datos.cc_cedula}) registrado por call center`,
       pacienteId,
-      consulta?.id
+      consulta?.id,
+      { origen: 'b2b', categoria: nivelACategoria(datos.cc_nivel || 1), etiqueta: 'EMPLEADO CON CÓDIGO' }
     );
 
     await alertar(`📅 <b>NUEVA CONSULTA CALL CENTER — ${empresa}</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nTeléfono: ${datos.cc_telefono}\nSíntomas: ${datos.cc_sintomas}\nAgente: ${telefono}`);

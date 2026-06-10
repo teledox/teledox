@@ -1,6 +1,6 @@
 const { query } = require('../services/supabase');
 const { alertar } = require('../services/telegram');
-const { guardar, eliminar } = require('../services/sesiones');
+const { crearNotificacion } = require('../services/consultas');
 const { esSi } = require('../utils/validaciones');
 
 async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
@@ -32,13 +32,23 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
       return `🎉 ¡Nos alegra mucho que se sienta mejor!\n\nSu caso fue registrado como *exitoso*.\n\nEn MediLyft estamos disponibles 24/7. Si necesita atención escriba *hola*. 💙`;
 
     } else if (mensaje === '2') {
-      await guardar(telefono, 98, { receta_id: r.receta_id, paciente_id: paciente.id });
-      return `👨‍⚕️ Entendemos que aún tiene síntomas.\n\n¿Desea agendar una consulta de seguimiento?\n\nResponda *Sí* o *No*`;
+      await crearNotificacion(
+        'seguimiento', '🔁 Paciente con síntomas persistentes',
+        `${paciente.nombre} ${paciente.apellidos || ''} mejoró parcialmente pero aún presenta síntomas (medicamento: ${recordatorio.medicamento || '—'}).`,
+        paciente.id, recordatorio?.consulta_id || null,
+        { origen: 'seguimiento', categoria: 'medio', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente' }
+      );
+      return `👨‍⚕️ Gracias por contarnos. Hemos registrado que aún presenta síntomas.\n\nUn médico revisará su caso y, si lo considera necesario, le contactaremos para agendar una *consulta de seguimiento*.\n\nSi en cualquier momento desea atención, escríbanos *hola*. 💙`;
 
     } else if (mensaje === '3') {
-      await guardar(telefono, 98, { receta_id: r.receta_id, paciente_id: paciente.id });
       await alertar(`🔴 <b>Sin mejoría — requiere atención</b>\nPaciente: ${paciente.nombre} ${paciente.apellidos || ''}\nMedicamento: ${recordatorio.medicamento}\nTeléfono: ${telefono}`);
-      return `😟 Es importante que sea evaluado por un médico.\n\n¿Desea agendar una teleconsulta ahora?\n\nResponda *Sí* o *No*`;
+      await crearNotificacion(
+        'seguimiento', '🔴 Paciente sin mejoría',
+        `${paciente.nombre} ${paciente.apellidos || ''} indica que NO mejoró o empeoró (medicamento: ${recordatorio.medicamento || '—'}).`,
+        paciente.id, recordatorio?.consulta_id || null,
+        { origen: 'seguimiento', categoria: 'grave', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente' }
+      );
+      return `😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad.\n\nLe contactaremos en breve. Si los síntomas son graves, *llame al 911* o escríbanos *hola*. 💙`;
 
     } else {
       return `Por favor responda con:\n1️⃣ Me siento mejor\n2️⃣ Mejoré pero aún tengo síntomas\n3️⃣ No mejoré o me siento peor`;

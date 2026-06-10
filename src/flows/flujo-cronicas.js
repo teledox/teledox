@@ -286,7 +286,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
       sintomas_descripcion: `Seguimiento de ${enfDef.nombre} fuera de rango (alerta grave): ${JSON.stringify(datos.valores)}`,
       estado: 'pendiente'
     });
-    await crearNotificacion('urgente', `🚨 Alerta grave — ${enfDef.nombre}`, `${nombreWhatsApp} reportó valores fuera de rango en su seguimiento crónico. Requiere agendar consulta de seguimiento con prioridad.`, datos.paciente_id, consultaGrave?.id);
+    await crearNotificacion('urgente', `🚨 Alerta grave — ${enfDef.nombre}`, `${nombreWhatsApp} reportó valores fuera de rango en su seguimiento crónico. Requiere agendar consulta de seguimiento con prioridad.`, datos.paciente_id, consultaGrave?.id, { origen: 'seguimiento', categoria: 'grave', etiqueta: 'CRÓNICO', estado_validacion: 'pendiente' });
   } else if (resultado.nivel === 2) {
     respuesta = `${resultado.msg}\n\nHemos notificado a su equipo médico. Le contactarán pronto.\n\nSi empeora, llame al *911* de inmediato.`;
     await alertar(`⚠️ <b>ALERTA MEDIA CRÓNICO — ${enfDef.nombre}</b>\nPaciente: ${nombreWhatsApp}\nTeléfono: ${telefono}\nValores: ${JSON.stringify(datos.valores)}`);
@@ -296,7 +296,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
       sintomas_descripcion: `Seguimiento de ${enfDef.nombre} con valores de atención: ${JSON.stringify(datos.valores)}`,
       estado: 'pendiente'
     });
-    await crearNotificacion('urgente', `⚠️ Valores de atención — ${enfDef.nombre}`, `${nombreWhatsApp} reportó valores de atención en su seguimiento crónico. Considere agendar una consulta de seguimiento.`, datos.paciente_id, consultaMedia?.id);
+    await crearNotificacion('urgente', `⚠️ Valores de atención — ${enfDef.nombre}`, `${nombreWhatsApp} reportó valores de atención en su seguimiento crónico. Considere agendar una consulta de seguimiento.`, datos.paciente_id, consultaMedia?.id, { origen: 'seguimiento', categoria: 'medio', etiqueta: 'CRÓNICO', estado_validacion: 'pendiente' });
   } else {
     respuesta = `${resultado.msg}\n\nGracias por su reporte diario. Su seguimiento ha sido registrado. 📋\n\nSi tiene algún síntoma nuevo escriba *hola*.`;
   }

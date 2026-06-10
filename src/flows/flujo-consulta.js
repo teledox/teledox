@@ -6,6 +6,7 @@ const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, separarNombre } = require('../utils/validaciones');
 const { procesarB2C } = require('./flujo-b2c');
+const { procesarSeguimientoPago } = require('./flujo-seguimiento-pago');
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_KEY;
@@ -43,6 +44,13 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
   // Pasos 50+ — flujo B2C (pago directo)
   if (paso >= 50 && paso < 90) {
     const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp);
+    if (!result.terminar) await guardar(telefono, result.paso, result.datos);
+    return result;
+  }
+
+  // Pasos 90-97 — flujo de seguimiento aprobado por médico (agendar + pago)
+  if (paso >= 90 && paso <= 97) {
+    const result = await procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWhatsApp);
     if (!result.terminar) await guardar(telefono, result.paso, result.datos);
     return result;
   }
@@ -90,6 +98,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       datos.nombre_paciente = paciente.nombre;
       datos.empresa = afiliacionB2B?.nombre_empresa || null;
       datos.empresa_id = afiliacionB2B?.id || null;
+      datos.origen_afiliacion = afiliacionB2B ? 'afiliado' : null;
       datos.seguro = afiliacionB2B?.nombre_seguro || null;
       // Pre-cargar datos personales ya registrados para no volver a preguntarlos más adelante
       datos.nombre = paciente.nombre || '';
@@ -116,6 +125,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       datos.cedula = cedulaFinal;
       datos.empresa = empleado.clientes_b2b?.nombre_empresa || 'su empresa';
       datos.empresa_id = empleado.clientes_b2b?.id || null;
+      datos.origen_afiliacion = 'empleado_codigo';
       datos.seguro = empleado.clientes_b2b?.nombre_seguro || 'su seguro';
       const nuevo = await crearPaciente({
         cedula: cedulaFinal,
@@ -168,7 +178,13 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
     } else if (nivel === 2) {
       await alertar(`⚠️ <b>SÍNTOMAS MEDIOS - ATENCIÓN URGENTE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       const consulta = await crearConsulta({ paciente_id: datos.paciente_id, nivel_sintomas: 2, sintomas_descripcion: mensaje, estado: 'pendiente' });
-      await crearNotificacion('urgente', '⚠️ Síntomas medios', `Paciente ${datos.nombre_paciente} requiere atención urgente`, datos.paciente_id, consulta?.id);
+      await crearNotificacion('urgente', '⚠️ Síntomas medios', `Paciente ${datos.nombre_paciente} requiere atención urgente`, datos.paciente_id, consulta?.id, {
+        origen: datos.empresa_id ? 'b2b' : 'b2c',
+        categoria: 'medio',
+        etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
+                : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
+                : null,
+      });
       // Registrar planillaje B2B automáticamente
       if (datos.empresa_id) await registrarPlanillajeB2B(datos, consulta?.id);
       await eliminar(telefono);
@@ -299,7 +315,13 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
         estado: 'pendiente'
       });
 
-      await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta', `${datos.nombreCompleto} solicita teleconsulta para ${datos.horario}`, datos.paciente_id, consulta?.id);
+      await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta', `${datos.nombreCompleto} solicita teleconsulta para ${datos.horario}`, datos.paciente_id, consulta?.id, {
+        origen: datos.empresa_id ? 'b2b' : 'b2c',
+        categoria: 'leve',
+        etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
+                : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
+                : null,
+      });
       await alertar(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
 
       // Registrar planillaje B2B automáticamente al confirmar

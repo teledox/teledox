@@ -72,7 +72,7 @@ async function atenderConsulta(consultaId, btnEl) {
   window._atendiendo.add(consultaId);
 
   // Ocultar tarjeta inmediatamente
-  const card = (btnEl || document.querySelector(`[onclick*="${consultaId}"]`))?.closest('.alerta-item, tr, [style*="border:2px solid #fee2e2"]');
+  const card = (btnEl || document.querySelector(`[onclick*="${consultaId}"]`))?.closest('.alerta-item, tr, .alerta-card, [style*="border:2px solid #fee2e2"]');
   if (card) card.style.display = 'none';
 
   try {

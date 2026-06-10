@@ -60,3 +60,25 @@ CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);
 
 -- Sexo del paciente (M/F) — se infiere del nombre al registrar y es editable en el panel
 -- ALTER TABLE pacientes ADD COLUMN IF NOT EXISTS sexo VARCHAR(1);
+
+-- ── Clasificación y workflow del panel "Alertas de servicio" ──────────────
+-- origen:    'b2b' | 'b2c' | 'seguimiento'   -> columna del panel donde aparece
+-- categoria: 'leve' | 'medio' | 'grave'       -> severidad (color/orden)
+-- etiqueta:  texto del chip — PAGO, PAGO SEGURO, AFILIADO, EMPLEADO CON CÓDIGO,
+--            CRÓNICO, SEGUIMIENTO
+-- estado_validacion: solo aplica a origen='seguimiento'
+--   NULL/'pendiente' -> tarjeta visible y accionable (Aprobar/Rechazar)
+--   'aprobada'  -> médico aprobó, WhatsApp enviado al paciente
+--   'rechazada' -> médico rechazó, sin mensaje al paciente
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS origen VARCHAR(20);
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS categoria VARCHAR(20);
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS etiqueta VARCHAR(30);
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS estado_validacion VARCHAR(20);
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS medico_validador_id UUID REFERENCES usuarios(id);
+-- CREATE INDEX IF NOT EXISTS idx_notificaciones_seguimiento
+--   ON notificaciones(origen, estado_validacion);
+
+-- Trazabilidad: la consulta de seguimiento aprobada queda enlazada a la original
+-- y marcada con origen='seguimiento_aprobado' (consultas normales: origen NULL)
+-- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS origen VARCHAR(30);
+-- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS consulta_seguimiento_de UUID REFERENCES consultas(id);

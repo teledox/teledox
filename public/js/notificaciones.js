@@ -19,7 +19,7 @@ async function loadNotificaciones() {
       </td>
       <td>${n.leida ? '<span class="badge badge-gray">Leída</span>' : '<span class="badge badge-blue">Nueva</span>'}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">
-        ${n.consulta_id && (currentUser?.rol === 'medico' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${n.consulta_id}');marcarLeida('${n.id}')">🩺 Atender</button>` : ''}
+        ${n.consulta_id && !n.leida && (currentUser?.rol === 'medico' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${n.consulta_id}');marcarLeida('${n.id}')">🩺 Atender</button>` : ''}
         ${n.consulta_id && !n.leida && (currentUser?.rol === 'operador' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${n.consulta_id}','${n.paciente_id}')">Agendar</button>` : ''}
         ${!n.leida ? `<button class="btn btn-sm" onclick="marcarLeida('${n.id}')">✓</button>` : ''}
       </td>

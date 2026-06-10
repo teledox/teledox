@@ -105,3 +105,23 @@ function switchTab(el, tabId) {
 function closePopup() {
   document.getElementById('popupAgendar').classList.remove('open');
 }
+
+// ===== MODAL DE CONFIRMACIÓN GENÉRICO =====
+let _confirmAccionOnOk = null;
+let _confirmAccionOnCancel = null;
+
+function abrirConfirmAccion(titulo, mensaje, onOk, onCancel) {
+  document.getElementById('confirmAccionTitulo').textContent = titulo;
+  document.getElementById('confirmAccionMensaje').textContent = mensaje;
+  _confirmAccionOnOk = onOk;
+  _confirmAccionOnCancel = onCancel || null;
+  document.getElementById('popupConfirmAccion').classList.add('open');
+}
+
+function cerrarConfirmAccion(confirmado) {
+  document.getElementById('popupConfirmAccion').classList.remove('open');
+  const ok = _confirmAccionOnOk, cancel = _confirmAccionOnCancel;
+  _confirmAccionOnOk = null; _confirmAccionOnCancel = null;
+  if (confirmado && ok) ok();
+  if (!confirmado && cancel) cancel();
+}

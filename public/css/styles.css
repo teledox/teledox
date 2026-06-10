@@ -379,3 +379,13 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   .seg-item { flex-direction: column; align-items: flex-start; gap: 2px; }
   .seg-alerta-badge { margin-left: 0; }
 }
+
+/* ── Layout 2 columnas para "Abrir info" (page-receta) ───────────────────── */
+.consulta-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+.consulta-grid > div { min-width: 0; }
+@media (max-width: 900px) {
+  .consulta-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Checkbox "Completada" en tabla de consultas ─────────────────────────── */
+.chk-completar { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #555; cursor: pointer; white-space: nowrap; }

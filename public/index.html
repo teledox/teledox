@@ -265,154 +265,164 @@
       <div class="page" id="page-receta">
         <button class="btn btn-sm" onclick="showPage('consultas');loadConsultas()" style="margin-bottom:1rem">← Volver a consultas</button>
         <div class="patient-header" id="recetaPacienteHeader"></div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
-          <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
-          <div class="form-group">
-            <label class="form-label">Códigos CIE-10</label>
-            <div style="position:relative">
-              <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre..." oninput="buscarCIE10()" autocomplete="off" />
-              <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+
+        <div class="consulta-grid">
+          <!-- ═══ COLUMNA IZQUIERDA: Docs ═══ -->
+          <div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
+              <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
+              <div class="form-group">
+                <label class="form-label">Códigos CIE-10</label>
+                <div style="position:relative">
+                  <input type="text" class="form-control" id="cie10Search" placeholder="Buscar por código o nombre..." oninput="buscarCIE10()" autocomplete="off" />
+                  <div id="cie10Dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:white;border:1px solid #e0e0e0;border-radius:0 0 8px 8px;max-height:200px;overflow-y:auto;z-index:50;box-shadow:0 4px 12px rgba(0,0,0,0.1)"></div>
+                </div>
+                <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
+              <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
             </div>
-            <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
+            <div class="card" style="margin-bottom:1rem">
+              <div class="card-header"><span class="card-title">📄 Plantillas clínicas</span></div>
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>💊 Receta Médica</strong><span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span></div>
+                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaReceta()">📋 Abrir plantilla</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo (alergias, peso/talla, medicamentos, indicaciones, medidas no farmacológicas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
+                <div class="doc-preview-slot" id="preview-receta"></div>
+              </div>
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>📄 Certificado Médico</strong><span style="font-size:12px;color:#888;margin-left:8px">Establecimiento + datos laborales + reposo</span></div>
+                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaCertificado()">📋 Abrir plantilla</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario oficial (establecimiento, datos laborales, tipo de contingencia, días de reposo) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
+                <div class="doc-preview-slot" id="preview-certificado"></div>
+              </div>
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>🔬 Pedido de Laboratorio</strong><span style="font-size:12px;color:#888;margin-left:8px">Exámenes seleccionables por categoría</span></div>
+                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaLaboratorio()">📋 Abrir plantilla</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario con los exámenes organizados por categoría (selecciona con casillas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
+                <div class="doc-preview-slot" id="preview-laboratorio"></div>
+              </div>
+
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>📋 Historia Clínica</strong><span style="font-size:12px;color:#888;margin-left:8px">Ficha completa del paciente</span></div>
+                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo con los datos del paciente pre-cargados. Completa los campos clínicos y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
+                <div class="doc-preview-slot" id="preview-historia"></div>
+              </div>
+
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>🔄 Interconsulta</strong><span style="font-size:12px;color:#888;margin-left:8px">Derivación a especialista</span></div>
+                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaInterconsulta()">📋 Abrir plantilla</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Genera la hoja de interconsulta para derivar al paciente a otro servicio o especialista médico.</div>
+                <div class="doc-preview-slot" id="preview-interconsulta"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">📤 Seleccionar documentos a enviar al paciente</span>
+                <span style="font-size:12px;color:#888">Solo los documentos generados pueden seleccionarse</span>
+              </div>
+              <div class="doc-seleccion">
+                <div class="doc-check-item">
+                  <input type="checkbox" id="chk-receta" disabled>
+                  <label class="doc-check-label" for="chk-receta">💊 Receta médica</label>
+                  <span class="doc-check-status pendiente" id="status-receta">No generada</span>
+                </div>
+                <div class="doc-check-item">
+                  <input type="checkbox" id="chk-certificado" disabled>
+                  <label class="doc-check-label" for="chk-certificado">📄 Certificado médico</label>
+                  <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
+                </div>
+                <div class="doc-check-item">
+                  <input type="checkbox" id="chk-pedido" disabled>
+                  <label class="doc-check-label" for="chk-pedido">🔬 Pedido de laboratorio</label>
+                  <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
+                </div>
+                <div class="doc-check-item">
+                  <input type="checkbox" id="chk-historia" disabled>
+                  <label class="doc-check-label" for="chk-historia">📋 Historia clínica</label>
+                  <span class="doc-check-status pendiente" id="status-historia">No generada</span>
+                </div>
+                <div class="doc-check-item">
+                  <input type="checkbox" id="chk-interconsulta" disabled>
+                  <label class="doc-check-label" for="chk-interconsulta">🔄 Interconsulta</label>
+                  <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
+                </div>
+              </div>
+              <div style="font-size:12px;color:#888;margin-top:10px;background:#f0fff4;border-radius:8px;padding:10px 14px;border:1px solid #bbf7d0">
+                Los documentos seleccionados llegarán en PDF no editable al WhatsApp del paciente al momento de hacer clic en <strong>Enviar</strong>.
+              </div>
+            </div>
+
+            <!-- Fila 1: Enviar documentos -->
+            <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:1rem;margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+              <div>
+                <div style="font-size:13px;font-weight:600;color:#dc2626">📤 Enviar documentos por WhatsApp</div>
+                <div style="font-size:12px;color:#888;margin-top:2px">Envía al paciente los documentos seleccionados arriba (receta, certificado, pedido de lab, etc.)</div>
+              </div>
+              <button class="btn btn-primary" id="btnEnviarDocs" onclick="enviarDocumentos()" style="background:#FF5A5F;border-color:#FF5A5F;white-space:nowrap">
+                📤 Enviar documentos al paciente
+              </button>
+            </div>
           </div>
-          <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
-          <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
+
+          <!-- ═══ COLUMNA DERECHA: Seguimiento ═══ -->
+          <div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">🔁 Seguimiento de esta consulta</span></div>
+              <div id="segTimelineConsulta"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">💊 Medicamentos para seguimiento del bot</span></div>
+              <div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem">
+                <div style="font-size:12px;color:#555;margin-bottom:10px">El bot enviará un recordatorio de cada medicamento según la <strong>frecuencia</strong>, durante los <strong>días</strong> indicados. Independiente del PDF de receta. Al pulsar <strong>Activar seguimiento</strong> quedan guardados y el bot empieza a contactar al paciente.</div>
+                <table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración (días)</th><th style="text-align:center">🔔 Notif.</th></tr></thead><tbody id="seg-meds-body"></tbody></table>
+                <button class="btn btn-sm" onclick="addFilaSeguimiento()" style="margin-top:8px">+ Agregar medicamento</button>
+              </div>
+              <!-- Fila 2: Seguimiento de tratamiento (medicamentos) -->
+              <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:1rem;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#ea580c">🔔 Seguimiento de tratamiento (medicamentos)</div>
+                  <div style="font-size:12px;color:#888;margin-top:2px">El bot enviará recordatorios de medicamentos al paciente según la frecuencia indicada arriba</div>
+                </div>
+                <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316;white-space:nowrap">
+                  🔔 Activar seguimiento de tratamiento
+                </button>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">🏥 Enfermedades crónicas</span></div>
+              <div id="consultaCronicasList"></div>
+              <!-- Fila 3: Seguimiento enfermedad crónica -->
+              <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:1rem;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+                <div>
+                  <div style="font-size:13px;font-weight:600;color:#2563eb">🏥 Seguimiento de enfermedad crónica</div>
+                  <div style="font-size:12px;color:#888;margin-top:2px">Activa el seguimiento periódico para pacientes con enfermedades crónicas (hipertensión, diabetes, etc.)</div>
+                </div>
+                <button class="btn btn-primary" id="btnActivarCronica" onclick="activarSeguimientoCronico()" style="background:#2563eb;border-color:#2563eb;white-space:nowrap">
+                  🏥 Activar seguimiento crónico
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="card" style="margin-bottom:1rem">
-          <div class="card-header"><span class="card-title">📄 Plantillas clínicas</span></div>
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>💊 Receta Médica</strong><span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span></div>
-              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaReceta()">📋 Abrir plantilla</button>
-            </div>
-            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo (alergias, peso/talla, medicamentos, indicaciones, medidas no farmacológicas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
-            <div class="doc-preview-slot" id="preview-receta"></div>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>📄 Certificado Médico</strong><span style="font-size:12px;color:#888;margin-left:8px">Establecimiento + datos laborales + reposo</span></div>
-              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaCertificado()">📋 Abrir plantilla</button>
-            </div>
-            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario oficial (establecimiento, datos laborales, tipo de contingencia, días de reposo) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
-            <div class="doc-preview-slot" id="preview-certificado"></div>
-          </div>
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🔬 Pedido de Laboratorio</strong><span style="font-size:12px;color:#888;margin-left:8px">Exámenes seleccionables por categoría</span></div>
-              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaLaboratorio()">📋 Abrir plantilla</button>
-            </div>
-            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario con los exámenes organizados por categoría (selecciona con casillas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
-            <div class="doc-preview-slot" id="preview-laboratorio"></div>
-          </div>
 
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>📋 Historia Clínica</strong><span style="font-size:12px;color:#888;margin-left:8px">Ficha completa del paciente</span></div>
-              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
-            </div>
-            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo con los datos del paciente pre-cargados. Completa los campos clínicos y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
-            <div class="doc-preview-slot" id="preview-historia"></div>
-          </div>
-
-          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
-            <div style="display:flex;justify-content:space-between;align-items:center">
-              <div><strong>🔄 Interconsulta</strong><span style="font-size:12px;color:#888;margin-left:8px">Derivación a especialista</span></div>
-              <button class="btn btn-sm btn-primary" onclick="abrirPlantillaInterconsulta()">📋 Abrir plantilla</button>
-            </div>
-            <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Genera la hoja de interconsulta para derivar al paciente a otro servicio o especialista médico.</div>
-            <div class="doc-preview-slot" id="preview-interconsulta"></div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header"><span class="card-title">🔔 Seguimiento automático por WhatsApp</span></div>
-          <div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem;margin-bottom:12px">
-            <div style="font-size:13px;font-weight:600;color:#16a34a;margin-bottom:4px">💊 Medicamentos para seguimiento del bot</div>
-            <div style="font-size:12px;color:#555;margin-bottom:10px">El bot enviará un recordatorio de cada medicamento según la <strong>frecuencia</strong>, durante los <strong>días</strong> indicados. Independiente del PDF de receta. Al pulsar <strong>Activar seguimiento</strong> quedan guardados y el bot empieza a contactar al paciente.</div>
-            <table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración (días)</th><th style="text-align:center">🔔 Notif.</th></tr></thead><tbody id="seg-meds-body"></tbody></table>
-            <button class="btn btn-sm" onclick="addFilaSeguimiento()" style="margin-top:8px">+ Agregar medicamento</button>
-          </div>
-          <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:1rem">
-            <div style="font-size:13px;font-weight:600;color:#ea580c;margin-bottom:6px">🏥 Por enfermedad crónica</div>
-            <div style="font-size:12px;color:#555">Si el paciente tiene enfermedades crónicas registradas, se actualizará la fecha de próximo seguimiento automáticamente.</div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">📤 Seleccionar documentos a enviar al paciente</span>
-            <span style="font-size:12px;color:#888">Solo los documentos generados pueden seleccionarse</span>
-          </div>
-          <div class="doc-seleccion">
-            <div class="doc-check-item">
-              <input type="checkbox" id="chk-receta" disabled>
-              <label class="doc-check-label" for="chk-receta">💊 Receta médica</label>
-              <span class="doc-check-status pendiente" id="status-receta">No generada</span>
-            </div>
-            <div class="doc-check-item">
-              <input type="checkbox" id="chk-certificado" disabled>
-              <label class="doc-check-label" for="chk-certificado">📄 Certificado médico</label>
-              <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
-            </div>
-            <div class="doc-check-item">
-              <input type="checkbox" id="chk-pedido" disabled>
-              <label class="doc-check-label" for="chk-pedido">🔬 Pedido de laboratorio</label>
-              <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
-            </div>
-            <div class="doc-check-item">
-              <input type="checkbox" id="chk-historia" disabled>
-              <label class="doc-check-label" for="chk-historia">📋 Historia clínica</label>
-              <span class="doc-check-status pendiente" id="status-historia">No generada</span>
-            </div>
-            <div class="doc-check-item">
-              <input type="checkbox" id="chk-interconsulta" disabled>
-              <label class="doc-check-label" for="chk-interconsulta">🔄 Interconsulta</label>
-              <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
-            </div>
-          </div>
-          <div style="font-size:12px;color:#888;margin-top:10px;background:#f0fff4;border-radius:8px;padding:10px 14px;border:1px solid #bbf7d0">
-            Los documentos seleccionados llegarán en PDF no editable al WhatsApp del paciente al momento de hacer clic en <strong>Enviar</strong>.
-          </div>
-        </div>
-        <!-- Botones de acción — separados claramente por función -->
-        <div style="margin-top:1.5rem">
-
-          <!-- Fila 1: Enviar documentos -->
-          <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:1rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#dc2626">📤 Enviar documentos por WhatsApp</div>
-              <div style="font-size:12px;color:#888;margin-top:2px">Envía al paciente los documentos seleccionados arriba (receta, certificado, pedido de lab, etc.)</div>
-            </div>
-            <button class="btn btn-primary" id="btnEnviarDocs" onclick="enviarDocumentos()" style="background:#FF5A5F;border-color:#FF5A5F;white-space:nowrap">
-              📤 Enviar documentos al paciente
-            </button>
-          </div>
-
-          <!-- Fila 2: Seguimiento de tratamiento (medicamentos) -->
-          <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:1rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#ea580c">🔔 Seguimiento de tratamiento (medicamentos)</div>
-              <div style="font-size:12px;color:#888;margin-top:2px">El bot enviará recordatorios de medicamentos al paciente según la frecuencia indicada arriba</div>
-            </div>
-            <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316;white-space:nowrap">
-              🔔 Activar seguimiento de tratamiento
-            </button>
-          </div>
-
-          <!-- Fila 3: Seguimiento enfermedad crónica -->
-          <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:1rem;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-            <div>
-              <div style="font-size:13px;font-weight:600;color:#2563eb">🏥 Seguimiento de enfermedad crónica</div>
-              <div style="font-size:12px;color:#888;margin-top:2px">Activa el seguimiento periódico para pacientes con enfermedades crónicas (hipertensión, diabetes, etc.)</div>
-            </div>
-            <button class="btn btn-primary" id="btnActivarCronica" onclick="activarSeguimientoCronico()" style="background:#2563eb;border-color:#2563eb;white-space:nowrap">
-              🏥 Activar seguimiento crónico
-            </button>
-          </div>
-
-          <!-- Cancelar -->
-          <div style="display:flex;justify-content:flex-end;margin-top:0.5rem">
-            <button class="btn" onclick="showPage('consultas');loadConsultas()">✕ Cancelar</button>
-          </div>
+        <!-- Cancelar -->
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+          <button class="btn" onclick="showPage('consultas');loadConsultas()">✕ Cancelar</button>
         </div>
       </div>
 
@@ -852,6 +862,18 @@
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1rem">
       <button class="btn" onclick="closePopup()">Cancelar</button>
       <button class="btn btn-primary" onclick="confirmarAgendamiento()">✓ Confirmar y notificar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMACIÓN GENÉRICA -->
+<div class="popup-overlay" id="popupConfirmAccion">
+  <div class="popup-box" style="max-width:400px">
+    <div class="popup-title" id="confirmAccionTitulo">Confirmar</div>
+    <div id="confirmAccionMensaje" style="font-size:14px;color:#555;margin-bottom:1.5rem"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn" onclick="cerrarConfirmAccion(false)">Cancelar</button>
+      <button class="btn btn-primary" onclick="cerrarConfirmAccion(true)">Confirmar</button>
     </div>
   </div>
 </div>
@@ -1347,17 +1369,17 @@
 <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="/js/config.js?v=20260609b"></script>
-<script src="/js/utils.js?v=20260609b"></script>
+<script src="/js/utils.js?v=20260610"></script>
 <script src="/js/realtime.js?v=20260609b"></script>
 <script src="/js/auth.js?v=20260609b"></script>
 <script src="/js/nav.js?v=20260609b"></script>
 <script src="/js/dashboard.js?v=20260609b"></script>
-<script src="/js/pacientes.js?v=20260609b"></script>
-<script src="/js/consultas.js?v=20260609b"></script>
-<script src="/js/notificaciones.js?v=20260609b"></script>
+<script src="/js/pacientes.js?v=20260610"></script>
+<script src="/js/consultas.js?v=20260610"></script>
+<script src="/js/notificaciones.js?v=20260610"></script>
 <script src="/js/agendamiento.js?v=20260609b"></script>
 <script src="/js/generarPDF.js?v=20260609b"></script>
-<script src="/js/receta.js?v=20260609b"></script>
+<script src="/js/receta.js?v=20260610"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260609b"></script>
 <script src="/js/perfil.js?v=20260609b"></script>

@@ -53,8 +53,12 @@ async function loadConsultas() {
           ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
           ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
           <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border-color:#bfdbfe" title="Enviar link de teleconsulta al paciente" onclick="abrirPopupLink('${c.paciente_id}','${(p.nombre||'').replace(/'/g,"\\'")} ${(p.apellidos||'').replace(/'/g,"\\'")}')">🔗 Link</button>
-          <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">📋 Docs</button>
-          ${c.estado !== 'completada' ? `<button class="btn btn-sm" onclick="marcarCompletada('${c.id}')" title="Marcar completada">✓</button>` : ''}
+          <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">ℹ️ Abrir info</button>
+          <label class="chk-completar" title="Marcar/desmarcar como completada">
+            <input type="checkbox" ${c.estado === 'completada' ? 'checked' : ''}
+              onchange="toggleCompletada('${c.id}', this, ${c.medico_id ? `'${c.medico_id}'` : 'null'})">
+            Completada
+          </label>
           ${currentUser.rol === 'admin' ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarConsulta('${c.id}')">🗑</button>` : ''}
         </td>
       </tr>`;
@@ -115,10 +119,21 @@ async function atenderConsulta(consultaId, btnEl) {
   }
 }
 
-async function marcarCompletada(id) {
-  await supa('PATCH', 'consultas', { estado: 'completada' }, `?id=eq.${id}`);
-  loadConsultas();
-  showToast('✓ Consulta completada');
+async function toggleCompletada(consultaId, checkboxEl, medicoId) {
+  const marcar = checkboxEl.checked;
+  const nuevoEstado = marcar ? 'completada' : (medicoId ? 'en_atencion' : 'pendiente');
+  abrirConfirmAccion(
+    marcar ? '✓ Marcar como completada' : '↩️ Desmarcar como completada',
+    marcar
+      ? '¿Confirmas que esta consulta fue completada?'
+      : '¿Confirmas que deseas desmarcar esta consulta como completada? Volverá a aparecer como pendiente de atención.',
+    async () => {
+      await supa('PATCH', 'consultas', { estado: nuevoEstado }, `?id=eq.${consultaId}`);
+      showToast(marcar ? '✓ Consulta marcada como completada' : '↩️ Consulta desmarcada');
+      loadConsultas();
+    },
+    () => { checkboxEl.checked = !marcar; }
+  );
 }
 
 // ── Link de teleconsulta ─────────────────────────────────────────────────

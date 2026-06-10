@@ -87,6 +87,88 @@ async function openReceta(consultaId, pacienteId) {
 
   // Re-pintar los mini-previews de los documentos ya generados/guardados
   if (typeof renderPreviewsGuardados === 'function') renderPreviewsGuardados();
+
+  // Timeline de seguimiento de esta consulta + enfermedades crónicas del paciente
+  if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
+  if (typeof renderCronicasConsulta === 'function') renderCronicasConsulta();
+}
+
+// ── Timeline de seguimiento de esta consulta (mensajes enviados + respuestas) ──
+function segEstadoInfo(s) {
+  if (s.respuesta == null) return { cls: 'seg-gris', label: '⏳ Sin respuesta' };
+  if (s.tomo_medicamento === false) return { cls: 'seg-naranja', label: '⚠️ No tomó el medicamento' };
+  if (s.tomo_medicamento === true)  return { cls: 'seg-verde',   label: '✅ Tomó el medicamento' };
+  if (s.respuesta === '3') return { cls: 'seg-rojo',     label: '🔴 No mejoró / empeoró' };
+  if (s.respuesta === '2') return { cls: 'seg-amarillo', label: '🟡 Mejoró, persisten síntomas' };
+  if (s.se_siente_mejor === true || s.respuesta === '1' || s.respuesta === 'curado')
+    return { cls: 'seg-verde', label: '✅ Se siente mejor / Curado' };
+  return { cls: 'seg-gris', label: s.respuesta };
+}
+
+function segPreguntaLabel(s) {
+  const p = s.pregunta || '';
+  if (/tomar su medicamento/i.test(p)) return '💊 Control de medicamento';
+  if (/tratamiento.*finalizado/i.test(p)) return '🏥 Cierre de tratamiento';
+  return '🔁 Mensaje de seguimiento';
+}
+
+function segAlertaBadge(s) {
+  const a = s._alerta;
+  if (!a) return '';
+  const m = a.medico_validador;
+  const medNombre = m ? ` — Dr. ${m.nombre || ''} ${m.apellidos || ''}`.trim() : '';
+  if (a.estado_validacion === 'aprobada')  return `<span class="seg-alerta-badge seg-aprobada">✅ Aprobada${medNombre}</span>`;
+  if (a.estado_validacion === 'rechazada') return `<span class="seg-alerta-badge seg-rechazada">❌ Rechazada${medNombre}</span>`;
+  return `<span class="seg-alerta-badge seg-pendiente">⏳ Pendiente de revisión médica</span>`;
+}
+
+async function renderSeguimientoTimeline() {
+  const el = document.getElementById('segTimelineConsulta');
+  if (!el) return;
+  const segs = await supa('GET', 'seguimiento_respuestas', null,
+    `?consulta_id=eq.${recetaConsultaId}&select=*&order=created_at.asc`) || [];
+  if (!segs.length) {
+    el.innerHTML = '<div class="empty-state">Sin mensajes de seguimiento enviados todavía.</div>';
+    return;
+  }
+  const segIds = segs.map(s => s.id);
+  const alertas = await supa('GET', 'notificaciones', null,
+    `?seguimiento_respuesta_id=in.(${segIds.join(',')})&select=seguimiento_respuesta_id,estado_validacion,medico_validador:usuarios!notificaciones_medico_validador_id_fkey(nombre,apellidos)`) || [];
+  const alertaPorSeg = {};
+  alertas.forEach(a => { alertaPorSeg[a.seguimiento_respuesta_id] = a; });
+  segs.forEach(s => { s._alerta = alertaPorSeg[s.id] || null; });
+
+  el.innerHTML = `<div class="seg-timeline">${segs.map(s => {
+    const info = segEstadoInfo(s);
+    return `<div class="seg-item ${info.cls}">
+      <div class="seg-item-fecha">${new Date(s.created_at).toLocaleString('es-EC',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
+      <div class="seg-item-pregunta" title="${(s.pregunta || '').replace(/"/g,'&quot;')}">${segPreguntaLabel(s)}</div>
+      <div class="seg-item-respuesta">${info.label}</div>
+      ${segAlertaBadge(s)}
+    </div>`;
+  }).join('')}</div>`;
+}
+
+// ── Enfermedades crónicas activas del paciente (para activar seguimiento) ──
+async function renderCronicasConsulta() {
+  const el = document.getElementById('consultaCronicasList');
+  if (!el) return;
+  const cronicas = await supa('GET', 'enfermedades_cronicas', null,
+    `?paciente_id=eq.${recetaPacienteId}&activo=eq.true&order=created_at.desc`) || [];
+  const btn = document.getElementById('btnActivarCronica');
+  if (!cronicas.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin enfermedades crónicas activas registradas.</div>';
+    return;
+  }
+  el.innerHTML = cronicas.map(c => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px">
+      <div>
+        <strong>${NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad}</strong>
+        ${c.codigo_cie10 ? `<span style="color:#aaa"> · ${c.codigo_cie10}</span>` : ''}
+        <div style="font-size:11px;color:#888">Cada ${c.frecuencia_horas}h · Próx.: ${c.proximo_seguimiento ? new Date(c.proximo_seguimiento).toLocaleString('es-EC') : '—'}</div>
+      </div>
+      <span class="badge badge-green">Activo</span>
+    </div>`).join('');
 }
 
 // Sincroniza medicamentosData con la tabla del modal de Receta y refleja el cambio en el card de seguimiento.

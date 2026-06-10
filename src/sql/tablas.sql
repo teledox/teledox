@@ -95,3 +95,9 @@ CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);
 -- ALTER TABLE seguimiento_respuestas ADD COLUMN IF NOT EXISTS consulta_id UUID REFERENCES consultas(id);
 -- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS seguimiento_respuesta_id UUID REFERENCES seguimiento_respuestas(id);
 -- CREATE INDEX IF NOT EXISTS idx_seguimiento_respuestas_consulta ON seguimiento_respuestas(consulta_id);
+
+-- ── Timestamp real de "Atender" (KPI tiempo de espera) ────────────────────
+-- atender-consulta.js intenta guardar atendido_at al asignar médico, pero la
+-- columna nunca se creó en consultas -> error "Could not find the 'atendido_at'
+-- column of 'consultas' in the schema cache" al presionar Atender.
+-- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS atendido_at TIMESTAMP;

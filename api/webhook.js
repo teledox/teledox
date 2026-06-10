@@ -18,7 +18,11 @@ function getFlows() {
     guardar:                      require('../src/services/sesiones').guardar,
     eliminar:                     require('../src/services/sesiones').eliminar,
     buscarRespuestaPendiente:     require('../src/services/seguimiento').buscarRespuestaPendiente,
+    buscarRespuestaLabPendiente:  require('../src/services/seguimiento').buscarRespuestaLabPendiente,
     procesarRespuestaSeguimiento: require('../src/flows/flujo-seguimiento').procesarRespuestaSeguimiento,
+    procesarRespuestaLab:         require('../src/flows/flujo-seguimiento-laboratorio').procesarRespuestaLab,
+    procesarSubidaExamen:         require('../src/flows/flujo-seguimiento-laboratorio').procesarSubidaExamen,
+    esRespuestaLab:               require('../src/flows/flujo-seguimiento-laboratorio').esRespuestaLab,
     procesarPaso:                 require('../src/flows/flujo-consulta').procesarPaso,
     procesarReagendamiento:       require('../src/flows/flujo-reagendar').procesarReagendamiento,
     procesarCronica:              require('../src/flows/flujo-cronicas').procesarCronica,
@@ -81,13 +85,16 @@ module.exports = async function handler(req, res) {
         mensaje = ir.list_reply?.id || ir.list_reply?.title || '';
       }
     } else {
-      // Imagen u otro tipo — solo en paso 60 (comprobante de pago) se acepta
+      // Imagen u otro tipo — solo en paso 60 (comprobante de pago), paso 96
+      // (comprobante seguimiento aprobado) y paso 150 (resultado de examen
+      // de laboratorio) se acepta
       mensaje = '__media__';
     }
 
     const {
       obtener, guardar, eliminar,
       buscarRespuestaPendiente, procesarRespuestaSeguimiento,
+      buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
       procesarCallCenter, buscarEmpresaPorCodigo
     } = getFlows();
@@ -124,6 +131,17 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // Respuesta a un recordatorio de seguimiento de examen de laboratorio (Sí/No).
+    const pendienteLab = !esInteractivo ? await buscarRespuestaLabPendiente(telefono) : null;
+    if (pendienteLab?.respuesta && (!enFlujoConsulta || esRespuestaLab(mensaje))) {
+      const resultLab = await procesarRespuestaLab(pendienteLab, mensaje, telefono);
+      if (resultLab) {
+        if (resultLab.paso) await guardar(telefono, resultLab.paso, resultLab.datos);
+        await enviar(telefono, resultLab.respuesta);
+        return res.status(200).send('OK');
+      }
+    }
+
     if (!sesion) sesion = { paso: 0, datos: {} };
     let { paso, datos } = sesion;
     datos = datos || {};
@@ -148,6 +166,15 @@ module.exports = async function handler(req, res) {
     // Paso 200+ — enfermedades crónicas
     if (paso >= 200) {
       const result = await procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp);
+      await despachar(telefono, result);
+      return res.status(200).send('OK');
+    }
+
+    // Paso 150 — esperando subida del resultado de examen de laboratorio
+    if (paso === 150) {
+      const result = await procesarSubidaExamen(paso, mensaje, datos, telefono, msg);
+      if (!result.terminar) await guardar(telefono, result.paso, result.datos);
+      else await eliminar(telefono);
       await despachar(telefono, result);
       return res.status(200).send('OK');
     }

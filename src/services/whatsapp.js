@@ -98,4 +98,20 @@ async function enviarLista(telefono, texto, secciones, botonTexto = 'Ver opcione
   });
 }
 
-module.exports = { enviar, enviarBotones, enviarLista };
+// ── Descarga de un archivo multimedia recibido (imagen/documento) ────────
+async function descargarMedia(mediaId) {
+  const metaRes = await fetch(`https://graph.facebook.com/v25.0/${mediaId}`, {
+    headers: { Authorization: `Bearer ${WA_TOKEN}` },
+  });
+  const meta = await metaRes.json();
+  if (!meta.url) throw new Error('No se pudo obtener la URL del archivo de WhatsApp');
+
+  const fileRes = await fetch(meta.url, {
+    headers: { Authorization: `Bearer ${WA_TOKEN}` },
+  });
+  if (!fileRes.ok) throw new Error('No se pudo descargar el archivo de WhatsApp');
+
+  return { buffer: Buffer.from(await fileRes.arrayBuffer()), mimeType: meta.mime_type };
+}
+
+module.exports = { enviar, enviarBotones, enviarLista, descargarMedia };

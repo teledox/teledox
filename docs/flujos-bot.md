@@ -20,11 +20,18 @@ deriva al flujo correspondiente **por rangos**:
 | `0`–`12`, `39`, `41` | Consulta principal (registro paciente) | `flujo-consulta.js` |
 | `13`–`17` | Antecedentes médicos | `flujo-antecedentes.js` |
 | `50`–`62` | B2C (pago directo / seguro externo) | `flujo-b2c.js` |
+| `90`–`97` | Seguimiento aprobado por médico (pago) | `flujo-seguimiento-pago.js` |
 | `98` | Reagendar | `flujo-reagendar.js` |
 | `99` | "Ya registrado" (mensaje fijo) | `webhook.js` |
 | `200`+ | Enfermedades crónicas (cuestionarios) | `flujo-cronicas.js` |
 | `300`+ | Call center B2B (agente registra pacientes) | `flujo-callcenter.js` |
 | (sin paso) | Respuesta a recordatorio de seguimiento | `flujo-seguimiento.js` |
+
+> ℹ️ **Detalle de ruteo:** `webhook.js` despacha directo los rangos `13-17`, `98`, `99`,
+> `200+` y `300+`. Todo lo demás (`0-12`, `39`, `41`, `50-97`) cae en
+> `procesarPaso()` de `flujo-consulta.js`, que a su vez delega internamente:
+> `50-89` → `flujo-b2c.js` (en la práctica solo usa `50-62`) y `90-97` →
+> `flujo-seguimiento-pago.js`.
 
 > ⚠️ **Esta numeración por rangos es la parte frágil del sistema** — ver la sección
 > *"Deuda técnica"* al final. Ya causó varios bugs (pasos que caían en el rango de otro
@@ -82,12 +89,19 @@ Después de confirmar la consulta, el bot completa la historia clínica.
 
 ```mermaid
 flowchart TD
-  P13["Paso 13: ¿Alergias?"] --> P14["Paso 14: Antecedentes patológicos"]
-  P14 --> P15["Paso 15: Antecedentes quirúrgicos"]
-  P15 --> P16["Paso 16: Antecedentes familiares"]
-  P16 --> P17["Paso 17: Medicamentos habituales"]
-  P17 --> FIN([Guarda antecedentes\nPaso 99 · Fin])
+  P13["Paso 13: ¿Alergias?"] --> P14["Paso 14: ¿Hipertensión arterial?"]
+  P14 --> P15["Paso 15: ¿Diabetes?"]
+  P15 --> P16["Paso 16: ¿Cirugías previas?"]
+  P16 --> P17["Paso 17: Otros antecedentes /\nmedicación habitual"]
+  P17 --> FIN([Guarda antecedentes,\ngenera PDF de historia clínica,\nelimina sesión · Fin])
 ```
+
+> ⚠️ **"Paso 99" es código muerto en este camino.** `flujo-antecedentes.js` llama
+> `eliminar(telefono)` y devuelve `terminar:true` — la sesión se borra por completo,
+> no queda guardada en `paso: 99`. Cualquier mensaje posterior (incluido "hola")
+> cae a `procesarPaso(0, ...)` y muestra de nuevo el saludo inicial. La rama
+> "paso 99 → ya registrado" de `webhook.js` no se alcanza desde aquí — habría que
+> confirmar si algún otro flujo deja la sesión en `paso: 99`, o eliminar esa rama.
 
 ---
 
@@ -110,10 +124,18 @@ flowchart TD
   P55 --> P62{"Paso 62\n¿Usar este número u otro?"}
   P62 -->|"Usar este"| P57["Paso 57: Residencia"]
   P62 -->|"Indicar otro"| P56["Paso 56: Teléfono"] --> P57
-  P57 --> P58["Paso 58: Síntomas"] --> P59["Paso 59: Horario"]
+  P57 --> P58["Paso 58: Síntomas"]
+
+  P58 --> NIVb{"Clasifica síntomas"}
+  NIVb -->|"Nivel 3 (grave)"| EMERb([🚨 Emergencia → 911\nalerta Telegram · Fin])
+  NIVb -->|"Nivel 1 o 2\n(nivel 2 también alerta)"| P59["Paso 59\n¿Forma de pago?\n(Transferencia / Tarjeta)"]
   P59 --> P60["Paso 60\nEsperando comprobante de pago"]
-  P60 --> FINB2([Registra consulta · Fin])
+  P60 --> FINB2([Registra consulta + facturación · Fin])
 ```
+
+> ℹ️ El flujo B2C **no tiene paso de horario de preferencia** (a diferencia de la
+> consulta principal/B2B, que sí lo pide en el paso 11). De síntomas (P58) se pasa
+> directo a forma de pago (P59).
 
 ---
 
@@ -161,19 +183,31 @@ flowchart TD
 ## 6) 🔔 Respuestas a recordatorios de seguimiento
 
 No usa `paso`: cuando hay un recordatorio pendiente (medicamento o fin de tratamiento),
-la respuesta del paciente se procesa aparte (`flujo-seguimiento.js`).
+la respuesta del paciente se procesa aparte (`flujo-seguimiento.js`), antes de llegar
+al ruteo por `paso`.
 
 ```mermaid
 flowchart TD
   REM([Cron envía recordatorio]) --> TIPO{"Tipo de recordatorio"}
   TIPO -->|"Medicamento: ¿ya tomó?"| MED{"Sí / No"}
-  MED -->|"Sí"| OKm([✅ Registrado])
-  MED -->|"No"| ALm([⚠️ Alerta incumplimiento])
+  MED -->|"Sí"| OKm([✅ Registrado · Fin])
+  MED -->|"No"| ALm([⚠️ Alerta Telegram\nincumplimiento · Fin])
+
   TIPO -->|"Fin de tratamiento: ¿cómo se siente?"| FT{"1 / 2 / 3"}
-  FT -->|"1 Mejor"| EXITO([🎉 Caso exitoso])
-  FT -->|"2 Aún con síntomas"| REAG1["➡️ Reagendar (paso 98)"]
-  FT -->|"3 Peor"| REAG2["➡️ Reagendar (paso 98) + alerta"]
+  FT -->|"1 Mejor"| EXITO([🎉 Caso exitoso\nalerta Telegram · Fin])
+  FT -->|"2 Mejoró pero\naún con síntomas"| NOTIF2["Crea notificación\n(categoría media,\nestado pendiente)"]
+  FT -->|"3 No mejoró\no empeoró"| NOTIF3["⚠️ Alerta Telegram +\nnotificación\n(categoría grave,\nestado pendiente)"]
+
+  NOTIF2 --> REVISA(["Médico revisa la notificación\nen el panel"])
+  NOTIF3 --> REVISA
+  REVISA -->|"Aprueba"| P90["➡️ Seguimiento aprobado\n(paso 90, ver sección 8)"]
+  REVISA -->|"Rechaza"| FINr2([Fin — no se notifica\nal paciente])
 ```
+
+> ⚠️ **Las respuestas "2" y "3" NO redirigen automáticamente a "Reagendar" (paso 98).**
+> Solo crean una notificación/alerta para que un médico la revise manualmente desde el
+> panel. Si el médico la aprueba, recién ahí `api/seguimiento-decision.js` arranca una
+> sesión nueva en `paso: 90` (sección 8) — distinto del paso 98 de "Reagendar".
 
 ---
 
@@ -184,6 +218,50 @@ flowchart TD
   P98{"Paso 98\n¿Desea agendar consulta?"} -->|"Sí"| SINT["Paso 3: pide síntomas\n(reentra al flujo de consulta)"]
   P98 -->|"No"| FINr([Fin])
 ```
+
+---
+
+## 8) 🔁 Consulta de seguimiento aprobada por el médico (pasos 90–97)
+
+No se llega aquí escribiendo "hola". Cuando un médico **aprueba** una notificación de
+seguimiento (sección 6) desde el panel, `api/seguimiento-decision.js`:
+
+1. Marca la notificación como `aprobada`.
+2. Pre-carga `datos` con la info ya conocida del paciente (nombre, cédula, correo,
+   teléfono, lugar de residencia, `cliente_b2b_id` si aplica, `consulta_origen_id`).
+3. Crea una sesión en **`paso: 90`** y le envía al paciente botones preguntando si
+   desea agendar la consulta de control.
+
+```mermaid
+flowchart TD
+  APROB(["Médico aprueba seguimiento\nen el panel (api/seguimiento-decision.js)"]) --> SETUP["Crea sesión en paso 90\ncon correo / teléfono / residencia\nprecargados desde el paciente"]
+  SETUP --> P90{"Paso 90\n¿Desea agendar consulta de control?"}
+  P90 -->|"No"| FIN90([Elimina sesión · Fin])
+  P90 -->|"Sí"| P91["Paso 91\n¿Cómo se siente?\n(describe síntomas)"]
+
+  P91 --> NIVs{"Clasifica síntomas"}
+  NIVs -->|"Nivel 3 (grave)"| EMERs([🚨 Emergencia → 911\nalerta Telegram · Fin])
+  NIVs -->|"Nivel 1 o 2"| DATOS{"¿Falta correo,\nteléfono o residencia?"}
+
+  DATOS -->|"Falta correo"| P92["Paso 92: Correo"] --> DATOS
+  DATOS -->|"Falta teléfono"| P93["Paso 93: Teléfono de contacto"] --> DATOS
+  DATOS -->|"Falta residencia"| P94["Paso 94: Lugar de residencia"] --> DATOS
+  DATOS -->|"Completos"| PAGO{"¿Tiene cliente_b2b_id\n(empresa cubre)?"}
+
+  PAGO -->|"Sí — sin costo"| REGB2B([Crea consulta de seguimiento\nsin costo · alerta · Fin])
+  PAGO -->|"No — $8.00"| P95["Paso 95\n¿Forma de pago?\n(Transferencia / Tarjeta)"]
+  P95 --> P96["Paso 96\nEsperando comprobante de pago"]
+  P96 --> REGPAGO([Crea consulta + facturación\n(facturacion_b2c) · Fin])
+```
+
+> ℹ️ En la práctica, `seguimiento-decision.js` ya pre-carga correo, teléfono y lugar
+> de residencia desde el registro del paciente, así que P92-94 normalmente se saltan
+> (solo se preguntan si esos campos están vacíos en `pacientes`).
+>
+> Para probarlo manualmente sin pasar por el panel: crear una sesión con
+> `paso: 90` y `datos` con al menos `paciente_id`, `cedula`, `nombreCompleto`,
+> `correo`, `telefonoContacto`, `lugar_residencia` (y opcionalmente `cliente_b2b_id`,
+> `consulta_origen_id`).
 
 ---
 

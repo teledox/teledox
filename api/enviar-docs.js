@@ -89,6 +89,34 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    // Si se envió el pedido de laboratorio, iniciar el seguimiento (48h, día 3, día 5, día 7)
+    const pedidoLabEnviado = docs.some(d => d.tipo === 'pedido_laboratorio')
+      && !errores.some(e => e.tipo === 'pedido_laboratorio');
+
+    if (pedidoLabEnviado && consulta_id) {
+      const existeRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/seguimiento_laboratorio?consulta_id=eq.${consulta_id}&activo=eq.true`,
+        { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+      );
+      const existentes = await existeRes.json();
+      if (!existentes?.length) {
+        await fetch(`${SUPABASE_URL}/rest/v1/seguimiento_laboratorio`, {
+          method: 'POST',
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json',
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({
+            consulta_id,
+            paciente_id,
+            proximo_envio: new Date(Date.now() + 48 * 3600000).toISOString()
+          })
+        });
+      }
+    }
+
     return res.status(200).json({ ok: true, enviados, numero, errores: errores.length ? errores : undefined });
   } catch (err) {
     console.error('[enviar-docs]', err.message);

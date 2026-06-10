@@ -22,4 +22,18 @@ async function buscarRespuestaPendiente(telefono) {
   return Array.isArray(data) && data.length > 0 ? { respuesta: data[0], paciente: pacientes[0] } : null;
 }
 
-module.exports = { buscarRecordatorioActivo, buscarRespuestaPendiente };
+async function buscarRespuestaLabPendiente(telefono) {
+  const telefonoLimpio = telefono.replace('whatsapp:', '');
+  const pacientes = await query('GET', 'pacientes', null, `?telefono=eq.${telefonoLimpio}`);
+  if (!pacientes || pacientes.length === 0) return null;
+
+  const paciente_id = pacientes[0].id;
+  // Ventana amplia (9 días): los intentos de seguimiento de laboratorio llegan hasta el día 7.
+  const desde = new Date(Date.now() - 9 * 24 * 3600000).toISOString();
+  const data = await query('GET', 'seguimiento_laboratorio_respuestas', null,
+    `?paciente_id=eq.${paciente_id}&respuesta=is.null&created_at=gte.${desde}&order=created_at.desc&limit=1&select=*,seguimiento_laboratorio(*)`
+  );
+  return Array.isArray(data) && data.length > 0 ? { respuesta: data[0], paciente: pacientes[0] } : null;
+}
+
+module.exports = { buscarRecordatorioActivo, buscarRespuestaPendiente, buscarRespuestaLabPendiente };

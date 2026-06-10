@@ -1,18 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <!-- Burbuja de chat redondeada -->
-  <rect x="92" y="68" width="328" height="330" rx="88" ry="88" stroke="#F05252" stroke-width="52" fill="none"/>
-  <!-- Cola de la burbuja (abajo, apuntando a la derecha) -->
-  <path d="M218 396 L218 468 Q218 480 230 471 L320 398 Z" fill="#F05252"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" fill="none">
+  <!-- Burbuja de chat -->
+  <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+  <!-- Cola de la burbuja -->
+  <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
 
-  <!-- Perfil de rostro humano mirando a la derecha -->
+  <!-- Perfil del rostro mirando a la derecha -->
   <path d="
-    M 232 164
-    C 288 158, 316 190, 319 230
-    C 321 254, 330 270, 344 284
-    Q 351 292, 342 297
-    Q 333 302, 337 312
-    Q 345 321, 334 330
-    C 324 343, 308 350, 298 352
-    C 283 372, 280 390, 283 400
-  " stroke="#F05252" stroke-width="38" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    M 468 332
+    C 528 326, 574 354, 589 398
+    C 599 428, 612 448, 630 466
+    Q 641 477, 628 483
+    Q 614 489, 619 503
+    Q 628 514, 616 526
+    Q 603 538, 608 550
+    C 601 562, 583 571, 570 574
+    C 549 601, 542 638, 549 672
+  " stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

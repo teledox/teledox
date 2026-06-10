@@ -182,12 +182,12 @@
       width:500px;height:500px;border-radius:50%;
       background:radial-gradient(circle,rgba(13,148,136,.08),transparent 65%);pointer-events:none
     }
-    .tracking-inner{max-width:1080px;margin:0 auto;display:flex;gap:72px;align-items:center;flex-wrap:wrap;position:relative;z-index:1}
-    .tracking-copy{flex:1;min-width:300px}
+    .tracking-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:56px;position:relative;z-index:1}
+    .tracking-copy{max-width:720px;text-align:center}
     .tracking-copy .eyebrow{color:var(--red);opacity:1;letter-spacing:2px}
     .tracking-copy h2{color:var(--dark);font-size:clamp(28px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.08}
-    .tracking-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin-top:18px;max-width:440px}
-    .tracking-items{margin-top:38px;display:flex;flex-direction:column;gap:18px}
+    .tracking-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin:18px auto 0;max-width:560px}
+    .tracking-items{margin:38px auto 0;display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:20px;text-align:left;max-width:760px}
     .tracking-item{display:flex;gap:14px;align-items:flex-start}
     .t-check{
       width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:2px;
@@ -196,7 +196,7 @@
     }
     .t-title{color:var(--dark);font-size:15px;font-weight:700;margin-bottom:3px}
     .t-desc{color:var(--gray);font-size:13px;line-height:1.55}
-    .tracking-visual{flex:1;min-width:300px;display:flex;flex-direction:column;gap:12px}
+    .tracking-visual{width:100%;max-width:800px;display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:14px}
     .track-card{
       background:#fff;border:1.5px solid rgba(0,0,0,.05);
       border-radius:16px;padding:20px 22px;
@@ -217,8 +217,8 @@
 
     /* ── CRÓNICAS ── */
     .chronic-section{padding:110px 24px;background:var(--gray-light)}
-    .chronic-inner{max-width:1080px;margin:0 auto;display:flex;gap:72px;align-items:center;flex-wrap:wrap}
-    .chronic-visual{flex:1;min-width:300px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .chronic-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column-reverse;align-items:center;gap:56px}
+    .chronic-visual{width:100%;max-width:640px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
     .chronic-card{
       background:#fff;border-radius:18px;padding:24px 20px;
       box-shadow:0 4px 18px rgba(0,0,0,.06);
@@ -228,9 +228,9 @@
     .c-icon{font-size:28px;margin-bottom:10px}
     .c-title{font-size:14px;font-weight:700;margin-bottom:6px}
     .c-desc{font-size:13px;color:var(--gray);line-height:1.5}
-    .chronic-copy{flex:1;min-width:300px}
+    .chronic-copy{max-width:700px;text-align:center}
     .chronic-copy h2{font-size:clamp(26px,4vw,46px);font-weight:800;letter-spacing:-1.5px;line-height:1.1}
-    .chronic-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin-top:16px}
+    .chronic-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin:16px auto 0;max-width:580px}
 
     /* ── CÓMO FUNCIONA ── */
     .how-section{padding:110px 24px}
@@ -274,7 +274,8 @@
 
     /* ── FOOTER ── */
     footer{background:var(--gray-light);padding:52px 52px 32px;border-top:1px solid #e5e7eb}
-    .footer-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:36px;margin-bottom:44px}
+    .footer-top{display:flex;justify-content:center;flex-wrap:wrap;gap:72px;margin-bottom:44px;text-align:center}
+    .footer-brand{display:flex;flex-direction:column;align-items:center}
     .footer-brand p{color:var(--gray);font-size:14px;line-height:1.65;max-width:240px;margin-top:12px}
     .footer-col h4{color:var(--dark);font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:14px}
     .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:10px}
@@ -292,6 +293,8 @@
       nav{padding:14px 18px}
       nav ul{display:none}
       .chronic-visual{grid-template-columns:1fr}
+      .tracking-items{grid-template-columns:1fr}
+      .tracking-visual{grid-template-columns:1fr}
       footer{padding:40px 22px 26px}
       .step:not(:last-child)::after{display:none}
     }

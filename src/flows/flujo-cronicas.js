@@ -237,6 +237,18 @@ const ENFERMEDADES = {
   }
 };
 
+// Valida que la respuesta tenga el formato esperado según la pregunta:
+// si la pregunta presenta opciones numeradas (1️⃣2️⃣3️⃣...), la respuesta debe
+// ser uno de esos números; si no, debe ser un valor numérico (entero o decimal).
+function validarRespuestaCronica(pregunta, mensaje) {
+  const valor = (mensaje || '').trim();
+  const opciones = (pregunta.match(/[1-9]️⃣/g) || []).length;
+  if (opciones > 0) {
+    return new RegExp(`^[1-${opciones}]$`).test(valor);
+  }
+  return /^\d+(\.\d+)?$/.test(valor);
+}
+
 async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
   const enfKey = datos.enfermedad_key;
   const enfDef = ENFERMEDADES[enfKey];
@@ -247,11 +259,23 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
     return { respuesta: `Escriba *hola* para iniciar una consulta. 👋`, terminar: true };
   }
 
-  // Guardar respuesta del paso actual
-  const paramActual = enfDef.pasos[pasoCronico - 1]?.param;
+  // Guardar respuesta del paso actual (validando el formato esperado)
+  const preguntaActual = enfDef.pasos[pasoCronico - 1];
+  const paramActual = preguntaActual?.param;
   if (paramActual) {
+    if (!validarRespuestaCronica(preguntaActual.pregunta, mensaje)) {
+      const opciones = (preguntaActual.pregunta.match(/[1-9]️⃣/g) || []).length;
+      const hint = opciones > 0
+        ? `Por favor responda únicamente con el número de la opción (1${opciones > 1 ? `-${opciones}` : ''}).`
+        : `Por favor ingrese solo el número, ej: 120`;
+      await guardar(telefono, 200, datos);
+      return {
+        respuesta: `❌ No entendí su respuesta.\n\n${hint}\n\n${preguntaActual.pregunta}`,
+        terminar: false
+      };
+    }
     datos.valores = datos.valores || {};
-    datos.valores[paramActual] = mensaje;
+    datos.valores[paramActual] = mensaje.trim();
   }
 
   // ¿Hay más preguntas?

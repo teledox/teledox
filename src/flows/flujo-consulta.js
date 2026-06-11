@@ -25,7 +25,7 @@ async function registrarPlanillajeB2B(datos, consultaId) {
     mes: ahora.getMonth() + 1,
     anio: ahora.getFullYear()
   };
-  await fetch(`${SUPA_URL}/rest/v1/planillaje_b2b`, {
+  const res = await fetch(`${SUPA_URL}/rest/v1/planillaje_b2b`, {
     method: 'POST',
     headers: {
       'apikey': SUPA_KEY,
@@ -35,6 +35,10 @@ async function registrarPlanillajeB2B(datos, consultaId) {
     },
     body: JSON.stringify(body)
   });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`Supabase POST planillaje_b2b: ${data?.message || `HTTP ${res.status}`}`);
+  }
 }
 
 async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
@@ -53,6 +57,17 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
     const result = await procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWhatsApp);
     if (!result.terminar) await guardar(telefono, result.paso, result.datos);
     return result;
+  }
+
+  // Paso desconocido/no reconocido — reiniciar sesión para evitar bucles
+  // sin salida (en lugar de repetir una respuesta vacía indefinidamente)
+  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 12];
+  if (!PASOS_VALIDOS.includes(paso)) {
+    await eliminar(telefono);
+    return {
+      respuesta: `¡Hola, ${nombreWhatsApp}! 👋 Bienvenido a *MediLyft*.\n\nEstamos listos para ayudarle.\n\nPor favor indíquenos su número de *cédula de identidad* o su *código de acceso* de empresa:`,
+      paso: 0, datos: {}, terminar: true
+    };
   }
 
   if (paso === 0) {

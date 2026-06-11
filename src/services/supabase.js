@@ -15,7 +15,7 @@ async function query(method, table, body, params = '') {
   const data = await res.json();
   if (!res.ok) {
     console.error(`[Supabase] ${method} ${table}: ${JSON.stringify(data)}`);
-    return null;
+    throw new Error(`Supabase ${method} ${table}: ${data?.message || `HTTP ${res.status}`}`);
   }
   return data;
 }

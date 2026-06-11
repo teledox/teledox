@@ -3,7 +3,7 @@ const { crear: crearPaciente, buscarPorCedula } = require('../services/pacientes
 const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('../services/consultas');
 const { guardar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
-const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
+const { clasificarSintomas, esSi, inferirSexo, separarNombre, validarCedula } = require('../utils/validaciones');
 
 // Buscar empresa por codigo_acceso
 async function buscarEmpresaPorCodigo(codigo) {
@@ -26,13 +26,14 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
 
   // ── Paso 301: cédula del paciente ────────────────────────────────────────
   } else if (paso === 301) {
-    const cedula = mensaje.replace(/\D/g, '').trim();
-    if (cedula.length !== 10) {
+    const { valida, error, cedula: cedulaLimpia } = validarCedula(mensaje);
+    if (!valida) {
       return {
-        respuesta: `❌ Cédula inválida. Debe tener 10 dígitos.\n\nIngrese la *cédula* del paciente:`,
+        respuesta: `❌ ${error}\n\nIngrese la *cédula* del paciente:`,
         paso: 301, datos, terminar: false
       };
     }
+    const cedula = cedulaLimpia || mensaje.replace(/\D/g, '');
     datos.cc_cedula = cedula;
     // Buscar paciente existente
     const existente = await buscarPorCedula(cedula);

@@ -1,5 +1,6 @@
 const { WA_VERIFY_TOKEN } = require('../src/config');
 const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
+const { alertar } = require('../src/services/telegram');
 const { esSi } = require('../src/utils/validaciones');
 
 // ¿El mensaje es una respuesta plausible al recordatorio de seguimiento pendiente?
@@ -60,6 +61,10 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
+  // Declarados fuera del try para poder reportarlos en el catch si algo falla
+  let telefono = null;
+  let paso = null;
+
   try {
     const body = req.body || {};
     if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
@@ -70,8 +75,8 @@ module.exports = async function handler(req, res) {
     if (!value?.messages?.length) return res.status(200).send('OK');
 
     const msg            = value.messages[0];
-    const telefono       = msg.from;
     const nombreWhatsApp = value.contacts?.[0]?.profile?.name || 'estimado/a';
+    telefono = msg.from;
 
     // ── Extraer texto (texto plano o respuesta de botón/lista) ──────────
     let mensaje = '';
@@ -122,11 +127,23 @@ module.exports = async function handler(req, res) {
     // El seguimiento NUNCA intercepta mensajes interactivos (botones/listas),
     // ya que el seguimiento solo usa texto libre — los botones siempre son del flujo de consulta.
     const pendiente = !esInteractivo ? await buscarRespuestaPendiente(telefono) : null;
-    if (pendiente?.respuesta && (!enFlujoConsulta || esRespuestaSeguimiento(pendiente.respuesta, mensaje))) {
-      const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
-      if (resp) {
-        await enviar(telefono, resp);
+    if (pendiente?.respuesta) {
+      const coincide = esRespuestaSeguimiento(pendiente.respuesta, mensaje);
+      if (enFlujoConsulta && !coincide) {
+        // El mensaje no coincide con el formato esperado y el usuario está en
+        // medio de una consulta — dejamos que continúe su flujo activo; el
+        // seguimiento pendiente se volverá a evaluar en el próximo mensaje.
+      } else if (!coincide && pendiente.respuesta?.recordatorios?.tipo === 'medicamento') {
+        // No está en una consulta, pero su respuesta no es un Sí/No claro —
+        // evitamos interpretarla como "No tomé el medicamento" y reinsistimos.
+        await enviar(telefono, `No entendimos su respuesta. 🙏\n\n¿Tomó su medicamento como se le indicó?\n\nResponda *Sí* o *No*.`);
         return res.status(200).send('OK');
+      } else {
+        const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
+        if (resp) {
+          await enviar(telefono, resp);
+          return res.status(200).send('OK');
+        }
       }
     }
 
@@ -142,7 +159,8 @@ module.exports = async function handler(req, res) {
     }
 
     if (!sesion) sesion = { paso: 0, datos: {} };
-    let { paso, datos } = sesion;
+    let datos;
+    ({ paso, datos } = sesion);
     datos = datos || {};
 
     // Pasos 300+ — flujo call center B2B
@@ -211,6 +229,21 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error('Error en webhook:', err.message);
+
+    try {
+      await alertar(`🔴 <b>Error en webhook</b>\nTeléfono: ${telefono || 'desconocido'}\nPaso: ${paso ?? 'desconocido'}\nError: ${err.message}`);
+    } catch (e2) {
+      console.error('Error enviando alerta de error:', e2.message);
+    }
+
+    if (telefono) {
+      try {
+        await enviar(telefono, `⚠️ Tuvimos un problema técnico procesando su mensaje. Por favor intente de nuevo en unos minutos.`);
+      } catch (e3) {
+        console.error('Error enviando mensaje de error al usuario:', e3.message);
+      }
+    }
+
     return res.status(200).send('OK');
   }
 };

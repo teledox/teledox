@@ -17,6 +17,17 @@ const BOTONES_PAGO = [
   { id: 'tarjeta',       titulo: '💳 Con tarjeta'   },
 ];
 
+// Mensaje uniforme cuando el usuario no responde con uno de los botones esperados
+const MSG_REINTENTAR_BOTON = `No entendí su respuesta. Por favor toque uno de los botones de arriba 👆\n\n¿Cómo desea realizar el pago?`;
+
+// ¿El mensaje confirma el envío del comprobante de pago?
+// Requiere una imagen/documento adjunto, o una palabra clave explícita de confirmación.
+function esConfirmacionComprobante(mensaje) {
+  const m = mensaje.trim().toLowerCase();
+  return mensaje === '__media__' ||
+    /\b(listo|enviado|envie|envié|pagado|pagu[ée]|hecho|realizad[oa]|comprobante)\b/.test(m);
+}
+
 async function registrarFacturacionB2C(datos) {
   const ahora = new Date();
   const body = {
@@ -35,7 +46,7 @@ async function registrarFacturacionB2C(datos) {
     mes: ahora.getMonth() + 1,
     anio: ahora.getFullYear()
   };
-  await fetch(`${SUPA_URL}/rest/v1/facturacion_b2c`, {
+  const res = await fetch(`${SUPA_URL}/rest/v1/facturacion_b2c`, {
     method: 'POST',
     headers: {
       'apikey': SUPA_KEY,
@@ -45,6 +56,10 @@ async function registrarFacturacionB2C(datos) {
     },
     body: JSON.stringify(body)
   });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(`Supabase POST facturacion_b2c: ${data?.message || `HTTP ${res.status}`}`);
+  }
 }
 
 function esSeguroAliado(nombre) {
@@ -200,21 +215,12 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura de pantalla del comprobante* para confirmar su consulta.`;
       nuevoPaso = 60;
     } else {
-      return { respuesta: `Por favor selecciona la forma de pago:`, paso: 59, datos, terminar: false, botones: BOTONES_PAGO };
+      return { respuesta: MSG_REINTENTAR_BOTON, paso: 59, datos, terminar: false, botones: BOTONES_PAGO };
     }
 
   } else if (paso === 60) {
-    // Recibe imagen o texto de confirmación de pago
-    const esFoto = mensaje.toLowerCase().includes('comprobante') ||
-                   mensaje.toLowerCase().includes('pagué') ||
-                   mensaje.toLowerCase().includes('pague') ||
-                   mensaje.toLowerCase().includes('listo') ||
-                   mensaje.toLowerCase().includes('hecho') ||
-                   mensaje.toLowerCase().includes('realicé') ||
-                   mensaje.toLowerCase().includes('ya pagué') ||
-                   mensaje === '' || mensaje.startsWith('https://');
-
-    if (esFoto || mensaje.length > 3) {
+    // Recibe imagen/documento del comprobante, o una confirmación explícita
+    if (esConfirmacionComprobante(mensaje)) {
       datos.comprobante_ref = `WhatsApp-${telefono}-${Date.now()}`;
 
       // 1. Crear o reutilizar paciente en BD
@@ -271,7 +277,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
         paso: 0, datos, terminar: true
       };
     } else {
-      respuesta = `Por favor envíenos la foto o captura del comprobante de pago para confirmar su consulta:`;
+      respuesta = `Por favor envíenos la *foto o captura del comprobante* de su pago para confirmar su consulta. Si ya realizó el pago, también puede escribir *"listo"*.`;
       nuevoPaso = 60;
     }
   }
@@ -279,4 +285,4 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
   return { respuesta, paso: nuevoPaso, datos, terminar: false };
 }
 
-module.exports = { procesarB2C, BOTONES_PAGO, registrarFacturacionB2C };
+module.exports = { procesarB2C, BOTONES_PAGO, MSG_REINTENTAR_BOTON, registrarFacturacionB2C, esConfirmacionComprobante };

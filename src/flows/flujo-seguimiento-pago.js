@@ -2,7 +2,7 @@ const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('..
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi } = require('../utils/validaciones');
-const { BOTONES_PAGO, registrarFacturacionB2C } = require('./flujo-b2c');
+const { BOTONES_PAGO, MSG_REINTENTAR_BOTON, registrarFacturacionB2C, esConfirmacionComprobante } = require('./flujo-b2c');
 
 // Pasos 90-97 — flujo de "consulta de seguimiento" aprobada por el médico desde
 // el panel (api/seguimiento-decision.js). El paciente ya fue identificado y
@@ -109,10 +109,18 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
       respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura del comprobante* para confirmar.`;
       nuevoPaso = 96;
     } else {
-      return { respuesta: `Por favor selecciona la forma de pago:`, paso: 95, datos, terminar: false, botones: BOTONES_PAGO };
+      return { respuesta: MSG_REINTENTAR_BOTON, paso: 95, datos, terminar: false, botones: BOTONES_PAGO };
     }
 
   } else if (paso === 96) {
+    // Recibe imagen/documento del comprobante, o una confirmación explícita
+    if (!esConfirmacionComprobante(mensaje)) {
+      return {
+        respuesta: `Por favor envíenos la *foto o captura del comprobante* de su pago para confirmar. Si ya realizó el pago, también puede escribir *"listo"*.`,
+        paso: 96, datos, terminar: false
+      };
+    }
+
     datos.comprobante_ref = `WhatsApp-${telefono}-${Date.now()}`;
 
     const consulta = await crearConsulta({

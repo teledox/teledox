@@ -10,8 +10,18 @@ async function procesarReagendamiento(datos, mensaje, telefono) {
       cedula: p.cedula,
       paciente_id: p.id,
       nombre_paciente: p.nombre,
+      nombre: p.nombre || '',
+      apellidos: p.apellidos || '',
+      nombreCompleto: `${p.nombre || ''} ${p.apellidos || ''}`.trim(),
+      edad: p.edad || '',
+      fecha_nacimiento: p.fecha_nacimiento || '',
+      correo: p.correo || '',
+      telefono: p.telefono || '',
+      lugar_residencia: p.lugar_residencia || '',
       empresa: p.clientes_b2b?.nombre_empresa || 'su empresa',
+      empresa_id: p.clientes_b2b?.id || null,
       seguro: p.clientes_b2b?.nombre_seguro || 'su seguro',
+      origen_afiliacion: p.clientes_b2b ? 'afiliado' : null,
       sintomas: 'Seguimiento de tratamiento — consulta de control'
     };
     await guardar(telefono, 3, nuevosDatos);

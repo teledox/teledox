@@ -17,16 +17,19 @@ async function _post(payload) {
     if (!res.ok) {
       const err = await res.json();
       console.error('WhatsApp API error:', JSON.stringify(err));
+      return false;
     }
+    return true;
   } catch (e) {
     console.error('WhatsApp fetch error:', e.message);
+    return false;
   }
 }
 
 // ── Mensaje de texto plano ────────────────────────────────────────────────
 async function enviar(telefono, mensaje) {
   const numero = telefono.replace('whatsapp:', '').replace('+', '').trim();
-  await _post({
+  return _post({
     messaging_product: 'whatsapp',
     to: numero,
     type: 'text',

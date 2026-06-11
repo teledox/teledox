@@ -34,14 +34,15 @@ async function enviarRecordatorioLab(seguimiento, paciente) {
   const intentoActual = (seguimiento.intento || 0) + 1;
   const mensaje = `🧪 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Le recordamos que el médico le solicitó un examen de laboratorio.\n\n¿Ya se realizó el examen?\n\nResponda *Sí* o *No*`;
 
-  await enviar(telefono, mensaje);
+  const enviado = await enviar(telefono, mensaje);
 
   await query('POST', 'seguimiento_laboratorio_respuestas', {
     seguimiento_id: seguimiento.id,
     paciente_id: seguimiento.paciente_id,
     consulta_id: seguimiento.consulta_id,
     intento: intentoActual,
-    pregunta: mensaje
+    pregunta: mensaje,
+    enviado
   });
 
   if (intentoActual < OFFSETS_LAB_H.length) {
@@ -58,7 +59,7 @@ async function enviarRecordatorioLab(seguimiento, paciente) {
     }, `?id=eq.${seguimiento.id}`);
   }
 
-  return { telefono, intento: intentoActual };
+  return { telefono, intento: intentoActual, enviado };
 }
 
 module.exports = { OFFSETS_LAB_H, crearSeguimientoLab, enviarRecordatorioLab };

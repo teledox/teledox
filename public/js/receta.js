@@ -252,6 +252,47 @@ function segLabRespuestaLabel(r) {
   return '⏳ Sin respuesta';
 }
 
+const LAB_RECORDATORIOS = [
+  { intento: 1, label: 'Recordatorio día 2 (48h)' },
+  { intento: 2, label: 'Recordatorio día 3 (72h)' },
+  { intento: 3, label: 'Recordatorio día 5 (120h)' },
+  { intento: 4, label: 'Recordatorio día 7 (168h)' }
+];
+
+function renderTablaRecordatoriosLab(seguimiento, respuestas) {
+  const filas = LAB_RECORDATORIOS.map(({ intento, label }) => {
+    const resp = respuestas.find(r => r.intento === intento);
+    let estadoHtml;
+    if (resp) {
+      estadoHtml = resp.enviado === false
+        ? '<span style="color:#dc2626;font-weight:700">❌ Falló</span>'
+        : '<span style="color:#16a34a;font-weight:700">✅ Enviado</span>';
+    } else if (seguimiento.activo && (seguimiento.intento || 0) === intento - 1) {
+      estadoHtml = '<span style="color:#888">⏳ Pendiente</span>';
+    } else {
+      estadoHtml = '<span style="color:#ccc">—</span>';
+    }
+    return `
+      <tr>
+        <td style="padding:5px 0;font-size:12px">${label}</td>
+        <td style="padding:5px 0;text-align:right">${estadoHtml}</td>
+      </tr>`;
+  }).join('');
+
+  return `
+    <table style="width:100%;border-collapse:collapse;margin-top:10px">
+      <tbody>
+        ${filas}
+        <tr>
+          <td style="padding:5px 0;font-size:12px">Enviar nueva alerta</td>
+          <td style="padding:5px 0;text-align:right">
+            <button class="btn btn-sm btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()" style="background:#7c3aed;border-color:#7c3aed">🧪 Enviar ahora</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>`;
+}
+
 async function renderSeguimientoLab() {
   const el = document.getElementById('segLaboratorioInfo');
   if (!el) return;
@@ -261,7 +302,11 @@ async function renderSeguimientoLab() {
   const seguimiento = seguimientos[0];
 
   if (!seguimiento) {
-    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin seguimiento de examen de laboratorio para esta consulta. Use el botón para iniciarlo.</div>';
+    el.innerHTML = `
+      <div class="empty-state" style="padding:8px 0">Sin seguimiento de examen de laboratorio para esta consulta.</div>
+      <div style="text-align:right;margin-top:8px">
+        <button class="btn btn-sm btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()" style="background:#7c3aed;border-color:#7c3aed">🧪 Enviar ahora</button>
+      </div>`;
     return;
   }
 
@@ -296,6 +341,7 @@ async function renderSeguimientoLab() {
         <div class="seg-item-pregunta">🧪 Intento ${r.intento}</div>
         <div class="seg-item-respuesta">${segLabRespuestaLabel(r)}</div>
       </div>`).join('')}</div>` : ''}
+    ${renderTablaRecordatoriosLab(seguimiento, respuestas)}
   `;
 }
 

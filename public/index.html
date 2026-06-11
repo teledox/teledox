@@ -26,39 +26,6 @@
       </div>
       <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
       <div class="login-error" id="loginError">Correo o contraseña incorrectos</div>
-      <div class="login-toggle">¿No tienes cuenta? <a href="#" onclick="showAuthView('register');return false;">Crear cuenta</a></div>
-    </div>
-
-    <!-- CREAR CUENTA -->
-    <div id="registerView" style="display:none">
-      <div class="login-sub">Crear cuenta médico</div>
-      <div class="form-group">
-        <label class="form-label">Nombre *</label>
-        <input type="text" class="form-input" id="regNombre" placeholder="Juan" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Apellidos *</label>
-        <input type="text" class="form-input" id="regApellidos" placeholder="Pérez García" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Correo electrónico *</label>
-        <input type="email" class="form-input" id="regEmail" placeholder="correo@ejemplo.com" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Contraseña * <span style="font-size:11px;color:#999">(mín. 6 caracteres)</span></label>
-        <input type="password" class="form-input" id="regPass" placeholder="••••••••" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Especialidad</label>
-        <input type="text" class="form-input" id="regEsp" placeholder="Ej: Medicina General" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">N° Registro MSP</label>
-        <input type="text" class="form-input" id="regNumero" placeholder="Ej: 1234567" />
-      </div>
-      <button class="btn-login" id="registerBtn" onclick="doRegister()">Crear cuenta</button>
-      <div class="login-error" id="registerError" style="display:none"></div>
-      <div class="login-toggle">¿Ya tienes cuenta? <a href="#" onclick="showAuthView('login');return false;">Iniciar sesión</a></div>
     </div>
 
   </div>
@@ -440,17 +407,8 @@
 
             <div class="card">
               <div class="card-header"><span class="card-title">🧪 Seguimiento de examen de laboratorio</span></div>
+              <div style="font-size:12px;color:#888;margin-bottom:6px">El bot pregunta al paciente si ya se realizó el examen y le pide subir el resultado</div>
               <div id="segLaboratorioInfo"></div>
-              <!-- Fila: Seguimiento de examen de laboratorio -->
-              <div style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:1rem;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-                <div>
-                  <div style="font-size:13px;font-weight:600;color:#7c3aed">🧪 Seguimiento de examen de laboratorio</div>
-                  <div style="font-size:12px;color:#888;margin-top:2px">El bot pregunta al paciente si ya se realizó el examen y le pide subir el resultado</div>
-                </div>
-                <button class="btn btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()" style="background:#7c3aed;border-color:#7c3aed;white-space:nowrap">
-                  🧪 Enviar seguimiento de laboratorio
-                </button>
-              </div>
             </div>
 
             <div class="card">

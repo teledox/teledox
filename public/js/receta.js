@@ -90,6 +90,7 @@ async function openReceta(consultaId, pacienteId) {
 
   // Timeline de seguimiento de esta consulta + enfermedades crónicas del paciente
   if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
+  if (typeof renderRecordatoriosConsulta === 'function') renderRecordatoriosConsulta();
   if (typeof renderCronicasConsulta === 'function') renderCronicasConsulta();
   if (typeof renderSeguimientoLab === 'function') renderSeguimientoLab();
 
@@ -215,6 +216,63 @@ async function renderSeguimientoTimeline() {
       ${segAlertaBadge(s)}
     </div>`;
   }).join('')}</div>`;
+}
+
+// ── Recordatorios (seguimientos activos/desactivados) de medicamentos de esta consulta ──
+async function renderRecordatoriosConsulta() {
+  const el = document.getElementById('segRecordatoriosConsulta');
+  if (!el) return;
+  const recordatorios = await supa('GET', 'recordatorios', null,
+    `?consulta_id=eq.${recetaConsultaId}&order=activo.desc,created_at.desc`) || [];
+  if (!recordatorios.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin seguimientos de medicamentos para esta consulta.</div>';
+    return;
+  }
+  const activos = recordatorios.filter(r => r.activo);
+  const fmtCada = r => r.frecuencia_horas < 1 ? `cada ${Math.round(r.frecuencia_horas * 60)} min` : `cada ${r.frecuencia_horas}h`;
+  el.innerHTML = `
+    ${activos.length ? `<div style="margin-bottom:10px"><button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="desactivarTodosRecordatoriosConsulta()">🔕 Desactivar todos (${activos.length})</button></div>` : ''}
+    ${recordatorios.map(r => `
+      <div class="detail-item" style="margin-bottom:8px;${r.activo ? '' : 'opacity:.55'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <div>
+            <div class="detail-label">${r.tipo === 'fin_tratamiento' ? 'Cierre de tratamiento' : 'Medicamento'} ${r.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
+            <div class="detail-value">${r.medicamento || '—'}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px">${fmtCada(r)} · Hasta: ${new Date(r.fecha_fin).toLocaleDateString('es-EC')}</div>
+          </div>
+          ${r.activo
+            ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorioConsulta('${r.id}')">🔕 Desactivar</button>`
+            : `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorioConsulta('${r.id}')">🔔 Reactivar</button>`}
+        </div>
+      </div>`).join('')}`;
+}
+
+async function desactivarRecordatorioConsulta(recId) {
+  await supa('PATCH', 'recordatorios', { activo: false }, `?id=eq.${recId}`);
+  showToast('🔕 Seguimiento desactivado');
+  renderRecordatoriosConsulta();
+}
+
+async function reactivarRecordatorioConsulta(recId) {
+  const ahora = new Date();
+  const rec = (await supa('GET', 'recordatorios', null, `?id=eq.${recId}&limit=1`) || [])[0];
+  if (!rec) return;
+  const freq = rec.frecuencia_horas || 24;
+  const finFuturo = new Date(rec.fecha_fin) > ahora;
+  await supa('PATCH', 'recordatorios', {
+    activo: true,
+    fecha_proximo: new Date(ahora.getTime() + freq * 3600000).toISOString(),
+    fecha_fin: finFuturo ? rec.fecha_fin : new Date(ahora.getTime() + 86400000).toISOString()
+  }, `?id=eq.${recId}`);
+  showToast('🔔 Seguimiento reactivado');
+  renderRecordatoriosConsulta();
+}
+
+async function desactivarTodosRecordatoriosConsulta() {
+  if (!confirm('¿Desactivar todos los seguimientos activos de esta consulta?')) return;
+  await supa('PATCH', 'recordatorios', { activo: false }, `?consulta_id=eq.${recetaConsultaId}&activo=eq.true`);
+  showToast('🔕 Seguimientos desactivados');
+  renderRecordatoriosConsulta();
 }
 
 // ── Enfermedades crónicas activas del paciente (para activar seguimiento) ──

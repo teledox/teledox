@@ -109,7 +109,6 @@ async function loadConsultas() {
         <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:170px">
           ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
           ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
-          <button class="btn btn-sm" style="background:#eff6ff;color:#2563eb;border-color:#bfdbfe" title="Enviar link de teleconsulta al paciente" onclick="abrirPopupLink('${c.paciente_id}','${(p.nombre||'').replace(/'/g,"\\'")} ${(p.apellidos||'').replace(/'/g,"\\'")}')">🔗 Link</button>
           <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">ℹ️ Abrir info</button>
           <label class="chk-completar" title="Marcar/desmarcar como completada">
             <input type="checkbox" ${c.estado === 'completada' ? 'checked' : ''}
@@ -191,53 +190,6 @@ async function toggleCompletada(consultaId, checkboxEl, medicoId) {
     },
     () => { checkboxEl.checked = !marcar; }
   );
-}
-
-// ── Link de teleconsulta ─────────────────────────────────────────────────
-function abrirPopupLink(pacienteId, pacienteNombre) {
-  document.getElementById('linkPacienteId').value    = pacienteId;
-  document.getElementById('linkPacienteInfo').textContent = `👤 ${pacienteNombre.trim() || 'Paciente'}`;
-  document.getElementById('linkInput').value         = '';
-  document.getElementById('popupLink').style.display = 'flex';
-  setTimeout(() => document.getElementById('linkInput').focus(), 100);
-}
-
-function cerrarPopupLink() {
-  document.getElementById('popupLink').style.display = 'none';
-  document.getElementById('linkInput').value = '';
-}
-
-async function enviarLinkTeleconsulta() {
-  const pacienteId = document.getElementById('linkPacienteId').value;
-  const link       = document.getElementById('linkInput').value.trim();
-
-  if (!link) { showToast('⚠️ Pega el link de la reunión'); return; }
-  if (!link.startsWith('http')) { showToast('⚠️ El link debe comenzar con http'); return; }
-
-  const btn = document.querySelector('#popupLink .btn-primary');
-  btn.disabled     = true;
-  btn.textContent  = '⏳ Enviando...';
-
-  try {
-    const medicoNombre = `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim();
-    const res = await fetch('/api/enviar-link', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paciente_id: pacienteId, link, medico_nombre: medicoNombre })
-    });
-    const data = await res.json();
-    if (!res.ok) {
-      showToast('❌ ' + (data.error || 'Error al enviar'));
-    } else {
-      cerrarPopupLink();
-      showToast(`✓ Link enviado a ${data.paciente} (${data.numero})`);
-    }
-  } catch (e) {
-    showToast('❌ Error de conexión: ' + e.message);
-  } finally {
-    btn.disabled    = false;
-    btn.textContent = '📲 Enviar link al paciente';
-  }
 }
 
 async function eliminarConsulta(consultaId) {

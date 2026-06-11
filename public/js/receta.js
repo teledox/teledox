@@ -92,6 +92,73 @@ async function openReceta(consultaId, pacienteId) {
   if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
   if (typeof renderCronicasConsulta === 'function') renderCronicasConsulta();
   if (typeof renderSeguimientoLab === 'function') renderSeguimientoLab();
+
+  // Enlace de teleconsulta + historial de envíos
+  const linkInput = document.getElementById('recetaLinkInput');
+  if (linkInput) linkInput.value = '';
+  if (typeof renderEnlacesEnviados === 'function') renderEnlacesEnviados();
+}
+
+// ── Enlace de teleconsulta (Meet/Zoom/Teams) ─────────────────────────────
+async function renderEnlacesEnviados() {
+  const el = document.getElementById('enlacesEnviadosList');
+  if (!el) return;
+
+  const enlaces = await supa('GET', 'enlaces_teleconsulta', null,
+    `?consulta_id=eq.${recetaConsultaId}&select=*,medico:usuarios(nombre,apellidos)&order=created_at.desc`) || [];
+
+  if (!enlaces.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Aún no se han enviado enlaces de teleconsulta para esta consulta.</div>';
+    return;
+  }
+
+  el.innerHTML = `<div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px">Enlaces enviados</div>` +
+    enlaces.map(e => {
+      const fecha = new Date(e.created_at).toLocaleString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const medico = e.medico ? `Dr(a). ${e.medico.nombre || ''} ${e.medico.apellidos || ''}`.trim() : '';
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid #f5f5f5;font-size:12px">
+          <div style="overflow:hidden">
+            <a href="${e.link}" target="_blank" rel="noopener" style="color:#2563eb;text-decoration:none;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.link}</a>
+            <div style="color:#aaa;font-size:11px">${fecha}${medico ? ' · ' + medico : ''}</div>
+          </div>
+        </div>`;
+    }).join('');
+}
+
+async function enviarLinkTeleconsultaReceta() {
+  const link = document.getElementById('recetaLinkInput')?.value.trim();
+  if (!link) { showToast('⚠️ Pega el link de la reunión'); return; }
+  if (!link.startsWith('http')) { showToast('⚠️ El link debe comenzar con http'); return; }
+
+  const btn = document.getElementById('btnEnviarLinkReceta');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+
+  try {
+    const medicoNombre = `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim();
+    const res = await fetch('/api/enviar-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paciente_id: recetaPacienteId,
+        consulta_id: recetaConsultaId,
+        medico_id: currentUser?.id,
+        link, medico_nombre: medicoNombre
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast('❌ ' + (data.error || 'Error al enviar'));
+    } else {
+      document.getElementById('recetaLinkInput').value = '';
+      showToast(`✓ Link enviado a ${data.paciente} (${data.numero})`);
+      renderEnlacesEnviados();
+    }
+  } catch (e) {
+    showToast('❌ Error de conexión: ' + e.message);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📲 Enviar link al paciente'; }
+  }
 }
 
 // ── Timeline de seguimiento de esta consulta (mensajes enviados + respuestas) ──

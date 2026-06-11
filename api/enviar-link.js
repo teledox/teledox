@@ -11,7 +11,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { paciente_id, link, medico_nombre } = req.body || {};
+  const { paciente_id, consulta_id, link, medico_nombre, medico_id } = req.body || {};
   if (!paciente_id || !link) return res.status(400).json({ error: 'Faltan paciente_id o link' });
 
   try {
@@ -50,6 +50,19 @@ module.exports = async function handler(req, res) {
     }
 
     console.log(`[enviar-link] Link enviado a ${pac.nombre} ${pac.apellidos || ''} · ${numero}`);
+
+    // Registrar el envío para mostrarlo en el historial de la consulta
+    await fetch(`${SUPABASE_URL}/rest/v1/enlaces_teleconsulta`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ paciente_id, consulta_id: consulta_id || null, medico_id: medico_id || null, link })
+    }).catch(e => console.error('[enviar-link] Error registrando enlace:', e.message));
+
     return res.status(200).json({ ok: true, numero, paciente: `${pac.nombre} ${pac.apellidos || ''}`.trim() });
 
   } catch (e) {

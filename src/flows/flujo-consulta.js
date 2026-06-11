@@ -258,7 +258,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
   } else if (paso === 6) {
     datos.edad = mensaje;
-    respuesta = `*Fecha de nacimiento* (ej: 15/03/1990):`;
+    respuesta = `*Fecha de nacimiento* (DD/MM/AAAA, ej: 15/03/1990):`;
     nuevoPaso = 7;
 
   } else if (paso === 7) {

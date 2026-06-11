@@ -86,7 +86,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   } else if (paso === 308) {
     datos.cc_edad = mensaje.replace(/\D/g, '').trim();
     return {
-      respuesta: `📅 Ingrese la *fecha de nacimiento* del paciente (ej: 15/03/1990):`,
+      respuesta: `📅 Ingrese la *fecha de nacimiento* del paciente (DD/MM/AAAA, ej: 15/03/1990):`,
       paso: 310, datos, terminar: false
     };
 

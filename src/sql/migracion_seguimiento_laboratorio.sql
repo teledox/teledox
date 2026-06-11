@@ -25,3 +25,10 @@ CREATE TABLE seguimiento_laboratorio_respuestas (
 
 CREATE INDEX idx_seguimiento_lab_activo ON seguimiento_laboratorio(activo, proximo_envio);
 CREATE INDEX idx_seguimiento_lab_resp_pendiente ON seguimiento_laboratorio_respuestas(paciente_id, respuesta);
+
+-- Supabase activa RLS por defecto en tablas nuevas creadas desde el SQL editor.
+-- El backend y el portal acceden con la misma clave que ya usan para
+-- recordatorios/seguimiento_respuestas (sin políticas RLS), así que se
+-- desactiva aquí también para evitar "new row violates row-level security policy".
+ALTER TABLE seguimiento_laboratorio DISABLE ROW LEVEL SECURITY;
+ALTER TABLE seguimiento_laboratorio_respuestas DISABLE ROW LEVEL SECURITY;

@@ -4,6 +4,9 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MediLyft — Medicina en línea que no te suelta</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -101,9 +104,11 @@
       opacity:.85
     }
     .hero-sub{
-      margin-top:24px;font-size:clamp(17px,2.2vw,20px);
-      color:var(--gray);line-height:1.65;max-width:560px
+      margin-top:26px;font-size:clamp(16px,2vw,19px);
+      color:#475569;line-height:1.75;max-width:640px;
+      font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:.2px
     }
+    .hero-sub b{color:var(--red);font-weight:600}
     .hero-actions{display:flex;gap:12px;margin-top:42px;flex-wrap:wrap;justify-content:center}
     .btn-primary{
       background:var(--red);color:var(--white);
@@ -323,7 +328,7 @@
 <!-- ── HERO ── -->
 <section class="hero">
   <h1 class="fade-up">Estamos contigo<br/>en cada paso hacia<br/><span class="hl">tu bienestar.</span></h1>
-  <p class="hero-sub fade-up">Consulta médica online con historia clínica digital, Smart Tracking post-consulta y control especializado de enfermedades crónicas.</p>
+  <p class="hero-sub fade-up">Consulta con un médico <b>en minutos</b>, recibe tu tratamiento, obtén tu <b>receta electrónica</b> y mantén un <b>seguimiento continuo</b> de tu salud, enfermedades crónicas o procesos de recuperación, todo desde un solo lugar.</p>
   <div class="hero-actions fade-up">
     <a href="https://wa.me/593979076453" target="_blank" class="btn-primary">Agendar mi consulta →</a>
   </div>

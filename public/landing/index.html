@@ -185,53 +185,6 @@
     .product-title{font-size:17px;font-weight:700;margin-bottom:10px}
     .product-desc{font-size:14px;color:var(--gray);line-height:1.65}
 
-    /* ── SMART TRACKING ── */
-    .tracking-section{
-      padding:110px 24px;background:var(--gray-light);position:relative;overflow:hidden
-    }
-    .tracking-section::before{
-      content:'';position:absolute;top:-200px;left:-200px;
-      width:600px;height:600px;border-radius:50%;
-      background:radial-gradient(circle,rgba(240,82,82,.08),transparent 65%);pointer-events:none
-    }
-    .tracking-section::after{
-      content:'';position:absolute;bottom:-150px;right:-150px;
-      width:500px;height:500px;border-radius:50%;
-      background:radial-gradient(circle,rgba(13,148,136,.08),transparent 65%);pointer-events:none
-    }
-    .tracking-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:56px;position:relative;z-index:1}
-    .tracking-copy{max-width:720px;text-align:center}
-    .tracking-copy .eyebrow{color:var(--red);opacity:1;letter-spacing:2px}
-    .tracking-copy h2{color:var(--dark);font-size:clamp(28px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.08}
-    .tracking-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin:18px auto 0;max-width:560px}
-    .tracking-items{margin:38px auto 0;display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:20px;text-align:left;max-width:760px}
-    .tracking-item{display:flex;gap:14px;align-items:flex-start}
-    .t-check{
-      width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:2px;
-      background:rgba(13,148,136,.12);display:flex;align-items:center;justify-content:center;
-      color:var(--teal);font-size:13px;font-weight:800
-    }
-    .t-title{color:var(--dark);font-size:15px;font-weight:700;margin-bottom:3px}
-    .t-desc{color:var(--gray);font-size:13px;line-height:1.55}
-    .tracking-visual{width:100%;max-width:800px;display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:14px}
-    .track-card{
-      background:#fff;border:1.5px solid rgba(0,0,0,.05);
-      border-radius:16px;padding:20px 22px;
-      box-shadow:0 4px 16px rgba(0,0,0,.05);
-      transition:border-color .25s,transform .2s,box-shadow .25s
-    }
-    .track-card:hover{border-color:rgba(240,82,82,.3);transform:translateY(-3px);box-shadow:0 8px 26px rgba(240,82,82,.1)}
-    .track-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-    .track-label{color:var(--gray-mid,#9CA3AF);font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
-    .track-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px}
-    .s-green{background:rgba(13,148,136,.12);color:#0D9488}
-    .s-red{background:rgba(240,82,82,.12);color:#D93333}
-    .s-amber{background:rgba(245,158,11,.14);color:#B45309}
-    .track-title{color:var(--dark);font-size:14px;font-weight:600;margin-bottom:8px}
-    .track-bar-bg{height:5px;border-radius:100px;background:rgba(0,0,0,.07)}
-    .track-bar-fill{height:5px;border-radius:100px}
-    .track-meta{margin-top:7px;font-size:11px;color:var(--gray)}
-
     /* ── CRÓNICAS ── */
     .chronic-section{padding:110px 24px;background:var(--gray-light)}
     .chronic-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column-reverse;align-items:center;gap:56px}
@@ -297,8 +250,6 @@
       nav{padding:14px 18px}
       nav ul{display:none}
       .chronic-visual{grid-template-columns:1fr}
-      .tracking-items{grid-template-columns:1fr}
-      .tracking-visual{grid-template-columns:1fr}
       footer{padding:40px 22px 26px}
       .step:not(:last-child)::after{display:none}
     }
@@ -315,7 +266,6 @@
   </a>
   <ul>
     <li><a href="#como-funciona">Cómo funciona</a></li>
-    <li><a href="#smart-tracking">Smart Tracking</a></li>
     <li><a href="#cronicas">Crónicas</a></li>
     <li><a href="empresas.html" class="page-link">Empresas</a></li>
     <li><a href="seguros.html" class="page-link">Seguros</a></li>
@@ -335,7 +285,7 @@
   <div class="hero-trust fade-up">
     <div class="trust-pill">📋 Historia clínica digital</div>
     <div class="trust-sep"></div>
-    <div class="trust-pill">📡 Smart Tracking™</div>
+    <div class="trust-pill">📡 Seguimiento continuo</div>
     <div class="trust-sep"></div>
     <div class="trust-pill">🧬 Control de crónicas</div>
     <div class="trust-sep"></div>
@@ -371,7 +321,7 @@
     </div>
     <div class="product-card highlight fade-up d2">
       <div class="product-icon">📡</div>
-      <div class="product-title">Smart Tracking™</div>
+      <div class="product-title">Seguimiento continuo</div>
       <p class="product-desc">Seguimiento inteligente de tu recuperación. El sistema monitorea tu evolución y activa atención si algo no va bien.</p>
     </div>
     <div class="product-card fade-up d3">
@@ -397,61 +347,6 @@
   </div>
 </section>
 
-<!-- ── SMART TRACKING ── -->
-<section class="tracking-section" id="smart-tracking">
-  <div class="tracking-inner">
-    <div class="tracking-copy fade-up">
-      <div class="eyebrow">Smart Tracking™</div>
-      <h2>Tu tratamiento<br/>tiene quien<br/>lo vigile.</h2>
-      <p>La mayoría de plataformas de telemedicina da el diagnóstico y desaparece. MediLyft no. Nuestro sistema mantiene un seguimiento activo de tu evolución hasta el alta médica.</p>
-      <div class="tracking-items">
-        <div class="tracking-item">
-          <div class="t-check">✓</div>
-          <div><div class="t-title">Alertas proactivas de evolución</div><div class="t-desc">Si tus síntomas no mejoran según lo esperado, el sistema lo detecta y reactiva tu atención.</div></div>
-        </div>
-        <div class="tracking-item">
-          <div class="t-check">✓</div>
-          <div><div class="t-title">Recordatorios de medicación</div><div class="t-desc">Seguimiento para asegurar que tomas tu tratamiento en los tiempos correctos.</div></div>
-        </div>
-        <div class="tracking-item">
-          <div class="t-check">✓</div>
-          <div><div class="t-title">Cierre clínico documentado</div><div class="t-desc">El episodio se cierra oficialmente cuando el médico confirma tu recuperación.</div></div>
-        </div>
-        <div class="tracking-item">
-          <div class="t-check">✓</div>
-          <div><div class="t-title">Historial de evolución</div><div class="t-desc">Registro completo de cómo evolucionaste, útil en futuras consultas.</div></div>
-        </div>
-      </div>
-    </div>
-    <div class="tracking-visual fade-up">
-      <div class="track-card">
-        <div class="track-top"><div class="track-label">Seguimiento activo</div><div class="track-status s-green">● En curso</div></div>
-        <div class="track-title">Faringitis aguda — Andrea L.</div>
-        <div class="track-bar-bg"><div class="track-bar-fill" style="width:72%;background:linear-gradient(90deg,#F05252,#0D9488)"></div></div>
-        <div class="track-meta">72% recuperación · Día 4 de 6 · Próxima revisión: mañana</div>
-      </div>
-      <div class="track-card">
-        <div class="track-top"><div class="track-label">Control crónico</div><div class="track-status s-green">● Estable</div></div>
-        <div class="track-title">Hipertensión — Carlos R.</div>
-        <div class="track-bar-bg"><div class="track-bar-fill" style="width:88%;background:linear-gradient(90deg,#F05252,#0D9488)"></div></div>
-        <div class="track-meta">Presión 120/80 · Medicación al día · Control en 12 días</div>
-      </div>
-      <div class="track-card">
-        <div class="track-top"><div class="track-label">Alerta</div><div class="track-status s-amber">⚠ Requiere revisión</div></div>
-        <div class="track-title">Diabetes tipo 2 — María P.</div>
-        <div class="track-bar-bg"><div class="track-bar-fill" style="width:44%;background:linear-gradient(90deg,#FBBF24,#F05252)"></div></div>
-        <div class="track-meta">Glucosa elevada · Médico notificado automáticamente</div>
-      </div>
-      <div class="track-card">
-        <div class="track-top"><div class="track-label">Episodio cerrado</div><div class="track-status s-green">✓ Alta médica</div></div>
-        <div class="track-title">Gastritis — Luis M.</div>
-        <div class="track-bar-bg"><div class="track-bar-fill" style="width:100%;background:linear-gradient(90deg,#0D9488,#059669)"></div></div>
-        <div class="track-meta">Recuperación confirmada · Alta médica 3 jun</div>
-      </div>
-    </div>
-  </div>
-</section>
-
 <!-- ── CÓMO FUNCIONA ── -->
 <section class="how-section" id="como-funciona">
   <div class="section-center fade-up">
@@ -463,7 +358,7 @@
     <div class="step fade-up d1"><div class="step-bubble">📅</div><h3>Agenda tu consulta</h3><p>Selecciona fecha y hora desde nuestra plataforma. Sin filas.</p></div>
     <div class="step fade-up d2"><div class="step-bubble">📋</div><h3>Completa tu historial</h3><p>Ingresa antecedentes y síntomas. El médico llega preparado.</p></div>
     <div class="step fade-up d3"><div class="step-bubble">👨‍⚕️</div><h3>Consulta en línea</h3><p>Atención médica real. Diagnóstico, receta y plan de tratamiento.</p></div>
-    <div class="step fade-up d4"><div class="step-bubble">📡</div><h3>Smart Tracking activo</h3><p>El sistema monitorea tu evolución y alerta si necesitas más atención.</p></div>
+    <div class="step fade-up d4"><div class="step-bubble">📡</div><h3>Seguimiento activo</h3><p>El sistema monitorea tu evolución y alerta si necesitas más atención.</p></div>
     <div class="step fade-up"><div class="step-bubble">✅</div><h3>Alta médica documentada</h3><p>Tu episodio se cierra cuando estás recuperado. Nada queda en el aire.</p></div>
   </div>
 </section>
@@ -505,7 +400,7 @@
       <a href="index.html" class="logo"><img src="./logo.svg" alt="MediLyft" style="height:34px" onerror="this.style.display='none'"/><span class="logo-name">Medi<em>Lyft</em></span></a>
       <p>Para que tu tratamiento funcione de verdad.</p>
     </div>
-    <div class="footer-col"><h4>Pacientes</h4><ul><li><a href="#como-funciona">Cómo funciona</a></li><li><a href="#smart-tracking">Smart Tracking</a></li><li><a href="#cronicas">Enfermedades crónicas</a></li></ul></div>
+    <div class="footer-col"><h4>Pacientes</h4><ul><li><a href="#como-funciona">Cómo funciona</a></li><li><a href="#cronicas">Enfermedades crónicas</a></li></ul></div>
     <div class="footer-col"><h4>Soluciones</h4><ul><li><a href="empresas.html">Para empresas</a></li><li><a href="seguros.html">Para aseguradoras</a></li></ul></div>
     <div class="footer-col"><h4>Contacto</h4><ul><li><a href="https://wa.me/593979076453" target="_blank">WhatsApp</a></li><li><a href="mailto:info@medilyft.com">info@medilyft.com</a></li></ul></div>
   </div>

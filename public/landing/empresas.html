@@ -145,6 +145,33 @@
     .ctag{padding:10px 18px;border-radius:100px;background:var(--gray-light);color:var(--dark);font-size:14px;font-weight:600;border:1.5px solid transparent;transition:all .2s}
     .ctag:hover{border-color:var(--red);background:var(--red-light);color:var(--red)}
 
+    /* ── SMART TRACKING ── */
+    .tracking-section{padding:110px 24px;background:var(--gray-light);position:relative;overflow:hidden}
+    .tracking-section::before{content:'';position:absolute;top:-200px;left:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(240,82,82,.08),transparent 65%);pointer-events:none}
+    .tracking-section::after{content:'';position:absolute;bottom:-150px;right:-150px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,.08),transparent 65%);pointer-events:none}
+    .tracking-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:56px;position:relative;z-index:1}
+    .tracking-copy{max-width:720px;text-align:center}
+    .tracking-copy h2{color:var(--dark);font-size:clamp(28px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;line-height:1.08}
+    .tracking-copy p{color:var(--gray);font-size:17px;line-height:1.7;margin:18px auto 0;max-width:560px}
+    .tracking-items{margin:38px auto 0;display:grid;grid-template-columns:repeat(2,minmax(260px,1fr));gap:20px;text-align:left;max-width:760px}
+    .tracking-item{display:flex;gap:14px;align-items:flex-start}
+    .tk-check{width:26px;height:26px;border-radius:7px;flex-shrink:0;margin-top:2px;background:rgba(13,148,136,.12);display:flex;align-items:center;justify-content:center;color:var(--teal);font-size:13px;font-weight:800}
+    .tk-title{color:var(--dark);font-size:15px;font-weight:700;margin-bottom:3px}
+    .tk-desc{color:var(--gray);font-size:13px;line-height:1.55}
+    .tracking-visual{width:100%;max-width:800px;display:grid;grid-template-columns:repeat(2,minmax(280px,1fr));gap:14px}
+    .track-card{background:#fff;border:1.5px solid rgba(0,0,0,.05);border-radius:16px;padding:20px 22px;box-shadow:0 4px 16px rgba(0,0,0,.05);transition:border-color .25s,transform .2s,box-shadow .25s}
+    .track-card:hover{border-color:rgba(240,82,82,.3);transform:translateY(-3px);box-shadow:0 8px 26px rgba(240,82,82,.1)}
+    .track-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+    .track-label{color:#9CA3AF;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase}
+    .track-status{font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px}
+    .s-green{background:rgba(13,148,136,.12);color:#0D9488}
+    .s-amber{background:rgba(245,158,11,.14);color:#B45309}
+    .track-title{color:var(--dark);font-size:14px;font-weight:600;margin-bottom:8px}
+    .track-bar-bg{height:5px;border-radius:100px;background:rgba(0,0,0,.07)}
+    .track-bar-fill{height:5px;border-radius:100px}
+    .track-meta{margin-top:7px;font-size:11px;color:var(--gray)}
+    @media(max-width:768px){.tracking-items{grid-template-columns:1fr}.tracking-visual{grid-template-columns:1fr}}
+
     /* ── CTA ── */
     .cta-section{padding:110px 24px;text-align:center;background:var(--red)}
     .cta-section h2{color:#fff;font-size:clamp(26px,4.5vw,52px);font-weight:900;letter-spacing:-1.5px;max-width:700px;margin:0 auto;line-height:1.08}
@@ -185,7 +212,7 @@
   </a>
   <ul>
     <li><a href="index.html">Inicio</a></li>
-    <li><a href="index.html#smart-tracking">Smart Tracking</a></li>
+    <li><a href="#smart-tracking">Smart Tracking</a></li>
     <li><a href="empresas.html" class="page-link active">Empresas</a></li>
     <li><a href="seguros.html" class="page-link">Seguros</a></li>
   </ul>
@@ -295,6 +322,49 @@
       <div class="access-card"><div class="a-icon">💊</div><div><div class="a-title">Receta digital inmediata</div><div class="a-desc">Recibe su receta médica en PDF al finalizar la consulta. Lista para la farmacia.</div></div></div>
       <div class="access-card"><div class="a-icon">📡</div><div><div class="a-title">Smart Tracking post-consulta</div><div class="a-desc">Seguimiento inteligente de su evolución. El sistema alerta si necesita una nueva atención.</div></div></div>
       <div class="access-card"><div class="a-icon">🧬</div><div><div class="a-title">Control de crónicas laborales</div><div class="a-desc">Empleados con diabetes, hipertensión u otras condiciones, bajo control continuo.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SMART TRACKING ── -->
+<section class="tracking-section" id="smart-tracking">
+  <div class="tracking-inner">
+    <div class="tracking-copy fade-up">
+      <div class="eyebrow-red">Smart Tracking™</div>
+      <h2>El tratamiento de tu equipo<br/>tiene quien lo vigile.</h2>
+      <p>Cada consulta de un colaborador continúa con seguimiento activo hasta el alta médica. Menos recaídas, menos ausentismo y un beneficio que tu gente siente de verdad.</p>
+      <div class="tracking-items">
+        <div class="tracking-item"><div class="tk-check">✓</div><div><div class="tk-title">Alertas proactivas de evolución</div><div class="tk-desc">Si un empleado no mejora según lo esperado, el sistema lo detecta y reactiva su atención.</div></div></div>
+        <div class="tracking-item"><div class="tk-check">✓</div><div><div class="tk-title">Recordatorios de medicación</div><div class="tk-desc">Seguimiento para asegurar que el tratamiento se cumple en los tiempos correctos.</div></div></div>
+        <div class="tracking-item"><div class="tk-check">✓</div><div><div class="tk-title">Cierre clínico documentado</div><div class="tk-desc">Cada episodio se cierra oficialmente cuando el médico confirma la recuperación.</div></div></div>
+        <div class="tracking-item"><div class="tk-check">✓</div><div><div class="tk-title">Historial de evolución</div><div class="tk-desc">Registro completo de cada episodio, útil para futuras consultas y reportes.</div></div></div>
+      </div>
+    </div>
+    <div class="tracking-visual fade-up">
+      <div class="track-card">
+        <div class="track-top"><div class="track-label">Seguimiento activo</div><div class="track-status s-green">● En curso</div></div>
+        <div class="track-title">Faringitis aguda — Andrea L.</div>
+        <div class="track-bar-bg"><div class="track-bar-fill" style="width:72%;background:linear-gradient(90deg,#F05252,#0D9488)"></div></div>
+        <div class="track-meta">72% recuperación · Día 4 de 6 · Próxima revisión: mañana</div>
+      </div>
+      <div class="track-card">
+        <div class="track-top"><div class="track-label">Control crónico</div><div class="track-status s-green">● Estable</div></div>
+        <div class="track-title">Hipertensión — Carlos R.</div>
+        <div class="track-bar-bg"><div class="track-bar-fill" style="width:88%;background:linear-gradient(90deg,#F05252,#0D9488)"></div></div>
+        <div class="track-meta">Presión 120/80 · Medicación al día · Control en 12 días</div>
+      </div>
+      <div class="track-card">
+        <div class="track-top"><div class="track-label">Alerta</div><div class="track-status s-amber">⚠ Requiere revisión</div></div>
+        <div class="track-title">Diabetes tipo 2 — María P.</div>
+        <div class="track-bar-bg"><div class="track-bar-fill" style="width:44%;background:linear-gradient(90deg,#FBBF24,#F05252)"></div></div>
+        <div class="track-meta">Glucosa elevada · Médico notificado automáticamente</div>
+      </div>
+      <div class="track-card">
+        <div class="track-top"><div class="track-label">Episodio cerrado</div><div class="track-status s-green">✓ Alta médica</div></div>
+        <div class="track-title">Gastritis — Luis M.</div>
+        <div class="track-bar-bg"><div class="track-bar-fill" style="width:100%;background:linear-gradient(90deg,#0D9488,#059669)"></div></div>
+        <div class="track-meta">Recuperación confirmada · Alta médica 3 jun</div>
+      </div>
     </div>
   </div>
 </section>

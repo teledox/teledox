@@ -88,6 +88,17 @@
     }
     .hero h1 .red{color:var(--red)}
     .hero h1 .teal{color:var(--teal)}
+    .hero h1 .hl{
+      position:relative;display:inline-block;
+      background:linear-gradient(95deg,var(--red) 10%,#E8638C 50%,var(--teal) 95%);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent;color:transparent
+    }
+    .hero h1 .hl::after{
+      content:'';position:absolute;left:2%;right:2%;bottom:-14px;height:18px;
+      background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 24' preserveAspectRatio='none'%3E%3Cpath d='M6 18 Q150 2 294 13' stroke='%23F05252' stroke-width='7' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center/100% 100%;
+      opacity:.85
+    }
     .hero-sub{
       margin-top:24px;font-size:clamp(17px,2.2vw,20px);
       color:var(--gray);line-height:1.65;max-width:560px
@@ -310,7 +321,7 @@
 
 <!-- ── HERO ── -->
 <section class="hero">
-  <h1 class="fade-up">Estamos contigo en cada paso<br/>hacia <span class="red">tu bienestar.</span></h1>
+  <h1 class="fade-up">Estamos contigo<br/>en cada paso hacia<br/><span class="hl">tu bienestar.</span></h1>
   <p class="hero-sub fade-up">Consulta médica online con historia clínica digital, Smart Tracking post-consulta y control especializado de enfermedades crónicas.</p>
   <div class="hero-actions fade-up">
     <a href="https://wa.me/593979076453" target="_blank" class="btn-primary">Agendar mi consulta →</a>

@@ -245,17 +245,37 @@
       <!-- CONSULTAS -->
       <div class="page" id="page-consultas">
         <div class="card">
-          <div class="card-header">
+          <div class="card-header" style="flex-wrap:wrap;gap:8px">
             <span class="card-title">Todas las consultas</span>
-            <select class="form-control" style="width:150px;padding:5px 8px;font-size:12px" id="filterEstado" onchange="loadConsultas()">
-              <option value="">Todos</option>
-              <option value="pendiente">Pendientes</option>
-              <option value="completada">Completadas</option>
-              <option value="confirmada">Confirmadas</option>
-            </select>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <select class="form-control" style="width:150px;padding:5px 8px;font-size:12px" id="filterEstado" onchange="loadConsultas()">
+                <option value="">Todos los estados</option>
+                <option value="pendiente">Pendientes</option>
+                <option value="completada">Completadas</option>
+                <option value="confirmada">Confirmadas</option>
+              </select>
+              <select class="form-control" style="width:130px;padding:5px 8px;font-size:12px" id="filterOrigen" onchange="onFilterOrigenChange()">
+                <option value="">B2B y B2C</option>
+                <option value="b2b">🏢 B2B</option>
+                <option value="b2c">👤 B2C</option>
+              </select>
+              <select class="form-control" style="width:170px;padding:5px 8px;font-size:12px;display:none" id="filterEmpresa" onchange="loadConsultas()">
+                <option value="">Todas las empresas</option>
+              </select>
+              <select class="form-control" style="width:170px;padding:5px 8px;font-size:12px" id="filterEtiqueta" onchange="loadConsultas()">
+                <option value="">Todas las etiquetas</option>
+                <option value="PAGO">PAGO</option>
+                <option value="PAGO SEGURO">PAGO SEGURO</option>
+                <option value="AFILIADO">AFILIADO</option>
+                <option value="EMPLEADO CON CÓDIGO">EMPLEADO CON CÓDIGO</option>
+                <option value="SEGUIMIENTO">SEGUIMIENTO</option>
+                <option value="CRÓNICO">CRÓNICO</option>
+                <option value="__sin_etiqueta">Sin etiqueta</option>
+              </select>
+            </div>
           </div>
           <table class="table">
-            <thead><tr><th style="text-align:center;width:40px">#</th><th>Paciente</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead><tr><th style="text-align:center;width:40px">#</th><th>Paciente</th><th>Origen</th><th>Fecha</th><th>Síntomas</th><th>Nivel</th><th>Estado</th><th>Acciones</th></tr></thead>
             <tbody id="consultasBody"></tbody>
           </table>
         </div>

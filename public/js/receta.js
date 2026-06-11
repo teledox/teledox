@@ -203,13 +203,25 @@ async function renderSeguimientoLab() {
 
   const estado = LAB_ESTADO_LABEL[seguimiento.estado] || { cls: 'badge-gray', label: seguimiento.estado };
 
+  let verExamen = '';
+  if (seguimiento.estado === 'confirmado') {
+    const docsExamen = await supa('GET', 'documentos', null,
+      `?consulta_id=eq.${recetaConsultaId}&tipo=eq.examen&order=created_at.desc&limit=1`) || [];
+    if (docsExamen[0]?.storage_path) {
+      verExamen = `<button class="btn btn-sm" onclick="verDocumento('${docsExamen[0].storage_path}')">👁 VER</button>`;
+    }
+  }
+
   el.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px">
       <div>
         <strong>Intentos enviados: ${seguimiento.intento || 0}/4</strong>
         ${seguimiento.activo && seguimiento.proximo_envio ? `<div style="font-size:11px;color:#888">Próx. recordatorio: ${new Date(seguimiento.proximo_envio).toLocaleString('es-EC')}</div>` : ''}
       </div>
-      <span class="badge ${estado.cls}">${estado.label}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="badge ${estado.cls}">${estado.label}</span>
+        ${verExamen}
+      </div>
     </div>
     ${respuestas.length ? `<div class="seg-timeline" style="margin-top:8px">${respuestas.map(r => `
       <div class="seg-item">

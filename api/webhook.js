@@ -113,43 +113,41 @@ module.exports = async function handler(req, res) {
     }
 
     let sesion = await obtener(telefono);
-    const pasoActual = sesion?.paso ?? 0;
+
+    // Sesiones abandonadas hace más de 6 horas se consideran expiradas: el paciente
+    // empieza de cero en vez de quedar atrapado en un paso intermedio (ej. "Ingrese
+    // su cédula") sin contexto de por qué se le pide eso.
+    if (sesion?.updated_at) {
+      const actualizada = new Date(/Z|[+-]\d\d:\d\d$/.test(sesion.updated_at) ? sesion.updated_at : sesion.updated_at + 'Z');
+      if (Date.now() - actualizada.getTime() > 6 * 3600000) {
+        await eliminar(telefono);
+        sesion = null;
+      }
+    }
 
     // Los botones/listas interactivas siempre pertenecen al flujo activo —
     // nunca deben ser interceptados por el seguimiento de medicamentos.
     const esInteractivo = msg.type === 'interactive';
-    const enFlujoConsulta = esInteractivo || (pasoActual >= 1 && pasoActual <= 89);
 
-    // Respuesta a un recordatorio de seguimiento. Tiene prioridad si el paciente no está
-    // en medio de una consulta, O si el mensaje es claramente una respuesta al recordatorio
-    // (Sí/No para medicamento, 1/2/3 para fin de tratamiento). Así un "Sí" al recordatorio
-    // no se confunde con la cédula aunque haya quedado una sesión vieja a medias.
+    // Respuesta a un recordatorio de seguimiento. Solo se intercepta si el mensaje
+    // coincide claramente con el formato esperado (Sí/No para medicamento, 1/2/3
+    // para fin de tratamiento). Así cualquier otro mensaje (ej. "quiero una consulta")
+    // nunca queda atrapado respondiendo a un recordatorio pendiente y siempre puede
+    // iniciar una nueva interacción.
     // El seguimiento NUNCA intercepta mensajes interactivos (botones/listas),
     // ya que el seguimiento solo usa texto libre — los botones siempre son del flujo de consulta.
     const pendiente = !esInteractivo ? await buscarRespuestaPendiente(telefono) : null;
-    if (pendiente?.respuesta) {
-      const coincide = esRespuestaSeguimiento(pendiente.respuesta, mensaje);
-      if (enFlujoConsulta && !coincide) {
-        // El mensaje no coincide con el formato esperado y el usuario está en
-        // medio de una consulta — dejamos que continúe su flujo activo; el
-        // seguimiento pendiente se volverá a evaluar en el próximo mensaje.
-      } else if (!coincide && pendiente.respuesta?.recordatorios?.tipo === 'medicamento') {
-        // No está en una consulta, pero su respuesta no es un Sí/No claro —
-        // evitamos interpretarla como "No tomé el medicamento" y reinsistimos.
-        await enviar(telefono, `No entendimos su respuesta. 🙏\n\n¿Tomó su medicamento como se le indicó?\n\nResponda *Sí* o *No*.`);
+    if (pendiente?.respuesta && esRespuestaSeguimiento(pendiente.respuesta, mensaje)) {
+      const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
+      if (resp) {
+        await enviar(telefono, resp);
         return res.status(200).send('OK');
-      } else {
-        const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
-        if (resp) {
-          await enviar(telefono, resp);
-          return res.status(200).send('OK');
-        }
       }
     }
 
     // Respuesta a un recordatorio de seguimiento de examen de laboratorio (Sí/No).
     const pendienteLab = !esInteractivo ? await buscarRespuestaLabPendiente(telefono) : null;
-    if (pendienteLab?.respuesta && (!enFlujoConsulta || esRespuestaLab(mensaje))) {
+    if (pendienteLab?.respuesta && esRespuestaLab(mensaje)) {
       const resultLab = await procesarRespuestaLab(pendienteLab, mensaje, telefono);
       if (resultLab) {
         if (resultLab.paso) await guardar(telefono, resultLab.paso, resultLab.datos);

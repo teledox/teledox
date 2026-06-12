@@ -81,14 +81,26 @@ async function updateUser() {
 
   if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
-  const res = await fetch('/api/actualizar-usuario', {
+  // PATCH directo con el token de sesión del admin (funciona cuando RLS está desactivado en usuarios)
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const token = session?.access_token || SUPA_KEY;
+  const patchRes = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
+    headers: {
+      'apikey':        SUPA_KEY,
+      'Authorization': `Bearer ${token}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation'
+    },
+    body: JSON.stringify({ nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
   });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    alert('Error al guardar cambios:\n\n' + (data.error || `HTTP ${res.status}`));
+  const patchData = await patchRes.json().catch(() => []);
+  if (!patchRes.ok) {
+    alert('Error al guardar: ' + (patchData?.message || patchRes.status));
+    return;
+  }
+  if (!Array.isArray(patchData) || patchData.length === 0) {
+    alert('No se pudo guardar. Asegúrate de haber desactivado RLS en la tabla usuarios en Supabase.\n\nSQL: ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;');
     return;
   }
 

@@ -86,8 +86,11 @@ async function updateUser() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
   });
-  const data = await res.json();
-  if (!res.ok) { showToast('⚠️ Error al guardar: ' + (data.error || res.status)); return; }
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    alert('Error al guardar cambios:\n\n' + (data.error || `HTTP ${res.status}`));
+    return;
+  }
 
   // Si el usuario editado soy yo, actualizo la sesión local
   if (id === currentUser?.id) {

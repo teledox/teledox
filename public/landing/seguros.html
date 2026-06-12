@@ -210,7 +210,27 @@
     .fade-up.visible{opacity:1;transform:translateY(0)}
     .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
 
-    @media(max-width:768px){nav{padding:14px 18px}nav ul{display:none}footer{padding:38px 22px 26px}.audit-features{grid-template-columns:1fr}}
+    @media(max-width:768px){
+      nav{padding:12px 14px}
+      .logo-name{display:none}
+      nav ul{display:flex;gap:8px}
+      nav ul a:not(.page-link){display:none}
+      nav ul a.page-link{padding:6px 12px;font-size:13px}
+      .btn-nav{padding:9px 14px;font-size:13px}
+      .hero{padding:110px 18px 70px;min-height:auto}
+      .hero h1{letter-spacing:-1.2px}
+      .hero h1 .hl::after{bottom:-9px;height:12px}
+      .hero-actions a{width:100%;justify-content:center}
+      .section,.triage-section,.audit-section,.costs-section,.bienestar-section,.tracking-section,.cta-section{padding:70px 18px}
+      .metrics-strip{padding:44px 18px}
+      .metrics-inner{gap:28px}
+      .triage-inner,.audit-inner,.costs-inner{gap:40px}
+      .audit-features{grid-template-columns:1fr}
+      .cta-actions a{width:100%;justify-content:center}
+      footer{padding:38px 22px 26px}
+      .footer-top{gap:32px}
+      .footer-bottom{justify-content:center;text-align:center}
+    }
   </style>
 </head>
 <body>

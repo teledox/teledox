@@ -177,6 +177,43 @@ async function firmarPdfConP12(doc, { nombre, motivo, p12b64, pass }) {
   return { pdfBytes, titular };
 }
 
+// Dibuja un sello visual de firma electrónica (QR + datos del firmante) en la
+// esquina inferior izquierda de la página, encima de la línea del pie de
+// página. Devuelve true si lo dibujó (hay un certificado .p12 activo) o
+// false si no hay nada que mostrar (el caller mantiene su layout original).
+async function dibujarFirmaElectronicaPDF(doc, page, { font, color }) {
+  const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
+  if (!p12 || typeof QRCode === 'undefined') return false;
+
+  const info = p12.info || {};
+  const titular = info.titular
+    || (typeof currentUser !== 'undefined' ? `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim() : '')
+    || 'Médico';
+  const fecha = new Date().toLocaleString('es-EC');
+
+  const texto = [
+    'Documento firmado electronicamente',
+    `Firmante: ${titular}`,
+    info.cedula ? `Cedula/RUC: ${info.cedula}` : null,
+    `Fecha: ${fecha}`,
+  ].filter(Boolean).join('\n');
+
+  try {
+    const dataUrl = await QRCode.toDataURL(texto, { margin: 0, width: 160 });
+    const qrImg = await doc.embedPng(dataUrl.split(',')[1]);
+    const size = 38;
+    const x = 40, y = 60;
+    page.drawImage(qrImg, { x, y, width: size, height: size });
+    page.drawText('Firmado electronicamente', { x: x + size + 6, y: y + size - 9, size: 7, font, color });
+    page.drawText(titular,                    { x: x + size + 6, y: y + size - 18, size: 7, font, color });
+    page.drawText(fecha,                      { x: x + size + 6, y: y + size - 27, size: 6, font, color });
+    return true;
+  } catch (e) {
+    console.error('No se pudo generar el sello visual de firma electronica:', e.message);
+    return false;
+  }
+}
+
 // Guarda el PDF, firmándolo con el .p12 activo del médico si está disponible.
 // Si algo falla (sin certificado activo, contraseña incorrecta, etc.) cae
 // de vuelta a un PDF sin firma criptográfica (con la firma/sello visuales).

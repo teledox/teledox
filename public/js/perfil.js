@@ -1,5 +1,5 @@
 // ── Datos en memoria para la sesión ──────────────────────────────────────────
-const firmaData = {};
+// firmaData ya está declarada como global en config.js
 let _p12Buffer  = null; // ArrayBuffer del archivo .p12 seleccionado
 
 // ── Cargar perfil ─────────────────────────────────────────────────────────────

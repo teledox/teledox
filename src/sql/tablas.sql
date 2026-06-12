@@ -101,3 +101,92 @@ CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);
 -- columna nunca se creó en consultas -> error "Could not find the 'atendido_at'
 -- column of 'consultas' in the schema cache" al presionar Atender.
 -- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS atendido_at TIMESTAMP;
+
+-- Verificación automática de comprobantes de pago (B2C) vía Gemini Vision.
+-- Se registra un intento por cada foto enviada, aprobada o no (auditoría).
+-- paciente_id/consulta_id solo se llenan si el comprobante fue aprobado.
+CREATE TABLE IF NOT EXISTS verificaciones_comprobante (
+  id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  paciente_id       UUID REFERENCES pacientes(id),
+  consulta_id       UUID REFERENCES consultas(id),
+  telefono          VARCHAR(50),
+  storage_path      VARCHAR(500),
+  es_comprobante    BOOLEAN,
+  captura_completa  BOOLEAN,
+  logo_banco_valido BOOLEAN,
+  banco             VARCHAR(150),
+  monto             NUMERIC,
+  monto_esperado    NUMERIC,
+  coincide_monto    BOOLEAN,
+  fecha_reciente    BOOLEAN,
+  score_secundarios NUMERIC,
+  aprobado          BOOLEAN,
+  fecha_comprobante VARCHAR(100),
+  referencia        VARCHAR(150),
+  beneficiario      VARCHAR(255),
+  observaciones     TEXT,
+  created_at        TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_verificaciones_paciente ON verificaciones_comprobante(paciente_id);
+CREATE INDEX IF NOT EXISTS idx_verificaciones_telefono ON verificaciones_comprobante(telefono);
+
+-- ── Auditoría de datos sensibles (LOPDP) ──────────────────────────────────
+-- Registra automáticamente quién (auth.uid()) y cuándo crea/edita/elimina
+-- registros en tablas con datos de pacientes. usuario_id queda NULL cuando
+-- el cambio lo hace el bot (service role), lo cual permite distinguir
+-- cambios del panel (usuarios autenticados) de cambios automáticos del bot.
+CREATE TABLE IF NOT EXISTS auditoria (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  usuario_id       UUID,
+  accion           VARCHAR(10) NOT NULL,  -- INSERT | UPDATE | DELETE
+  tabla            VARCHAR(50) NOT NULL,
+  registro_id      UUID,
+  datos_anteriores JSONB,
+  datos_nuevos     JSONB,
+  created_at       TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_auditoria_tabla_registro ON auditoria(tabla, registro_id);
+CREATE INDEX IF NOT EXISTS idx_auditoria_usuario ON auditoria(usuario_id);
+CREATE INDEX IF NOT EXISTS idx_auditoria_created ON auditoria(created_at);
+
+CREATE OR REPLACE FUNCTION fn_auditoria() RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO auditoria (usuario_id, accion, tabla, registro_id, datos_anteriores, datos_nuevos)
+  VALUES (
+    auth.uid(),
+    TG_OP,
+    TG_TABLE_NAME,
+    COALESCE(NEW.id, OLD.id),
+    CASE WHEN TG_OP IN ('UPDATE','DELETE') THEN to_jsonb(OLD) ELSE NULL END,
+    CASE WHEN TG_OP IN ('UPDATE','INSERT') THEN to_jsonb(NEW) ELSE NULL END
+  );
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS trg_auditoria_pacientes ON pacientes;
+CREATE TRIGGER trg_auditoria_pacientes
+  AFTER INSERT OR UPDATE OR DELETE ON pacientes
+  FOR EACH ROW EXECUTE FUNCTION fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_auditoria_consultas ON consultas;
+CREATE TRIGGER trg_auditoria_consultas
+  AFTER INSERT OR UPDATE OR DELETE ON consultas
+  FOR EACH ROW EXECUTE FUNCTION fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_auditoria_antecedentes ON antecedentes;
+CREATE TRIGGER trg_auditoria_antecedentes
+  AFTER INSERT OR UPDATE OR DELETE ON antecedentes
+  FOR EACH ROW EXECUTE FUNCTION fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_auditoria_documentos_datos ON documentos_datos;
+CREATE TRIGGER trg_auditoria_documentos_datos
+  AFTER INSERT OR UPDATE OR DELETE ON documentos_datos
+  FOR EACH ROW EXECUTE FUNCTION fn_auditoria();
+
+DROP TRIGGER IF EXISTS trg_auditoria_documentos ON documentos;
+CREATE TRIGGER trg_auditoria_documentos
+  AFTER INSERT OR UPDATE OR DELETE ON documentos
+  FOR EACH ROW EXECUTE FUNCTION fn_auditoria();

@@ -145,7 +145,7 @@ async function generarRecetaPDF() {
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
-  return await doc.save();
+  return await guardarPDFConFirma(doc, 'Receta medica');
 }
 
 // ===== HISTORIA CLÍNICA PDF =====
@@ -316,7 +316,7 @@ async function generarHistoriaClinicaPDF() {
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
-  return await doc.save();
+  return await guardarPDFConFirma(doc, 'Historia clinica');
 }
 
 // ===== INTERCONSULTA PDF =====
@@ -400,7 +400,7 @@ async function generarInterconsultaPDF() {
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
-  return await doc.save();
+  return await guardarPDFConFirma(doc, 'Interconsulta medica');
 }
 
 async function generarCertificadoPDF() {
@@ -486,7 +486,7 @@ async function generarCertificadoPDF() {
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
-  return await doc.save();
+  return await guardarPDFConFirma(doc, 'Certificado medico');
 }
 
 async function generarPedidoPDF() {
@@ -587,5 +587,5 @@ async function generarPedidoPDF() {
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
 
-  return await doc.save();
+  return await guardarPDFConFirma(doc, 'Pedido de laboratorio');
 }

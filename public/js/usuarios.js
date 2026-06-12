@@ -70,46 +70,32 @@ async function abrirEditarUsuario(id) {
 }
 
 async function updateUser() {
-  try {
-    const id           = document.getElementById('editUserId').value;
-    const nombre       = document.getElementById('editNombre').value.trim();
-    const apellidos    = document.getElementById('editApellidos').value.trim();
-    const rol          = document.getElementById('editRol').value;
-    const especialidad = document.getElementById('editEsp').value.trim() || null;
-    const numero_registro = document.getElementById('editRegMSP').value.trim() || null;
-    const cedula       = document.getElementById('editCedulaUser').value.trim() || null;
-    const telefono     = document.getElementById('editTelefonoUser').value.trim() || null;
+  const id           = document.getElementById('editUserId').value;
+  const nombre       = document.getElementById('editNombre').value.trim();
+  const apellidos    = document.getElementById('editApellidos').value.trim();
+  const rol          = document.getElementById('editRol').value;
+  const especialidad = document.getElementById('editEsp').value.trim() || null;
+  const numero_registro = document.getElementById('editRegMSP').value.trim() || null;
+  const cedula       = document.getElementById('editCedulaUser').value.trim() || null;
+  const telefono     = document.getElementById('editTelefonoUser').value.trim() || null;
 
-    if (!id)              { alert('Error: no se encontró el ID del usuario. Cierra el formulario y vuelve a hacer clic en Editar.'); return; }
-    if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
+  if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
-    // Llamada directa a Supabase REST (RLS debe estar desactivado)
-    const r = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${id}`, {
-      method: 'PATCH',
-      headers: {
-        'apikey':        SUPA_KEY,
-        'Authorization': `Bearer ${SUPA_KEY}`,
-        'Content-Type':  'application/json',
-        'Prefer':        'return=representation'
-      },
-      body: JSON.stringify({ nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
-    });
+  await supa('PATCH', 'usuarios', { nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono }, `?id=eq.${id}`);
 
-    const texto = await r.text();
-    // DIAGNÓSTICO — muestra el resultado exacto de Supabase
-    alert('HTTP ' + r.status + '\n\nRespuesta:\n' + texto.slice(0, 500));
-
-  } catch (e) {
-    alert('Error inesperado:\n' + e.message);
+  // Si el usuario editado soy yo, actualizo la sesión local
+  if (id === currentUser?.id) {
+    currentUser = { ...currentUser, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono };
+    if (typeof saveSession === 'function') saveSession(currentUser);
   }
+
+  document.getElementById('editUserForm').style.display = 'none';
+  loadUsuarios();
+  showToast('✓ Usuario actualizado correctamente');
 }
 
 async function toggleUser(id, activo) {
-  await fetch('/api/actualizar-usuario', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ id, activo: !activo })
-  });
+  await supa('PATCH', 'usuarios', { activo: !activo }, `?id=eq.${id}`);
   loadUsuarios();
 }
 

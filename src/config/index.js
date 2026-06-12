@@ -7,4 +7,6 @@ module.exports = {
   WA_TOKEN:        process.env.WA_TOKEN,
   WA_PHONE_ID:     process.env.WA_PHONE_ID,
   WA_VERIFY_TOKEN: process.env.WA_VERIFY_TOKEN,
+  // Google Gemini (verificación de comprobantes de pago)
+  GEMINI_API_KEY:  process.env.GEMINI_API_KEY,
 };

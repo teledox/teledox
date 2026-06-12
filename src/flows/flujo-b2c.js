@@ -2,8 +2,14 @@ const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('..
 const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
+const { descargarMedia } = require('../services/whatsapp');
+const { subirArchivo, registrarDocumento } = require('../services/documentos');
+const { analizarComprobante } = require('../services/gemini');
+const { query } = require('../services/supabase');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
 const { mensajeBienvenida } = require('./flujo-inicio');
+
+const MONTO_TELECONSULTA = 8.00;
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_KEY;
@@ -68,7 +74,7 @@ function esSeguroAliado(nombre) {
   return SEGUROS_ALIADOS.some(s => n.includes(s));
 }
 
-async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
+async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
   let nuevoPaso = paso;
 
@@ -209,20 +215,112 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
     const m = mensaje.trim().toLowerCase();
     if (m === '1' || m === 'transferencia') {
       datos.forma_pago = 'transferencia';
-      respuesta = `🏦 *Datos para transferencia:*\n\n🏦 Banco Internacional\n📋 Cuenta Corriente: *640618402*\n🏢 RUC: *1793197189001*\n💰 Monto: *$8.00*\n📝 Concepto: Teleconsulta MediLyft\n\nRealice la transferencia y envíenos la *foto del comprobante* para confirmar su consulta.`;
+      respuesta = `🏦 *Datos para transferencia:*\n\n🏦 Banco Internacional\n📋 Cuenta Corriente: *640618402*\n🏢 RUC: *1793197189001*\n💰 Monto: *$8.00*\n📝 Concepto: Teleconsulta MediLyft\n\nRealice la transferencia y envíenos la *captura de pantalla COMPLETA* del comprobante (sin recortar), donde se vea el *logo del banco*, *beneficiario*, *monto*, *fecha y hora*, y *número de referencia*.`;
       nuevoPaso = 60;
     } else if (m === '2' || m === 'tarjeta') {
       datos.forma_pago = 'tarjeta';
-      respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura de pantalla del comprobante* para confirmar su consulta.`;
+      respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura de pantalla COMPLETA* del comprobante (sin recortar), donde se vea el *monto*, *fecha y hora*, y *número de referencia*.`;
       nuevoPaso = 60;
     } else {
       return { respuesta: MSG_REINTENTAR_BOTON, paso: 59, datos, terminar: false, botones: BOTONES_PAGO };
     }
 
   } else if (paso === 60) {
-    // Recibe imagen/documento del comprobante, o una confirmación explícita
-    if (esConfirmacionComprobante(mensaje)) {
-      datos.comprobante_ref = `WhatsApp-${telefono}-${Date.now()}`;
+    // Solo se acepta la foto/captura real del comprobante — se verifica con Gemini Vision
+    const media = msg?.image || msg?.document;
+
+    if (mensaje !== '__media__' || !media?.id) {
+      respuesta = `Por favor envíenos la *foto o captura del comprobante* de su transferencia (monto *$8.00*) para confirmar su consulta.`;
+      nuevoPaso = 60;
+
+    } else {
+      let buffer, mimeType, storagePath;
+      try {
+        ({ buffer, mimeType } = await descargarMedia(media.id));
+        const extension = mimeType?.split('/')[1] || 'jpg';
+        const carpeta = (telefono || 'sin-telefono').replace(/\D/g, '');
+        storagePath = await subirArchivo(carpeta, 'comprobante', buffer, extension, mimeType || 'image/jpeg');
+      } catch (e) {
+        console.error('Error descargando/subiendo comprobante:', e.message);
+        return {
+          respuesta: `⚠️ Hubo un problema al recibir su imagen. Por favor intente enviarla nuevamente.`,
+          paso: 60, datos, terminar: false
+        };
+      }
+
+      let verificacion = null;
+      try {
+        verificacion = await analizarComprobante(buffer, mimeType);
+      } catch (e) {
+        console.error('Error analizando comprobante con Gemini:', e.message);
+      }
+
+      const coincideMonto = typeof verificacion?.monto === 'number' &&
+        Math.abs(verificacion.monto - MONTO_TELECONSULTA) < 0.01;
+      const beneficiarioValido = !!verificacion?.beneficiario &&
+        /medilyft|1793197189001/i.test(verificacion.beneficiario);
+
+      // ¿Esta referencia ya fue usada en un comprobante aprobado antes? (evita reutilizar el mismo comprobante)
+      let referenciaDuplicada = false;
+      if (verificacion?.referencia) {
+        const previos = await query('GET', 'verificaciones_comprobante', null,
+          `?referencia=eq.${encodeURIComponent(verificacion.referencia)}&aprobado=eq.true&select=id`
+        ).catch(() => []);
+        referenciaDuplicada = Array.isArray(previos) && previos.length > 0;
+      }
+
+      // Checks obligatorios: previenen fraude/cobro incorrecto, no admiten excepción
+      const pasaObligatorios = !!verificacion?.es_comprobante && coincideMonto && !referenciaDuplicada;
+
+      // Checks secundarios: dependen de la calidad de la foto/lectura de Gemini.
+      // Se exige un mínimo de 75% (3 de 4) para tolerar fallos puntuales de un check aislado.
+      const checksSecundarios = {
+        captura_completa: !!verificacion?.captura_completa,
+        logo_banco_valido: !!verificacion?.logo_banco_valido,
+        fecha_reciente: !!verificacion?.fecha_reciente,
+        beneficiario_valido: beneficiarioValido,
+      };
+      const totalSecundarios = Object.keys(checksSecundarios).length;
+      const aprobadosSecundarios = Object.values(checksSecundarios).filter(Boolean).length;
+      const scoreSecundarios = aprobadosSecundarios / totalSecundarios;
+
+      const aprobado = pasaObligatorios && scoreSecundarios >= 0.75;
+
+      // Registrar el intento (aprobado o no) para auditoría
+      await query('POST', 'verificaciones_comprobante', {
+        telefono,
+        storage_path: storagePath,
+        es_comprobante: !!verificacion?.es_comprobante,
+        captura_completa: checksSecundarios.captura_completa,
+        logo_banco_valido: checksSecundarios.logo_banco_valido,
+        banco: verificacion?.banco || null,
+        monto: verificacion?.monto ?? null,
+        monto_esperado: MONTO_TELECONSULTA,
+        coincide_monto: coincideMonto,
+        fecha_reciente: checksSecundarios.fecha_reciente,
+        score_secundarios: scoreSecundarios,
+        aprobado,
+        fecha_comprobante: verificacion?.fecha || null,
+        referencia: verificacion?.referencia || null,
+        beneficiario: verificacion?.beneficiario || null,
+        observaciones: verificacion?.observaciones || null,
+      }).catch(e => console.error('Error guardando verificación de comprobante:', e.message));
+
+      if (referenciaDuplicada) {
+        return {
+          respuesta: `❌ Este comprobante ya fue utilizado anteriormente.\n\nPor favor realice una *nueva transferencia* de $8.00 y envíe el comprobante correspondiente.`,
+          paso: 60, datos, terminar: false
+        };
+      }
+
+      if (!aprobado) {
+        return {
+          respuesta: `❌ No pudimos validar su comprobante.\n\nVerifique que la imagen sea una *captura de pantalla completa* (sin recortar) donde se vea:\n• El *logo del banco*\n• El *beneficiario*\n• El monto exacto de *$8.00*\n• La *fecha y hora* (de las últimas 48 horas)\n• El *número de referencia*\n\nPor favor envíe nuevamente la captura del comprobante.`,
+          paso: 60, datos, terminar: false
+        };
+      }
+
+      datos.comprobante_ref = storagePath;
 
       // 1. Crear o reutilizar paciente en BD
       let pacienteId = datos.paciente_id || null;
@@ -269,7 +367,12 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       // 4. Registrar en facturacion_b2c
       await registrarFacturacionB2C(datos);
 
-      // 5. Alertar al operador
+      // 5. Registrar documento del comprobante
+      await registrarDocumento(pacienteId, consulta?.id, 'comprobante', datos.comprobante_ref).catch(e =>
+        console.error('Error registrando documento comprobante:', e.message)
+      );
+
+      // 6. Alertar al operador
       await alertar(`💰 <b>NUEVO PAGO DIRECTO B2C - MEDILYFT</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}\nSíntomas: ${datos.sintomas}\nPago: ${datos.forma_pago}\nMonto: $8.00`);
 
       return {
@@ -280,9 +383,6 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
           { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
         ]
       };
-    } else {
-      respuesta = `Por favor envíenos la *foto o captura del comprobante* de su pago para confirmar su consulta. Si ya realizó el pago, también puede escribir *"listo"*.`;
-      nuevoPaso = 60;
     }
 
   } else if (paso === 63) {

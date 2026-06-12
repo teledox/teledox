@@ -209,7 +209,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Flujo principal de consulta
-    let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp);
+    let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
 
     // Redirección a call center cuando el paso 1 detecta un código de empresa
     if (result._redirect) {

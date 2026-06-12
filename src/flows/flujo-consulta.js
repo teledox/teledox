@@ -10,13 +10,13 @@ const { procesarB2C } = require('./flujo-b2c');
 const { procesarSeguimientoPago } = require('./flujo-seguimiento-pago');
 const { mensajeBienvenida } = require('./flujo-inicio');
 
-async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
+async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
   let nuevoPaso = paso;
 
   // Pasos 50+ — flujo B2C (pago directo)
   if (paso >= 50 && paso < 90) {
-    const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp);
+    const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
     if (!result.terminar) await guardar(telefono, result.paso, result.datos);
     return result;
   }

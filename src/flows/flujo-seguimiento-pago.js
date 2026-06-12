@@ -3,6 +3,7 @@ const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi } = require('../utils/validaciones');
 const { BOTONES_PAGO, MSG_REINTENTAR_BOTON, registrarFacturacionB2C, esConfirmacionComprobante } = require('./flujo-b2c');
+const { estaEnHorarioAtencion, proximaApertura, mensajeFueraHorario, BOTONES_HORARIO } = require('../utils/horarios');
 
 // Pasos 90-97 — flujo de "consulta de seguimiento" aprobada por el médico desde
 // el panel (api/seguimiento-decision.js). El paciente ya fue identificado y
@@ -15,7 +16,17 @@ function faltaDato(datos) {
   return null;
 }
 
-async function irAPago(datos, telefono) {
+async function irAPago(datos, telefono, omitirCheckHorario = false) {
+  if (!omitirCheckHorario && !estaEnHorarioAtencion()) {
+    return {
+      respuesta: mensajeFueraHorario(),
+      paso: 97, datos, terminar: false,
+      botones: BOTONES_HORARIO
+    };
+  }
+
+  const inicioAtencion = datos.inicio_atencion ? new Date(datos.inicio_atencion) : new Date();
+
   if (datos.cliente_b2b_id) {
     const consulta = await crearConsulta({
       paciente_id: datos.paciente_id,
@@ -24,12 +35,13 @@ async function irAPago(datos, telefono) {
       estado: 'pendiente',
       origen: 'seguimiento_aprobado',
       consulta_seguimiento_de: datos.consulta_origen_id || null,
+      inicio_atencion: inicioAtencion.toISOString(),
     });
     await crearNotificacion(
       'nueva_consulta', '🔁 Consulta de seguimiento agendada',
       `${datos.nombreCompleto} — seguimiento aprobado por médico (cubierto por empresa)`,
       datos.paciente_id, consulta?.id,
-      { origen: 'b2b', categoria: nivelACategoria(datos.nivel), etiqueta: 'AFILIADO' }
+      { origen: 'b2b', categoria: nivelACategoria(datos.nivel), etiqueta: 'AFILIADO', inicio_atencion: inicioAtencion.toISOString() }
     );
     await alertar(`🔁 <b>SEGUIMIENTO AGENDADO (sin costo - B2B)</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${datos.sintomas_seguimiento}`);
     await eliminar(telefono);
@@ -123,6 +135,7 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
 
     datos.comprobante_ref = `WhatsApp-${telefono}-${Date.now()}`;
 
+    const inicioAtencion = datos.inicio_atencion ? new Date(datos.inicio_atencion) : new Date();
     const consulta = await crearConsulta({
       paciente_id: datos.paciente_id,
       nivel_sintomas: datos.nivel || 1,
@@ -130,13 +143,14 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
       estado: 'pendiente',
       origen: 'seguimiento_aprobado',
       consulta_seguimiento_de: datos.consulta_origen_id || null,
+      inicio_atencion: inicioAtencion.toISOString(),
     });
 
     await crearNotificacion(
       'nueva_consulta', '🔁 Pago - Consulta de seguimiento',
       `${datos.nombreCompleto} pagó consulta de seguimiento (${datos.forma_pago}, $8.00)`,
       datos.paciente_id, consulta?.id,
-      { origen: 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: 'PAGO' }
+      { origen: 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: 'PAGO', inicio_atencion: inicioAtencion.toISOString() }
     );
 
     await registrarFacturacionB2C(datos);
@@ -148,6 +162,21 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
       respuesta: `✅ *¡Pago confirmado!*\n\n🎉 Su consulta de seguimiento ha sido registrada.\n\nUn asesor de *MediLyft* le contactará en breve para confirmar el horario.\n\n📧 La factura electrónica será enviada a *${datos.correo}*.\n\n¡Gracias por confiar en MediLyft! 💙`,
       paso: 0, datos, terminar: true
     };
+
+  } else if (paso === 97) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'confirmar' || m.includes('confirmar')) {
+      datos.inicio_atencion = proximaApertura().toISOString();
+      return await irAPago(datos, telefono, true);
+    } else if (m === 'abandonar' || m.includes('abandonar')) {
+      await eliminar(telefono);
+      return {
+        respuesta: `Entendido. Cuando lo desee, escríbanos *hola* para iniciar de nuevo. 👋`,
+        paso: 0, datos, terminar: true
+      };
+    } else {
+      return { respuesta: mensajeFueraHorario(), paso: 97, datos, terminar: false, botones: BOTONES_HORARIO };
+    }
   }
 
   return { respuesta, paso: nuevoPaso, datos, terminar: false };

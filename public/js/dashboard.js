@@ -16,7 +16,7 @@ function _bannerHtmlDesde(sinMedico) {
           <div class="alerta-item-info">
             <div class="alerta-item-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
             <div class="alerta-item-meta">${nivel} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
-            <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span>
+            <span class="alerta-timer" data-created="${c.inicio_atencion || c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.inicio_atencion || c.created_at)}</span>
           </div>
           <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
         </div>`;
@@ -163,7 +163,7 @@ async function loadAlertasServicio() {
         <div class="alerta-card-foot">
           <div style="display:flex;align-items:center;gap:10px">
             ${nivelBadge(c.nivel_sintomas)}
-            <span class="alerta-timer" data-created="${c.created_at}" style="font-size:12px;font-weight:700">${formatElapsedTime(c.created_at)}</span>
+            <span class="alerta-timer" data-created="${c.inicio_atencion || c.created_at}" style="font-size:12px;font-weight:700">${formatElapsedTime(c.inicio_atencion || c.created_at)}</span>
           </div>
           <button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
         </div>

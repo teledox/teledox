@@ -8,6 +8,7 @@ const { analizarComprobante } = require('../services/gemini');
 const { query } = require('../services/supabase');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
 const { mensajeBienvenida } = require('./flujo-inicio');
+const { estaEnHorarioAtencion, proximaApertura, mensajeFueraHorario, BOTONES_HORARIO } = require('../utils/horarios');
 
 const MONTO_TELECONSULTA = 8.00;
 
@@ -205,11 +206,38 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
       await alertar(`⚠️ <b>SÍNTOMAS MEDIOS - B2C</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
     }
 
+    if (!estaEnHorarioAtencion()) {
+      return {
+        respuesta: mensajeFueraHorario(),
+        paso: 64, datos, terminar: false,
+        botones: BOTONES_HORARIO
+      };
+    }
+
     return {
       respuesta: `✅ Sus síntomas han sido registrados.\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
       paso: 59, datos, terminar: false,
       botones: BOTONES_PAGO
     };
+
+  } else if (paso === 64) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'confirmar' || m.includes('confirmar')) {
+      datos.inicio_atencion = proximaApertura().toISOString();
+      return {
+        respuesta: `✅ Sus síntomas han sido registrados.\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+        paso: 59, datos, terminar: false,
+        botones: BOTONES_PAGO
+      };
+    } else if (m === 'abandonar' || m.includes('abandonar')) {
+      await eliminar(telefono);
+      return {
+        respuesta: `Entendido. Cuando lo desee, escríbanos *hola* para iniciar de nuevo. 👋`,
+        paso: 0, datos, terminar: true
+      };
+    } else {
+      return { respuesta: mensajeFueraHorario(), paso: 64, datos, terminar: false, botones: BOTONES_HORARIO };
+    }
 
   } else if (paso === 59) {
     const m = mensaje.trim().toLowerCase();
@@ -346,11 +374,13 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
       }
 
       // 2. Crear consulta
+      const inicioAtencion = datos.inicio_atencion ? new Date(datos.inicio_atencion) : new Date();
       const consulta = await crearConsulta({
         paciente_id: pacienteId,
         nivel_sintomas: datos.nivel || 1,
         sintomas_descripcion: datos.sintomas || '',
         estado: 'pendiente',
+        inicio_atencion: inicioAtencion.toISOString(),
       });
 
       // 3. Crear notificación en el panel
@@ -361,7 +391,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
         `${datos.nombreCompleto} registró teleconsulta (${esAliado ? `seguro: ${datos.seguro_nombre}` : 'pago directo $8.00'})`,
         pacienteId,
         consulta?.id,
-        { origen: esAliado ? 'b2b' : 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: esAliado ? 'PAGO SEGURO' : 'PAGO' }
+        { origen: esAliado ? 'b2b' : 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: esAliado ? 'PAGO SEGURO' : 'PAGO', inicio_atencion: inicioAtencion.toISOString() }
       );
 
       // 4. Registrar en facturacion_b2c

@@ -9,6 +9,60 @@ const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, se
 const { procesarB2C } = require('./flujo-b2c');
 const { procesarSeguimientoPago } = require('./flujo-seguimiento-pago');
 const { mensajeBienvenida } = require('./flujo-inicio');
+const { estaEnHorarioAtencion, proximaApertura, mensajeFueraHorario, BOTONES_HORARIO } = require('../utils/horarios');
+
+// Guarda los datos del paciente y registra la consulta principal (B2B/B2C sin pago directo).
+// `inicioAtencion` es el momento desde el cual debe correr el cronómetro del panel:
+// ahora mismo si entra en horario de atención, o la próxima apertura si entra fuera de horario.
+async function _registrarConsultaPrincipal(datos, telefono, nombreWhatsApp, inicioAtencion) {
+  await actualizar(datos.cedula, {
+    nombre: datos.nombre,
+    apellidos: datos.apellidos,
+    edad: datos.edad,
+    fecha_nacimiento: datos.fecha_nacimiento,
+    sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
+    correo: datos.correo,
+    telefono: datos.telefono,
+    lugar_residencia: datos.lugar_residencia,
+    updated_at: new Date().toISOString()
+  });
+
+  const consulta = await crearConsulta({
+    paciente_id: datos.paciente_id,
+    nivel_sintomas: 1,
+    sintomas_descripcion: datos.sintomas,
+    estado: 'pendiente',
+    inicio_atencion: inicioAtencion.toISOString()
+  });
+
+  await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta', `${datos.nombreCompleto} solicita teleconsulta para ${datos.horario}`, datos.paciente_id, consulta?.id, {
+    origen: datos.empresa_id ? 'b2b' : 'b2c',
+    categoria: 'leve',
+    etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
+            : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
+            : null,
+    inicio_atencion: inicioAtencion.toISOString()
+  });
+  await alertar(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
+
+  // Registrar planillaje B2B automáticamente al confirmar (no debe interrumpir el flujo si falla)
+  if (datos.empresa_id) {
+    try {
+      await registrarPlanillajeB2B(datos, consulta?.id);
+    } catch (e) {
+      await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nError: ${e.message}`);
+    }
+  }
+
+  return {
+    respuesta: `🎉 *¡Consulta registrada exitosamente!*\n\n👤 ${datos.nombreCompleto} — ${datos.cedula}\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.`,
+    paso: 42, datos, terminar: false,
+    botones: [
+      { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
+      { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
+    ]
+  };
+}
 
 async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
@@ -30,7 +84,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
 
   // Paso desconocido/no reconocido — reiniciar sesión para evitar bucles
   // sin salida (en lugar de repetir una respuesta vacía indefinidamente)
-  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 12, 42];
+  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 12, 42, 43];
   if (!PASOS_VALIDOS.includes(paso)) {
     await eliminar(telefono);
     return {
@@ -286,55 +340,32 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
 
   } else if (paso === 12) {
     if (mensaje.toLowerCase() === 'confirmar' || mensaje.toLowerCase() === '✅ confirmar') {
-      await actualizar(datos.cedula, {
-        nombre: datos.nombre,
-        apellidos: datos.apellidos,
-        edad: datos.edad,
-        fecha_nacimiento: datos.fecha_nacimiento,
-        sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
-        correo: datos.correo,
-        telefono: datos.telefono,
-        lugar_residencia: datos.lugar_residencia,
-        updated_at: new Date().toISOString()
-      });
-
-      const consulta = await crearConsulta({
-        paciente_id: datos.paciente_id,
-        nivel_sintomas: 1,
-        sintomas_descripcion: datos.sintomas,
-        estado: 'pendiente'
-      });
-
-      await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta', `${datos.nombreCompleto} solicita teleconsulta para ${datos.horario}`, datos.paciente_id, consulta?.id, {
-        origen: datos.empresa_id ? 'b2b' : 'b2c',
-        categoria: 'leve',
-        etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
-                : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
-                : null,
-      });
-      await alertar(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
-
-      // Registrar planillaje B2B automáticamente al confirmar (no debe interrumpir el flujo si falla)
-      if (datos.empresa_id) {
-        try {
-          await registrarPlanillajeB2B(datos, consulta?.id);
-        } catch (e) {
-          await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nError: ${e.message}`);
-        }
+      if (!estaEnHorarioAtencion()) {
+        return {
+          respuesta: mensajeFueraHorario(),
+          paso: 43, datos, terminar: false,
+          botones: BOTONES_HORARIO
+        };
       }
-
-      return {
-        respuesta: `🎉 *¡Consulta registrada exitosamente!*\n\n👤 ${datos.nombreCompleto} — ${datos.cedula}\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.`,
-        paso: 42, datos, terminar: false,
-        botones: [
-          { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
-          { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
-        ]
-      };
+      return await _registrarConsultaPrincipal(datos, telefono, nombreWhatsApp, new Date());
     } else {
       datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, empresa_id: datos.empresa_id, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
       respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
       nuevoPaso = 4;
+    }
+
+  } else if (paso === 43) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'confirmar' || m.includes('confirmar')) {
+      return await _registrarConsultaPrincipal(datos, telefono, nombreWhatsApp, proximaApertura());
+    } else if (m === 'abandonar' || m.includes('abandonar')) {
+      await eliminar(telefono);
+      return {
+        respuesta: `Entendido. Cuando lo desee, escríbanos *hola* para iniciar de nuevo. 👋`,
+        paso: 0, datos, terminar: true
+      };
+    } else {
+      return { respuesta: mensajeFueraHorario(), paso: 43, datos, terminar: false, botones: BOTONES_HORARIO };
     }
 
   } else if (paso === 42) {

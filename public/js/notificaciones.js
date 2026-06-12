@@ -14,7 +14,7 @@ async function loadNotificaciones() {
       <td><span style="font-size:12px;font-weight:600;color:${n.tipo === 'urgente' ? '#dc2626' : '#2563eb'}">${n.tipo === 'urgente' ? '⚠️ Urgente' : '📅 Nueva'}</span></td>
       <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
       <td style="white-space:nowrap;font-size:12px">
-        ${n.leida ? '' : `<span class="alerta-timer" data-created="${n.created_at}" style="font-weight:700;color:${getTimerColor(n.created_at)}">⏱ ${formatElapsedTime(n.created_at)}</span><br>`}
+        ${n.leida ? '' : `<span class="alerta-timer" data-created="${n.inicio_atencion || n.created_at}" style="font-weight:700;color:${getTimerColor(n.inicio_atencion || n.created_at)}">⏱ ${formatElapsedTime(n.inicio_atencion || n.created_at)}</span><br>`}
         <span style="color:#aaa;font-size:11px">${new Date(n.created_at).toLocaleString('es-EC')}</span>
       </td>
       <td>${n.leida ? '<span class="badge badge-gray">Leída</span>' : '<span class="badge badge-blue">Nueva</span>'}</td>
@@ -31,7 +31,7 @@ async function loadNotificaciones() {
       <div class="notif-titulo">${n.titulo}</div>
       <div class="notif-msg">${n.mensaje}</div>
       <div class="notif-time">
-        ${n.leida ? '' : `<span class="alerta-timer" data-created="${n.created_at}" style="font-weight:700;color:${getTimerColor(n.created_at)}">⏱ ${formatElapsedTime(n.created_at)}</span>`}
+        ${n.leida ? '' : `<span class="alerta-timer" data-created="${n.inicio_atencion || n.created_at}" style="font-weight:700;color:${getTimerColor(n.inicio_atencion || n.created_at)}">⏱ ${formatElapsedTime(n.inicio_atencion || n.created_at)}</span>`}
       </div>
     </div>
   `).join('') || '<div style="padding:1rem;color:#aaa;text-align:center;font-size:13px">Sin notificaciones</div>';

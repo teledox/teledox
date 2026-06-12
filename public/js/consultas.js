@@ -83,7 +83,7 @@ async function loadConsultas() {
 
     // Timer en vivo: cuánto lleva la consulta sin agendar (solo mientras está pendiente)
     const timerEspera = c.estado === 'pendiente'
-      ? `<div style="margin-top:5px"><span class="alerta-timer" data-created="${c.created_at}" style="font-size:12px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span><div style="font-size:9px;color:#aaa">sin agendar</div></div>`
+      ? `<div style="margin-top:5px"><span class="alerta-timer" data-created="${c.inicio_atencion || c.created_at}" style="font-size:12px;font-weight:700">⏱ ${formatElapsedTime(c.inicio_atencion || c.created_at)}</span><div style="font-size:9px;color:#aaa">sin agendar</div></div>`
       : '';
 
     const medicoInfo = med

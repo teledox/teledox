@@ -102,6 +102,13 @@ CREATE INDEX idx_documentos_datos_consulta ON documentos_datos(consulta_id);
 -- column of 'consultas' in the schema cache" al presionar Atender.
 -- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS atendido_at TIMESTAMP;
 
+-- Horario de atención (Lunes-Viernes 8am-5pm, Sábado-Domingo 9am-12pm, hora Ecuador).
+-- Si la consulta se confirma fuera de este horario, inicio_atencion queda en la
+-- próxima apertura del consultorio y el cronómetro del panel/alertas no corre hasta
+-- entonces (ver src/utils/horarios.js y public/js/utils.js).
+-- ALTER TABLE consultas ADD COLUMN IF NOT EXISTS inicio_atencion TIMESTAMP DEFAULT NOW();
+-- ALTER TABLE notificaciones ADD COLUMN IF NOT EXISTS inicio_atencion TIMESTAMP DEFAULT NOW();
+
 -- Verificación automática de comprobantes de pago (B2C) vía Gemini Vision.
 -- Se registra un intento por cada foto enviada, aprobada o no (auditoría).
 -- paciente_id/consulta_id solo se llenan si el comprobante fue aprobado.

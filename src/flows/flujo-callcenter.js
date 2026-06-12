@@ -5,6 +5,7 @@ const { registrarPlanillajeB2B } = require('../services/planillaje');
 const { guardar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre, validarCedula } = require('../utils/validaciones');
+const { estaEnHorarioAtencion, proximaApertura, mensajeFueraHorario, BOTONES_HORARIO } = require('../utils/horarios');
 
 // Buscar empresa por codigo_acceso
 async function buscarEmpresaPorCodigo(codigo) {
@@ -12,6 +13,64 @@ async function buscarEmpresaPorCodigo(codigo) {
     `?codigo_acceso=eq.${encodeURIComponent(codigo.trim().toUpperCase())}&activo=eq.true&select=*&limit=1`
   );
   return Array.isArray(data) && data.length > 0 ? data[0] : null;
+}
+
+// Crea/actualiza el paciente, registra la consulta y el planillaje B2B.
+// `inicioAtencion` es desde cuándo debe correr el cronómetro del panel.
+async function _registrarConsultaCallCenter(datos, telefono, empresa, empresaId, inicioAtencion) {
+  let pacienteId = datos.cc_paciente_id;
+  const { nombre, apellidos } = separarNombre(datos.cc_nombre);
+
+  if (!pacienteId) {
+    const nuevo = await crearPaciente({
+      cedula:          datos.cc_cedula,
+      nombre,
+      apellidos,
+      edad:            datos.cc_edad || null,
+      fecha_nacimiento: datos.cc_nacimiento || null,
+      sexo:            inferirSexo(datos.cc_nombre),
+      correo:          datos.cc_correo || '',
+      telefono:        datos.cc_telefono || '',
+      lugar_residencia: datos.cc_residencia || '',
+      cliente_b2b_id:  empresaId
+    });
+    pacienteId = nuevo?.id || null;
+  }
+
+  const consulta = await crearConsulta({
+    paciente_id:         pacienteId,
+    nivel_sintomas:      datos.cc_nivel || 1,
+    sintomas_descripcion: datos.cc_sintomas,
+    estado:              'pendiente',
+    inicio_atencion:     inicioAtencion.toISOString()
+  });
+
+  await crearNotificacion(
+    datos.cc_nivel === 2 ? 'urgente' : 'nueva_consulta',
+    `📅 Consulta B2B — ${empresa}`,
+    `${datos.cc_nombre} (${datos.cc_cedula}) registrado por call center`,
+    pacienteId,
+    consulta?.id,
+    { origen: 'b2b', categoria: nivelACategoria(datos.cc_nivel || 1), etiqueta: 'EMPLEADO CON CÓDIGO', inicio_atencion: inicioAtencion.toISOString() }
+  );
+
+  await alertar(`📅 <b>NUEVA CONSULTA CALL CENTER — ${empresa}</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nTeléfono: ${datos.cc_telefono}\nSíntomas: ${datos.cc_sintomas}\nAgente: ${telefono}`);
+
+  // Registrar planillaje B2B para facturación a la empresa (no debe interrumpir el flujo si falla)
+  try {
+    await registrarPlanillajeB2B({ ...datos, cc_paciente_id: pacienteId, cc_empresa_id: empresaId }, consulta?.id);
+  } catch (e) {
+    await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nEmpresa: ${empresa}\nError: ${e.message}`);
+  }
+
+  return {
+    respuesta: `✅ *¡Consulta registrada!*\n\n👤 ${datos.cc_nombre} — ${datos.cc_cedula}\n\nUn médico de MediLyft le contactará pronto.\n\n¿Desea registrar otro paciente?`,
+    paso: 309, datos, terminar: false,
+    botones: [
+      { id: 'si', titulo: '✅ Otro paciente' },
+      { id: 'no', titulo: '🔚 Finalizar sesión' }
+    ]
+  };
 }
 
 async function procesarCallCenter(paso, mensaje, datos, telefono) {
@@ -169,60 +228,33 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
       };
     }
 
-    // Crear o actualizar paciente
-    let pacienteId = datos.cc_paciente_id;
-    const { nombre, apellidos } = separarNombre(datos.cc_nombre);
-
-    if (!pacienteId) {
-      const nuevo = await crearPaciente({
-        cedula:          datos.cc_cedula,
-        nombre,
-        apellidos,
-        edad:            datos.cc_edad || null,
-        fecha_nacimiento: datos.cc_nacimiento || null,
-        sexo:            inferirSexo(datos.cc_nombre),
-        correo:          datos.cc_correo || '',
-        telefono:        datos.cc_telefono || '',
-        lugar_residencia: datos.cc_residencia || '',
-        cliente_b2b_id:  empresaId
-      });
-      pacienteId = nuevo?.id || null;
+    if (!estaEnHorarioAtencion()) {
+      return {
+        respuesta: mensajeFueraHorario(),
+        paso: 312, datos, terminar: false,
+        botones: BOTONES_HORARIO
+      };
     }
 
-    // Crear consulta
-    const consulta = await crearConsulta({
-      paciente_id:         pacienteId,
-      nivel_sintomas:      datos.cc_nivel || 1,
-      sintomas_descripcion: datos.cc_sintomas,
-      estado:              'pendiente'
-    });
+    return await _registrarConsultaCallCenter(datos, telefono, empresa, empresaId, new Date());
 
-    await crearNotificacion(
-      datos.cc_nivel === 2 ? 'urgente' : 'nueva_consulta',
-      `📅 Consulta B2B — ${empresa}`,
-      `${datos.cc_nombre} (${datos.cc_cedula}) registrado por call center`,
-      pacienteId,
-      consulta?.id,
-      { origen: 'b2b', categoria: nivelACategoria(datos.cc_nivel || 1), etiqueta: 'EMPLEADO CON CÓDIGO' }
-    );
-
-    await alertar(`📅 <b>NUEVA CONSULTA CALL CENTER — ${empresa}</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nTeléfono: ${datos.cc_telefono}\nSíntomas: ${datos.cc_sintomas}\nAgente: ${telefono}`);
-
-    // Registrar planillaje B2B para facturación a la empresa (no debe interrumpir el flujo si falla)
-    try {
-      await registrarPlanillajeB2B({ ...datos, cc_paciente_id: pacienteId, cc_empresa_id: empresaId }, consulta?.id);
-    } catch (e) {
-      await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nEmpresa: ${empresa}\nError: ${e.message}`);
+  // ── Paso 312: fuera de horario — confirmar/abandonar registro ───────────
+  } else if (paso === 312) {
+    const m = mensaje.trim().toLowerCase();
+    if (m === 'confirmar' || m.includes('confirmar')) {
+      return await _registrarConsultaCallCenter(datos, telefono, empresa, empresaId, proximaApertura());
+    } else if (m === 'abandonar' || m.includes('abandonar')) {
+      return {
+        respuesta: `Entendido, no se registró esta consulta.\n\n¿Desea registrar otro paciente?`,
+        paso: 309, datos, terminar: false,
+        botones: [
+          { id: 'si', titulo: '✅ Otro paciente' },
+          { id: 'no', titulo: '🔚 Finalizar sesión' }
+        ]
+      };
+    } else {
+      return { respuesta: mensajeFueraHorario(), paso: 312, datos, terminar: false, botones: BOTONES_HORARIO };
     }
-
-    return {
-      respuesta: `✅ *¡Consulta registrada!*\n\n👤 ${datos.cc_nombre} — ${datos.cc_cedula}\n\nUn médico de MediLyft le contactará pronto.\n\n¿Desea registrar otro paciente?`,
-      paso: 309, datos, terminar: false,
-      botones: [
-        { id: 'si', titulo: '✅ Otro paciente' },
-        { id: 'no', titulo: '🔚 Finalizar sesión' }
-      ]
-    };
 
   // ── Paso 309: ¿otro paciente? ────────────────────────────────────────────
   } else if (paso === 309) {

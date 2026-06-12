@@ -81,7 +81,13 @@ async function updateUser() {
 
   if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
-  await supa('PATCH', 'usuarios', { nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono }, `?id=eq.${id}`);
+  const res = await fetch('/api/actualizar-usuario', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast('⚠️ Error al guardar: ' + (data.error || res.status)); return; }
 
   // Si el usuario editado soy yo, actualizo la sesión local
   if (id === currentUser?.id) {
@@ -95,7 +101,11 @@ async function updateUser() {
 }
 
 async function toggleUser(id, activo) {
-  await supa('PATCH', 'usuarios', { activo: !activo }, `?id=eq.${id}`);
+  await fetch('/api/actualizar-usuario', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, activo: !activo })
+  });
   loadUsuarios();
 }
 

@@ -293,14 +293,16 @@ async function validarYGuardarP12() {
   const p12info = JSON.stringify(info);
 
   try {
-    await fetch(`/api/guardar-p12`, {
+    const r = await fetch(`/api/guardar-p12`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ usuario_id: currentUser.id, firma_p12: p12b64, firma_p12_info: info })
-    }).then(r => r.json());
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
   } catch (e) {
-    // Fallback directo si el endpoint no existe aún
-    await supa('PATCH', 'usuarios', { firma_p12: p12b64, firma_p12_info: p12info }, `?id=eq.${currentUser.id}`);
+    alert('❌ No se pudo guardar el certificado en la base de datos.\n\n' + e.message);
+    return;
   }
 
   // Guardar contraseña en sessionStorage (nunca en BD)

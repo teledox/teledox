@@ -81,7 +81,23 @@ async function updateUser() {
 
   if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
-  await supa('PATCH', 'usuarios', { nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono }, `?id=eq.${id}`);
+  let r, resultado;
+  try {
+    r = await fetch('/api/actualizar-usuario', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
+    });
+    resultado = await r.json();
+  } catch (e) {
+    showToast('⚠️ Error de conexión al actualizar el usuario');
+    return;
+  }
+
+  if (!r.ok) {
+    showToast('⚠️ ' + (resultado?.error || 'No se pudo actualizar el usuario'));
+    return;
+  }
 
   // Si el usuario editado soy yo, actualizo la sesión local
   if (id === currentUser?.id) {

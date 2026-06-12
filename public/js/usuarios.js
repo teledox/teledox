@@ -81,12 +81,15 @@ async function updateUser() {
 
   if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
+  const { data: { session } } = await supabaseClient.auth.getSession();
+  const campos = { nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono };
+
   let r, resultado;
   try {
-    r = await fetch('/api/actualizar-usuario', {
-      method: 'PATCH',
+    r = await fetch('/api/admin-delete', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
+      body: JSON.stringify({ tipo: 'usuario', id, token: session?.access_token, campos })
     });
     resultado = await r.json();
   } catch (e) {

@@ -95,6 +95,37 @@ async function eliminarConsulta(consultaId) {
   await q('DELETE', 'consultas', `?id=eq.${consultaId}`);
 }
 
+// ── Actualizar datos de un usuario de la plataforma
+const CAMPOS_USUARIO_PERMITIDOS = ['nombre', 'apellidos', 'rol', 'especialidad', 'numero_registro', 'cedula', 'telefono', 'activo'];
+
+async function actualizarUsuario(id, campos) {
+  const update = {};
+  for (const campo of CAMPOS_USUARIO_PERMITIDOS) {
+    if (campo in campos) update[campo] = campos[campo];
+  }
+  if (Object.keys(update).length === 0) throw new Error('Sin campos válidos para actualizar');
+  if ('nombre' in update && !update.nombre) throw new Error('El nombre es obligatorio');
+  if ('apellidos' in update && !update.apellidos) throw new Error('Los apellidos son obligatorios');
+
+  const r = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey':        SUPA_SERVICE_KEY,
+      'Authorization': `Bearer ${SUPA_SERVICE_KEY}`,
+      'Content-Type':  'application/json',
+      'Prefer':        'return=representation',
+    },
+    body: JSON.stringify(update)
+  });
+
+  const text = await r.text();
+  if (!r.ok) throw new Error(`Error de Supabase (${r.status})`);
+
+  const data = JSON.parse(text || '[]');
+  if (!data.length) throw new Error('Usuario no encontrado');
+  return data[0];
+}
+
 // ── Eliminar paciente completo (manual en cascada)
 async function eliminarPaciente(pacienteId) {
   // 1. Consultas del paciente
@@ -139,7 +170,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { tipo, id, token } = req.body || {};
+  const { tipo, id, token, campos } = req.body || {};
   if (!tipo || !id) return res.status(400).json({ error: 'Faltan parámetros (tipo, id)' });
 
   try {
@@ -152,6 +183,10 @@ module.exports = async function handler(req, res) {
     if (tipo === 'paciente') {
       await eliminarPaciente(id);
       return res.status(200).json({ ok: true, msg: 'Paciente eliminado' });
+    }
+    if (tipo === 'usuario') {
+      const usuario = await actualizarUsuario(id, campos || {});
+      return res.status(200).json({ ok: true, usuario });
     }
     return res.status(400).json({ error: `Tipo desconocido: ${tipo}` });
 

@@ -181,7 +181,7 @@ async function firmarPdfConP12(doc, { nombre, motivo, p12b64, pass }) {
 // esquina inferior izquierda de la página, encima de la línea del pie de
 // página. Devuelve true si lo dibujó (hay un certificado .p12 activo) o
 // false si no hay nada que mostrar (el caller mantiene su layout original).
-async function dibujarFirmaElectronicaPDF(doc, page, { font, color }) {
+async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocumento }) {
   const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
   if (!p12 || typeof QRCode === 'undefined') return false;
 
@@ -191,15 +191,35 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color }) {
     || 'Médico';
   const fecha = new Date().toLocaleString('es-EC');
 
-  const texto = [
+  // Registra el documento en MediLyft para que el QR apunte a una página de
+  // verificación pública con los datos del firmante. Si el registro falla
+  // (sin conexión, etc.), el QR cae de vuelta a mostrar la info en texto.
+  let qrTexto = [
     'Documento firmado electronicamente',
     `Firmante: ${titular}`,
-    info.cedula ? `Cedula/RUC: ${info.cedula}` : null,
     `Fecha: ${fecha}`,
-  ].filter(Boolean).join('\n');
+  ].join('\n');
 
   try {
-    const dataUrl = await QRCode.toDataURL(texto, { margin: 0, width: 160 });
+    const r = await fetch('/api/registrar-firma', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        usuario_id: typeof currentUser !== 'undefined' ? currentUser?.id : null,
+        titular,
+        tipo_documento: tipoDocumento || null,
+      })
+    });
+    if (r.ok) {
+      const { id } = await r.json();
+      if (id) qrTexto = `https://www.medilyft.app/verificar.html?id=${id}`;
+    }
+  } catch (e) {
+    console.error('No se pudo registrar la firma para verificación:', e.message);
+  }
+
+  try {
+    const dataUrl = await QRCode.toDataURL(qrTexto, { margin: 0, width: 160 });
     const qrImg = await doc.embedPng(dataUrl.split(',')[1]);
     const size = 38;
     const x = 40, y = 60;

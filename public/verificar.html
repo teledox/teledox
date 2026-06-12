@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verificar documento · MediLyft</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#f3f4f6; margin:0; padding:24px; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); max-width:420px; width:100%; padding:32px 28px; text-align:center; }
+  .icon { font-size:42px; margin-bottom:8px; }
+  h1 { font-size:18px; margin:0 0 16px; color:#111827; }
+  .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f1f1; font-size:14px; text-align:left; }
+  .row span:first-child { color:#6b7280; }
+  .row span:last-child { color:#111827; font-weight:600; text-align:right; margin-left:12px; }
+  .ok { color:#16a34a; }
+  .err { color:#dc2626; }
+  .footer { margin-top:20px; font-size:12px; color:#9ca3af; }
+</style>
+</head>
+<body>
+  <div class="card" id="card">
+    <div class="icon">⏳</div>
+    <h1>Verificando documento...</h1>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id');
+    const card = document.getElementById('card');
+
+    function render(html) { card.innerHTML = html; }
+
+    if (!id) {
+      render(`
+        <div class="icon err">⚠️</div>
+        <h1 class="err">Falta el identificador del documento</h1>
+      `);
+    } else {
+      fetch(`/api/verificar-firma?id=${encodeURIComponent(id)}`)
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+          const fecha = new Date(data.creado_en).toLocaleString('es-EC');
+          render(`
+            <div class="icon ok">✅</div>
+            <h1 class="ok">Documento firmado electrónicamente</h1>
+            <div class="row"><span>Firmante</span><span>${data.titular || '—'}</span></div>
+            <div class="row"><span>Tipo de documento</span><span>${data.tipo_documento || '—'}</span></div>
+            <div class="row"><span>Fecha de firma</span><span>${fecha}</span></div>
+            <div class="footer">Verificado en MediLyft · medilyft.app</div>
+          `);
+        })
+        .catch(() => {
+          render(`
+            <div class="icon err">❌</div>
+            <h1 class="err">No se encontró este documento</h1>
+            <div class="footer">El código no corresponde a un documento registrado en MediLyft.</div>
+          `);
+        });
+    }
+  </script>
+</body>
+</html>

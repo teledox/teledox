@@ -144,7 +144,7 @@ async function generarRecetaPDF() {
   page.drawText(gV('rec-esp-medico') || '—', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Receta medica' });
 
   return await guardarPDFConFirma(doc, 'Receta medica');
 }
@@ -316,7 +316,7 @@ async function generarHistoriaClinicaPDF() {
   page.drawText('Médico tratante · MediLyft', { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Historia clinica' });
 
   return await guardarPDFConFirma(doc, 'Historia clinica');
 }
@@ -401,7 +401,7 @@ async function generarInterconsultaPDF() {
   page.drawText('Firma y sello', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Interconsulta medica' });
 
   return await guardarPDFConFirma(doc, 'Interconsulta medica');
 }
@@ -488,7 +488,7 @@ async function generarCertificadoPDF() {
   page.drawText('Firma y sello', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Certificado medico' });
 
   return await guardarPDFConFirma(doc, 'Certificado medico');
 }
@@ -590,7 +590,7 @@ async function generarPedidoPDF() {
 
   page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
   page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Pedido de laboratorio' });
 
   return await guardarPDFConFirma(doc, 'Pedido de laboratorio');
 }

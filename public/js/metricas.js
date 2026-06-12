@@ -23,13 +23,14 @@ async function loadMetricas(periodo) {
 
   try {
     // Queries separadas para aislar errores — si una falla, las demás continúan
-    const [consultasRaw, pacientesRaw, recetasRaw, respuestasRaw, medicosRaw] = await Promise.all([
+    const [consultasRaw, pacientesRaw, recetasRaw, respuestasRaw, medicosRaw, historicasRaw] = await Promise.all([
       supa('GET', 'consultas', null,
         `?select=id,nivel_sintomas,estado,created_at,atendido_at,medico_id,pacientes(clientes_b2b(nombre_empresa))&created_at=gte.${desde}`),
       supa('GET', 'pacientes', null, '?select=count'),
       supa('GET', 'recetas',   null, '?select=id,seguimiento_activo'),
       supa('GET', 'seguimiento_respuestas', null, '?select=se_siente_mejor').catch(() => []),
-      supa('GET', 'usuarios',  null, '?select=id,nombre,apellidos,especialidad&activo=eq.true&rol=in.(medico,admin)')
+      supa('GET', 'usuarios',  null, '?select=id,nombre,apellidos,especialidad&activo=eq.true&rol=in.(medico,admin)'),
+      supa('GET', 'consultas', null, '?select=paciente_id,created_at,pacientes(cliente_b2b_id,clientes_b2b(nombre_empresa))').catch(() => [])
     ]);
 
     // Normalizar — si algo devolvió error JSON en vez de array, usar []
@@ -190,6 +191,94 @@ async function loadMetricas(periodo) {
         : '<div style="text-align:center;color:#aaa;padding:2rem;font-size:13px">Sin datos de empresas en el período.</div>';
     }
 
+    // ── Tasa de retención de pacientes ────────────────────────────────────
+    const historicas = Array.isArray(historicasRaw) ? historicasRaw : [];
+
+    // Agrupar todas las consultas históricas por paciente_id
+    const porPaciente = {};
+    historicas.forEach(c => {
+      const pid = c.paciente_id;
+      if (!pid) return;
+      if (!porPaciente[pid]) {
+        porPaciente[pid] = {
+          total: 0,
+          empresa: c.pacientes?.clientes_b2b?.nombre_empresa || null,
+          cliente_b2b_id: c.pacientes?.cliente_b2b_id || null
+        };
+      }
+      porPaciente[pid].total++;
+    });
+
+    const totalPacientesHistorico = Object.keys(porPaciente).length;
+    const recurrentes = Object.values(porPaciente).filter(p => p.total > 1).length;
+    const nuevos      = totalPacientesHistorico - recurrentes;
+    const tasaRetencion = totalPacientesHistorico > 0
+      ? Math.round(recurrentes / totalPacientesHistorico * 100) : 0;
+
+    // Segmentación por empresa
+    const retencionPorEmpresa = {};
+    Object.values(porPaciente).forEach(p => {
+      const seg = p.empresa || 'B2C / Sin empresa';
+      if (!retencionPorEmpresa[seg]) retencionPorEmpresa[seg] = { total: 0, recurrentes: 0 };
+      retencionPorEmpresa[seg].total++;
+      if (p.total > 1) retencionPorEmpresa[seg].recurrentes++;
+    });
+
+    const retEl = document.getElementById('retencionStats');
+    if (retEl) {
+      const colorGlobal = tasaRetencion >= 40 ? '#16a34a' : tasaRetencion >= 20 ? '#ca8a04' : '#dc2626';
+      const segmentos = Object.entries(retencionPorEmpresa).sort((a,b) => b[1].total - a[1].total);
+      retEl.innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:0.5rem 0;margin-bottom:1rem">
+          <div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px">
+            <div style="font-size:36px;font-weight:700;color:${colorGlobal}">${tasaRetencion}%</div>
+            <div style="font-size:12px;color:#888;margin-top:4px">Tasa de retención global</div>
+          </div>
+          <div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px">
+            <div style="font-size:28px;font-weight:700;color:#2563eb">${recurrentes}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px">Pacientes recurrentes</div>
+            <div style="font-size:11px;color:#aaa">(más de 1 consulta)</div>
+          </div>
+          <div style="text-align:center;padding:1rem;background:#f9f9f9;border-radius:8px">
+            <div style="font-size:28px;font-weight:700;color:#ca8a04">${nuevos}</div>
+            <div style="font-size:12px;color:#888;margin-top:4px">Pacientes nuevos</div>
+            <div style="font-size:11px;color:#aaa">(primera consulta)</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#555;font-weight:600;margin-bottom:8px">Desglose por segmento</div>
+        <table class="table">
+          <thead><tr>
+            <th>Segmento</th>
+            <th style="text-align:center">Total pacientes</th>
+            <th style="text-align:center">Recurrentes</th>
+            <th style="text-align:center">Nuevos</th>
+            <th style="text-align:center">Tasa retención</th>
+          </tr></thead>
+          <tbody>${segmentos.map(([seg, d]) => {
+            const t = d.total > 0 ? Math.round(d.recurrentes / d.total * 100) : 0;
+            const c = t >= 40 ? '#16a34a' : t >= 20 ? '#ca8a04' : '#dc2626';
+            const esB2C = seg === 'B2C / Sin empresa';
+            return `<tr>
+              <td><strong>${esB2C ? '👤 ' : '🏢 '}${seg}</strong></td>
+              <td style="text-align:center;font-weight:700">${d.total}</td>
+              <td style="text-align:center;color:#2563eb;font-weight:600">${d.recurrentes}</td>
+              <td style="text-align:center;color:#ca8a04;font-weight:600">${d.total - d.recurrentes}</td>
+              <td style="text-align:center">
+                <div style="display:flex;align-items:center;gap:6px;justify-content:center">
+                  <div style="background:#eee;border-radius:10px;overflow:hidden;height:8px;width:60px">
+                    <div style="width:${t}%;background:${c};height:100%;border-radius:10px"></div>
+                  </div>
+                  <span style="font-weight:700;color:${c}">${t}%</span>
+                </div>
+              </td>
+            </tr>`;
+          }).join('')}</tbody>
+        </table>
+        <div style="font-size:11px;color:#aaa;margin-top:8px;text-align:right">
+          📊 Datos históricos acumulados · ${totalPacientesHistorico} pacientes en total
+        </div>`;
+    }
+
     // ── Ranking por médico ─────────────────────────────────────────────────
     // Guardar datos globalmente para exportación
     // _kpiData se completa después de calcular tiempos (más abajo)
@@ -226,7 +315,8 @@ async function loadMetricas(periodo) {
     _kpiData = { periodo, periodoLabel, total, graves, medios, leves, completadas, enAtencion, pendientes,
       exitosos, sinMejora: respuestas.filter(r => r.se_siente_mejor === false).length,
       tasa, recetasActivas: recetas.filter(r => r.seguimiento_activo).length,
-      totalRecetas: recetas.length, porEmpresa, tiempos, avgGeneral, minResp, maxResp, mediana };
+      totalRecetas: recetas.length, porEmpresa, tiempos, avgGeneral, minResp, maxResp, mediana,
+      retencion: { tasaRetencion, recurrentes, nuevos, totalPacientesHistorico, retencionPorEmpresa } };
     _kpiData.porMedico = porMedico;
     const medicoTablaEl = document.getElementById('medicoTabla');
     if (medicoTablaEl) {
@@ -253,7 +343,7 @@ async function loadMetricas(periodo) {
   } catch (e) {
     console.error('[loadMetricas] Error:', e.message);
     // Mostrar error visible en lugar de quedarse en "Cargando..."
-    ['metricStats','nivelChart','kpiContent','seguimientoStats','tiempoRespuestaStats','tiempoRespuestaB2B','medicoRanking']
+    ['metricStats','nivelChart','kpiContent','seguimientoStats','tiempoRespuestaStats','tiempoRespuestaB2B','retencionStats','medicoRanking']
       .forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = `<div style="color:#dc2626;padding:1rem;font-size:13px">⚠️ Error al cargar: ${e.message}</div>`;
@@ -362,6 +452,24 @@ function exportarSeccion(seccion) {
     XLSX.utils.book_append_sheet(wb, ws, 'Por empresa');
   }
 
+  else if (seccion === 'kpi-retencion') {
+    const r = d.retencion || {};
+    const resumen = _sheetDesde([
+      ['Tasa de retención global',  (r.tasaRetencion||0)+'%'],
+      ['Pacientes recurrentes',     r.recurrentes||0],
+      ['Pacientes nuevos',          r.nuevos||0],
+      ['Total pacientes histórico', r.totalPacientesHistorico||0],
+    ], ['Indicador', 'Valor']);
+    XLSX.utils.book_append_sheet(wb, resumen, 'Retención resumen');
+
+    const filasSeg = Object.entries(r.retencionPorEmpresa || {}).map(([seg, data]) => {
+      const t = data.total > 0 ? Math.round(data.recurrentes/data.total*100) : 0;
+      return [seg, data.total, data.recurrentes, data.total - data.recurrentes, t+'%'];
+    }).sort((a,b) => b[1] - a[1]);
+    const detalle = _sheetDesde(filasSeg, ['Segmento', 'Total pacientes', 'Recurrentes', 'Nuevos', 'Tasa retención']);
+    XLSX.utils.book_append_sheet(wb, detalle, 'Retención por segmento');
+  }
+
   _descargarExcel(wb, seccion.replace('kpi-', ''));
   showToast('✓ Excel exportado');
 }
@@ -415,7 +523,20 @@ function exportarTodoKPI() {
   XLSX.utils.book_append_sheet(wb, _sheetDesde(filasEmp,
     ['Empresa', 'Total consultas', 'Completadas', 'Emergencias', 'Tasa resolución']), 'Por empresa');
 
-  // Hoja 4: Distribución por nivel
+  // Hoja 4: Retención de pacientes
+  const ret = d.retencion || {};
+  XLSX.utils.book_append_sheet(wb, _sheetDesde([
+    ['Tasa de retención global',  (ret.tasaRetencion||0)+'%'],
+    ['Pacientes recurrentes',     ret.recurrentes||0],
+    ['Pacientes nuevos',          ret.nuevos||0],
+    ['Total pacientes histórico', ret.totalPacientesHistorico||0],
+    ...Object.entries(ret.retencionPorEmpresa||{}).map(([seg,data]) => {
+      const t = data.total > 0 ? Math.round(data.recurrentes/data.total*100) : 0;
+      return [seg, data.total, data.recurrentes, data.total-data.recurrentes, t+'%'];
+    })
+  ], ['Indicador/Segmento', 'Total', 'Recurrentes', 'Nuevos', 'Tasa']), 'Retención');
+
+  // Hoja 5: Distribución por nivel
   XLSX.utils.book_append_sheet(wb, _sheetDesde([
     ['Leves',       d.leves,       d.total > 0 ? Math.round(d.leves/d.total*100)+'%'       : '0%'],
     ['Medios',      d.medios,      d.total > 0 ? Math.round(d.medios/d.total*100)+'%'      : '0%'],

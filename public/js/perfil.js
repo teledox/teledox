@@ -71,7 +71,6 @@ async function saveDatosPersonales() {
 
   await supa('PATCH', 'usuarios', { cedula, telefono, especialidad, numero_registro }, `?id=eq.${currentUser.id}`);
   currentUser = { ...currentUser, cedula, telefono, especialidad, numero_registro };
-  saveSession(currentUser);
   loadPerfil();
   showToast('✓ Datos personales actualizados');
 }
@@ -94,7 +93,6 @@ async function saveFirma() {
   if (Object.keys(update).length === 0) { alert('Suba al menos una imagen'); return; }
   await supa('PATCH', 'usuarios', update, `?id=eq.${currentUser.id}`);
   currentUser = { ...currentUser, ...update };
-  saveSession(currentUser);
   loadPerfil();
   showToast('✓ Firma y sello guardados');
 }
@@ -111,7 +109,6 @@ async function eliminarFirmaOSello(tipo) {
   currentUser = { ...currentUser, [campo]: null };
   if (tipo === 'firma') firmaData.firma = null;
   else firmaData.sello = null;
-  saveSession(currentUser);
 
   const preview = document.getElementById(previewId);
   if (preview) preview.innerHTML = tipo === 'firma' ? '📝 Clic para subir firma digital' : '🔵 Clic para subir sello médico';
@@ -322,7 +319,6 @@ async function validarYGuardarP12() {
     sessionStorage.setItem(`p12pass_${currentUser.id}`, pass);
 
     currentUser = { ...currentUser, firma_p12: p12b64, firma_p12_info: info };
-    saveSession(currentUser);
 
     document.getElementById('p12PasswordInput').value = '';
     document.getElementById('p12FileInput').value = '';
@@ -365,7 +361,6 @@ async function eliminarP12() {
   await supa('PATCH', 'usuarios', { firma_p12: null, firma_p12_info: null }, `?id=eq.${currentUser.id}`);
   sessionStorage.removeItem(`p12pass_${currentUser.id}`);
   currentUser = { ...currentUser, firma_p12: null, firma_p12_info: null };
-  saveSession(currentUser);
 
   showToast('✓ Certificado eliminado');
   _renderP12Status();

@@ -83,32 +83,24 @@ async function updateUser() {
     if (!id)              { alert('Error: no se encontró el ID del usuario. Cierra el formulario y vuelve a hacer clic en Editar.'); return; }
     if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
-    // Usar el endpoint backend con service key para bypass total de RLS
-    const res = await fetch('/api/actualizar-usuario', {
+    // Llamada directa a Supabase REST (RLS debe estar desactivado)
+    const r = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${id}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
+      headers: {
+        'apikey':        SUPA_KEY,
+        'Authorization': `Bearer ${SUPA_KEY}`,
+        'Content-Type':  'application/json',
+        'Prefer':        'return=representation'
+      },
+      body: JSON.stringify({ nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      alert('Error al guardar (' + res.status + '):\n' + (data.error || JSON.stringify(data)));
-      return;
-    }
-
-    // Si el usuario editado soy yo, actualizo la sesión local
-    if (id === currentUser?.id) {
-      currentUser = { ...currentUser, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono };
-      if (typeof saveSession === 'function') saveSession(currentUser);
-    }
-
-    document.getElementById('editUserForm').style.display = 'none';
-    loadUsuarios();
-    showToast('✓ Usuario actualizado correctamente');
+    const texto = await r.text();
+    // DIAGNÓSTICO — muestra el resultado exacto de Supabase
+    alert('HTTP ' + r.status + '\n\nRespuesta:\n' + texto.slice(0, 500));
 
   } catch (e) {
-    alert('Error inesperado al guardar:\n' + e.message);
+    alert('Error inesperado:\n' + e.message);
   }
 }
 

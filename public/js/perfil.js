@@ -178,14 +178,20 @@ function _parsearP12(arrayBuffer, password) {
 }
 
 // Callback cuando el usuario elige un archivo .p12
+let _p12Cargando = false;
 function onP12FileSelected(input) {
   const file = input.files[0];
   if (!file) return;
   document.getElementById('p12Preview').style.display = 'none';
   _p12Buffer = null;
+  _p12Cargando = true;
 
   const reader = new FileReader();
-  reader.onload = e => { _p12Buffer = e.target.result; };
+  reader.onload  = e => { _p12Buffer = e.target.result; _p12Cargando = false; };
+  reader.onerror = () => {
+    _p12Cargando = false;
+    alert('❌ No se pudo leer el archivo seleccionado.\n\n' + (reader.error?.message || reader.error || 'Error desconocido'));
+  };
   reader.readAsArrayBuffer(file);
 }
 
@@ -272,51 +278,62 @@ function _renderP12Status() {
 
 // Validar y guardar el .p12 en la BD
 async function validarYGuardarP12() {
-  if (!_p12Buffer) { showToast('⚠️ Seleccione un archivo .p12 primero'); return; }
-  const pass = document.getElementById('p12PasswordInput')?.value || '';
-
-  let info;
   try {
-    info = _parsearP12(_p12Buffer, pass);
+    if (typeof forge === 'undefined') {
+      alert('❌ La librería de certificados (forge) no cargó.\n\nVerifique su conexión a internet y recargue la página.');
+      return;
+    }
+    if (_p12Cargando) { showToast('⏳ Espere, todavía se está leyendo el archivo...'); return; }
+    if (!_p12Buffer) { showToast('⚠️ Seleccione un archivo .p12 primero'); return; }
+
+    const pass = document.getElementById('p12PasswordInput')?.value || '';
+    if (!pass) { showToast('⚠️ Ingrese la contraseña del certificado'); return; }
+
+    let info;
+    try {
+      info = _parsearP12(_p12Buffer, pass);
+    } catch (e) {
+      alert('❌ No se pudo leer el certificado.\n\n' + e.message + '\n\nVerifique que la contraseña sea correcta y que el archivo sea un .p12 válido.');
+      return;
+    }
+
+    // Mostrar preview antes de guardar
+    _mostrarPreviewCert(info);
+
+    if (!confirm(`¿Guardar este certificado?\n\nTitular: ${info.titular}\nVigente: ${info.vigente ? 'Sí' : 'NO (vencido)'}`)) return;
+
+    // Guardar base64 del p12 + metadata en BD
+    const p12b64 = _bufferToBase64(_p12Buffer);
+
+    try {
+      const r = await fetch(`/api/guardar-p12`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id: currentUser.id, firma_p12: p12b64, firma_p12_info: info })
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
+    } catch (e) {
+      alert('❌ No se pudo guardar el certificado en la base de datos.\n\n' + e.message);
+      return;
+    }
+
+    // Guardar contraseña en sessionStorage (nunca en BD)
+    sessionStorage.setItem(`p12pass_${currentUser.id}`, pass);
+
+    currentUser = { ...currentUser, firma_p12: p12b64, firma_p12_info: info };
+    saveSession(currentUser);
+
+    document.getElementById('p12PasswordInput').value = '';
+    document.getElementById('p12FileInput').value = '';
+    _p12Buffer = null;
+
+    showToast('✓ Certificado .p12 guardado correctamente');
+    _renderP12Status();
   } catch (e) {
-    alert('❌ No se pudo leer el certificado.\n\n' + e.message + '\n\nVerifique que la contraseña sea correcta y que el archivo sea un .p12 válido.');
-    return;
+    console.error('[validarYGuardarP12]', e);
+    alert('❌ Error inesperado al procesar el certificado.\n\n' + (e.message || e));
   }
-
-  // Mostrar preview antes de guardar
-  _mostrarPreviewCert(info);
-
-  if (!confirm(`¿Guardar este certificado?\n\nTitular: ${info.titular}\nVigente: ${info.vigente ? 'Sí' : 'NO (vencido)'}`)) return;
-
-  // Guardar base64 del p12 + metadata en BD
-  const p12b64  = _bufferToBase64(_p12Buffer);
-  const p12info = JSON.stringify(info);
-
-  try {
-    const r = await fetch(`/api/guardar-p12`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id: currentUser.id, firma_p12: p12b64, firma_p12_info: info })
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || `HTTP ${r.status}`);
-  } catch (e) {
-    alert('❌ No se pudo guardar el certificado en la base de datos.\n\n' + e.message);
-    return;
-  }
-
-  // Guardar contraseña en sessionStorage (nunca en BD)
-  sessionStorage.setItem(`p12pass_${currentUser.id}`, pass);
-
-  currentUser = { ...currentUser, firma_p12: p12b64, firma_p12_info: info };
-  saveSession(currentUser);
-
-  document.getElementById('p12PasswordInput').value = '';
-  document.getElementById('p12FileInput').value = '';
-  _p12Buffer = null;
-
-  showToast('✓ Certificado .p12 guardado correctamente');
-  _renderP12Status();
 }
 
 // Activar certificado en la sesión actual (cuando ya está en BD pero la sesión fue nueva)

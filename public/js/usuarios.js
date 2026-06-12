@@ -70,49 +70,46 @@ async function abrirEditarUsuario(id) {
 }
 
 async function updateUser() {
-  const id           = document.getElementById('editUserId').value;
-  const nombre       = document.getElementById('editNombre').value.trim();
-  const apellidos    = document.getElementById('editApellidos').value.trim();
-  const rol          = document.getElementById('editRol').value;
-  const especialidad = document.getElementById('editEsp').value.trim() || null;
-  const numero_registro = document.getElementById('editRegMSP').value.trim() || null;
-  const cedula       = document.getElementById('editCedulaUser').value.trim() || null;
-  const telefono     = document.getElementById('editTelefonoUser').value.trim() || null;
+  try {
+    const id           = document.getElementById('editUserId').value;
+    const nombre       = document.getElementById('editNombre').value.trim();
+    const apellidos    = document.getElementById('editApellidos').value.trim();
+    const rol          = document.getElementById('editRol').value;
+    const especialidad = document.getElementById('editEsp').value.trim() || null;
+    const numero_registro = document.getElementById('editRegMSP').value.trim() || null;
+    const cedula       = document.getElementById('editCedulaUser').value.trim() || null;
+    const telefono     = document.getElementById('editTelefonoUser').value.trim() || null;
 
-  if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
+    if (!id)              { alert('Error: no se encontró el ID del usuario. Cierra el formulario y vuelve a hacer clic en Editar.'); return; }
+    if (!nombre || !apellidos) { alert('Nombre y apellidos son obligatorios'); return; }
 
-  // PATCH directo con el token de sesión del admin (funciona cuando RLS está desactivado en usuarios)
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  const token = session?.access_token || SUPA_KEY;
-  const patchRes = await fetch(`${SUPA_URL}/rest/v1/usuarios?id=eq.${id}`, {
-    method: 'PATCH',
-    headers: {
-      'apikey':        SUPA_KEY,
-      'Authorization': `Bearer ${token}`,
-      'Content-Type':  'application/json',
-      'Prefer':        'return=representation'
-    },
-    body: JSON.stringify({ nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
-  });
-  const patchData = await patchRes.json().catch(() => []);
-  if (!patchRes.ok) {
-    alert('Error al guardar: ' + (patchData?.message || patchRes.status));
-    return;
+    // Usar el endpoint backend con service key para bypass total de RLS
+    const res = await fetch('/api/actualizar-usuario', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono })
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert('Error al guardar (' + res.status + '):\n' + (data.error || JSON.stringify(data)));
+      return;
+    }
+
+    // Si el usuario editado soy yo, actualizo la sesión local
+    if (id === currentUser?.id) {
+      currentUser = { ...currentUser, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono };
+      if (typeof saveSession === 'function') saveSession(currentUser);
+    }
+
+    document.getElementById('editUserForm').style.display = 'none';
+    loadUsuarios();
+    showToast('✓ Usuario actualizado correctamente');
+
+  } catch (e) {
+    alert('Error inesperado al guardar:\n' + e.message);
   }
-  if (!Array.isArray(patchData) || patchData.length === 0) {
-    alert('No se pudo guardar. Asegúrate de haber desactivado RLS en la tabla usuarios en Supabase.\n\nSQL: ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;');
-    return;
-  }
-
-  // Si el usuario editado soy yo, actualizo la sesión local
-  if (id === currentUser?.id) {
-    currentUser = { ...currentUser, nombre, apellidos, rol, especialidad, numero_registro, cedula, telefono };
-    if (typeof saveSession === 'function') saveSession(currentUser);
-  }
-
-  document.getElementById('editUserForm').style.display = 'none';
-  loadUsuarios();
-  showToast('✓ Usuario actualizado correctamente');
 }
 
 async function toggleUser(id, activo) {

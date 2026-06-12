@@ -687,6 +687,12 @@ function agregarCIE10(codigo, nombre) {
   if (cie10Seleccionados.find(x => x.c === codigo)) { document.getElementById('cie10Search').value = ''; document.getElementById('cie10Dropdown').style.display = 'none'; return; }
   cie10Seleccionados.push({ c: codigo, n: nombre });
   renderCIE10();
+  // El texto del CIE-10 es el diagnóstico — se pega directo en el campo (editable luego)
+  const diagInput = document.getElementById('recetaDiagnostico');
+  if (diagInput) {
+    const actual = diagInput.value.trim();
+    diagInput.value = actual ? `${actual}, ${nombre}` : nombre;
+  }
   document.getElementById('cie10Search').value = '';
   document.getElementById('cie10Dropdown').style.display = 'none';
 }

@@ -258,7 +258,6 @@
           <div>
             <div class="card">
               <div class="card-header"><span class="card-title">Diagnóstico y notas</span></div>
-              <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Ej: Síndrome gripal agudo" /></div>
               <div class="form-group">
                 <label class="form-label">Códigos CIE-10</label>
                 <div style="position:relative">
@@ -267,11 +266,20 @@
                 </div>
                 <div id="cie10Seleccionados" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px"></div>
               </div>
+              <div class="form-group"><label class="form-label">Diagnóstico *</label><input type="text" class="form-control" id="recetaDiagnostico" placeholder="Se completa al elegir un código CIE-10, o escríbalo manualmente" /></div>
               <div class="form-group"><label class="form-label">Notas de la consulta</label><textarea class="form-control" id="recetaNotas" placeholder="Observaciones clínicas..."></textarea></div>
               <div class="form-group"><label class="form-label">Indicaciones generales</label><textarea class="form-control" id="recetaIndicaciones" placeholder="Ej: Reposo, hidratación, dieta blanda..."></textarea></div>
             </div>
             <div class="card" style="margin-bottom:1rem">
               <div class="card-header"><span class="card-title">📄 Plantillas clínicas</span></div>
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <div><strong>📋 Historia Clínica</strong><span style="font-size:12px;color:#888;margin-left:8px">Ficha completa del paciente</span></div>
+                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
+                </div>
+                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo con los datos del paciente pre-cargados. Completa los campos clínicos y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
+                <div class="doc-preview-slot" id="preview-historia"></div>
+              </div>
               <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
                 <div style="display:flex;justify-content:space-between;align-items:center">
                   <div><strong>💊 Receta Médica</strong><span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span></div>
@@ -295,15 +303,6 @@
                 </div>
                 <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario con los exámenes organizados por categoría (selecciona con casillas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
                 <div class="doc-preview-slot" id="preview-laboratorio"></div>
-              </div>
-
-              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                  <div><strong>📋 Historia Clínica</strong><span style="font-size:12px;color:#888;margin-left:8px">Ficha completa del paciente</span></div>
-                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
-                </div>
-                <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo con los datos del paciente pre-cargados. Completa los campos clínicos y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
-                <div class="doc-preview-slot" id="preview-historia"></div>
               </div>
 
               <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
@@ -1364,14 +1363,14 @@
 <script src="/js/notificaciones.js?v=20260610"></script>
 <script src="/js/agendamiento.js?v=20260609b"></script>
 <script src="/js/generarPDF.js?v=20260609b"></script>
-<script src="/js/receta.js?v=20260610"></script>
+<script src="/js/receta.js?v=20260611"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260609b"></script>
 <script src="/js/perfil.js?v=20260609b"></script>
 <script src="/js/metricas.js?v=20260609b"></script>
 <script src="/js/empresas.js?v=20260609b"></script>
 <script src="/js/cronicas-portal.js?v=20260609b"></script>
-<script src="/js/plantillas.js?v=20260609b"></script>
+<script src="/js/plantillas.js?v=20260611"></script>
 <script src="/js/facturacion.js?v=20260609b"></script>
 
 <script>

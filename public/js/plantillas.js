@@ -430,6 +430,11 @@ function abrirPlantillaHistoriaClinica(soloPreview) {
   // Pre-llenar antecedentes si existen
   const diag = document.getElementById('recetaDiagnostico')?.value || '';
   if (diag) set('hc-enfermedad', diag);
+  // Pre-llenar tabla de diagnóstico (CIE-10) con los códigos seleccionados
+  (cie10Seleccionados || []).slice(0, 4).forEach((x, i) => {
+    set(`hc-dx-${i + 1}`, x.n);
+    set(`hc-dx-cie-${i + 1}`, x.c);
+  });
   const evoInput = (placeholder, extra = '') => `<input placeholder="${placeholder}" style="width:100%;border:none;outline:none;font-size:10px;background:transparent" ${extra}/>`;
   document.getElementById('hc-evolucion-body').innerHTML = Array.from({ length: 4 }, () =>
     `<tr><td>${evoInput('dd/mm/aaaa')}</td><td>${evoInput('Evolución del paciente...')}</td><td>${evoInput('Prescripción / indicaciones...')}</td></tr>`

@@ -2,44 +2,13 @@ const { buscarPorCedula, actualizar, crear: crearPaciente } = require('../servic
 const { buscarCedulaB2B } = require('../services/empleados');
 const { buscarEmpresaPorCodigo } = require('./flujo-callcenter');
 const { crear: crearConsulta, crearNotificacion } = require('../services/consultas');
+const { registrarPlanillajeB2B } = require('../services/planillaje');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, separarNombre } = require('../utils/validaciones');
 const { procesarB2C } = require('./flujo-b2c');
 const { procesarSeguimientoPago } = require('./flujo-seguimiento-pago');
-
-const SUPA_URL = process.env.SUPABASE_URL;
-const SUPA_KEY = process.env.SUPABASE_KEY;
-
-async function registrarPlanillajeB2B(datos, consultaId) {
-  const ahora = new Date();
-  const body = {
-    paciente_id: datos.paciente_id || null,
-    empresa_id: datos.empresa_id || null,
-    nombre_paciente: datos.nombreCompleto || datos.nombre_paciente || '',
-    cedula_paciente: datos.cedula || '',
-    fecha_consulta: ahora.toISOString(),
-    sintomas: datos.sintomas || '',
-    nivel_sintomas: datos.nivel || 1,
-    estado_planillaje: 'pendiente',
-    mes: ahora.getMonth() + 1,
-    anio: ahora.getFullYear()
-  };
-  const res = await fetch(`${SUPA_URL}/rest/v1/planillaje_b2b`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPA_KEY,
-      'Authorization': `Bearer ${SUPA_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=minimal'
-    },
-    body: JSON.stringify(body)
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(`Supabase POST planillaje_b2b: ${data?.message || `HTTP ${res.status}`}`);
-  }
-}
+const { mensajeBienvenida } = require('./flujo-inicio');
 
 async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
   let respuesta = '';
@@ -61,7 +30,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
   // Paso desconocido/no reconocido — reiniciar sesión para evitar bucles
   // sin salida (en lugar de repetir una respuesta vacía indefinidamente)
-  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 12];
+  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 12, 42];
   if (!PASOS_VALIDOS.includes(paso)) {
     await eliminar(telefono);
     return {
@@ -200,8 +169,14 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
                 : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
                 : null,
       });
-      // Registrar planillaje B2B automáticamente
-      if (datos.empresa_id) await registrarPlanillajeB2B(datos, consulta?.id);
+      // Registrar planillaje B2B automáticamente (no debe interrumpir el flujo si falla)
+      if (datos.empresa_id) {
+        try {
+          await registrarPlanillajeB2B(datos, consulta?.id);
+        } catch (e) {
+          await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.nombre_paciente || datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nError: ${e.message}`);
+        }
+      }
       await eliminar(telefono);
       return {
         respuesta: `⚠️ *Atención prioritaria requerida*\n\nSus síntomas necesitan evaluación médica urgente.\n\nHemos notificado a nuestro equipo y le contactarán a la brevedad.\n\nSi los síntomas empeoran *llame al 911 de inmediato*.`,
@@ -339,18 +314,37 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp) {
       });
       await alertar(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
 
-      // Registrar planillaje B2B automáticamente al confirmar
-      if (datos.empresa_id) await registrarPlanillajeB2B(datos, consulta?.id);
+      // Registrar planillaje B2B automáticamente al confirmar (no debe interrumpir el flujo si falla)
+      if (datos.empresa_id) {
+        try {
+          await registrarPlanillajeB2B(datos, consulta?.id);
+        } catch (e) {
+          await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nError: ${e.message}`);
+        }
+      }
 
-      await guardar(telefono, 13, datos);
       return {
-        respuesta: `🎉 *¡Consulta registrada exitosamente!*\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.\n\nPara completar su historia clínica necesitamos algunas preguntas más:\n\n💊 ¿Tiene *alergias* conocidas a medicamentos o alimentos?\n\nResponda *No* o descríbalas brevemente.`,
-        paso: 13, datos, terminar: true
+        respuesta: `🎉 *¡Consulta registrada exitosamente!*\n\n👤 ${datos.nombreCompleto} — ${datos.cedula}\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.`,
+        paso: 42, datos, terminar: false,
+        botones: [
+          { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
+          { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
+        ]
       };
     } else {
       datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, empresa_id: datos.empresa_id, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
       respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
       nuevoPaso = 4;
+    }
+
+  } else if (paso === 42) {
+    if (mensaje === 'otra_consulta' || mensaje.toLowerCase().includes('otra consulta')) {
+      return mensajeBienvenida(nombreWhatsApp);
+    } else {
+      return {
+        respuesta: `Para completar su historia clínica necesitamos algunas preguntas más:\n\n💊 ¿Tiene *alergias* conocidas a medicamentos o alimentos?\n\nResponda *No* o descríbalas brevemente.`,
+        paso: 13, datos, terminar: false
+      };
     }
   }
 

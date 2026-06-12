@@ -1,6 +1,7 @@
 const { query } = require('../services/supabase');
 const { crear: crearPaciente, buscarPorCedula } = require('../services/pacientes');
 const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('../services/consultas');
+const { registrarPlanillajeB2B } = require('../services/planillaje');
 const { guardar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre, validarCedula } = require('../utils/validaciones');
@@ -206,6 +207,13 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
     );
 
     await alertar(`📅 <b>NUEVA CONSULTA CALL CENTER — ${empresa}</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nTeléfono: ${datos.cc_telefono}\nSíntomas: ${datos.cc_sintomas}\nAgente: ${telefono}`);
+
+    // Registrar planillaje B2B para facturación a la empresa (no debe interrumpir el flujo si falla)
+    try {
+      await registrarPlanillajeB2B({ ...datos, cc_paciente_id: pacienteId, cc_empresa_id: empresaId }, consulta?.id);
+    } catch (e) {
+      await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nEmpresa: ${empresa}\nError: ${e.message}`);
+    }
 
     return {
       respuesta: `✅ *¡Consulta registrada!*\n\n👤 ${datos.cc_nombre} — ${datos.cc_cedula}\n\nUn médico de MediLyft le contactará pronto.\n\n¿Desea registrar otro paciente?`,

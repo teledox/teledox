@@ -3,6 +3,7 @@ const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
+const { mensajeBienvenida } = require('./flujo-inicio');
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_KEY;
@@ -271,14 +272,27 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp) {
       // 5. Alertar al operador
       await alertar(`💰 <b>NUEVO PAGO DIRECTO B2C - MEDILYFT</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}\nSíntomas: ${datos.sintomas}\nPago: ${datos.forma_pago}\nMonto: $8.00`);
 
-      await eliminar(telefono);
       return {
         respuesta: `✅ *¡Pago confirmado!*\n\n🎉 Su teleconsulta ha sido registrada exitosamente.\n\nUn asesor de *MediLyft* le contactará en breve para confirmar el horario.\n\n📧 La factura electrónica será enviada a *${datos.correo}*.\n\n¡Gracias por confiar en MediLyft! 💙`,
-        paso: 0, datos, terminar: true
+        paso: 63, datos, terminar: false,
+        botones: [
+          { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
+          { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
+        ]
       };
     } else {
       respuesta = `Por favor envíenos la *foto o captura del comprobante* de su pago para confirmar su consulta. Si ya realizó el pago, también puede escribir *"listo"*.`;
       nuevoPaso = 60;
+    }
+
+  } else if (paso === 63) {
+    if (mensaje === 'otra_consulta' || mensaje.toLowerCase().includes('otra consulta')) {
+      return mensajeBienvenida(nombreWhatsApp);
+    } else {
+      return {
+        respuesta: `Para completar su historia clínica necesitamos algunas preguntas más:\n\n💊 ¿Tiene *alergias* conocidas a medicamentos o alimentos?\n\nResponda *No* o descríbalas brevemente.`,
+        paso: 13, datos, terminar: false
+      };
     }
   }
 

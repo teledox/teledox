@@ -119,7 +119,11 @@ async function actualizarUsuario(id, campos) {
   });
 
   const text = await r.text();
-  if (!r.ok) throw new Error(`Error de Supabase (${r.status})`);
+  if (!r.ok) {
+    let detalle = text;
+    try { detalle = JSON.parse(text).message || JSON.parse(text).hint || text; } catch {}
+    throw new Error(`Error de Supabase (${r.status}): ${detalle}`);
+  }
 
   const data = JSON.parse(text || '[]');
   if (!data.length) throw new Error('Usuario no encontrado');

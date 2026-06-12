@@ -28,9 +28,19 @@ function poblarDatosMedico(prefijo) {
   setEl(`${prefijo}-reg-medico`, reg ? `Reg. MSP: ${reg}` : '');
   setEl(`${prefijo}-esp-medico`, esp);
   const firmaEl = document.getElementById(`${prefijo}-firma-container`);
-  if (firmaEl) firmaEl.innerHTML = m.firma_digital ? `<img src="${m.firma_digital}" style="height:56px;max-width:160px;object-fit:contain" />` : '<span style="color:#ccc;font-size:11px">Sin firma</span>';
   const selloEl = document.getElementById(`${prefijo}-sello-container`);
-  if (selloEl) selloEl.innerHTML = m.sello ? `<img src="${m.sello}" style="height:56px;max-width:80px;object-fit:contain" />` : '<span style="color:#ccc;font-size:11px">Sin sello</span>';
+  // Si hay un certificado .p12 activo en esta sesión, prioriza la firma
+  // electrónica (PAdES) sobre las imágenes de firma/sello escaneadas.
+  const p12Activo = typeof getP12Activo === 'function' ? getP12Activo() : null;
+  if (p12Activo) {
+    const titular = p12Activo.info?.titular || 'certificado activo';
+    const badge = `<div style="font-size:10px;color:#16a34a;font-weight:700;text-align:center;line-height:1.4">🔐 Firma electrónica<br><span style="font-weight:400;color:#555">${titular}</span></div>`;
+    if (firmaEl) firmaEl.innerHTML = badge;
+    if (selloEl) selloEl.innerHTML = '';
+  } else {
+    if (firmaEl) firmaEl.innerHTML = m.firma_digital ? `<img src="${m.firma_digital}" style="height:56px;max-width:160px;object-fit:contain" />` : '<span style="color:#ccc;font-size:11px">Sin firma</span>';
+    if (selloEl) selloEl.innerHTML = m.sello ? `<img src="${m.sello}" style="height:56px;max-width:80px;object-fit:contain" />` : '<span style="color:#ccc;font-size:11px">Sin sello</span>';
+  }
   if (prefijo === 'cert') { const ce = document.getElementById('cert-correo-medico'); if (ce) ce.textContent = m.correo || ''; }
 }
 

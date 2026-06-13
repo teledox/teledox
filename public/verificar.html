@@ -36,7 +36,7 @@
         <h1 class="err">Falta el identificador del documento</h1>
       `);
     } else {
-      fetch(`/api/verificar-firma?id=${encodeURIComponent(id)}`)
+      fetch(`/api/firma-electronica?id=${encodeURIComponent(id)}`)
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(data => {
           const fecha = new Date(data.creado_en).toLocaleString('es-EC');

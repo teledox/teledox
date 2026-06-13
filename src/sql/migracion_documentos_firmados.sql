@@ -12,3 +12,9 @@ CREATE TABLE IF NOT EXISTS documentos_firmados (
   tipo_documento  TEXT,
   creado_en       TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Mismo criterio que el resto de tablas nuevas: el backend (api/registrar-firma,
+-- api/verificar-firma) accede con la clave de servicio (sin políticas RLS),
+-- así que se desactiva aquí también para evitar
+-- "new row violates row-level security policy".
+ALTER TABLE documentos_firmados DISABLE ROW LEVEL SECURITY;

@@ -303,7 +303,7 @@ async function validarYGuardarP12() {
     const p12b64 = _bufferToBase64(_p12Buffer);
 
     try {
-      const r = await fetch(`/api/guardar-p12`, {
+      const r = await fetch(`/api/firma-electronica`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ usuario_id: currentUser.id, firma_p12: p12b64, firma_p12_info: info })

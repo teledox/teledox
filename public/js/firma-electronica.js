@@ -201,7 +201,7 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
   ].join('\n');
 
   try {
-    const r = await fetch('/api/registrar-firma', {
+    const r = await fetch('/api/firma-electronica', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

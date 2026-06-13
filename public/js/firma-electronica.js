@@ -177,13 +177,47 @@ async function firmarPdfConP12(doc, { nombre, motivo, p12b64, pass }) {
   return { pdfBytes, titular };
 }
 
+// Genera un QR como data URL PNG usando qrcode-generator (global `qrcode`,
+// cargado vía <script> en index.html). Prueba tamaños crecientes hasta que
+// el texto entre ("code length overflow" si el QR es muy chico para el texto).
+function _generarQRDataURL(texto, cellSize = 4, margin = 4) {
+  let qr = null;
+  for (let typeNumber = 4; typeNumber <= 20; typeNumber++) {
+    try {
+      qr = qrcode(typeNumber, 'M');
+      qr.addData(texto);
+      qr.make();
+      break;
+    } catch (e) {
+      qr = null;
+    }
+  }
+  if (!qr) throw new Error('El texto es demasiado largo para generar el QR');
+
+  const moduleCount = qr.getModuleCount();
+  const size = moduleCount * cellSize + margin * 2;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = '#000000';
+  for (let row = 0; row < moduleCount; row++) {
+    for (let col = 0; col < moduleCount; col++) {
+      if (qr.isDark(row, col)) ctx.fillRect(margin + col * cellSize, margin + row * cellSize, cellSize, cellSize);
+    }
+  }
+  return canvas.toDataURL('image/png');
+}
+
 // Dibuja un sello visual de firma electrónica (QR + datos del firmante) en la
 // esquina inferior izquierda de la página, encima de la línea del pie de
 // página. Devuelve true si lo dibujó (hay un certificado .p12 activo) o
 // false si no hay nada que mostrar (el caller mantiene su layout original).
 async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocumento }) {
   const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
-  if (!p12 || typeof QRCode === 'undefined') return false;
+  if (!p12 || typeof qrcode === 'undefined') return false;
 
   const info = p12.info || {};
   const titular = info.titular
@@ -219,7 +253,7 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
   }
 
   try {
-    const dataUrl = await QRCode.toDataURL(qrTexto, { margin: 0, width: 160 });
+    const dataUrl = _generarQRDataURL(qrTexto);
     const qrImg = await doc.embedPng(dataUrl.split(',')[1]);
     const size = 38;
     const x = 40, y = 60;

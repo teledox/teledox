@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -72,10 +73,22 @@
       position:relative;overflow:hidden
     }
     .hero::before{
-      content:'';position:absolute;inset:0;
+      content:'';position:absolute;inset:0;z-index:0;
       background-image:radial-gradient(circle,rgba(240,82,82,.05) 1.2px,transparent 1.2px);
       background-size:42px 42px;pointer-events:none
     }
+    /* ── SPLINE FONDO HERO ── */
+    .hero-spline{
+      position:absolute;inset:0;z-index:1;
+      pointer-events:none;border:0;width:100%;height:100%;
+      opacity:0;transition:opacity 1.2s ease
+    }
+    .hero-spline.loaded{opacity:.95}
+    .hero-scrim{
+      position:absolute;inset:0;z-index:2;pointer-events:none;
+      background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(255,255,255,.82) 0%,rgba(255,255,255,.5) 55%,rgba(255,255,255,.15) 100%)
+    }
+    .hero>h1,.hero>.hero-sub,.hero>.hero-actions,.hero>.hero-trust{position:relative;z-index:3}
     .badge{
       display:inline-flex;align-items:center;gap:8px;
       background:var(--red-light);color:var(--red);
@@ -298,6 +311,7 @@
       nav ul a.page-link{padding:6px 12px;font-size:13px}
       .btn-nav{padding:9px 14px;font-size:13px}
       .hero{padding:110px 18px 70px;min-height:auto}
+      .hero-spline,.hero-scrim{display:none}
       .hero h1{letter-spacing:-1.2px}
       .hero h1 .hl::after{bottom:-9px;height:12px}
       .hero-actions{width:100%}
@@ -340,6 +354,8 @@
 
 <!-- ── HERO ── -->
 <section class="hero">
+  <spline-viewer class="hero-spline" loading-anim-type="none" url="https://prod.spline.design/WFbtac88CPy1U7CO/scene.splinecode"></spline-viewer>
+  <div class="hero-scrim"></div>
   <h1 class="fade-up">Estamos contigo<br/>en cada paso hacia<br/><span class="hl">tu bienestar.</span></h1>
   <p class="hero-sub fade-up">Consulta con un médico <b>en minutos</b>, recibe tu tratamiento, obtén tu <b>receta electrónica</b> y mantén un <b>seguimiento continuo</b> de tu salud, enfermedades crónicas o procesos de recuperación, todo desde un solo lugar.</p>
   <div class="hero-actions fade-up">
@@ -547,6 +563,15 @@
 <script>
   const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1});
   document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
+
+  // Reveal suave de la animación Spline (evento load + respaldo por tiempo)
+  (function(){
+    const s=document.querySelector('.hero-spline');
+    if(!s) return;
+    const show=()=>s.classList.add('loaded');
+    s.addEventListener('load',show);
+    setTimeout(show,3500);
+  })();
 </script>
 </body>
 </html>

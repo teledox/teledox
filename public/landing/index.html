@@ -67,14 +67,14 @@
       align-items:center;justify-content:center;text-align:center;
       padding:140px 24px 100px;
       background:
-        radial-gradient(ellipse 85% 55% at 50% -5%,rgba(240,82,82,.08) 0%,transparent 65%),
-        radial-gradient(ellipse 50% 40% at 80% 85%,rgba(13,148,136,.06) 0%,transparent 55%),
-        var(--white);
+        radial-gradient(ellipse 85% 55% at 50% -5%,rgba(240,82,82,.18) 0%,transparent 60%),
+        radial-gradient(ellipse 50% 40% at 80% 85%,rgba(13,148,136,.14) 0%,transparent 55%),
+        #06080F;
       position:relative;overflow:hidden
     }
     .hero::before{
       content:'';position:absolute;inset:0;z-index:0;
-      background-image:radial-gradient(circle,rgba(240,82,82,.05) 1.2px,transparent 1.2px);
+      background-image:radial-gradient(circle,rgba(255,255,255,.05) 1.2px,transparent 1.2px);
       background-size:42px 42px;pointer-events:none
     }
     /* ── SPLINE FONDO HERO ── */
@@ -86,7 +86,7 @@
     .hero-spline.loaded{opacity:.95}
     .hero-scrim{
       position:absolute;inset:0;z-index:2;pointer-events:none;
-      background:radial-gradient(ellipse 70% 60% at 50% 45%,rgba(255,255,255,.82) 0%,rgba(255,255,255,.5) 55%,rgba(255,255,255,.15) 100%)
+      background:radial-gradient(ellipse 75% 65% at 50% 45%,rgba(6,8,15,.55) 0%,rgba(6,8,15,.25) 55%,transparent 100%)
     }
     .hero>h1,.hero>.hero-sub,.hero>.hero-actions,.hero>.hero-trust{position:relative;z-index:3}
     .badge{
@@ -101,7 +101,7 @@
     .hero h1{
       font-size:clamp(38px,7.5vw,80px);
       font-weight:900;line-height:1.03;letter-spacing:-2.5px;max-width:880px;
-      color:#0B7A6E
+      color:#FFFFFF
     }
     .hero h1 .red{color:var(--red)}
     .hero h1 .teal{color:var(--teal)}
@@ -118,10 +118,10 @@
     }
     .hero-sub{
       margin-top:26px;font-size:clamp(16px,2vw,19px);
-      color:#475569;line-height:1.75;max-width:640px;
+      color:rgba(255,255,255,.82);line-height:1.75;max-width:640px;
       font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:.2px
     }
-    .hero-sub b{color:var(--red);font-weight:600}
+    .hero-sub b{color:#FF8585;font-weight:600}
     .hero-actions{display:flex;gap:12px;margin-top:42px;flex-wrap:wrap;justify-content:center}
     .btn-primary{
       background:var(--red);color:var(--white);
@@ -141,12 +141,14 @@
       transition:border-color .2s,color .2s,transform .15s
     }
     .btn-ghost:hover{border-color:var(--red);color:var(--red);transform:translateY(-2px)}
+    .hero .btn-ghost{color:#fff;border-color:rgba(255,255,255,.35)}
+    .hero .btn-ghost:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
     .hero-trust{
       margin-top:56px;display:flex;flex-wrap:wrap;
       align-items:center;justify-content:center;gap:24px
     }
-    .trust-pill{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--gray);font-weight:500}
-    .trust-sep{width:4px;height:4px;border-radius:50%;background:#d1d5db}
+    .trust-pill{display:flex;align-items:center;gap:7px;font-size:14px;color:rgba(255,255,255,.75);font-weight:500}
+    .trust-sep{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.3)}
 
     /* ── PROBLEMA ── */
     .problem-section{padding:110px 24px;background:var(--red-light);text-align:center;position:relative;overflow:hidden}

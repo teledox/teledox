@@ -246,6 +246,50 @@
     .fade-up.visible{opacity:1;transform:translateY(0)}
     .d1{transition-delay:.08s}.d2{transition-delay:.16s}.d3{transition-delay:.24s}.d4{transition-delay:.32s}
 
+    /* ── TESTIMONIOS ── */
+    .testi-section{padding:110px 24px;background:var(--gray-light)}
+    .testi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px;max-width:1080px;margin:56px auto 0}
+    .testi-card{
+      background:#fff;border-radius:20px;padding:32px 28px;
+      border:1.5px solid rgba(0,0,0,.05);box-shadow:0 4px 20px rgba(0,0,0,.05);
+      display:flex;flex-direction:column;transition:border-color .25s,transform .2s,box-shadow .25s
+    }
+    .testi-card:hover{border-color:rgba(240,82,82,.3);transform:translateY(-4px);box-shadow:0 10px 32px rgba(240,82,82,.1)}
+    .testi-stars{color:var(--red);font-size:15px;letter-spacing:2px;margin-bottom:16px}
+    .testi-quote{color:var(--dark);font-size:15px;line-height:1.7;flex:1}
+    .testi-author{display:flex;align-items:center;gap:13px;margin-top:24px}
+    .testi-avatar{
+      width:46px;height:46px;border-radius:50%;flex-shrink:0;
+      background:linear-gradient(135deg,var(--red),var(--teal));
+      display:flex;align-items:center;justify-content:center;
+      color:#fff;font-weight:800;font-size:16px
+    }
+    .testi-name{font-size:14px;font-weight:700;color:var(--dark)}
+    .testi-loc{font-size:13px;color:var(--gray)}
+
+    /* ── FAQ ── */
+    .faq-section{padding:110px 24px;background:#fff}
+    .faq-list{max-width:760px;margin:52px auto 0;display:flex;flex-direction:column;gap:12px}
+    .faq-item{
+      border:1.5px solid rgba(0,0,0,.08);border-radius:14px;
+      background:var(--gray-light);overflow:hidden;transition:border-color .2s
+    }
+    .faq-item[open]{border-color:var(--red);background:#fff;box-shadow:0 6px 24px rgba(240,82,82,.08)}
+    .faq-item summary{
+      list-style:none;cursor:pointer;padding:20px 24px;
+      display:flex;align-items:center;justify-content:space-between;gap:16px;
+      font-size:16px;font-weight:600;color:var(--dark)
+    }
+    .faq-item summary::-webkit-details-marker{display:none}
+    .faq-icon{
+      flex-shrink:0;width:26px;height:26px;border-radius:50%;
+      background:rgba(240,82,82,.12);color:var(--red);
+      display:flex;align-items:center;justify-content:center;
+      font-size:18px;font-weight:700;transition:transform .25s,background .2s
+    }
+    .faq-item[open] .faq-icon{transform:rotate(45deg);background:var(--red);color:#fff}
+    .faq-answer{padding:0 24px 22px;color:var(--gray);font-size:15px;line-height:1.7}
+
     @media(max-width:768px){
       nav{padding:12px 14px}
       .logo-name{display:none}
@@ -260,7 +304,7 @@
       .hero-actions a{width:100%;justify-content:center}
       .hero-trust{gap:12px}
       .trust-sep{display:none}
-      .problem-section,.solution-section,.how-section,.chronic-section,.final-section{padding:70px 18px}
+      .problem-section,.solution-section,.how-section,.chronic-section,.final-section,.testi-section,.faq-section{padding:70px 18px}
       .product-grid{margin-top:40px}
       .chronic-visual{grid-template-columns:1fr}
       .steps-wrap{margin-top:44px}
@@ -284,6 +328,8 @@
   <ul>
     <li><a href="#como-funciona">Cómo funciona</a></li>
     <li><a href="#cronicas">Crónicas</a></li>
+    <li><a href="#testimonios">Testimonios</a></li>
+    <li><a href="#faq">Preguntas</a></li>
     <li><a href="empresas.html" class="page-link">Empresas</a></li>
     <li><a href="seguros.html" class="page-link">Seguros</a></li>
   </ul>
@@ -298,6 +344,7 @@
   <p class="hero-sub fade-up">Consulta con un médico <b>en minutos</b>, recibe tu tratamiento, obtén tu <b>receta electrónica</b> y mantén un <b>seguimiento continuo</b> de tu salud, enfermedades crónicas o procesos de recuperación, todo desde un solo lugar.</p>
   <div class="hero-actions fade-up">
     <a href="https://wa.me/593979076453" target="_blank" class="btn-primary">Agendar mi consulta →</a>
+    <a href="#como-funciona" class="btn-ghost">Ver cómo funciona ↓</a>
   </div>
   <div class="hero-trust fade-up">
     <div class="trust-pill">📋 Historia clínica digital</div>
@@ -398,6 +445,77 @@
   </div>
 </section>
 
+<!-- ── TESTIMONIOS ── -->
+<!-- ⚠️ TESTIMONIOS DE EJEMPLO — reemplazar por testimonios REALES de pacientes antes de publicar -->
+<section class="testi-section" id="testimonios">
+  <div class="section-center fade-up">
+    <div class="eyebrow-red">Testimonios</div>
+    <h2 class="section-title">Pacientes que ya se sienten <span style="color:var(--red)">acompañados</span></h2>
+    <p class="section-sub">Historias reales de personas que dejaron de ir solas a su salud.</p>
+  </div>
+  <div class="testi-grid">
+    <div class="testi-card fade-up d1">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"Tenía dudas de consultar por internet, pero me atendieron en minutos y el médico revisó mi historial completo. La receta me llegó al instante y la usé en la farmacia sin problema."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">MC</div>
+        <div><div class="testi-name">María Cevallos</div><div class="testi-loc">Quito</div></div>
+      </div>
+    </div>
+    <div class="testi-card fade-up d2">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"Soy diabético y el seguimiento que hacen es lo que más valoro. No es solo la consulta: están pendientes de cómo voy y eso me da tranquilidad."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">JR</div>
+        <div><div class="testi-name">Jorge Ramírez</div><div class="testi-loc">Guayaquil</div></div>
+      </div>
+    </div>
+    <div class="testi-card fade-up d3">
+      <div class="testi-stars">★★★★★</div>
+      <p class="testi-quote">"Trabajo todo el día y nunca tenía tiempo para el médico. Con MediLyft me atendí desde casa, sin filas y sin perder el día. Ojalá lo hubiera conocido antes."</p>
+      <div class="testi-author">
+        <div class="testi-avatar">AT</div>
+        <div><div class="testi-name">Andrea Torres</div><div class="testi-loc">Cuenca</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section class="faq-section" id="faq">
+  <div class="section-center fade-up">
+    <div class="eyebrow-red">Preguntas frecuentes</div>
+    <h2 class="section-title">Resolvemos tus <span style="color:var(--red)">dudas</span></h2>
+    <p class="section-sub">Todo lo que necesitas saber antes de tu primera consulta.</p>
+  </div>
+  <div class="faq-list fade-up">
+    <details class="faq-item">
+      <summary>¿Cómo funciona la consulta en línea? <span class="faq-icon">+</span></summary>
+      <div class="faq-answer">Agendas tu consulta, completas tu historial con tus síntomas y antecedentes, y te conectas por videollamada con un médico certificado. Al terminar recibes tu diagnóstico, plan de tratamiento y receta electrónica, todo desde tu celular o computador.</div>
+    </details>
+    <details class="faq-item">
+      <summary>¿Los médicos están certificados? <span class="faq-icon">+</span></summary>
+      <div class="faq-answer">Sí. Todas las consultas son atendidas por médicos profesionales certificados. No es un chatbot ni un asistente automático: es atención médica real con un profesional de la salud.</div>
+    </details>
+    <details class="faq-item">
+      <summary>¿La receta electrónica sirve en farmacias? <span class="faq-icon">+</span></summary>
+      <div class="faq-answer">Sí. Recibes tu receta médica en formato digital (PDF) válida para presentar en farmacias. Queda guardada en tu historia clínica para que puedas acceder a ella cuando la necesites.</div>
+    </details>
+    <details class="faq-item">
+      <summary>¿Qué pasa después de mi consulta? <span class="faq-icon">+</span></summary>
+      <div class="faq-answer">Ahí es donde MediLyft te acompaña de verdad. No te dejamos solo con un diagnóstico: damos seguimiento a tu evolución, te recordamos tu tratamiento y estamos pendientes de tu recuperación.</div>
+    </details>
+    <details class="faq-item">
+      <summary>¿Atienden enfermedades crónicas? <span class="faq-icon">+</span></summary>
+      <div class="faq-answer">Sí. Tenemos un protocolo especializado para condiciones como hipertensión, diabetes, tiroides y asma/EPOC, con controles periódicos y tu historia clínica siempre al día para mantener tu salud estable.</div>
+    </details>
+    <details class="faq-item">
+      <summary>¿Mis datos médicos están seguros? <span class="faq-icon">+</span></summary>
+      <div class="faq-answer">Totalmente. Tu información médica está cifrada y bajo tu control. Nunca compartimos tus datos sin tu consentimiento explícito.</div>
+    </details>
+  </div>
+</section>
+
 <!-- ── CTA FINAL ── -->
 <section class="final-section">
   <div class="fade-up">
@@ -416,7 +534,7 @@
       <a href="index.html" class="logo"><img src="./logo.svg" alt="MediLyft" style="height:34px" onerror="this.style.display='none'"/><span class="logo-name">Medi<em>Lyft</em></span></a>
       <p>Para que tu tratamiento funcione de verdad.</p>
     </div>
-    <div class="footer-col"><h4>Pacientes</h4><ul><li><a href="#como-funciona">Cómo funciona</a></li><li><a href="#cronicas">Enfermedades crónicas</a></li></ul></div>
+    <div class="footer-col"><h4>Pacientes</h4><ul><li><a href="#como-funciona">Cómo funciona</a></li><li><a href="#cronicas">Enfermedades crónicas</a></li><li><a href="#testimonios">Testimonios</a></li><li><a href="#faq">Preguntas frecuentes</a></li></ul></div>
     <div class="footer-col"><h4>Soluciones</h4><ul><li><a href="empresas.html">Para empresas</a></li><li><a href="seguros.html">Para aseguradoras</a></li></ul></div>
     <div class="footer-col"><h4>Contacto</h4><ul><li><a href="https://wa.me/593979076453" target="_blank">WhatsApp</a></li><li><a href="mailto:hola@medilyft.app">hola@medilyft.app</a></li></ul></div>
   </div>

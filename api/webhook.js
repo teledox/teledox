@@ -136,7 +136,12 @@ module.exports = async function handler(req, res) {
     // iniciar una nueva interacción.
     // El seguimiento NUNCA intercepta mensajes interactivos (botones/listas),
     // ya que el seguimiento solo usa texto libre — los botones siempre son del flujo de consulta.
-    const pendiente = !esInteractivo ? await buscarRespuestaPendiente(telefono) : null;
+    // Una conversación activa de seguimiento crónico (paso 200+) tiene prioridad:
+    // sus respuestas (ej. "1", "2", "3") no deben ser interceptadas por recordatorios
+    // de medicación/laboratorio pendientes de consultas anteriores.
+    const enCronica = (sesion?.paso || 0) >= 200;
+
+    const pendiente = (!esInteractivo && !enCronica) ? await buscarRespuestaPendiente(telefono) : null;
     if (pendiente?.respuesta && esRespuestaSeguimiento(pendiente.respuesta, mensaje)) {
       const resp = await procesarRespuestaSeguimiento(pendiente, mensaje, telefono);
       if (resp) {
@@ -146,7 +151,7 @@ module.exports = async function handler(req, res) {
     }
 
     // Respuesta a un recordatorio de seguimiento de examen de laboratorio (Sí/No).
-    const pendienteLab = !esInteractivo ? await buscarRespuestaLabPendiente(telefono) : null;
+    const pendienteLab = (!esInteractivo && !enCronica) ? await buscarRespuestaLabPendiente(telefono) : null;
     if (pendienteLab?.respuesta && esRespuestaLab(mensaje)) {
       const resultLab = await procesarRespuestaLab(pendienteLab, mensaje, telefono);
       if (resultLab) {

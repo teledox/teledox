@@ -67,14 +67,14 @@
       align-items:center;justify-content:center;text-align:center;
       padding:140px 24px 100px;
       background:
-        radial-gradient(ellipse 85% 55% at 50% -5%,rgba(240,82,82,.18) 0%,transparent 60%),
-        radial-gradient(ellipse 50% 40% at 80% 85%,rgba(13,148,136,.14) 0%,transparent 55%),
-        #06080F;
+        radial-gradient(ellipse 85% 55% at 50% -5%,rgba(240,82,82,.1) 0%,transparent 62%),
+        radial-gradient(ellipse 50% 40% at 80% 85%,rgba(13,148,136,.08) 0%,transparent 55%),
+        var(--white);
       position:relative;overflow:hidden
     }
     .hero::before{
       content:'';position:absolute;inset:0;z-index:0;
-      background-image:radial-gradient(circle,rgba(255,255,255,.05) 1.2px,transparent 1.2px);
+      background-image:radial-gradient(circle,rgba(240,82,82,.05) 1.2px,transparent 1.2px);
       background-size:42px 42px;pointer-events:none
     }
     /* ── SPLINE FONDO HERO ── */
@@ -84,10 +84,10 @@
       transform:scale(1.6);transform-origin:center center;
       opacity:0;transition:opacity 1.2s ease
     }
-    .hero-spline.loaded{opacity:.95}
+    .hero-spline.loaded{opacity:1;filter:saturate(1.6) contrast(1.18) brightness(1.05)}
     .hero-scrim{
       position:absolute;inset:0;z-index:2;pointer-events:none;
-      background:radial-gradient(ellipse 75% 65% at 50% 45%,rgba(6,8,15,.55) 0%,rgba(6,8,15,.25) 55%,transparent 100%)
+      background:radial-gradient(ellipse 72% 62% at 50% 45%,rgba(255,255,255,.78) 0%,rgba(255,255,255,.45) 55%,transparent 100%)
     }
     .hero>h1,.hero>.hero-sub,.hero>.hero-actions,.hero>.hero-trust{position:relative;z-index:3}
     .badge{
@@ -102,7 +102,7 @@
     .hero h1{
       font-size:clamp(38px,7.5vw,80px);
       font-weight:900;line-height:1.03;letter-spacing:-2.5px;max-width:880px;
-      color:#FFFFFF
+      color:#0B7A6E
     }
     .hero h1 .red{color:var(--red)}
     .hero h1 .teal{color:var(--teal)}
@@ -119,10 +119,10 @@
     }
     .hero-sub{
       margin-top:26px;font-size:clamp(16px,2vw,19px);
-      color:rgba(255,255,255,.82);line-height:1.75;max-width:640px;
+      color:#475569;line-height:1.75;max-width:640px;
       font-family:'Space Grotesk',sans-serif;font-weight:500;letter-spacing:.2px
     }
-    .hero-sub b{color:#FF8585;font-weight:600}
+    .hero-sub b{color:var(--red);font-weight:600}
     .hero-actions{display:flex;gap:12px;margin-top:42px;flex-wrap:wrap;justify-content:center}
     .btn-primary{
       background:var(--red);color:var(--white);
@@ -142,14 +142,14 @@
       transition:border-color .2s,color .2s,transform .15s
     }
     .btn-ghost:hover{border-color:var(--red);color:var(--red);transform:translateY(-2px)}
-    .hero .btn-ghost{color:#fff;border-color:rgba(255,255,255,.35)}
-    .hero .btn-ghost:hover{border-color:#fff;color:#fff;background:rgba(255,255,255,.08)}
+    .hero .btn-ghost{color:var(--dark);border-color:rgba(0,0,0,.14);background:rgba(255,255,255,.7)}
+    .hero .btn-ghost:hover{border-color:var(--red);color:var(--red);background:#fff}
     .hero-trust{
       margin-top:56px;display:flex;flex-wrap:wrap;
       align-items:center;justify-content:center;gap:24px
     }
-    .trust-pill{display:flex;align-items:center;gap:7px;font-size:14px;color:rgba(255,255,255,.75);font-weight:500}
-    .trust-sep{width:4px;height:4px;border-radius:50%;background:rgba(255,255,255,.3)}
+    .trust-pill{display:flex;align-items:center;gap:7px;font-size:14px;color:var(--gray);font-weight:500}
+    .trust-sep{width:4px;height:4px;border-radius:50%;background:#d1d5db}
 
     /* ── PROBLEMA ── */
     .problem-section{padding:110px 24px;background:var(--red-light);text-align:center;position:relative;overflow:hidden}
@@ -306,6 +306,75 @@
     .faq-item[open] .faq-icon{transform:rotate(45deg);background:var(--red);color:#fff}
     .faq-answer{padding:0 24px 22px;color:var(--gray);font-size:15px;line-height:1.7}
 
+    /* ── WIDGET QUIZ HERO ── */
+    .hero-quiz{
+      position:relative;z-index:3;margin-top:40px;width:100%;max-width:480px;
+      background:rgba(255,255,255,.85);backdrop-filter:blur(14px);
+      border:1px solid rgba(0,0,0,.07);border-radius:22px;
+      padding:28px 26px;text-align:center;
+      box-shadow:0 20px 60px rgba(240,82,82,.12)
+    }
+    .hq-step{display:none}
+    .hq-step.active{display:block;animation:hqFade .4s ease}
+    @keyframes hqFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    .hq-q{color:#0B7A6E;font-size:18px;font-weight:700;line-height:1.35;margin-bottom:20px}
+    .hq-q span{color:var(--red)}
+    .hq-opts{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+    .hq-opt{
+      flex:1;min-width:110px;background:var(--gray-light);
+      border:1.5px solid rgba(0,0,0,.08);color:var(--dark);
+      padding:13px 14px;border-radius:12px;font-size:14px;font-weight:600;
+      cursor:pointer;font-family:inherit;transition:background .2s,border-color .2s,transform .15s
+    }
+    .hq-opt:hover{background:var(--red);border-color:var(--red);color:#fff;transform:translateY(-2px)}
+    .hq-intro{color:var(--gray);font-size:15px;line-height:1.65;margin-bottom:16px}
+    .hq-intro b{color:var(--dark);font-weight:600}
+    .hq-ta{
+      width:100%;min-height:84px;resize:vertical;
+      background:var(--gray-light);border:1.5px solid rgba(0,0,0,.1);
+      border-radius:12px;padding:12px 14px;color:var(--dark);font-size:14px;
+      font-family:inherit;line-height:1.5;margin-bottom:16px
+    }
+    .hq-ta::placeholder{color:#9CA3AF}
+    .hq-ta:focus{outline:none;border-color:var(--red)}
+    .hq-btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      background:var(--red);color:#fff;border:0;cursor:pointer;font-family:inherit;
+      padding:15px 24px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;
+      box-shadow:0 10px 28px rgba(240,82,82,.35);transition:background .2s,transform .15s
+    }
+    .hq-btn:hover{background:var(--red-dark);transform:translateY(-2px)}
+    .hq-final-msg{color:var(--gray);font-size:16px;line-height:1.6;margin-bottom:22px}
+    .hq-final-msg b{color:var(--dark)}
+    .hq-back{display:inline-block;margin-top:14px;color:#9CA3AF;font-size:13px;cursor:pointer;background:none;border:0;font-family:inherit}
+    .hq-back:hover{color:var(--red);text-decoration:underline}
+
+    /* ── PLACEHOLDERS SPLINE (MOCKUP) ── */
+    .spline-slot{
+      position:relative;border:2px dashed rgba(240,82,82,.45);border-radius:24px;
+      background:radial-gradient(ellipse at center,rgba(240,82,82,.08),rgba(13,148,136,.06) 70%,transparent);
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+      overflow:hidden
+    }
+    .spline-slot .ss-obj{font-size:64px;animation:floaty 4s ease-in-out infinite}
+    .spline-slot.spin .ss-obj{animation:floaty 4s ease-in-out infinite,spin3d 9s linear infinite}
+    .spline-slot .ss-tag{
+      font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+      color:var(--red);background:rgba(240,82,82,.1);padding:5px 12px;border-radius:100px
+    }
+    @keyframes floaty{0%,100%{transform:translateY(-8px)}50%{transform:translateY(8px)}}
+    @keyframes spin3d{0%{transform:rotateY(0)}100%{transform:rotateY(360deg)}}
+    /* C — iconos flotantes en pain cards */
+    .pain-card .pain-icon.float-3d{animation:floaty 4.5s ease-in-out infinite;display:inline-block}
+    /* E — stepper con línea animada */
+    .steps-wrap{position:relative}
+    .steps-line{position:absolute;top:28px;left:12%;right:12%;height:2px;z-index:0;overflow:visible}
+    .steps-line svg{width:100%;height:6px;display:block;overflow:visible}
+    .steps-line path{stroke:var(--red);stroke-width:2.5;fill:none;stroke-dasharray:6 7;stroke-linecap:round;
+      stroke-dashoffset:0;animation:dash 18s linear infinite}
+    @keyframes dash{to{stroke-dashoffset:-260}}
+    .steps-wrap .step{position:relative;z-index:1}
+
     @media(max-width:768px){
       nav{padding:12px 14px}
       .logo-name{display:none}
@@ -362,8 +431,31 @@
   <h1 class="fade-up">Estamos contigo<br/>en cada paso hacia<br/><span class="hl">tu bienestar.</span></h1>
   <p class="hero-sub fade-up">Consulta con un médico <b>en minutos</b>, recibe tu tratamiento, obtén tu <b>receta electrónica</b> y mantén un <b>seguimiento continuo</b> de tu salud, enfermedades crónicas o procesos de recuperación, todo desde un solo lugar.</p>
   <div class="hero-actions fade-up">
-    <a href="https://wa.me/593979076453" target="_blank" class="btn-primary">Agendar mi consulta →</a>
     <a href="#como-funciona" class="btn-ghost">Ver cómo funciona ↓</a>
+  </div>
+
+  <div class="hero-quiz fade-up">
+    <!-- Paso 1 -->
+    <div class="hq-step active" id="hq-1">
+      <div class="hq-q">¿Hace cuánto tiempo no hablas con un <span>médico</span>?</div>
+      <div class="hq-opts">
+        <button class="hq-opt" onclick="hqGo(2)">3 meses</button>
+        <button class="hq-opt" onclick="hqGo(2)">6 meses</button>
+        <button class="hq-opt" onclick="hqGo(2)">Más…</button>
+      </div>
+    </div>
+    <!-- Paso 2 -->
+    <div class="hq-step" id="hq-2">
+      <p class="hq-intro">¿Tienes alguna <b>molestia</b>? ¿No has tenido <b>tiempo para un chequeo</b>? ¿Vives con una <b>enfermedad crónica</b>? ¿Algún <b>familiar</b> necesita atenderse pero no encuentra el momento? ¿Sientes que es <b>muy costoso</b> o que has <b>descuidado tu salud</b>?</p>
+      <textarea class="hq-ta" placeholder="Cuéntanos en una línea…"></textarea>
+      <button class="hq-btn" onclick="hqGo(3)">Continuar →</button>
+    </div>
+    <!-- Paso 3 -->
+    <div class="hq-step" id="hq-3">
+      <p class="hq-final-msg">Sea cual sea tu respuesta, <b>MediLyft está aquí para darte esa consulta en el momento que lo necesitas, y desde donde la necesites.</b></p>
+      <a href="https://wa.me/593979076453" target="_blank" class="hq-btn">💬 Consulta con un médico en minutos</a>
+      <button class="hq-back" onclick="hqGo(1)">← Empezar de nuevo</button>
+    </div>
   </div>
   <div class="hero-trust fade-up">
     <div class="trust-pill">📋 Historia clínica digital</div>
@@ -382,10 +474,10 @@
   <h2 class="fade-up">La medicina te atiende.<br/><span style="color:var(--red)">MediLyft te acompaña.</span></h2>
   <p class="fade-up">Porque una consulta aislada no siempre es suficiente. Tu salud merece continuidad, seguimiento y apoyo en cada paso del proceso.</p>
   <div class="pain-grid">
-    <div class="pain-card fade-up d1"><div class="pain-icon">🏥</div><div class="pain-title">Citas imposibles de conseguir</div><div class="pain-desc">Tienes una duda, un síntoma o una molestia, pero encontrar tiempo para consultar nunca es fácil.</div></div>
-    <div class="pain-card fade-up d2"><div class="pain-icon">📂</div><div class="pain-title">Historial disperso</div><div class="pain-desc">Papeles, fotocopias, exámenes en cajones. Cada médico empieza de cero.</div></div>
-    <div class="pain-card fade-up d3"><div class="pain-icon">🔇</div><div class="pain-title">Nadie hace seguimiento</div><div class="pain-desc">Te dan el tratamiento y no vuelven a saber de ti. Si algo falla, estás solo.</div></div>
-    <div class="pain-card fade-up d4"><div class="pain-icon">♾️</div><div class="pain-title">Crónicas sin control</div><div class="pain-desc">Condiciones que exigen atención continua y solo reciben consultas aisladas.</div></div>
+    <div class="pain-card fade-up d1"><div class="pain-icon float-3d">🏥</div><div class="pain-title">Citas imposibles de conseguir</div><div class="pain-desc">Tienes una duda, un síntoma o una molestia, pero encontrar tiempo para consultar nunca es fácil.</div></div>
+    <div class="pain-card fade-up d2"><div class="pain-icon float-3d">📂</div><div class="pain-title">Historial disperso</div><div class="pain-desc">Papeles, fotocopias, exámenes en cajones. Cada médico empieza de cero.</div></div>
+    <div class="pain-card fade-up d3"><div class="pain-icon float-3d">🔇</div><div class="pain-title">Nadie hace seguimiento</div><div class="pain-desc">Te dan el tratamiento y no vuelven a saber de ti. Si algo falla, estás solo.</div></div>
+    <div class="pain-card fade-up d4"><div class="pain-icon float-3d">♾️</div><div class="pain-title">Crónicas sin control</div><div class="pain-desc">Condiciones que exigen atención continua y solo reciben consultas aisladas.</div></div>
   </div>
 </section>
 
@@ -438,6 +530,7 @@
     <p class="section-sub">Un proceso simple, pensado para que recibas atención médica sin complicarte.</p>
   </div>
   <div class="steps-wrap">
+    <div class="steps-line"><svg viewBox="0 0 600 6" preserveAspectRatio="none"><path d="M0 3 L600 3"/></svg></div>
     <div class="step fade-up d1"><a href="https://wa.me/593979076453" target="_blank" style="text-decoration:none;color:inherit;display:block;cursor:pointer"><div class="step-bubble">📅</div><h3>Agenda tu consulta</h3><p>Selecciona fecha y hora y pide tu consulta. Sin filas.</p></a></div>
     <div class="step fade-up d2"><div class="step-bubble">📋</div><h3>Completa tu historial</h3><p>Ingresa antecedentes y síntomas. El médico llega preparado.</p></div>
     <div class="step fade-up d3"><div class="step-bubble">👨‍⚕️</div><h3>Consulta en línea</h3><p>Atención médica real. Diagnóstico, receta y plan de tratamiento.</p></div>
@@ -453,6 +546,10 @@
       <div class="chronic-card"><div class="c-icon">🩸</div><div class="c-title">Diabetes</div><div class="c-desc">Control de glucosa y alertas inteligentes de descompensación.</div></div>
       <div class="chronic-card"><div class="c-icon">🦋</div><div class="c-title">Tiroides</div><div class="c-desc">Seguimiento de TSH y ajuste de dosis sin desplazamientos.</div></div>
       <div class="chronic-card"><div class="c-icon">🫁</div><div class="c-title">Asma / EPOC</div><div class="c-desc">Control de episodios y plan de acción personalizado.</div></div>
+    </div>
+    <div class="spline-slot fade-up" style="width:100%;max-width:340px;height:240px;margin:0 auto">
+      <div class="ss-obj">❤️</div>
+      <div class="ss-tag">Spline: corazón 3D latiendo</div>
     </div>
     <div class="chronic-copy fade-up">
       <div class="eyebrow-red">Enfermedades crónicas</div>
@@ -538,6 +635,9 @@
 <!-- ── CTA FINAL ── -->
 <section class="final-section">
   <div class="fade-up">
+    <div class="spline-slot spin" style="width:130px;height:130px;border-radius:50%;margin:0 auto 28px">
+      <img src="./logo.svg" alt="" class="ss-obj" style="width:70px;height:70px;animation:spin3d 9s linear infinite"/>
+    </div>
     <h2>¿Y si nunca más te dejaran solo con un diagnóstico?</h2>
     <p>Estamos convencidos de que una consulta médica puede cambiar un diagnóstico, pero el acompañamiento continuo puede cambiar una vida.</p>
     <div class="hero-actions" style="margin-top:44px">
@@ -566,6 +666,13 @@
 <script>
   const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1});
   document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
+
+  // Widget quiz del hero
+  window.hqGo=function(step){
+    document.querySelectorAll('.hq-step').forEach(s=>s.classList.remove('active'));
+    const el=document.getElementById('hq-'+step);
+    if(el) el.classList.add('active');
+  };
 
   // Reveal suave de la animación Spline (evento load + respaldo por tiempo)
   (function(){

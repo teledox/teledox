@@ -90,6 +90,12 @@
     .section-title{font-size:clamp(26px,4.5vw,48px);font-weight:800;letter-spacing:-1.5px;line-height:1.1}
     .section-sub{color:var(--gray);font-size:17px;line-height:1.65;margin-top:14px}
 
+    /* ── PLACEHOLDER SPLINE (MOCKUP) ── */
+    .spline-slot{position:relative;border:2px dashed rgba(240,82,82,.45);border-radius:24px;background:radial-gradient(ellipse at center,rgba(240,82,82,.08),rgba(13,148,136,.06) 70%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden}
+    .spline-slot .ss-obj{font-size:64px;animation:floaty 4s ease-in-out infinite}
+    .spline-slot .ss-tag{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--red);background:rgba(240,82,82,.1);padding:5px 12px;border-radius:100px}
+    @keyframes floaty{0%,100%{transform:translateY(-8px)}50%{transform:translateY(8px)}}
+
     /* ── TRIAGE ── */
     .triage-section{padding:100px 24px;background:var(--gray-light);overflow:hidden;position:relative}
     .triage-section::before{content:'';position:absolute;top:-60px;right:-100px;width:420px;height:420px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024' fill='none'%3E%3Crect x='290' y='235' width='440' height='440' rx='112' ry='112' stroke='%23F05252' stroke-width='58' fill='none'/%3E%3Cpath d='M428 666 L428 748 Q428 770 448 756 L560 666 Z' fill='%23F05252'/%3E%3Cpath d='M468 332 C528 326 574 354 589 398 C599 428 612 448 630 466 Q641 477 628 483 Q614 489 619 503 Q628 514 616 526 Q603 538 608 550 C601 562 583 571 570 574 C549 601 542 638 549 672' stroke='%23F05252' stroke-width='50' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.07;transform:rotate(12deg);pointer-events:none}
@@ -324,6 +330,10 @@
       </div>
     </div>
     <div class="costs-visual fade-up">
+      <div class="spline-slot" style="width:100%;height:180px;margin-bottom:4px">
+        <div class="ss-obj">📈</div>
+        <div class="ss-tag">Spline: gráfico 3D de siniestralidad</div>
+      </div>
       <div class="cost-bar-card">
         <div class="cost-bar-label">Distribución del gasto</div>
         <div class="cost-bar-title">Sin MediLyft vs. Con MediLyft</div>

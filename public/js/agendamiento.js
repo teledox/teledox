@@ -23,10 +23,10 @@ async function confirmarAgendamiento() {
 
   const medicoNombre = document.getElementById('medicoAsignado').selectedOptions[0]?.text.split(' — ')[0] || '';
   try {
-    const res = await fetch('/api/notificar-agendamiento', {
+    const res = await fetch('/api/enviar-link', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paciente_id: currentPacienteId, fecha, medico_nombre: medicoNombre, notas })
+      body: JSON.stringify({ accion: 'agendamiento', paciente_id: currentPacienteId, fecha, medico_nombre: medicoNombre, notas })
     });
     const data = await res.json();
     if (!res.ok) showToast('✓ Consulta agendada — ⚠️ no se pudo avisar al paciente por WhatsApp');

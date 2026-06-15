@@ -4,6 +4,11 @@
  * Verifica que el solicitante sea médico o admin activo.
  */
 
+const { query } = require('../src/services/supabase');
+const { enviar } = require('../src/services/whatsapp');
+const { guardar, obtener } = require('../src/services/sesiones');
+const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
+
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY;
 
@@ -31,17 +36,67 @@ async function verificarMedico(token) {
   return u.id;
 }
 
+// Dispara manualmente (desde el panel) el envío de la primera pregunta de
+// seguimiento de una enfermedad crónica, para pruebas/demo sin esperar al cron.
+async function dispararSeguimientoCronico(req, res) {
+  const { enfermedad_id } = req.body || {};
+  if (!enfermedad_id) return res.status(400).json({ error: 'Falta enfermedad_id' });
+
+  const rows = await query('GET', 'enfermedades_cronicas', null,
+    `?id=eq.${enfermedad_id}&select=*,pacientes(nombre,apellidos,telefono)`
+  );
+  const c = rows?.[0];
+  if (!c) return res.status(404).json({ error: 'Enfermedad crónica no encontrada' });
+  if (!c.activo) return res.status(400).json({ error: 'El seguimiento está pausado' });
+
+  const telefono = c.pacientes?.telefono;
+  if (!telefono) return res.status(400).json({ error: 'El paciente no tiene teléfono registrado' });
+
+  const enfDef = ENFERMEDADES[c.enfermedad];
+  if (!enfDef) return res.status(400).json({ error: `Enfermedad desconocida: ${c.enfermedad}` });
+
+  // Igual que el loop de cron.js: usar el teléfono del paciente tal cual está en la BD
+  // (sin reformatear), para que coincida con la sesión que luego busca webhook.js.
+  const sesion = await obtener(telefono);
+  if (sesion && sesion.paso !== 0) return res.status(409).json({ error: 'El paciente ya tiene una conversación activa con el bot' });
+
+  const paciente = c.pacientes || {};
+  const primeraPregunta = enfDef.pasos[0];
+  const mensaje = `🩺 *Seguimiento MediLyft — ${enfDef.nombre}*\n\nHola ${paciente.nombre || ''}! Es hora de su control diario.\n\n${primeraPregunta.pregunta}`;
+
+  await enviar(telefono, mensaje);
+
+  await guardar(telefono, 200, {
+    enfermedad_key: c.enfermedad,
+    enfermedad_id: c.id,
+    paciente_id: c.paciente_id,
+    paso_cronico: 1
+  });
+
+  const ahora = new Date();
+  const proximoSeguimiento = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+  await query('PATCH', 'enfermedades_cronicas', {
+    ultima_consulta: ahora.toISOString(),
+    proximo_seguimiento: proximoSeguimiento.toISOString()
+  }, `?id=eq.${c.id}`);
+
+  return res.status(200).json({ ok: true, numero: telefono, paciente: `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim() });
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { token, consulta_id } = req.body || {};
-  if (!consulta_id) return res.status(400).json({ error: 'Falta consulta_id' });
+  const { token, consulta_id, accion } = req.body || {};
 
   try {
     const medicoId = await verificarMedico(token);
+
+    if (accion === 'disparar_cronico') return await dispararSeguimientoCronico(req, res);
+
+    if (!consulta_id) return res.status(400).json({ error: 'Falta consulta_id' });
 
     // Verificar que no esté ya tomada (race condition)
     const checkRes = await fetch(

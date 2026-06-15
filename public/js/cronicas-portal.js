@@ -78,10 +78,10 @@ async function dispararSeguimientoCronico(enfermedadId) {
   try {
     const { data: { session } } = await supabaseClient.auth.getSession();
     const token = session?.access_token;
-    const res = await fetch('/api/disparar-seguimiento-cronico', {
+    const res = await fetch('/api/atender-consulta', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, enfermedad_id: enfermedadId })
+      body: JSON.stringify({ token, accion: 'disparar_cronico', enfermedad_id: enfermedadId })
     });
     const data = await res.json();
     if (!res.ok) { showToast('⚠️ ' + (data.error || 'Error al enviar')); return; }

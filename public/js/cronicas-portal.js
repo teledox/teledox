@@ -41,6 +41,7 @@ async function cargarCronicas(pacienteId) {
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge ${ec.activo ? 'badge-green' : 'badge-gray'}">${ec.activo ? 'Activo' : 'Inactivo'}</span>
         <button class="btn btn-sm" onclick="verRegistrosCronicos('${ec.id}','${NOMBRES_ENFERMEDAD[ec.enfermedad] || ec.enfermedad}')">Ver registros</button>
+        ${ec.activo && (currentUser?.rol === 'medico' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm" onclick="dispararSeguimientoCronico('${ec.id}')">📨 Enviar ahora</button>` : ''}
         <button class="btn btn-sm ${ec.activo ? 'btn-danger' : ''}" onclick="toggleCronica('${ec.id}',${ec.activo})">${ec.activo ? 'Pausar' : 'Activar'}</button>
       </div>
     </div>`).join('');
@@ -71,6 +72,23 @@ async function toggleCronica(id, activo) {
   await supa('PATCH', 'enfermedades_cronicas', { activo: !activo }, `?id=eq.${id}`);
   await cargarCronicas(currentPacienteId);
   showToast(activo ? '⏸ Seguimiento pausado' : '▶ Seguimiento activado');
+}
+
+async function dispararSeguimientoCronico(enfermedadId) {
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const token = session?.access_token;
+    const res = await fetch('/api/disparar-seguimiento-cronico', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, enfermedad_id: enfermedadId })
+    });
+    const data = await res.json();
+    if (!res.ok) { showToast('⚠️ ' + (data.error || 'Error al enviar')); return; }
+    showToast(`✓ Pregunta de seguimiento enviada a ${data.paciente} (${data.numero})`);
+  } catch (e) {
+    showToast('⚠️ Error al enviar la pregunta de seguimiento');
+  }
 }
 
 async function verRegistrosCronicos(enfermedadId, nombre) {

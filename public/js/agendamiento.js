@@ -20,6 +20,20 @@ async function confirmarAgendamiento() {
   await supa('PATCH', 'consultas', { estado: 'confirmada', medico_id: medicoId, updated_at: new Date().toISOString() }, `?id=eq.${currentConsultaId}`);
   await supa('POST', 'notificaciones', { tipo: 'confirmacion', titulo: '✅ Consulta confirmada', mensaje: `Su teleconsulta fue confirmada para ${new Date(fecha).toLocaleString('es-EC')}. ${notas || ''}`, paciente_id: currentPacienteId, consulta_id: currentConsultaId });
   closePopup();
-  showToast('✓ Consulta agendada');
+
+  const medicoNombre = document.getElementById('medicoAsignado').selectedOptions[0]?.text.split(' — ')[0] || '';
+  try {
+    const res = await fetch('/api/notificar-agendamiento', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paciente_id: currentPacienteId, fecha, medico_nombre: medicoNombre, notas })
+    });
+    const data = await res.json();
+    if (!res.ok) showToast('✓ Consulta agendada — ⚠️ no se pudo avisar al paciente por WhatsApp');
+    else showToast(`✓ Consulta agendada y avisada al paciente (${data.numero})`);
+  } catch (e) {
+    showToast('✓ Consulta agendada — ⚠️ no se pudo avisar al paciente por WhatsApp');
+  }
+
   loadDashboard();
 }

@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MediLyft para Empresas — Salud corporativa que opera en silencio</title>
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -12,8 +13,10 @@
       --gray:#6B7280;--gray-light:#F5F7FA;
       --teal:#0D9488;--teal-light:#CCFBF1;--white:#FFFFFF;
     }
-    html{scroll-behavior:smooth}
-    body{font-family:'Inter',sans-serif;color:var(--dark);background:var(--white);overflow-x:hidden}
+    html{scroll-behavior:smooth;background:#fff}
+    body{font-family:'Inter',sans-serif;color:var(--dark);background:transparent;overflow-x:hidden}
+    .page-spline{position:fixed;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none;border:0;opacity:0;transition:opacity 1.4s ease}
+    .page-spline.loaded{opacity:.45}
 
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 52px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.07)}
@@ -138,7 +141,7 @@
     .kpi-desc{font-size:13px;color:var(--gray);line-height:1.5}
 
     /* ── IMPACTO ── */
-    .impact-section{padding:100px 24px;background:var(--white);text-align:center;position:relative;overflow:hidden}
+    .impact-section{padding:100px 24px;background:transparent;text-align:center;position:relative;overflow:hidden}
     .impact-section::before{content:'';position:absolute;bottom:-70px;left:-100px;width:400px;height:400px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024' fill='none'%3E%3Crect x='290' y='235' width='440' height='440' rx='112' ry='112' stroke='%23F05252' stroke-width='58' fill='none'/%3E%3Cpath d='M428 666 L428 748 Q428 770 448 756 L560 666 Z' fill='%23F05252'/%3E%3Cpath d='M468 332 C528 326 574 354 589 398 C599 428 612 448 630 466 Q641 477 628 483 Q614 489 619 503 Q628 514 616 526 Q603 538 608 550 C601 562 583 571 570 574 C549 601 542 638 549 672' stroke='%23F05252' stroke-width='50' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") no-repeat center/contain;opacity:.06;transform:rotate(-10deg);pointer-events:none}
     .impact-section h2{color:var(--dark);font-size:clamp(26px,4.5vw,50px);font-weight:800;letter-spacing:-1.5px;max-width:700px;margin:0 auto;line-height:1.1}
     .impact-section p{color:var(--gray);font-size:18px;line-height:1.7;max-width:520px;margin:18px auto 0}
@@ -218,6 +221,7 @@
 
     @media(max-width:768px){
       nav{padding:12px 14px}
+      .page-spline{display:none}
       .logo-name{display:none}
       nav ul{display:flex;gap:8px}
       nav ul a:not(.page-link){display:none}
@@ -238,6 +242,8 @@
   </style>
 </head>
 <body>
+
+<spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer>
 
 <!-- ── NAV ── -->
 <nav>
@@ -491,6 +497,7 @@
 </footer>
 
 <script>
+  (function(){const s=document.querySelector('.page-spline');if(s){const show=()=>s.classList.add('loaded');s.addEventListener('load',show);setTimeout(show,3500);}})();
   const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1});
   document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
 </script>

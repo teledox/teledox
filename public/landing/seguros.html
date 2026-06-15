@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MediLyft para Aseguradoras — Cartera más sana, siniestralidad controlada</title>
+  <script type="module" src="https://unpkg.com/@splinetool/viewer@1.9.82/build/spline-viewer.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     :root{
@@ -13,8 +14,10 @@
       --teal:#0D9488;--teal-light:#CCFBF1;
       --navy:#0F1F3D;--white:#FFFFFF;
     }
-    html{scroll-behavior:smooth}
-    body{font-family:'Inter',sans-serif;color:var(--dark);background:var(--white);overflow-x:hidden}
+    html{scroll-behavior:smooth;background:#fff}
+    body{font-family:'Inter',sans-serif;color:var(--dark);background:transparent;overflow-x:hidden}
+    .page-spline{position:fixed;inset:0;z-index:-1;width:100%;height:100%;pointer-events:none;border:0;opacity:0;transition:opacity 1.4s ease}
+    .page-spline.loaded{opacity:.45}
 
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 52px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.07)}
@@ -162,7 +165,7 @@
     .b-desc{font-size:14px;color:var(--gray);line-height:1.65}
 
     /* ── SMART TRACKING ── */
-    .tracking-section{padding:110px 24px;background:#fff;position:relative;overflow:hidden}
+    .tracking-section{padding:110px 24px;background:transparent;position:relative;overflow:hidden}
     .tracking-section::before{content:'';position:absolute;top:-200px;left:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(240,82,82,.08),transparent 65%);pointer-events:none}
     .tracking-section::after{content:'';position:absolute;bottom:-150px;right:-150px;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(13,148,136,.08),transparent 65%);pointer-events:none}
     .tracking-inner{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:56px;position:relative;z-index:1}
@@ -218,6 +221,7 @@
 
     @media(max-width:768px){
       nav{padding:12px 14px}
+      .page-spline{display:none}
       .logo-name{display:none}
       nav ul{display:flex;gap:8px}
       nav ul a:not(.page-link){display:none}
@@ -240,6 +244,8 @@
   </style>
 </head>
 <body>
+
+<spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer>
 
 <!-- ── NAV ── -->
 <nav>
@@ -502,6 +508,7 @@
 </footer>
 
 <script>
+  (function(){const s=document.querySelector('.page-spline');if(s){const show=()=>s.classList.add('loaded');s.addEventListener('load',show);setTimeout(show,3500);}})();
   const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1});
   document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
 </script>

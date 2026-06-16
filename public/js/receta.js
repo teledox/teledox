@@ -840,7 +840,7 @@ async function activarSeguimientoCronico() {
 }
 
 function _normCIE10(s) {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/\./g, '').toLowerCase();
 }
 function buscarCIE10() {
   const q = document.getElementById('cie10Search').value.trim();

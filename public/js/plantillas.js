@@ -363,13 +363,28 @@ function confirmarPeseAVacios(modalId) {
 
 function cerrarModal(id) { document.getElementById(id).classList.remove('open'); }
 
-function imprimirPlantilla(tipo) {
-  const docIds = { receta: 'docReceta', certificado: 'docCertificado', laboratorio: 'docLaboratorio', historiaclinica: 'docHistoriaClinica', interconsulta: 'docInterconsulta' };
-  const docEl = document.getElementById(docIds[tipo]); if (!docEl) return;
-  const printRoot = document.getElementById('printRoot'); printRoot.innerHTML = '';
-  const clone = docEl.cloneNode(true); clone.style.padding = '0'; printRoot.appendChild(clone);
-  window.print();
-  setTimeout(() => { printRoot.innerHTML = ''; }, 1000);
+async function imprimirPlantilla(tipo) {
+  const generadores = {
+    receta:        generarRecetaPDF,
+    certificado:   generarCertificadoPDF,
+    laboratorio:   generarPedidoPDF,
+    historiaclinica: generarHistoriaClinicaPDF,
+    interconsulta: generarInterconsultaPDF,
+  };
+  const fn = generadores[tipo];
+  if (!fn) return;
+  try {
+    showToast('⏳ Generando PDF con firma...');
+    const pdfBytes = await fn();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    showToast('✓ PDF listo — usa Ctrl+P en la pestaña para imprimir');
+  } catch (e) {
+    console.error('[imprimirPlantilla]', e);
+    showToast('Error al generar el PDF para imprimir');
+  }
 }
 
 // Utilidades certificado

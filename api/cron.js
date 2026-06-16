@@ -1,5 +1,5 @@
 const { query } = require('../src/services/supabase');
-const { enviar, enviarTemplate } = require('../src/services/whatsapp');
+const { enviar, enviarTemplate, enviarBotones } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
 const { obtener, guardar } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
@@ -299,6 +299,40 @@ module.exports = async function handler(req, res) {
         procesados++;
       } catch (e) {
         console.error('Error en recordatorio med tracking:', c.id, e.message);
+        errores++;
+      }
+    }
+
+    // Propuestas de consulta pendientes (médico activó desde el panel cuando bienestar ≥ 4)
+    const propuestasCasos = await query('GET', 'tracking_casos', null,
+      `?propuesta_pendiente=eq.true&activado=eq.true&estado=eq.activo`);
+
+    for (const c of propuestasCasos || []) {
+      try {
+        const telefono = c.telefono;
+        if (!telefono) continue;
+
+        const sesion = await obtener(telefono);
+        if (sesion && sesion.paso !== 0) continue;
+
+        const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
+        await enviarBotones(
+          telefono,
+          `${saludo} 👋\n\nTu equipo médico quiere programar una *consulta de seguimiento* con MediLyft.\n\n¿Te interesa agendar?`,
+          [
+            { id: 'propuesta_consulta_si', titulo: '✅ Sí, me interesa' },
+            { id: 'propuesta_consulta_no', titulo: '⏸ Ahora no' }
+          ]
+        );
+
+        await query('PATCH', 'tracking_casos', {
+          propuesta_pendiente:  false,
+          propuesta_enviada_at: ahora.toISOString()
+        }, `?id=eq.${c.id}`);
+
+        procesados++;
+      } catch (e) {
+        console.error('Error procesando propuesta:', c.id, e.message);
         errores++;
       }
     }

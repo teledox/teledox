@@ -26,6 +26,8 @@ CREATE TABLE IF NOT EXISTS tracking_casos (
   dias_activos         INTEGER[] DEFAULT '{1,2,3,4,5,6}',
   meds_recordatorios   JSONB DEFAULT '{}',
   activado             BOOLEAN DEFAULT false,
+  propuesta_pendiente  BOOLEAN DEFAULT false,
+  propuesta_enviada_at TIMESTAMPTZ DEFAULT NULL,
   proximo_seguimiento  TIMESTAMPTZ DEFAULT now(),
   estado               TEXT DEFAULT 'activo',
   created_at           TIMESTAMPTZ DEFAULT now(),
@@ -59,5 +61,7 @@ ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS duracion_dias   INTEGER   DE
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS horario_inicio  INTEGER   DEFAULT 8;
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS horario_fin     INTEGER   DEFAULT 21;
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS dias_activos        INTEGER[] DEFAULT '{1,2,3,4,5,6}';
-ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS meds_recordatorios  JSONB     DEFAULT '{}';
-ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS activado            BOOLEAN   DEFAULT false;
+ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS meds_recordatorios   JSONB      DEFAULT '{}';
+ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS activado             BOOLEAN    DEFAULT false;
+ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS propuesta_pendiente  BOOLEAN    DEFAULT false;
+ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS propuesta_enviada_at TIMESTAMPTZ DEFAULT NULL;

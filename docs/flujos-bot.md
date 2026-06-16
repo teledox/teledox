@@ -28,6 +28,7 @@ migración"*):
 | `200` | Enfermedades crónicas (cuestionarios) | `flujo-cronicas.js` |
 | `300`–`311` | Call center B2B (agente registra pacientes) | `flujo-callcenter.js` |
 | `400` | Tracking externo (bienestar + medicación) | `flujo-tracking.js` |
+| `410`–`411` | Migración tracking → consulta (`_flujo:'tracking_migracion'`) | `flujo-tracking-consulta.js` |
 | (sin paso) | Respuesta a recordatorio de seguimiento | `flujo-seguimiento.js` |
 
 > ℹ️ **Detalle de ruteo (dos capas):** `webhook.js` despacha los rangos `13-17`, `98`,
@@ -321,6 +322,59 @@ flowchart TD
 > ℹ️ El flujo de tracking se activa la primera vez que el paciente escribe **hola** y
 > tiene un `tracking_casos` activo. El webhook detecta esto antes de crear una sesión
 > normal y setea `paso: 400` directamente.
+>
+> Si el paciente **ya estaba activado** y vuelve a escribir **hola**, el webhook muestra
+> dos botones de elección: `tracking_reporte` (reporte de seguimiento) o
+> `tracking_consulta` (iniciar flujo de consulta MediLyft normal).
+
+---
+
+## 11) 🔄 Migración tracking → consulta (`tracking_migracion`, pasos 410–411)
+
+Flujo activado cuando el médico propone una consulta MediLyft a un paciente de tracking.
+Implementado en `src/flows/flujo-tracking-consulta.js`.
+
+### Fase 1 — Doctor propone (panel)
+El doctor abre el detalle de un caso en el panel, ve el botón **"📋 Proponer consulta"**
+(visible cuando `estado='activo'` + `activado=true` + último bienestar ≥ 4) y hace click.
+El panel hace `PATCH tracking_casos { propuesta_pendiente: true }`.
+
+### Fase 2 — Cron envía propuesta
+El cron detecta `propuesta_pendiente=true` y envía al paciente botones de WhatsApp:
+- `propuesta_consulta_si` → "✅ Sí, me interesa"
+- `propuesta_consulta_no` → "❌ No por ahora"
+
+Luego marca `propuesta_pendiente: false, propuesta_enviada_at: now()`.
+
+### Fase 3 — Webhook maneja respuesta
+```
+propuesta_consulta_si → guardar sesión en paso 410 con _flujo:'tracking_migracion'
+                        → enviar botones ¿tienes cédula?
+propuesta_consulta_no → mensaje de cierre, sesión termina
+```
+
+### Fase 4 — Mini-flujo `tracking_migracion` (pasos 410–411)
+```mermaid
+flowchart TD
+  START([propuesta_consulta_si recibida]) --> S410["paso 410\nEnvía botones: ¿tienes cédula?"]
+  S410 -->|"propuesta_cedula_si"| S411["paso 411\nPide número de cédula"]
+  S410 -->|"propuesta_cedula_no"| FIN_NO([Instrucciones para flujo B2C · Fin])
+  S411 -->|"Cédula inválida"| S411
+  S411 -->|"Cédula válida"| CREAR["Buscar/crear paciente\nCrear consulta pendiente\nmarcar caso 'derivado'\nAlertar por Telegram"]
+  CREAR --> FIN_OK([✅ Confirmación al paciente · Fin])
+```
+
+**Tabla de ruteo:**
+
+| `_flujo` | Pasos | Archivo |
+|---|---|---|
+| `tracking_migracion` | 410–411 | `flujo-tracking-consulta.js` |
+
+**Columnas nuevas en `tracking_casos`:**
+```sql
+propuesta_pendiente  BOOLEAN    DEFAULT false
+propuesta_enviada_at TIMESTAMPTZ DEFAULT NULL
+```
 
 ---
 

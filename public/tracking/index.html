@@ -677,9 +677,15 @@ async function verDetalle(id) {
     ${(c.medicamentos||[]).map(m => `<span class="badge" style="background:#eff6ff;color:#1d4ed8">💊 ${m.nombre}${m.dosis?` ${m.dosis}`:''}</span>`).join('')}
   `;
   document.getElementById('detalleTratamiento').innerHTML = `<strong>Diagnóstico:</strong> ${c.diagnostico || '—'}<br><strong>Tratamiento:</strong> ${c.tratamiento || '—'}`;
+
+  // Botón "Proponer consulta" visible cuando el paciente está activo y su último
+  // reporte de bienestar fue 4 o 5 (está bien — tiene sentido para una consulta de seguimiento).
+  const ultimoBienestar = parseInt(registros?.[0]?.respuestas?.bienestar);
+  const puedeProponerConsulta = c.estado === 'activo' && c.activado && !isNaN(ultimoBienestar) && ultimoBienestar >= 4;
   document.getElementById('detalleAcciones').innerHTML = `
     <button class="btn btn-sm btn-secondary" onclick="editarCaso('${c.id}')">✏️ Editar</button>
-    <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Cambiar estado</button>
+    <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Estado</button>
+    ${puedeProponerConsulta ? `<button class="btn btn-sm btn-primary" onclick="proponerConsulta('${c.id}')">📋 Proponer consulta</button>` : ''}
   `;
   const dotColor = { 1: 'tl-dot-green', 2: 'tl-dot-yellow', 3: 'tl-dot-red' };
   document.getElementById('detalleTimeline').innerHTML = (registros || []).length
@@ -702,6 +708,13 @@ async function verDetalle(id) {
       }).join('')
     : '<div style="color:#aaa;font-size:13px;padding:1rem 0">Sin interacciones registradas aún.</div>';
   document.getElementById('modalDetalle').classList.add('open');
+}
+
+async function proponerConsulta(id) {
+  if (!confirm('¿Proponer consulta médica a este paciente? Se le enviará un mensaje de WhatsApp.')) return;
+  await t('PATCH', 'tracking_casos', { propuesta_pendiente: true }, `?id=eq.${id}`);
+  alert('✅ Propuesta marcada. El cron enviará el mensaje en el próximo ciclo.');
+  closeModal('modalDetalle');
 }
 
 async function editarCaso(id) {

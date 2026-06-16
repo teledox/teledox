@@ -32,6 +32,7 @@ function getFlows() {
     buscarEmpresaPorCodigo:       require('../src/flows/flujo-callcenter').buscarEmpresaPorCodigo,
     procesarTracking:             require('../src/flows/flujo-tracking').procesarTracking,
     procesarRespuestaMed:         require('../src/flows/flujo-tracking').procesarRespuestaMed,
+    procesarMigracion:            require('../src/flows/flujo-tracking-consulta').procesarMigracion,
     procesarB2C:                  require('../src/flows/flujo-b2c').procesarB2C,
     procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
   };
@@ -105,7 +106,7 @@ module.exports = async function handler(req, res) {
       buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
       procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
-      procesarB2C, procesarSeguimientoPago
+      procesarB2C, procesarSeguimientoPago, procesarMigracion
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -121,20 +122,30 @@ module.exports = async function handler(req, res) {
       const casoT = casosTracking?.[0];
 
       if (casoT) {
-        // Marcar como activado la primera vez que el paciente responde
         if (!casoT.activado) {
+          // Primera activación — marcar y arrancar bienestar directamente
           await qTracking('PATCH', 'tracking_casos', { activado: true }, `?id=eq.${casoT.id}`);
+          const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
+          const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
+          await guardar(telefono, 400, {
+            tipo: 'bienestar',
+            caso_id: casoT.id,
+            empresa_id: casoT.empresa_id,
+            paciente_nombre: casoT.paciente_nombre,
+            diagnostico: casoT.diagnostico
+          }, 'tracking');
+          await enviar(telefono, msgTracking);
+        } else {
+          // Ya activado — ofrecer elección entre reporte diario y consulta médica
+          const nombre = casoT.paciente_nombre || nombreWhatsApp;
+          await enviarBotones(telefono,
+            `¡Hola ${nombre}! 👋 ¿En qué te puedo ayudar hoy?`,
+            [
+              { id: 'tracking_reporte',  titulo: '📊 Reporte de seguimiento' },
+              { id: 'tracking_consulta', titulo: '🏥 Consulta médica' }
+            ]
+          );
         }
-        const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
-        const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
-        await guardar(telefono, 400, {
-          tipo: 'bienestar',
-          caso_id: casoT.id,
-          empresa_id: casoT.empresa_id,
-          paciente_nombre: casoT.paciente_nombre,
-          diagnostico: casoT.diagnostico
-        }, 'tracking');
-        await enviar(telefono, msgTracking);
         return res.status(200).send('OK');
       }
 
@@ -168,6 +179,69 @@ module.exports = async function handler(req, res) {
     if (mensaje === 'ahora_no') {
       await enviar(telefono,
         `Entendido 👍\n\nCuando quieras empezar, escríbenos *hola* y activamos tu seguimiento.`
+      );
+      return res.status(200).send('OK');
+    }
+
+    // Botón "Reporte de seguimiento" (desde el menú de hola con tracking activo)
+    if (mensaje === 'tracking_reporte') {
+      const { query: qTr } = require('../src/services/supabase');
+      const casosTr = await qTr('GET', 'tracking_casos', null,
+        `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
+      const cTr = casosTr?.[0];
+      if (cTr) {
+        const s = cTr.paciente_nombre ? `Hola ${cTr.paciente_nombre}!` : '¡Hola!';
+        await guardar(telefono, 400, {
+          tipo: 'bienestar', caso_id: cTr.id, empresa_id: cTr.empresa_id,
+          paciente_nombre: cTr.paciente_nombre, diagnostico: cTr.diagnostico
+        }, 'tracking');
+        await enviar(telefono,
+          `🩺 *Seguimiento MediLyft*\n\n${s}\n\n📋 Diagnóstico: ${cTr.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`
+        );
+      } else {
+        await enviar(telefono, `No encontramos un seguimiento activo. Para iniciar una consulta escribe *hola*.`);
+      }
+      return res.status(200).send('OK');
+    }
+
+    // Botón "Consulta médica" (desde el menú de hola con tracking activo)
+    if (mensaje === 'tracking_consulta') {
+      await eliminar(telefono);
+      const result = await procesarPaso(0, mensaje, {}, telefono, nombreWhatsApp);
+      await guardar(telefono, result.paso, result.datos, 'consulta');
+      await despachar(telefono, result);
+      return res.status(200).send('OK');
+    }
+
+    // Propuesta de consulta — el paciente acepta (botón enviado por cron desde el panel)
+    if (mensaje === 'propuesta_consulta_si') {
+      const { query: qPr } = require('../src/services/supabase');
+      const casosPr = await qPr('GET', 'tracking_casos', null,
+        `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
+      const cPr = casosPr?.[0];
+      if (!cPr) {
+        await enviar(telefono, `No encontramos un caso de seguimiento activo. Escribe *hola* para comenzar.`);
+        return res.status(200).send('OK');
+      }
+      await guardar(telefono, 410, {
+        caso_id: cPr.id, empresa_id: cPr.empresa_id,
+        paciente_nombre: cPr.paciente_nombre,
+        diagnostico: cPr.diagnostico, tratamiento: cPr.tratamiento
+      }, 'tracking_migracion');
+      await enviarBotones(telefono,
+        `¡Perfecto! 🙌 Para registrar tu consulta necesito un dato más.\n\n¿Tienes número de *cédula ecuatoriana*?`,
+        [
+          { id: 'propuesta_cedula_si', titulo: '✅ Sí, la tengo' },
+          { id: 'propuesta_cedula_no', titulo: '➡️ No / Soy extranjero' }
+        ]
+      );
+      return res.status(200).send('OK');
+    }
+
+    // Propuesta de consulta — el paciente declina
+    if (mensaje === 'propuesta_consulta_no') {
+      await enviar(telefono,
+        `Entendido 👍\n\nCuando quieras una consulta escribe *hola* y selecciona *"🏥 Consulta médica"*. ¡Que te mejores pronto!`
       );
       return res.status(200).send('OK');
     }
@@ -290,6 +364,14 @@ module.exports = async function handler(req, res) {
         case 'seguimiento_pago': {
           const result = await procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWhatsApp);
           if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'seguimiento_pago');
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'tracking_migracion': {
+          const result = await procesarMigracion(paso, mensaje, datos, telefono);
+          if (!result.terminar) await guardar(telefono, result.paso ?? paso, result.datos ?? datos, 'tracking_migracion');
+          else await eliminar(telefono);
           await despachar(telefono, result);
           return res.status(200).send('OK');
         }

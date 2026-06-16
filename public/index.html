@@ -672,6 +672,15 @@
               <button class="btn btn-primary" style="font-size:13px" onclick="activarP12Sesion()">Activar</button>
             </div>
           </div>
+
+          <!-- Panel de debug de firma (visible solo con ?debug=firma en la URL) -->
+          <div id="p12DebugPanel" style="display:none;margin-top:1rem;padding:0.75rem 1rem;background:#0f172a;border-radius:8px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em">Log de firma — última sesión</span>
+              <button onclick="_firmaCopiarLogs()" class="btn btn-sm" style="font-size:11px;padding:2px 10px;background:#1e293b;border-color:#334155;color:#94a3b8">Copiar</button>
+            </div>
+            <pre id="p12DebugLog" style="font-size:10px;color:#94a3b8;max-height:220px;overflow-y:auto;white-space:pre-wrap;margin:0;font-family:monospace">(sin actividad aún — genera un PDF para ver los logs)</pre>
+          </div>
         </div>
       </div>
 
@@ -1414,12 +1423,12 @@
 <script src="/js/consultas.js?v=20260610"></script>
 <script src="/js/notificaciones.js?v=20260610"></script>
 <script src="/js/agendamiento.js?v=20260609b"></script>
-<script src="/js/firma-electronica.js?v=20260612e"></script>
+<script src="/js/firma-electronica.js?v=20260616a"></script>
 <script src="/js/generarPDF.js?v=20260612c"></script>
 <script src="/js/receta.js?v=20260611b"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260612e"></script>
-<script src="/js/perfil.js?v=20260612d"></script>
+<script src="/js/perfil.js?v=20260616a"></script>
 <script src="/js/metricas.js?v=20260611"></script>
 <script src="/js/empresas.js?v=20260609b"></script>
 <script src="/js/cronicas-portal.js?v=20260609b"></script>

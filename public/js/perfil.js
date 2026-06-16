@@ -373,3 +373,31 @@ function getP12Activo() {
   if (!pass) return null;
   return { p12b64: currentUser.firma_p12, pass, info: currentUser.firma_p12_info };
 }
+
+// ── Panel de debug de firma (visible con ?debug=firma en la URL) ──────────────
+// _firmaActualizarPanel es llamado por _logFirma() en firma-electronica.js cada
+// vez que se escribe una entrada al log, manteniendo el panel en tiempo real.
+function _firmaActualizarPanel() {
+  const el = document.getElementById('p12DebugLog');
+  if (!el) return;
+  const logs = window._firmaLogs || [];
+  el.textContent = logs.length
+    ? logs.map(l =>
+        `${l.ts.slice(11, 23)} [${l.ok ? 'OK  ' : 'FAIL'}] ${l.paso.padEnd(30)} ${l.detalle}`
+      ).join('\n')
+    : '(sin actividad aún — genera un PDF para ver los logs)';
+  el.scrollTop = el.scrollHeight;
+}
+
+function _firmaCopiarLogs() {
+  const logs = window._firmaLogs || [];
+  const txt = logs.map(l => `[${l.ts}] [${l.ok ? 'OK' : 'FAIL'}] ${l.paso}: ${l.detalle}`).join('\n');
+  navigator.clipboard.writeText(txt || '(sin logs)')
+    .then(() => showToast('✓ Logs copiados al portapapeles'));
+}
+
+// Mostrar panel si la URL contiene ?debug=firma
+if (new URLSearchParams(window.location.search).get('debug') === 'firma') {
+  const panel = document.getElementById('p12DebugPanel');
+  if (panel) panel.style.display = 'block';
+}

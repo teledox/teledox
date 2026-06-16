@@ -10,6 +10,20 @@ const SIG_PLACEHOLDER_BYTES   = 12000;
 const SIG_PLACEHOLDER_HEX_LEN = SIG_PLACEHOLDER_BYTES * 2;
 const BYTE_RANGE_PLACEHOLDER  = 9999999999;
 
+// ── Log estructurado de sesión de firma ──────────────────────────────────────
+// Accesible en consola como window._firmaLogs para debugging.
+// Se limpia al inicio de cada llamada a guardarPDFConFirma().
+const _firmaLogs = [];
+window._firmaLogs = _firmaLogs;
+
+function _logFirma(paso, ok, detalle = '') {
+  const entry = { ts: new Date().toISOString(), paso, ok, detalle };
+  _firmaLogs.push(entry);
+  (ok ? console.log : console.error)(`[firma:${paso}]`, detalle || (ok ? 'OK' : 'FALLO'));
+  if (typeof _firmaActualizarPanel === 'function') _firmaActualizarPanel();
+  return entry;
+}
+
 function _fechaPDFFirma(d) {
   const pad = n => String(n).padStart(2, '0');
   return `D:${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}-05'00'`;
@@ -113,22 +127,35 @@ function _derToHex(der) {
 // Firma PKCS#7 detached (CMS) con la clave privada del .p12. La contraseña
 // solo se usa aquí, en memoria, para descifrar la clave; nunca se transmite.
 function _firmarPKCS7(messageBytes, p12b64, pass) {
+  _logFirma('pkcs7:parsear-p12', true, 'inicio parseo forge');
   const p12Der = atob(p12b64);
   const p12Asn1 = forge.asn1.fromDer(p12Der);
   const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, pass);
 
   const certBags = (p12.getBags({ bagType: forge.pki.oids.certBag })[forge.pki.oids.certBag]) || [];
   const keyBags  = (p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag })[forge.pki.oids.pkcs8ShroudedKeyBag]) || [];
+  _logFirma('pkcs7:bags', true, `certBags=${certBags.length}, keyBags=${keyBags.length}`);
 
-  if (certBags.length === 0) throw new Error('El certificado .p12 no contiene certificados');
+  if (certBags.length === 0) {
+    _logFirma('pkcs7:validar-certs', false, 'P12 sin certificados');
+    throw new Error('El certificado .p12 no contiene certificados');
+  }
   const keyBag = keyBags[0];
-  if (!keyBag) throw new Error('El certificado .p12 no contiene una clave privada');
+  if (!keyBag) {
+    _logFirma('pkcs7:validar-key', false, 'P12 sin clave privada');
+    throw new Error('El certificado .p12 no contiene una clave privada');
+  }
 
   const keyId = keyBag.attributes?.localKeyId?.[0];
   const leafBag = certBags.find(b => {
     const certKeyId = b.attributes?.localKeyId?.[0];
     return keyId && certKeyId && certKeyId === keyId;
   }) || certBags[0];
+
+  const usóLocalKeyId = !!(keyId && leafBag.attributes?.localKeyId?.[0] === keyId);
+  const titular = leafBag.cert.subject.getField('CN')?.value || '';
+  _logFirma('pkcs7:leaf-cert', true,
+    `titular="${titular}", localKeyId=${usóLocalKeyId ? 'sí' : 'NO — fallback a certBags[0]'}`);
 
   const p7 = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(_bytesToLatin1(messageBytes));
@@ -146,33 +173,50 @@ function _firmarPKCS7(messageBytes, p12b64, pass) {
   p7.sign({ detached: true });
 
   const der = forge.asn1.toDer(p7.toAsn1()).getBytes();
-  const titular = leafBag.cert.subject.getField('CN')?.value || '';
+  _logFirma('pkcs7:firma-der', true,
+    `${der.length} bytes DER → ${der.length * 2} hex (placeholder=${SIG_PLACEHOLDER_HEX_LEN})`);
+
   return { der, titular };
 }
 
 // Firma electrónicamente un PDFDocument (pdf-lib) que aún no fue guardado.
 // Devuelve los bytes finales (Uint8Array) ya firmados (PAdES-B / PKCS#7).
 async function firmarPdfConP12(doc, { nombre, motivo, p12b64, pass }) {
+  _logFirma('pades:placeholder', true, 'insertando /Sig /Widget /AcroForm');
   _agregarPlaceholderFirma(doc, { nombre, motivo });
 
+  _logFirma('pades:serializar', true, 'doc.save() con useObjectStreams=false');
   const pdfBytes = await doc.save({ useObjectStreams: false });
+  _logFirma('pades:serializar', true, `${pdfBytes.length} bytes`);
+
   const { byteRangeIdx, byteRangeNeedle, hexStart, hexEnd } = _localizarPlaceholders(pdfBytes);
+  _logFirma('pades:byterange-localizar', true, `hexStart=${hexStart}, hexEnd=${hexEnd}`);
 
   const A = hexStart;
   const B = hexEnd;
   const C = pdfBytes.length - B;
   _aplicarByteRange(pdfBytes, byteRangeIdx, byteRangeNeedle, A, B, C);
+  _logFirma('pades:byterange-aplicar', true, `[0, ${A}, ${B}, ${C}]`);
 
   const firmado = new Uint8Array(A + C);
   firmado.set(pdfBytes.subarray(0, A), 0);
   firmado.set(pdfBytes.subarray(B, B + C), A);
+  _logFirma('pades:mensaje', true, `${firmado.length} bytes a firmar`);
 
   const { der, titular } = _firmarPKCS7(firmado, p12b64, pass);
+
   const sigHex = _derToHex(der);
+  _logFirma('pades:sig-hex', sigHex.length <= SIG_PLACEHOLDER_HEX_LEN,
+    `${sigHex.length} chars hex, max=${SIG_PLACEHOLDER_HEX_LEN}`);
+
   if (sigHex.length > SIG_PLACEHOLDER_HEX_LEN) {
-    throw new Error('La firma PKCS#7 no entra en el espacio reservado del PDF');
+    _logFirma('pades:overflow', false,
+      `OVERFLOW: firma ${sigHex.length} > placeholder ${SIG_PLACEHOLDER_HEX_LEN} — aumentar SIG_PLACEHOLDER_BYTES`);
+    throw new Error(`La firma PKCS#7 excede el espacio reservado (${sigHex.length} > ${SIG_PLACEHOLDER_HEX_LEN}). Contacte soporte.`);
   }
+
   _writeLatin1(pdfBytes, sigHex.padEnd(SIG_PLACEHOLDER_HEX_LEN, '0'), hexStart);
+  _logFirma('pades:completo', true, `PDF firmado como "${titular}"`);
 
   return { pdfBytes, titular };
 }
@@ -217,7 +261,14 @@ function _generarQRDataURL(texto, cellSize = 4, margin = 4) {
 // false si no hay nada que mostrar (el caller mantiene su layout original).
 async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocumento }) {
   const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
-  if (!p12 || typeof qrcode === 'undefined') return false;
+  if (!p12) {
+    _logFirma('sello:sin-p12', true, 'sin certificado activo — sin sello visual');
+    return false;
+  }
+  if (typeof qrcode === 'undefined') {
+    _logFirma('sello:sin-qrcode', false, 'librería qrcode-generator no disponible');
+    return false;
+  }
 
   const info = p12.info || {};
   const titular = info.titular
@@ -246,10 +297,15 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
     });
     if (r.ok) {
       const { id } = await r.json();
-      if (id) qrTexto = `https://www.medilyft.app/verificar.html?id=${id}`;
+      if (id) {
+        qrTexto = `https://www.medilyft.app/verificar.html?id=${id}`;
+        _logFirma('sello:registro-api', true, `documento registrado id=${id}`);
+      }
+    } else {
+      _logFirma('sello:registro-api', false, `HTTP ${r.status} — QR usará texto plano`);
     }
   } catch (e) {
-    console.error('No se pudo registrar la firma para verificación:', e.message);
+    _logFirma('sello:registro-api', false, `${e.message} — QR usará texto plano`);
   }
 
   try {
@@ -258,12 +314,13 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
     const size = 38;
     const x = 40, y = 60;
     page.drawImage(qrImg, { x, y, width: size, height: size });
-    page.drawText('Firmado electronicamente', { x: x + size + 6, y: y + size - 9, size: 7, font, color });
+    page.drawText('Firmado electronicamente', { x: x + size + 6, y: y + size - 9,  size: 7, font, color });
     page.drawText(titular,                    { x: x + size + 6, y: y + size - 18, size: 7, font, color });
     page.drawText(fecha,                      { x: x + size + 6, y: y + size - 27, size: 6, font, color });
+    _logFirma('sello:qr-dibujado', true, `titular="${titular}"`);
     return true;
   } catch (e) {
-    console.error('No se pudo generar el sello visual de firma electronica:', e.message);
+    _logFirma('sello:qr-fallo', false, e.message);
     return false;
   }
 }
@@ -272,18 +329,28 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
 // Si algo falla (sin certificado activo, contraseña incorrecta, etc.) cae
 // de vuelta a un PDF sin firma criptográfica (con la firma/sello visuales).
 async function guardarPDFConFirma(doc, motivo) {
-  try {
-    const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
-    if (p12) {
-      const nombre = typeof currentUser !== 'undefined'
-        ? `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim()
-        : '';
-      const { pdfBytes, titular } = await firmarPdfConP12(doc, { nombre, motivo, p12b64: p12.p12b64, pass: p12.pass });
-      console.log(`✓ PDF firmado electrónicamente (${titular})`);
-      return pdfBytes;
-    }
-  } catch (e) {
-    console.error('No se pudo firmar electrónicamente el PDF, se genera sin firma criptográfica:', e.message);
+  _firmaLogs.length = 0; // limpiar log de sesión anterior
+  _logFirma('guardar:inicio', true, `motivo="${motivo}"`);
+
+  const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
+  if (!p12) {
+    _logFirma('guardar:sin-p12', true, 'sin certificado activo — PDF sin firma criptográfica');
+    return await doc.save();
   }
-  return await doc.save();
+
+  try {
+    _logFirma('guardar:intentar-firma', true, 'P12 activo, iniciando firma PAdES');
+    const nombre = typeof currentUser !== 'undefined'
+      ? `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim()
+      : '';
+    const { pdfBytes, titular } = await firmarPdfConP12(doc, { nombre, motivo, p12b64: p12.p12b64, pass: p12.pass });
+    _logFirma('guardar:exito', true, `PDF firmado correctamente como "${titular}"`);
+    return pdfBytes;
+  } catch (e) {
+    _logFirma('guardar:fallo-firma', false, e.message);
+    if (typeof showToast === 'function') {
+      showToast(`⚠️ Firma electrónica falló: ${e.message}. PDF generado SIN firma criptográfica.`);
+    }
+    return await doc.save();
+  }
 }

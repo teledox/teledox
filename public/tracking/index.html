@@ -266,6 +266,9 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="meds-input-row">
         <input class="form-input" id="medNombre" placeholder="Nombre" style="flex:2">
         <input class="form-input" id="medDosis" placeholder="Dosis" style="flex:1">
+        <select class="form-input" id="medHora" style="flex:1" title="Hora de recordatorio (opcional)">
+          <option value="">sin hora</option>
+        </select>
         <button class="btn btn-secondary btn-sm" onclick="addMed()">+ Agregar</button>
       </div>
     </div>
@@ -470,7 +473,7 @@ function openNuevoCaso() {
   editandoCasoId = null;
   medicamentosTemp = [];
   document.getElementById('modalCasoTitle').textContent = 'Nuevo caso de seguimiento';
-  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis'].forEach(id => {
+  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis','medHora'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = el.tagName === 'SELECT' ? '' : '';
   });
@@ -485,12 +488,14 @@ function openNuevoCaso() {
 }
 
 function addMed() {
-  const nombre = document.getElementById('medNombre').value.trim();
-  const dosis = document.getElementById('medDosis').value.trim();
+  const nombre  = document.getElementById('medNombre').value.trim();
+  const dosis   = document.getElementById('medDosis').value.trim();
+  const horaVal = document.getElementById('medHora').value;
   if (!nombre) return;
-  medicamentosTemp.push({ nombre, dosis });
+  medicamentosTemp.push({ nombre, dosis: dosis || null, hora: horaVal !== '' ? parseInt(horaVal) : null });
   document.getElementById('medNombre').value = '';
-  document.getElementById('medDosis').value = '';
+  document.getElementById('medDosis').value  = '';
+  document.getElementById('medHora').value   = '';
   renderMeds();
 }
 
@@ -501,7 +506,7 @@ function removeMed(i) {
 
 function renderMeds() {
   document.getElementById('medsTags').innerHTML = medicamentosTemp.map((m, i) =>
-    `<span class="med-tag">💊 ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}<button onclick="removeMed(${i})">×</button></span>`
+    `<span class="med-tag">💊 ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}${m.hora != null ? ` · ${String(m.hora).padStart(2,'0')}:00` : ''}<button onclick="removeMed(${i})">×</button></span>`
   ).join('');
 }
 
@@ -671,12 +676,14 @@ async function toggleEmpresa(id, activo) {
 
 // ── HORARIO / PREVIEW ─────────────────────────────────────────────────────
 function buildHoraSelects() {
-  ['horaInicio','horaFin'].forEach(id => {
+  // horaInicio/horaFin: rango del seguimiento. medHora: hora de recordatorio de med.
+  const defs = { horaInicio: 8, horaFin: 21, medHora: null };
+  Object.entries(defs).forEach(([id, def]) => {
     const sel = document.getElementById(id);
-    const def = id === 'horaInicio' ? 8 : 21;
+    if (!sel) return;
     for (let h = 0; h <= 23; h++) {
       const opt = new Option(`${String(h).padStart(2,'0')}:00`, h);
-      if (h === def) opt.selected = true;
+      if (def !== null && h === def) opt.selected = true;
       sel.appendChild(opt);
     }
   });

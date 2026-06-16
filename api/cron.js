@@ -193,23 +193,17 @@ module.exports = async function handler(req, res) {
         const sesion = await obtener(telefono);
         if (sesion && sesion.paso !== 0) continue;
 
-        const meds = Array.isArray(c.medicamentos) ? c.medicamentos : [];
-        const medsTexto = meds.length
-          ? `\n\n💊 Medicamentos actuales:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
-          : '';
         const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
-        const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
+        const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
 
         await enviar(telefono, mensaje);
 
         await guardar(telefono, 400, {
+          tipo: 'bienestar',
           caso_id: c.id,
           empresa_id: c.empresa_id,
           paciente_nombre: c.paciente_nombre,
-          diagnostico: c.diagnostico,
-          medicamentos: meds,
-          paso_tracking: 1,
-          respuestas: {}
+          diagnostico: c.diagnostico
         });
 
         const rawNext      = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
@@ -224,6 +218,61 @@ module.exports = async function handler(req, res) {
         procesados++;
       } catch (e) {
         console.error('Error procesando tracking caso:', c.id, e.message);
+        errores++;
+      }
+    }
+
+    // Recordatorios de medicación — independientes del chequeo de bienestar
+    // Cada med tiene { nombre, dosis, hora } donde hora es entero 0-23 (Ecuador local).
+    // meds_recordatorios JSONB guarda { "h8": "2026-06-15T13:00:00Z", ... } para deduplicar.
+    const horaActualEC = horaEC(ahora);
+    const casosConMeds = await query('GET', 'tracking_casos', null, `?estado=eq.activo`);
+
+    for (const c of casosConMeds || []) {
+      try {
+        const meds = Array.isArray(c.medicamentos) ? c.medicamentos : [];
+        const medsAhora = meds.filter(m => m.hora === horaActualEC);
+        if (!medsAhora.length) continue;
+
+        const tel = c.telefono;
+        if (!tel) continue;
+
+        // Deduplicar: saltear si ya enviamos en las últimas 20h
+        const medRec = c.meds_recordatorios || {};
+        const medKey = `h${horaActualEC}`;
+        if (medRec[medKey]) {
+          const diff = ahora - new Date(medRec[medKey] + (medRec[medKey].endsWith('Z') ? '' : 'Z'));
+          if (diff < 20 * 3600000) continue;
+        }
+
+        // No interrumpir sesión activa
+        const sesionMed = await obtener(tel);
+        if (sesionMed && sesionMed.paso !== 0) continue;
+
+        const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
+        const lista  = medsAhora.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n');
+        const plural = medsAhora.length > 1 ? 'los' : 'lo';
+        const msgMed = `💊 *Recordatorio de medicación*\n\n${saludo}\n\nEs hora de tomar:\n${lista}\n\n¿Ya ${plural} tomó?\n\n1️⃣ Sí\n2️⃣ No`;
+
+        await enviar(tel, msgMed);
+
+        await guardar(tel, 400, {
+          tipo: 'med_reminder',
+          caso_id: c.id,
+          empresa_id: c.empresa_id,
+          paciente_nombre: c.paciente_nombre,
+          medicamentos_ahora: medsAhora
+        });
+
+        // Registrar timestamp para deduplicación en próxima ejecución
+        await query('PATCH', 'tracking_casos',
+          { meds_recordatorios: { ...medRec, [medKey]: ahora.toISOString() } },
+          `?id=eq.${c.id}`
+        );
+
+        procesados++;
+      } catch (e) {
+        console.error('Error en recordatorio med tracking:', c.id, e.message);
         errores++;
       }
     }

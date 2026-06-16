@@ -31,6 +31,7 @@ function getFlows() {
     procesarCallCenter:           require('../src/flows/flujo-callcenter').procesarCallCenter,
     buscarEmpresaPorCodigo:       require('../src/flows/flujo-callcenter').buscarEmpresaPorCodigo,
     procesarTracking:             require('../src/flows/flujo-tracking').procesarTracking,
+    procesarRespuestaMed:         require('../src/flows/flujo-tracking').procesarRespuestaMed,
   };
 }
 
@@ -101,7 +102,7 @@ module.exports = async function handler(req, res) {
       buscarRespuestaPendiente, procesarRespuestaSeguimiento,
       buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
-      procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking
+      procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -117,20 +118,14 @@ module.exports = async function handler(req, res) {
       const casoT = casosTracking?.[0];
 
       if (casoT) {
-        const meds = Array.isArray(casoT.medicamentos) ? casoT.medicamentos : [];
-        const medsTexto = meds.length
-          ? `\n\n💊 Medicamentos:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
-          : '';
         const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
-        const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
+        const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
         await guardar(telefono, 400, {
+          tipo: 'bienestar',
           caso_id: casoT.id,
           empresa_id: casoT.empresa_id,
           paciente_nombre: casoT.paciente_nombre,
-          diagnostico: casoT.diagnostico,
-          medicamentos: meds,
-          paso_tracking: 1,
-          respuestas: {}
+          diagnostico: casoT.diagnostico
         });
         await enviar(telefono, msgTracking);
         return res.status(200).send('OK');
@@ -196,9 +191,11 @@ module.exports = async function handler(req, res) {
     ({ paso, datos } = sesion);
     datos = datos || {};
 
-    // Paso 400+ — tracking de seguimiento externo (empresas médicas)
+    // Paso 400+ — tracking externo: bienestar o recordatorio de medicación
     if (paso >= 400) {
-      const result = await procesarTracking(paso, mensaje, datos, telefono);
+      const result = datos.tipo === 'med_reminder'
+        ? await procesarRespuestaMed(mensaje, datos, telefono)
+        : await procesarTracking(paso, mensaje, datos, telefono);
       await despachar(telefono, result);
       return res.status(200).send('OK');
     }

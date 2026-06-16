@@ -1,65 +1,50 @@
 const { query } = require('../services/supabase');
-const { guardar, eliminar } = require('../services/sesiones');
+const { eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
+const { esSi } = require('../utils/validaciones');
 
-// Evalúa respuestas (escala Likert 1-5) y devuelve nivel de alerta 1-3.
-function evaluar(respuestas) {
-  const bienestar = parseInt(respuestas.bienestar);
-  let nivel = 1;
-  if (!isNaN(bienestar)) {
-    if (bienestar <= 2) nivel = 3;
-    else if (bienestar === 3) nivel = 2;
-  }
-  // No tomó medicación → sube al menos a nivel 2
-  if (respuestas.medicacion === '2' && nivel < 2) nivel = 2;
-  return nivel;
+const LIKERT = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
+
+// Bienestar Likert 1-5 → nivel de alerta 1-3
+function evaluar(bienestar) {
+  const b = parseInt(bienestar);
+  if (isNaN(b)) return 1;
+  if (b <= 2) return 3;
+  if (b === 3) return 2;
+  return 1;
 }
 
+// ── Chequeo de bienestar (paso 400, tipo:'bienestar') ─────────────────────
 async function procesarTracking(paso, mensaje, datos, telefono) {
-  const { caso_id, paciente_nombre, diagnostico, medicamentos, paso_tracking } = datos;
-  const pasActual = paso_tracking || 1;
-  const tieneMeds = Array.isArray(medicamentos) ? medicamentos.length > 0 : false;
-  const totalPreguntas = tieneMeds ? 2 : 1;
+  const { caso_id, paciente_nombre, diagnostico } = datos;
 
-  // Guardar respuesta del paso actual
-  datos.respuestas = datos.respuestas || {};
-  if (pasActual === 1) datos.respuestas.bienestar = mensaje.trim();
-  if (pasActual === 2) datos.respuestas.medicacion = mensaje.trim();
+  const bienestarRaw = mensaje.trim();
+  const bienestar    = parseInt(bienestarRaw);
 
-  // ¿Hay más preguntas?
-  if (pasActual < totalPreguntas) {
-    datos.paso_tracking = pasActual + 1;
-    await guardar(telefono, 400, datos);
-
-    const medsTexto = tieneMeds
-      ? medicamentos.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')
-      : '';
+  // Respuesta inválida: pedir de nuevo (sesión permanece activa)
+  if (isNaN(bienestar) || bienestar < 1 || bienestar > 5) {
     return {
-      respuesta: `¿Tomó sus medicamentos hoy?\n\n${medsTexto}\n\n1️⃣ Sí, los tomé todos\n2️⃣ No los tomé`,
+      respuesta: 'Por favor responda del *1 al 5*:\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien',
       terminar: false
     };
   }
 
-  // Todas las respuestas recolectadas — evaluar y registrar
-  const nivel = evaluar(datos.respuestas);
+  const nivel = evaluar(bienestarRaw);
 
   await query('POST', 'tracking_registros', {
     caso_id,
-    respuestas: datos.respuestas,
+    respuestas: { tipo: 'bienestar', bienestar: bienestarRaw },
     nivel_alerta: nivel
   });
 
-  // Actualizar estado del caso si es alerta grave
   if (nivel === 3) {
     await query('PATCH', 'tracking_casos', { estado: 'alerta' }, `?id=eq.${caso_id}`);
-    const _likert = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
-    await alertar(`🚨 <b>ALERTA TRACKING</b>\nPaciente: ${paciente_nombre || telefono}\nDiagnóstico: ${diagnostico}\nBienestar: ${_likert[datos.respuestas.bienestar] || datos.respuestas.bienestar}${datos.respuestas.medicacion ? `\nMedicación: ${datos.respuestas.medicacion === '1' ? 'Sí' : 'No'}` : ''}`);
+    await alertar(`🚨 <b>ALERTA TRACKING</b>\nPaciente: ${paciente_nombre || telefono}\nDiagnóstico: ${diagnostico}\nBienestar: ${LIKERT[bienestarRaw] || bienestarRaw}`);
   }
 
   await eliminar(telefono);
 
-  const likertLabel = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
-  const bLabel = likertLabel[datos.respuestas.bienestar] || datos.respuestas.bienestar;
+  const bLabel = LIKERT[bienestarRaw] || bienestarRaw;
   const msgs = {
     3: `🚨 Hemos registrado su reporte (*${bLabel}*). El equipo médico ha sido notificado.\n\nSi es una emergencia llame al *911*.`,
     2: `⚠️ Registramos su reporte (*${bLabel}*). Su equipo de seguimiento estará pendiente.\n\nSi empeora, llame al *911*.`,
@@ -69,4 +54,38 @@ async function procesarTracking(paso, mensaje, datos, telefono) {
   return { respuesta: msgs[nivel], terminar: true };
 }
 
-module.exports = { procesarTracking };
+// ── Recordatorio de medicación (paso 400, tipo:'med_reminder') ────────────
+async function procesarRespuestaMed(mensaje, datos, telefono) {
+  const { caso_id, medicamentos_ahora } = datos;
+  const m    = mensaje.trim();
+  const tomo = esSi(m) ? true : /^(no|2)$/i.test(m) ? false : null;
+
+  // Respuesta no reconocida: pedir de nuevo (sesión permanece activa)
+  if (tomo === null) {
+    return {
+      respuesta: 'Por favor responda:\n\n1️⃣ Sí, ya los tomé\n2️⃣ No los tomé todavía',
+      terminar: false
+    };
+  }
+
+  await query('POST', 'tracking_registros', {
+    caso_id,
+    respuestas: {
+      tipo: 'medicacion',
+      medicamentos: (medicamentos_ahora || []).map(x => x.nombre),
+      tomado: tomo
+    },
+    nivel_alerta: tomo ? 1 : 2
+  });
+
+  await eliminar(telefono);
+
+  return {
+    respuesta: tomo
+      ? `✅ ¡Perfecto! Registramos que tomó sus medicamentos. 👍`
+      : `⚠️ Recuerde tomarlos cuando pueda. Si tiene dudas, consulte con su médico.`,
+    terminar: true
+  };
+}
+
+module.exports = { procesarTracking, procesarRespuestaMed };

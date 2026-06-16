@@ -90,6 +90,8 @@ textarea.form-input{resize:vertical;min-height:70px}
 .tl-date{font-size:11px;color:#aaa;margin-bottom:4px}
 .tl-content{font-size:13px}
 .empty-state{text-align:center;padding:3rem;color:#aaa;font-size:13px}
+.dia-btn{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:6px;border:1.5px solid #e5e7eb;background:#fff;cursor:pointer;font-size:12px;font-weight:700;color:#666;transition:all .12s}
+.dia-btn.active{background:#1e3a5f;color:#fff;border-color:#1e3a5f}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e3a5f;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
 </style>
@@ -220,13 +222,36 @@ textarea.form-input{resize:vertical;min-height:70px}
     <div class="form-row">
       <div>
         <label class="form-label">Seguimiento cada (horas) *</label>
-        <input class="form-input" type="number" id="casoFrecuencia" value="24" min="1">
+        <input class="form-input" type="number" id="casoFrecuencia" value="24" min="1" oninput="renderPreviewGrid()">
       </div>
       <div>
         <label class="form-label">Durante (días) <span style="color:#aaa;font-weight:400">— vacío = sin límite</span></label>
-        <input class="form-input" type="number" id="casoDuracion" placeholder="ej: 30" min="1">
+        <input class="form-input" type="number" id="casoDuracion" placeholder="ej: 30" min="1" oninput="renderPreviewGrid()">
       </div>
     </div>
+    <div style="margin-bottom:10px">
+      <label class="form-label" style="margin-bottom:6px;display:block">Días activos</label>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="dia-btn active" data-dia="1" onclick="toggleDia(this)">L</button>
+        <button type="button" class="dia-btn active" data-dia="2" onclick="toggleDia(this)">M</button>
+        <button type="button" class="dia-btn active" data-dia="3" onclick="toggleDia(this)">X</button>
+        <button type="button" class="dia-btn active" data-dia="4" onclick="toggleDia(this)">J</button>
+        <button type="button" class="dia-btn active" data-dia="5" onclick="toggleDia(this)">V</button>
+        <button type="button" class="dia-btn active" data-dia="6" onclick="toggleDia(this)">S</button>
+        <button type="button" class="dia-btn" data-dia="0" onclick="toggleDia(this)">D</button>
+      </div>
+    </div>
+    <div class="form-row" style="margin-bottom:8px">
+      <div>
+        <label class="form-label">Desde</label>
+        <select class="form-input" id="horaInicio" onchange="renderPreviewGrid()"></select>
+      </div>
+      <div>
+        <label class="form-label">Hasta</label>
+        <select class="form-input" id="horaFin" onchange="renderPreviewGrid()"></select>
+      </div>
+    </div>
+    <div id="previewGrid" style="margin-bottom:10px"></div>
     <div class="form-row-single">
       <label class="form-label">Diagnóstico *</label>
       <input class="form-input" id="casoDiagnostico" placeholder="Ej: Diabetes tipo 2 — post-inicio de tratamiento">
@@ -451,7 +476,11 @@ function openNuevoCaso() {
   });
   document.getElementById('casoFrecuencia').value = 24;
   document.getElementById('casoDuracion').value = '';
+  document.querySelectorAll('.dia-btn').forEach(b => b.classList.toggle('active', b.dataset.dia !== '0'));
+  document.getElementById('horaInicio').value = 8;
+  document.getElementById('horaFin').value = 21;
   renderMeds();
+  renderPreviewGrid();
   document.getElementById('modalCaso').classList.add('open');
 }
 
@@ -492,6 +521,9 @@ async function guardarCaso() {
     medicamentos: medicamentosTemp,
     frecuencia_horas: parseInt(document.getElementById('casoFrecuencia').value) || 24,
     duracion_dias: duracion_raw ? parseInt(duracion_raw) : null,
+    horario_inicio: parseInt(document.getElementById('horaInicio').value) || 8,
+    horario_fin: parseInt(document.getElementById('horaFin').value) || 21,
+    dias_activos: Array.from(document.querySelectorAll('.dia-btn.active')).map(b => parseInt(b.dataset.dia)),
     estado: 'activo',
     proximo_seguimiento: new Date().toISOString()
   };
@@ -535,9 +567,13 @@ async function verDetalle(id) {
   document.getElementById('detalleTitulo').textContent = c.paciente_nombre || c.telefono;
   document.getElementById('detalleEmpresa').textContent = `${c.tracking_empresas?.nombre || '—'} · ${c.telefono}`;
   const duracionLabel = c.duracion_dias ? `${c.duracion_dias} días` : 'Sin límite';
+  const _dNombres = ['D','L','M','X','J','V','S'];
+  const diasLabel = (Array.isArray(c.dias_activos) ? c.dias_activos : [1,2,3,4,5,6]).sort((a,b)=>a-b).map(d=>_dNombres[d]).join(' ');
+  const horarioLabel = `${String(c.horario_inicio??8).padStart(2,'0')}:00–${String(c.horario_fin??21).padStart(2,'0')}:00`;
   document.getElementById('detalleBadges').innerHTML = `
     <span class="badge" style="background:#f3f4f6;color:${estadoColor[c.estado]||'#333'}">${c.estado}</span>
     <span class="badge badge-gray">Cada ${c.frecuencia_horas}h · ${duracionLabel}</span>
+    <span class="badge badge-gray">${horarioLabel} · ${diasLabel}</span>
     ${(c.medicamentos||[]).map(m => `<span class="badge" style="background:#eff6ff;color:#1d4ed8">💊 ${m.nombre}${m.dosis?` ${m.dosis}`:''}</span>`).join('')}
   `;
   document.getElementById('detalleTratamiento').innerHTML = `<strong>Diagnóstico:</strong> ${c.diagnostico || '—'}<br><strong>Tratamiento:</strong> ${c.tratamiento || '—'}`;
@@ -582,7 +618,12 @@ async function editarCaso(id) {
   document.getElementById('casoTratamiento').value = c.tratamiento || '';
   document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
   document.getElementById('casoDuracion').value = c.duracion_dias || '';
+  document.getElementById('horaInicio').value = c.horario_inicio ?? 8;
+  document.getElementById('horaFin').value = c.horario_fin ?? 21;
+  const diasC = Array.isArray(c.dias_activos) ? c.dias_activos : [1,2,3,4,5,6];
+  document.querySelectorAll('.dia-btn').forEach(b => b.classList.toggle('active', diasC.includes(parseInt(b.dataset.dia))));
   renderMeds();
+  renderPreviewGrid();
   document.getElementById('modalCaso').classList.add('open');
 }
 
@@ -628,6 +669,136 @@ async function toggleEmpresa(id, activo) {
   loadEmpresas();
 }
 
+// ── HORARIO / PREVIEW ─────────────────────────────────────────────────────
+function buildHoraSelects() {
+  ['horaInicio','horaFin'].forEach(id => {
+    const sel = document.getElementById(id);
+    const def = id === 'horaInicio' ? 8 : 21;
+    for (let h = 0; h <= 23; h++) {
+      const opt = new Option(`${String(h).padStart(2,'0')}:00`, h);
+      if (h === def) opt.selected = true;
+      sel.appendChild(opt);
+    }
+  });
+}
+
+function toggleDia(btn) {
+  btn.classList.toggle('active');
+  renderPreviewGrid();
+}
+
+// Calcula los slots de seguimiento para los próximos maxDias días
+// usando hora local del navegador (asume misma zona que el paciente)
+function computeTrackingSlots(frecuencia, horarioInicio, horarioFin, diasActivos, maxDias) {
+  const slots = [];
+  const now = new Date();
+  const limit = new Date(now.getTime() + maxDias * 24 * 3600000);
+
+  // Snap al inicio de la próxima hora
+  let t = new Date(now);
+  t.setMinutes(0, 0, 0);
+  t = new Date(t.getTime() + 3600000);
+
+  // Avanzar al primer slot válido
+  for (let i = 0; i < 24 * 7 && t < limit; i++) {
+    if (diasActivos.includes(t.getDay()) && t.getHours() >= horarioInicio && t.getHours() < horarioFin) break;
+    t = new Date(t.getTime() + 3600000);
+  }
+
+  let iter = 0;
+  while (t < limit && iter < 200) {
+    iter++;
+    slots.push(new Date(t));
+    // siguiente slot crudo
+    t = new Date(t.getTime() + frecuencia * 3600000);
+    t.setMinutes(0, 0, 0);
+    // avanzar al próximo slot válido
+    for (let i = 0; i < 24 * 7; i++) {
+      if (diasActivos.includes(t.getDay()) && t.getHours() >= horarioInicio && t.getHours() < horarioFin) break;
+      t = new Date(t.getTime() + 3600000);
+    }
+  }
+  return slots;
+}
+
+function renderPreviewGrid() {
+  const frecuencia   = parseInt(document.getElementById('casoFrecuencia')?.value) || 24;
+  const horarioIn    = parseInt(document.getElementById('horaInicio')?.value) || 8;
+  const horarioFin   = parseInt(document.getElementById('horaFin')?.value) || 21;
+  const durDias      = parseInt(document.getElementById('casoDuracion')?.value) || null;
+  const diasActivos  = Array.from(document.querySelectorAll('.dia-btn.active')).map(b => parseInt(b.dataset.dia));
+  const el           = document.getElementById('previewGrid');
+  if (!el) return;
+
+  if (!diasActivos.length) {
+    el.innerHTML = '<div style="color:#aaa;font-size:11px;text-align:center;padding:8px">Selecciona al menos un día.</div>';
+    return;
+  }
+
+  const maxDias = Math.min(durDias || 7, 7);
+  const slots   = computeTrackingSlots(frecuencia, horarioIn, horarioFin, diasActivos, maxDias);
+
+  const now = new Date();
+  const diasNombres = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  // Columnas: días del período
+  const cols = [];
+  for (let i = 0; i < maxDias; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i); d.setHours(0,0,0,0);
+    cols.push(d);
+  }
+
+  // Filas: horas únicas con algún slot
+  const horasSet = new Set(slots.map(s => s.getHours()));
+  const horas = [...horasSet].sort((a,b) => a - b);
+
+  // Lookup: "yyyy-mm-dd" → Set<hora>
+  const lookup = {};
+  slots.forEach(s => {
+    const k = s.toDateString();
+    if (!lookup[k]) lookup[k] = new Set();
+    lookup[k].add(s.getHours());
+  });
+
+  if (!horas.length) {
+    el.innerHTML = '<div style="color:#aaa;font-size:11px;text-align:center;padding:8px">Sin mensajes en el período — revisa la frecuencia y el horario.</div>';
+    return;
+  }
+
+  let html = `<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:8px;overflow-x:auto">
+    <div style="font-size:10px;color:#aaa;margin-bottom:6px">Vista previa · ${horarioIn}:00–${horarioFin}:00 · ${slots.length} mensaje${slots.length!==1?'s':''}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr>
+    <th style="width:36px"></th>`;
+
+  cols.forEach(d => {
+    const inactivo = !diasActivos.includes(d.getDay());
+    const label = d.toDateString() === now.toDateString() ? 'Hoy' : diasNombres[d.getDay()];
+    const fecha = `${d.getDate()}/${d.getMonth()+1}`;
+    html += `<th style="text-align:center;padding:3px 4px;font-weight:600;color:${inactivo?'#ccc':'#555'}">${label}<br><span style="font-weight:400">${fecha}</span></th>`;
+  });
+
+  html += '</tr></thead><tbody>';
+
+  horas.forEach(h => {
+    html += `<tr><td style="color:#aaa;font-size:10px;text-align:right;padding-right:6px;white-space:nowrap">${String(h).padStart(2,'0')}:00</td>`;
+    cols.forEach(d => {
+      const inactivo = !diasActivos.includes(d.getDay());
+      const tieneSlot = lookup[d.toDateString()]?.has(h);
+      if (inactivo) {
+        html += '<td style="text-align:center;color:#e5e7eb;font-size:10px">—</td>';
+      } else if (tieneSlot) {
+        html += '<td style="text-align:center"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#1e3a5f"></span></td>';
+      } else {
+        html += '<td></td>';
+      }
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
 // ── UTILS ─────────────────────────────────────────────────────────────────
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
@@ -649,6 +820,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 });
 
 window.addEventListener('load', async () => {
+  buildHoraSelects();
   const { data: { session } } = await sc.auth.getSession();
   if (session) {
     const users = await t('GET', 'usuarios', null, `?correo=eq.${encodeURIComponent(session.user.email)}&activo=eq.true`);

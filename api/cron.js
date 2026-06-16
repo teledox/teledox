@@ -6,6 +6,27 @@ const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
 const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratorio');
 const { procesarTracking: _procesarTracking } = require('../src/flows/flujo-tracking');
 
+// Ecuador es UTC-5 sin horario de verano.
+// Convierte una fecha UTC al día de semana y hora local ecuatoriana.
+const OFFSET_EC = -5;
+function horaEC(date) { return (date.getUTCHours() + 24 + OFFSET_EC) % 24; }
+function diaEC(date) {
+  const h = date.getUTCHours() + OFFSET_EC;
+  return (date.getUTCDay() + 7 + (h < 0 ? -1 : 0)) % 7;
+}
+
+// Dado un momento UTC, avanza hora a hora hasta encontrar un slot válido
+// según el rango horario y días activos del caso. Máximo 7 días de búsqueda.
+function siguienteSlotValido(desde, horarioInicio, horarioFin, diasActivos) {
+  let t = new Date(desde);
+  t.setUTCMinutes(0, 0, 0);
+  for (let i = 0; i < 24 * 7; i++) {
+    if (diasActivos.includes(diaEC(t)) && horaEC(t) >= horarioInicio && horaEC(t) < horarioFin) return t;
+    t = new Date(t.getTime() + 3600000);
+  }
+  return desde; // fallback: sin slot válido en 7 días, usar original
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).send('Method Not Allowed');
@@ -191,7 +212,11 @@ module.exports = async function handler(req, res) {
           respuestas: {}
         });
 
-        const proximoSeguimiento = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+        const rawNext      = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+        const horIn        = c.horario_inicio ?? 8;
+        const horFin       = c.horario_fin    ?? 21;
+        const dias         = Array.isArray(c.dias_activos) && c.dias_activos.length ? c.dias_activos : [1,2,3,4,5,6];
+        const proximoSeguimiento = siguienteSlotValido(rawNext, horIn, horFin, dias);
         await query('PATCH', 'tracking_casos', {
           proximo_seguimiento: proximoSeguimiento.toISOString()
         }, `?id=eq.${c.id}`);

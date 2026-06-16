@@ -161,12 +161,18 @@ function _parsearP12(arrayBuffer, password) {
   const hasta  = cert.validity.notAfter;
   const vigente = now >= desde && now <= hasta;
 
+  // Validar si el emisor es una ECI acreditada (función definida en firma-electronica.js)
+  const { acreditada: eciAcreditada, emisor: certEmisor } =
+    typeof _validarEmisorECI === 'function' ? _validarEmisorECI(cert) : { acreditada: false, emisor: '' };
+
   return {
     titular:      getField(subj, 'commonName'),
     cedula:       getField(subj, 'serialNumber') || getField(subj, 'organizationalUnitName'),
     organizacion: getField(subj, 'organizationName'),
     pais:         getField(subj, 'countryName'),
-    emisor:       getField(iss,  'commonName') || getField(iss, 'organizationName'),
+    emisor:       certEmisor || getField(iss, 'commonName') || getField(iss, 'organizationName'),
+    certEmisor,
+    eciAcreditada,
     validoDesde:  desde.toLocaleDateString('es-EC'),
     validoHasta:  hasta.toLocaleDateString('es-EC'),
     diasRestantes: vigente ? Math.ceil((hasta - now) / 86400000) : 0,
@@ -242,27 +248,35 @@ function _renderP12Status() {
 
   if (btnElim) btnElim.style.display = 'inline-flex';
 
-  // Badge de estado
+  // Badge de estado (vigencia + tipo de firma)
   if (badge && info) {
     const vigente = info.vigente;
     const dias    = info.diasRestantes || 0;
-    badge.style.display  = 'inline-block';
+    const eci     = info.eciAcreditada;
+    badge.style.display    = 'inline-block';
     badge.style.background = vigente && dias > 30 ? '#dcfce7' : vigente ? '#fef9c3' : '#fee2e2';
     badge.style.color      = vigente && dias > 30 ? '#16a34a' : vigente ? '#92400e' : '#dc2626';
-    badge.textContent      = vigente ? (dias > 30 ? `✅ Vigente · ${dias} días` : `⚠️ Vence en ${dias} días`) : '❌ Vencido';
+    badge.textContent      = vigente
+      ? (dias > 30 ? `${eci ? '🏛️ Certificada' : '🔐 Simple'} · ${dias} días` : `⚠️ Vence en ${dias} días`)
+      : '❌ Vencido';
   }
 
   // Panel de estado del certificado
   if (statusEl && info) {
+    const eci = info.eciAcreditada;
+    const eciBadge = eci
+      ? '<div style="margin-top:8px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:6px 10px;font-size:12px;color:#1d4ed8;font-weight:600">🏛️ Firma Electrónica Certificada — emisor es una ECI acreditada por ARCOTEL</div>'
+      : '<div style="margin-top:8px;background:#fefce8;border:1px solid #fde68a;border-radius:6px;padding:6px 10px;font-size:12px;color:#92400e">⚠️ Firma Electrónica Simple — el emisor no está en la lista de ECIs acreditadas</div>';
     statusEl.innerHTML = `
       <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:1rem;font-size:13px">
         <div style="font-weight:700;margin-bottom:6px;color:#0369a1">🔐 Certificado registrado</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:12px">
           <div><span style="color:#888">Titular: </span><strong>${info.titular || '—'}</strong></div>
-          <div><span style="color:#888">Emisor: </span><strong>${info.emisor || '—'}</strong></div>
+          <div><span style="color:#888">Emisor: </span><strong>${info.certEmisor || info.emisor || '—'}</strong></div>
           <div><span style="color:#888">Válido desde: </span><strong>${info.validoDesde || '—'}</strong></div>
           <div><span style="color:#888">Válido hasta: </span><strong>${info.validoHasta || '—'}</strong></div>
         </div>
+        ${eciBadge}
         ${sesionActiva
           ? '<div style="margin-top:8px;color:#16a34a;font-size:12px;font-weight:600">🟢 Sesión activa — certificado disponible para firmar documentos</div>'
           : '<div style="margin-top:8px;color:#ca8a04;font-size:12px">🔑 Ingrese su contraseña para activar el certificado en esta sesión</div>'}

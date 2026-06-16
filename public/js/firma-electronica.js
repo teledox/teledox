@@ -10,11 +10,43 @@ const SIG_PLACEHOLDER_BYTES   = 12000;
 const SIG_PLACEHOLDER_HEX_LEN = SIG_PLACEHOLDER_BYTES * 2;
 const BYTE_RANGE_PLACEHOLDER  = 9999999999;
 
+// ECIs acreditadas por ARCOTEL en Ecuador. Se compara contra issuer CN + O en minúsculas.
+const _ECI_ACREDITADAS = [
+  'banco central del ecuador',
+  'bce - entidad de certificacion',
+  'bce-entidad de certificacion',
+  'registro civil',
+  'rc-entidad de certificacion',
+  'security data',
+  'anf ac ecuador',
+  'anf autoridad de certificacion',
+  'consejo de la judicatura',
+  'cj - entidad de certificacion',
+  'cj-entidad de certificacion',
+];
+
+// Detecta si el emisor del certificado es una ECI acreditada.
+// Exportada como global para que perfil.js la use al guardar el .p12.
+function _validarEmisorECI(cert) {
+  const getField = (attrs, name) => (attrs.find(a => a.name === name || a.shortName === name) || {}).value || '';
+  const issAttrs = cert.issuer.attributes;
+  const cn  = getField(issAttrs, 'commonName').toLowerCase();
+  const org = getField(issAttrs, 'organizationName').toLowerCase();
+  const texto = cn + ' ' + org;
+  const acreditada = _ECI_ACREDITADAS.some(eci => texto.includes(eci));
+  const emisor = getField(issAttrs, 'commonName') || getField(issAttrs, 'organizationName') || 'Desconocido';
+  return { acreditada, emisor };
+}
+
 // ── Log estructurado de sesión de firma ──────────────────────────────────────
 // Accesible en consola como window._firmaLogs para debugging.
 // Se limpia al inicio de cada llamada a guardarPDFConFirma().
 const _firmaLogs = [];
 window._firmaLogs = _firmaLogs;
+
+// UUID del documento registrado por dibujarFirmaElectronicaPDF; leído por
+// guardarPDFConFirma para enviar el token TSA al registro correcto.
+let _firmaDocIdActual = null;
 
 function _logFirma(paso, ok, detalle = '') {
   const entry = { ts: new Date().toISOString(), paso, ok, detalle };
@@ -22,6 +54,12 @@ function _logFirma(paso, ok, detalle = '') {
   (ok ? console.log : console.error)(`[firma:${paso}]`, detalle || (ok ? 'OK' : 'FALLO'));
   if (typeof _firmaActualizarPanel === 'function') _firmaActualizarPanel();
   return entry;
+}
+
+// SHA-256 de un Uint8Array, devuelve hex string.
+async function _sha256Hex(uint8Array) {
+  const buf = await crypto.subtle.digest('SHA-256', uint8Array);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
 function _fechaPDFFirma(d) {
@@ -126,6 +164,7 @@ function _derToHex(der) {
 
 // Firma PKCS#7 detached (CMS) con la clave privada del .p12. La contraseña
 // solo se usa aquí, en memoria, para descifrar la clave; nunca se transmite.
+// Devuelve también eciAcreditada y certEmisor para registrarlos en Supabase.
 function _firmarPKCS7(messageBytes, p12b64, pass) {
   _logFirma('pkcs7:parsear-p12', true, 'inicio parseo forge');
   const p12Der = atob(p12b64);
@@ -157,6 +196,11 @@ function _firmarPKCS7(messageBytes, p12b64, pass) {
   _logFirma('pkcs7:leaf-cert', true,
     `titular="${titular}", localKeyId=${usóLocalKeyId ? 'sí' : 'NO — fallback a certBags[0]'}`);
 
+  // Validar si el emisor es una ECI acreditada por ARCOTEL
+  const { acreditada: eciAcreditada, emisor: certEmisor } = _validarEmisorECI(leafBag.cert);
+  _logFirma('pkcs7:eci', eciAcreditada,
+    `emisor="${certEmisor}" — ${eciAcreditada ? 'ECI acreditada (firma certificada)' : 'NO es ECI acreditada (firma simple)'}`);
+
   const p7 = forge.pkcs7.createSignedData();
   p7.content = forge.util.createBuffer(_bytesToLatin1(messageBytes));
   certBags.forEach(b => p7.addCertificate(b.cert));
@@ -176,7 +220,7 @@ function _firmarPKCS7(messageBytes, p12b64, pass) {
   _logFirma('pkcs7:firma-der', true,
     `${der.length} bytes DER → ${der.length * 2} hex (placeholder=${SIG_PLACEHOLDER_HEX_LEN})`);
 
-  return { der, titular };
+  return { der, titular, eciAcreditada, certEmisor };
 }
 
 // Firma electrónicamente un PDFDocument (pdf-lib) que aún no fue guardado.
@@ -203,7 +247,7 @@ async function firmarPdfConP12(doc, { nombre, motivo, p12b64, pass }) {
   firmado.set(pdfBytes.subarray(B, B + C), A);
   _logFirma('pades:mensaje', true, `${firmado.length} bytes a firmar`);
 
-  const { der, titular } = _firmarPKCS7(firmado, p12b64, pass);
+  const { der, titular, eciAcreditada, certEmisor } = _firmarPKCS7(firmado, p12b64, pass);
 
   const sigHex = _derToHex(der);
   _logFirma('pades:sig-hex', sigHex.length <= SIG_PLACEHOLDER_HEX_LEN,
@@ -218,7 +262,13 @@ async function firmarPdfConP12(doc, { nombre, motivo, p12b64, pass }) {
   _writeLatin1(pdfBytes, sigHex.padEnd(SIG_PLACEHOLDER_HEX_LEN, '0'), hexStart);
   _logFirma('pades:completo', true, `PDF firmado como "${titular}"`);
 
-  return { pdfBytes, titular };
+  // SHA-256 de los bytes DER de la firma → se enviará al proxy TSA
+  const derUint8 = new Uint8Array(der.length);
+  for (let i = 0; i < der.length; i++) derUint8[i] = der.charCodeAt(i);
+  const sigHashHex = await _sha256Hex(derUint8);
+  _logFirma('pades:sig-hash', true, `SHA-256 DER = ${sigHashHex.slice(0, 16)}…`);
+
+  return { pdfBytes, titular, eciAcreditada, certEmisor, sigHashHex };
 }
 
 // Genera un QR como data URL PNG usando qrcode-generator (global `qrcode`,
@@ -256,9 +306,9 @@ function _generarQRDataURL(texto, cellSize = 4, margin = 4) {
 }
 
 // Dibuja un sello visual de firma electrónica (QR + datos del firmante) en la
-// esquina inferior izquierda de la página, encima de la línea del pie de
-// página. Devuelve true si lo dibujó (hay un certificado .p12 activo) o
-// false si no hay nada que mostrar (el caller mantiene su layout original).
+// esquina inferior izquierda de la página. Registra el documento en Supabase
+// para el QR de verificación y almacena el doc_id en _firmaDocIdActual para
+// que guardarPDFConFirma pueda actualizar el registro con el token TSA.
 async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocumento }) {
   const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
   if (!p12) {
@@ -274,12 +324,13 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
   const titular = info.titular
     || (typeof currentUser !== 'undefined' ? `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim() : '')
     || 'Médico';
-  const especialidad = (typeof currentUser !== 'undefined' ? currentUser?.especialidad : '') || '';
+  const especialidad   = (typeof currentUser !== 'undefined' ? currentUser?.especialidad : '') || '';
+  const certEmisor     = info.certEmisor    || '';
+  const eciAcreditada  = info.eciAcreditada || false;
   const fecha = new Date().toLocaleString('es-EC');
 
-  // Registra el documento en MediLyft para que el QR apunte a una página de
-  // verificación pública con los datos del firmante. Si el registro falla
-  // (sin conexión, etc.), el QR cae de vuelta a mostrar la info en texto.
+  _firmaDocIdActual = null; // resetear antes de cada documento
+
   let qrTexto = [
     'Documento firmado electronicamente',
     `Firmante: ${titular}`,
@@ -291,16 +342,19 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        usuario_id: typeof currentUser !== 'undefined' ? currentUser?.id : null,
+        usuario_id:     typeof currentUser !== 'undefined' ? currentUser?.id : null,
         titular,
         tipo_documento: tipoDocumento || null,
+        cert_emisor:    certEmisor    || null,
+        eci_acreditada: eciAcreditada,
       })
     });
     if (r.ok) {
       const { id } = await r.json();
       if (id) {
         qrTexto = `https://www.medilyft.app/verificar.html?id=${id}`;
-        _logFirma('sello:registro-api', true, `documento registrado id=${id}`);
+        _firmaDocIdActual = id;
+        _logFirma('sello:registro-api', true, `documento registrado id=${id}, eci=${eciAcreditada}`);
       }
     } else {
       _logFirma('sello:registro-api', false, `HTTP ${r.status} — QR usará texto plano`);
@@ -315,9 +369,9 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
     const size = 38;
     const x = 40, y = 60;
     page.drawImage(qrImg, { x, y, width: size, height: size });
-    page.drawText('Firmado electronicamente', { x: x + size + 6, y: y + size - 9,  size: 7, font, color });
-    page.drawText(titular,                    { x: x + size + 6, y: y + size - 18, size: 7, font, color });
-    page.drawText(fecha,                      { x: x + size + 6, y: y + size - 27, size: 6, font, color });
+    page.drawText('Firmado electronicamente',   { x: x + size + 6, y: y + size - 9,  size: 7, font, color });
+    page.drawText(titular,                       { x: x + size + 6, y: y + size - 18, size: 7, font, color });
+    page.drawText(fecha,                         { x: x + size + 6, y: y + size - 27, size: 6, font, color });
     if (especialidad) page.drawText(especialidad.toUpperCase(), { x: x + size + 6, y: y + size - 36, size: 6, font, color });
     _logFirma('sello:qr-dibujado', true, `titular="${titular}"`);
     return true;
@@ -328,8 +382,8 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
 }
 
 // Guarda el PDF, firmándolo con el .p12 activo del médico si está disponible.
-// Si algo falla (sin certificado activo, contraseña incorrecta, etc.) cae
-// de vuelta a un PDF sin firma criptográfica (con la firma/sello visuales).
+// Después de firmar, solicita un timestamp RFC 3161 al proxy TSA y actualiza
+// el registro en Supabase. Si cualquier paso falla, degrada sin romper el PDF.
 async function guardarPDFConFirma(doc, motivo) {
   _firmaLogs.length = 0; // limpiar log de sesión anterior
   _logFirma('guardar:inicio', true, `motivo="${motivo}"`);
@@ -345,8 +399,16 @@ async function guardarPDFConFirma(doc, motivo) {
     const nombre = typeof currentUser !== 'undefined'
       ? `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim()
       : '';
-    const { pdfBytes, titular } = await firmarPdfConP12(doc, { nombre, motivo, p12b64: p12.p12b64, pass: p12.pass });
+    const { pdfBytes, titular, sigHashHex } = await firmarPdfConP12(doc, {
+      nombre, motivo, p12b64: p12.p12b64, pass: p12.pass
+    });
     _logFirma('guardar:exito', true, `PDF firmado correctamente como "${titular}"`);
+
+    // Solicitar timestamp TSA y persistirlo (no bloqueante: fallo no invalida el PDF)
+    _solicitarYGuardarTSA(sigHashHex).catch(e =>
+      _logFirma('tsa:error-no-bloqueante', false, e.message)
+    );
+
     return pdfBytes;
   } catch (e) {
     _logFirma('guardar:fallo-firma', false, e.message);
@@ -354,5 +416,40 @@ async function guardarPDFConFirma(doc, motivo) {
       showToast(`⚠️ Firma electrónica falló: ${e.message}. PDF generado SIN firma criptográfica.`);
     }
     return await doc.save();
+  }
+}
+
+// Solicita un timestamp RFC 3161 a freetsa.org (vía nuestro proxy) y lo
+// guarda en el registro de documentos_firmados. Separado para no bloquear
+// la entrega del PDF al médico si el TSA tarda o falla.
+async function _solicitarYGuardarTSA(sigHashHex) {
+  if (!_firmaDocIdActual || !sigHashHex) return;
+  _logFirma('tsa:solicitar', true, `sigHashHex=${sigHashHex.slice(0, 16)}…`);
+
+  const r = await fetch('/api/firma-electronica', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'tsa', sigHashHex })
+  });
+
+  if (!r.ok) {
+    const err = await r.text();
+    _logFirma('tsa:proxy-error', false, err);
+    return;
+  }
+
+  const { tsaToken, tsaTs } = await r.json();
+  _logFirma('tsa:recibido', true, `tsaTs=${tsaTs}`);
+
+  const r2 = await fetch('/api/firma-electronica', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'tsa_update', doc_id: _firmaDocIdActual, tsa_token: tsaToken, tsa_ts: tsaTs })
+  });
+
+  if (r2.ok) {
+    _logFirma('tsa:guardado', true, `doc_id=${_firmaDocIdActual}`);
+  } else {
+    _logFirma('tsa:update-error', false, await r2.text());
   }
 }

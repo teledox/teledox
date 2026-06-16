@@ -6,13 +6,17 @@
 <title>Verificar documento · MediLyft</title>
 <style>
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background:#f3f4f6; margin:0; padding:24px; display:flex; align-items:center; justify-content:center; min-height:100vh; }
-  .card { background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); max-width:420px; width:100%; padding:32px 28px; text-align:center; }
+  .card { background:#fff; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,.08); max-width:440px; width:100%; padding:32px 28px; text-align:center; }
   .icon { font-size:42px; margin-bottom:8px; }
   h1 { font-size:18px; margin:0 0 16px; color:#111827; }
-  .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f1f1; font-size:14px; text-align:left; }
-  .row span:first-child { color:#6b7280; }
-  .row span:last-child { color:#111827; font-weight:600; text-align:right; margin-left:12px; }
-  .ok { color:#16a34a; }
+  .row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #f1f1f1; font-size:14px; text-align:left; gap:12px; }
+  .row span:first-child { color:#6b7280; flex-shrink:0; }
+  .row span:last-child { color:#111827; font-weight:600; text-align:right; }
+  .badge { display:inline-block; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:600; margin:12px 0 4px; }
+  .badge-eci  { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
+  .badge-simple { background:#fefce8; color:#92400e; border:1px solid #fde68a; }
+  .badge-tsa  { background:#f0fdf4; color:#15803d; border:1px solid #bbf7d0; }
+  .ok  { color:#16a34a; }
   .err { color:#dc2626; }
   .footer { margin-top:20px; font-size:12px; color:#9ca3af; }
 </style>
@@ -31,21 +35,42 @@
     function render(html) { card.innerHTML = html; }
 
     if (!id) {
-      render(`
-        <div class="icon err">⚠️</div>
-        <h1 class="err">Falta el identificador del documento</h1>
-      `);
+      render(`<div class="icon err">⚠️</div><h1 class="err">Falta el identificador del documento</h1>`);
     } else {
       fetch(`/api/firma-electronica?id=${encodeURIComponent(id)}`)
         .then(r => r.ok ? r.json() : Promise.reject(r.status))
         .then(data => {
-          const fecha = new Date(data.creado_en).toLocaleString('es-EC');
+          const fechaFirma = new Date(data.creado_en).toLocaleString('es-EC');
+          const fechaTSA   = data.tsa_ts ? new Date(data.tsa_ts).toLocaleString('es-EC') : null;
+
+          const eciBadge = data.eci_acreditada
+            ? `<div class="badge badge-eci">🏛️ Firma Electrónica Certificada · ECI acreditada ARCOTEL</div>`
+            : `<div class="badge badge-simple">🔐 Firma Electrónica Simple</div>`;
+
+          const tsaBadge = fechaTSA
+            ? `<div class="badge badge-tsa">🕐 Timestamp RFC 3161 · freetsa.org</div>`
+            : '';
+
+          const rowEmisor = data.cert_emisor
+            ? `<div class="row"><span>Entidad emisora</span><span>${data.cert_emisor}</span></div>`
+            : '';
+
+          const rowTSA = fechaTSA
+            ? `<div class="row"><span>Timestamp TSA</span><span>${fechaTSA}</span></div>`
+            : '';
+
           render(`
             <div class="icon ok">✅</div>
             <h1 class="ok">Documento firmado electrónicamente</h1>
-            <div class="row"><span>Firmante</span><span>${data.titular || '—'}</span></div>
-            <div class="row"><span>Tipo de documento</span><span>${data.tipo_documento || '—'}</span></div>
-            <div class="row"><span>Fecha de firma</span><span>${fecha}</span></div>
+            ${eciBadge}
+            ${tsaBadge}
+            <div style="margin-top:12px">
+              <div class="row"><span>Firmante</span><span>${data.titular || '—'}</span></div>
+              ${rowEmisor}
+              <div class="row"><span>Tipo de documento</span><span>${data.tipo_documento || '—'}</span></div>
+              <div class="row"><span>Fecha de firma</span><span>${fechaFirma}</span></div>
+              ${rowTSA}
+            </div>
             <div class="footer">Verificado en MediLyft · medilyft.app</div>
           `);
         })

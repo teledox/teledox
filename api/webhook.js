@@ -107,6 +107,34 @@ module.exports = async function handler(req, res) {
     // Reinicio de sesión con "hola"
     if (mensaje.toLowerCase() === 'hola') {
       await eliminar(telefono);
+
+      // Si el teléfono tiene un caso de tracking activo, arranca ese flujo
+      // en vez del flujo de consulta normal — evita que el paciente derivado
+      // de otra empresa entre por error al flujo B2C.
+      const { query: qTracking } = require('../src/services/supabase');
+      const casosTracking = await qTracking('GET', 'tracking_casos', null,
+        `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
+      const casoT = casosTracking?.[0];
+
+      if (casoT) {
+        const meds = Array.isArray(casoT.medicamentos) ? casoT.medicamentos : [];
+        const medsTexto = meds.length
+          ? `\n\n💊 Medicamentos:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
+          : '';
+        const msgTracking = `🩺 *Seguimiento MediLyft*\n\nHola ${casoT.paciente_nombre || nombreWhatsApp}! Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy del *1 al 10*?\n_(1 = muy mal · 10 = excelente)_`;
+        await guardar(telefono, 400, {
+          caso_id: casoT.id,
+          empresa_id: casoT.empresa_id,
+          paciente_nombre: casoT.paciente_nombre,
+          diagnostico: casoT.diagnostico,
+          medicamentos: meds,
+          paso_tracking: 1,
+          respuestas: {}
+        });
+        await enviar(telefono, msgTracking);
+        return res.status(200).send('OK');
+      }
+
       const result = await procesarPaso(0, mensaje, {}, telefono, nombreWhatsApp);
       await guardar(telefono, result.paso, result.datos);
       await despachar(telefono, result);

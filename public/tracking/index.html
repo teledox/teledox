@@ -76,9 +76,19 @@ tr:hover td{background:#fafafa}
 select.form-input{background:#fff}
 textarea.form-input{resize:vertical;min-height:70px}
 /* MEDS */
-.med-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:12px;margin:3px}
-.med-tag button{background:none;border:none;cursor:pointer;color:#1d4ed8;font-size:14px;line-height:1;padding:0}
 .meds-input-row{display:flex;gap:8px;margin-top:8px}
+.med-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
+.med-card{display:flex;align-items:center;gap:8px;border-radius:10px;padding:9px 11px;border:1.5px solid var(--mc-border);background:var(--mc-bg)}
+.med-card-icon{font-size:16px;flex-shrink:0}
+.med-card-body{flex:1;min-width:0}
+.med-card-name{font-size:12px;font-weight:700;color:var(--mc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.med-card-sub{font-size:11px;color:var(--mc-text);opacity:.65;margin-top:1px}
+.med-card-time{font-size:11px;color:var(--mc-text);font-weight:600;flex-shrink:0;white-space:nowrap}
+.med-card-del{background:none;border:none;cursor:pointer;color:var(--mc-text);opacity:.4;font-size:15px;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:opacity .1s}
+.med-card-del:hover{opacity:.9}
+/* separador visual entre secciones del formulario */
+.section-sep{border-top:1.5px dashed #e5e7eb;margin:1.2rem 0 .9rem}
+.section-sep-label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.7rem;display:flex;align-items:center;gap:6px;padding-top:.8rem}
 /* TIMELINE */
 .timeline{display:flex;flex-direction:column;gap:10px;margin-top:1rem}
 .tl-item{display:flex;gap:12px;align-items:flex-start}
@@ -260,13 +270,13 @@ textarea.form-input{resize:vertical;min-height:70px}
       <label class="form-label">Tratamiento / indicaciones</label>
       <textarea class="form-input" id="casoTratamiento" placeholder="Ej: Dieta baja en carbohidratos, ejercicio 30min/día, control glucosa en ayunas"></textarea>
     </div>
-    <div class="form-row-single">
-      <label class="form-label">Medicamentos</label>
-      <div id="medsTags" style="min-height:32px;margin-bottom:6px"></div>
+    <div class="section-sep">
+      <div class="section-sep-label">💊 Recordatorios de medicación</div>
+      <div id="medGrid" class="med-grid"></div>
       <div class="meds-input-row">
-        <input class="form-input" id="medNombre" placeholder="Nombre" style="flex:2">
-        <input class="form-input" id="medDosis" placeholder="Dosis" style="flex:1">
-        <select class="form-input" id="medHora" style="flex:1" title="Hora de recordatorio (opcional)">
+        <input class="form-input" id="medNombre" placeholder="Medicamento" style="flex:2">
+        <input class="form-input" id="medDosis" placeholder="Dosis (ej: 500mg)" style="flex:1.2">
+        <select class="form-input" id="medHora" style="flex:.9" title="Hora de recordatorio (opcional)">
           <option value="">sin hora</option>
         </select>
         <button class="btn btn-secondary btn-sm" onclick="addMed()">+ Agregar</button>
@@ -504,10 +514,35 @@ function removeMed(i) {
   renderMeds();
 }
 
+const MED_COLORS = [
+  { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },  // azul
+  { bg: '#f5f3ff', border: '#ddd6fe', text: '#7c3aed' },  // violeta
+  { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d' },  // verde
+  { bg: '#fff7ed', border: '#fed7aa', text: '#c2410c' },  // naranja
+  { bg: '#fdf4ff', border: '#f5d0fe', text: '#a21caf' },  // fucsia
+  { bg: '#f0fdfa', border: '#99f6e4', text: '#0f766e' },  // teal
+];
+
 function renderMeds() {
-  document.getElementById('medsTags').innerHTML = medicamentosTemp.map((m, i) =>
-    `<span class="med-tag">💊 ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}${m.hora != null ? ` · ${String(m.hora).padStart(2,'0')}:00` : ''}<button onclick="removeMed(${i})">×</button></span>`
-  ).join('');
+  const el = document.getElementById('medGrid');
+  if (!el) return;
+  if (!medicamentosTemp.length) {
+    el.innerHTML = '<div style="color:#ccc;font-size:12px;grid-column:1/-1;padding:2px 0">Sin medicamentos — agregar arriba</div>';
+    return;
+  }
+  el.innerHTML = medicamentosTemp.map((m, i) => {
+    const c = MED_COLORS[i % MED_COLORS.length];
+    const horaLabel = m.hora != null ? `🕐 ${String(m.hora).padStart(2,'0')}:00` : '';
+    return `<div class="med-card" style="--mc-bg:${c.bg};--mc-border:${c.border};--mc-text:${c.text}">
+      <div class="med-card-icon">💊</div>
+      <div class="med-card-body">
+        <div class="med-card-name">${m.nombre}</div>
+        ${m.dosis ? `<div class="med-card-sub">${m.dosis}</div>` : ''}
+      </div>
+      ${horaLabel ? `<div class="med-card-time">${horaLabel}</div>` : ''}
+      <button class="med-card-del" onclick="removeMed(${i})">×</button>
+    </div>`;
+  }).join('');
 }
 
 async function guardarCaso() {

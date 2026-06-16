@@ -1,5 +1,5 @@
 const { query } = require('../src/services/supabase');
-const { enviar } = require('../src/services/whatsapp');
+const { enviar, enviarTemplate } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
 const { obtener, guardar } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
@@ -193,27 +193,45 @@ module.exports = async function handler(req, res) {
         const sesion = await obtener(telefono);
         if (sesion && sesion.paso !== 0) continue;
 
-        const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
-        const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
+        if (!c.activado) {
+          // Primera vez — el paciente aún no activó el seguimiento.
+          // Enviamos la plantilla aprobada (fuera de la ventana de 24h).
+          // Los payloads de los botones se definen aquí, no en Meta.
+          await enviarTemplate(
+            telefono,
+            'med_reminder',
+            [c.diagnostico || '—'],
+            ['hola', 'que_es_esto']
+          );
+          // Volver a intentar en 24h si el paciente no responde
+          await query('PATCH', 'tracking_casos', {
+            proximo_seguimiento: new Date(ahora.getTime() + 24 * 3600000).toISOString()
+          }, `?id=eq.${c.id}`);
+        } else {
+          // Ya activado — la ventana de 24h debería estar abierta.
+          // Enviamos el check-in diario como texto libre.
+          const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
+          const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
 
-        await enviar(telefono, mensaje);
+          await enviar(telefono, mensaje);
 
-        await guardar(telefono, 400, {
-          tipo: 'bienestar',
-          caso_id: c.id,
-          empresa_id: c.empresa_id,
-          paciente_nombre: c.paciente_nombre,
-          diagnostico: c.diagnostico
-        });
+          await guardar(telefono, 400, {
+            tipo: 'bienestar',
+            caso_id: c.id,
+            empresa_id: c.empresa_id,
+            paciente_nombre: c.paciente_nombre,
+            diagnostico: c.diagnostico
+          });
 
-        const rawNext      = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
-        const horIn        = c.horario_inicio ?? 8;
-        const horFin       = c.horario_fin    ?? 21;
-        const dias         = Array.isArray(c.dias_activos) && c.dias_activos.length ? c.dias_activos : [1,2,3,4,5,6];
-        const proximoSeguimiento = siguienteSlotValido(rawNext, horIn, horFin, dias);
-        await query('PATCH', 'tracking_casos', {
-          proximo_seguimiento: proximoSeguimiento.toISOString()
-        }, `?id=eq.${c.id}`);
+          const rawNext = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+          const horIn   = c.horario_inicio ?? 8;
+          const horFin  = c.horario_fin    ?? 21;
+          const dias    = Array.isArray(c.dias_activos) && c.dias_activos.length ? c.dias_activos : [1,2,3,4,5,6];
+          const proximoSeguimiento = siguienteSlotValido(rawNext, horIn, horFin, dias);
+          await query('PATCH', 'tracking_casos', {
+            proximo_seguimiento: proximoSeguimiento.toISOString()
+          }, `?id=eq.${c.id}`);
+        }
 
         procesados++;
       } catch (e) {

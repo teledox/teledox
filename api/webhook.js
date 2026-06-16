@@ -118,6 +118,10 @@ module.exports = async function handler(req, res) {
       const casoT = casosTracking?.[0];
 
       if (casoT) {
+        // Marcar como activado la primera vez que el paciente responde
+        if (!casoT.activado) {
+          await qTracking('PATCH', 'tracking_casos', { activado: true }, `?id=eq.${casoT.id}`);
+        }
         const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
         const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
         await guardar(telefono, 400, {

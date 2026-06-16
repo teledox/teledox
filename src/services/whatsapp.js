@@ -117,4 +117,40 @@ async function descargarMedia(mediaId) {
   return { buffer: Buffer.from(await fileRes.arrayBuffer()), mimeType: meta.mime_type };
 }
 
-module.exports = { enviar, enviarBotones, enviarLista, descargarMedia };
+// ── Plantilla de WhatsApp (mensajes fuera de la ventana de 24h) ──────────
+// variables: ['Juan', 'Hipertensión']  →  {{1}}, {{2}} en el cuerpo
+// payloadsBotones: ['hola', 'que_es_esto']  →  payload de cada quick_reply
+async function enviarTemplate(telefono, nombrePlantilla, variables = [], payloadsBotones = []) {
+  const numero = telefono.replace('whatsapp:', '').replace('+', '').trim();
+
+  const components = [];
+
+  if (variables.length > 0) {
+    components.push({
+      type: 'body',
+      parameters: variables.map(v => ({ type: 'text', text: String(v) }))
+    });
+  }
+
+  payloadsBotones.forEach((payload, i) => {
+    components.push({
+      type: 'button',
+      sub_type: 'quick_reply',
+      index: String(i),
+      parameters: [{ type: 'payload', payload: String(payload) }]
+    });
+  });
+
+  return _post({
+    messaging_product: 'whatsapp',
+    to: numero,
+    type: 'template',
+    template: {
+      name: nombrePlantilla,
+      language: { code: 'es' },
+      components
+    }
+  });
+}
+
+module.exports = { enviar, enviarBotones, enviarLista, descargarMedia, enviarTemplate };

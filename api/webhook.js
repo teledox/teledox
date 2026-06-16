@@ -30,6 +30,7 @@ function getFlows() {
     procesarAntecedentes:         require('../src/flows/flujo-antecedentes').procesarAntecedentes,
     procesarCallCenter:           require('../src/flows/flujo-callcenter').procesarCallCenter,
     buscarEmpresaPorCodigo:       require('../src/flows/flujo-callcenter').buscarEmpresaPorCodigo,
+    procesarTracking:             require('../src/flows/flujo-tracking').procesarTracking,
   };
 }
 
@@ -100,7 +101,7 @@ module.exports = async function handler(req, res) {
       buscarRespuestaPendiente, procesarRespuestaSeguimiento,
       buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
-      procesarCallCenter, buscarEmpresaPorCodigo
+      procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -165,6 +166,13 @@ module.exports = async function handler(req, res) {
     let datos;
     ({ paso, datos } = sesion);
     datos = datos || {};
+
+    // Paso 400+ — tracking de seguimiento externo (empresas médicas)
+    if (paso >= 400) {
+      const result = await procesarTracking(paso, mensaje, datos, telefono);
+      await despachar(telefono, result);
+      return res.status(200).send('OK');
+    }
 
     // Pasos 300+ — flujo call center B2B
     if (paso >= 300) {

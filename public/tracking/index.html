@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediLyft Tracking</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f6fa;color:#111;font-size:14px}
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f6fa}
+.login-box{background:#fff;border-radius:16px;padding:2.5rem;width:360px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-logo{font-size:22px;font-weight:800;color:#1e3a5f;margin-bottom:4px}
+.login-sub{font-size:13px;color:#888;margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
+.form-input{width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;outline:none;transition:border .15s}
+.form-input:focus{border-color:#2563eb}
+.btn-login{width:100%;padding:11px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:.5rem}
+.btn-login:hover{background:#15294a}
+.login-error{color:#dc2626;font-size:12px;margin-top:.5rem;display:none}
+/* APP */
+.app-wrap{display:none;min-height:100vh;flex-direction:column}
+.app-wrap.visible{display:flex}
+.topbar{background:#1e3a5f;color:#fff;padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-logo{font-size:16px;font-weight:800;letter-spacing:.02em}
+.topbar-tag{font-size:11px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:999px;margin-left:8px}
+.topbar-right{display:flex;align-items:center;gap:12px;font-size:13px}
+.topbar-user{opacity:.8}
+.btn-logout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.layout{display:flex;flex:1;overflow:hidden}
+.sidebar{width:200px;background:#fff;border-right:1px solid #e5e7eb;padding:1rem;flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:500;color:#555;margin-bottom:2px;transition:background .12s}
+.nav-item:hover{background:#f5f6fa}
+.nav-item.active{background:#eff6ff;color:#1d4ed8;font-weight:600}
+.main{flex:1;overflow-y:auto;padding:1.5rem}
+.page{display:none}
+.page.active{display:block}
+/* CARDS / STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem 1.2rem}
+.stat-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-size:28px;font-weight:800;margin:4px 0 2px}
+.stat-sub{font-size:11px;color:#aaa}
+/* TABLE */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.section-title{font-size:16px;font-weight:700}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid transparent;transition:all .12s}
+.btn-primary{background:#1e3a5f;color:#fff;border-color:#1e3a5f}
+.btn-primary:hover{background:#15294a}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-secondary{background:#fff;color:#333;border-color:#e5e7eb}
+.btn-secondary:hover{background:#f5f6fa}
+.btn-danger{background:#fee2e2;color:#dc2626;border-color:#fecaca}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse}
+th{background:#f9fafb;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb}
+td{padding:11px 14px;border-bottom:1px solid #f5f6fa;font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-yellow{background:#fef9c3;color:#a16207}
+.badge-red{background:#fee2e2;color:#b91c1c}
+.badge-gray{background:#f3f4f6;color:#6b7280}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:#fff;border-radius:16px;padding:1.5rem;width:540px;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem}
+.modal-title{font-size:16px;font-weight:700}
+.modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:#888;line-height:1}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row-single{margin-bottom:12px}
+select.form-input{background:#fff}
+textarea.form-input{resize:vertical;min-height:70px}
+/* MEDS */
+.med-tag{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#eff6ff;color:#1d4ed8;border-radius:999px;font-size:12px;margin:3px}
+.med-tag button{background:none;border:none;cursor:pointer;color:#1d4ed8;font-size:14px;line-height:1;padding:0}
+.meds-input-row{display:flex;gap:8px;margin-top:8px}
+/* TIMELINE */
+.timeline{display:flex;flex-direction:column;gap:10px;margin-top:1rem}
+.tl-item{display:flex;gap:12px;align-items:flex-start}
+.tl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.tl-dot-green{background:#16a34a}
+.tl-dot-yellow{background:#ca8a04}
+.tl-dot-red{background:#dc2626}
+.tl-body{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;flex:1}
+.tl-date{font-size:11px;color:#aaa;margin-bottom:4px}
+.tl-content{font-size:13px}
+.empty-state{text-align:center;padding:3rem;color:#aaa;font-size:13px}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e3a5f;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">MediLyft</div>
+    <div class="login-sub">Panel de Tracking</div>
+    <div class="form-group">
+      <label class="form-label">Correo</label>
+      <input type="email" class="form-input" id="loginEmail" placeholder="correo@ejemplo.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input type="password" class="form-input" id="loginPass" placeholder="••••••••">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="loginError">Correo o contraseña incorrectos</div>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app-wrap" id="appWrap">
+  <div class="topbar">
+    <div style="display:flex;align-items:center">
+      <span class="topbar-logo">MediLyft</span>
+      <span class="topbar-tag">Tracking</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbarUser"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">📊 Dashboard</div>
+      <div class="nav-item" onclick="showPage('casos')" id="nav-casos">📋 Casos</div>
+      <div class="nav-item" onclick="showPage('empresas')" id="nav-empresas">🏥 Empresas</div>
+    </div>
+    <div class="main">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card"><div class="stat-label">Casos activos</div><div class="stat-value" id="s-activos">—</div></div>
+          <div class="stat-card"><div class="stat-label">Alerta hoy</div><div class="stat-value" id="s-alertas" style="color:#dc2626">—</div></div>
+          <div class="stat-card"><div class="stat-label">Altas este mes</div><div class="stat-value" id="s-altas" style="color:#16a34a">—</div></div>
+          <div class="stat-card"><div class="stat-label">Empresas activas</div><div class="stat-value" id="s-empresas">—</div></div>
+        </div>
+        <div class="card">
+          <div style="padding:1rem 1.2rem;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:14px">Casos en alerta</div>
+          <table>
+            <thead><tr><th>Paciente</th><th>Empresa</th><th>Diagnóstico</th><th>Bienestar</th><th>Acción</th></tr></thead>
+            <tbody id="alertasBody"><tr><td colspan="5" class="empty-state">Sin alertas activas</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CASOS -->
+      <div class="page" id="page-casos">
+        <div class="section-header">
+          <div class="section-title">Casos de seguimiento</div>
+          <div style="display:flex;gap:8px">
+            <select class="form-input btn-sm" id="filtroEmpresa" onchange="loadCasos()" style="width:180px">
+              <option value="">Todas las empresas</option>
+            </select>
+            <select class="form-input btn-sm" id="filtroEstado" onchange="loadCasos()" style="width:140px">
+              <option value="">Todos los estados</option>
+              <option value="activo">Activo</option>
+              <option value="alerta">Alerta</option>
+              <option value="alta">Alta</option>
+              <option value="derivado">Derivado</option>
+              <option value="inactivo">Inactivo</option>
+            </select>
+            <button class="btn btn-primary" onclick="openNuevoCaso()">+ Nuevo caso</button>
+          </div>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>#</th><th>Paciente</th><th>Empresa</th><th>Diagnóstico</th><th>Estado</th><th>Próx. seguimiento</th><th>Acciones</th></tr></thead>
+            <tbody id="casosBody"><tr><td colspan="7" class="empty-state">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- EMPRESAS -->
+      <div class="page" id="page-empresas">
+        <div class="section-header">
+          <div class="section-title">Empresas médicas</div>
+          <button class="btn btn-primary" onclick="openNuevaEmpresa()">+ Nueva empresa</button>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Empresa</th><th>Contacto</th><th>Casos activos</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <tbody id="empresasBody"><tr><td colspan="5" class="empty-state">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO CASO -->
+<div class="modal-overlay" id="modalCaso">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalCasoTitle">Nuevo caso de seguimiento</div>
+      <button class="modal-close" onclick="closeModal('modalCaso')">✕</button>
+    </div>
+    <div class="form-row">
+      <div>
+        <label class="form-label">Empresa médica *</label>
+        <select class="form-input" id="casoEmpresa"></select>
+      </div>
+      <div>
+        <label class="form-label">Teléfono WhatsApp *</label>
+        <input class="form-input" id="casoTelefono" placeholder="ej: 593987654321">
+      </div>
+    </div>
+    <div class="form-row">
+      <div>
+        <label class="form-label">Nombre del paciente *</label>
+        <input class="form-input" id="casoNombre" placeholder="Juan Pérez">
+      </div>
+      <div>
+        <label class="form-label">Seguimiento cada (horas)</label>
+        <input class="form-input" type="number" id="casoFrecuencia" value="24" min="1">
+      </div>
+    </div>
+    <div class="form-row-single">
+      <label class="form-label">Diagnóstico *</label>
+      <input class="form-input" id="casoDiagnostico" placeholder="Ej: Diabetes tipo 2 — post-inicio de tratamiento">
+    </div>
+    <div class="form-row-single">
+      <label class="form-label">Tratamiento / indicaciones</label>
+      <textarea class="form-input" id="casoTratamiento" placeholder="Ej: Dieta baja en carbohidratos, ejercicio 30min/día, control glucosa en ayunas"></textarea>
+    </div>
+    <div class="form-row-single">
+      <label class="form-label">Medicamentos</label>
+      <div id="medsTags" style="min-height:32px;margin-bottom:6px"></div>
+      <div class="meds-input-row">
+        <input class="form-input" id="medNombre" placeholder="Nombre" style="flex:2">
+        <input class="form-input" id="medDosis" placeholder="Dosis" style="flex:1">
+        <button class="btn btn-secondary btn-sm" onclick="addMed()">+ Agregar</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem">
+      <button class="btn btn-secondary" onclick="closeModal('modalCaso')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarCaso()">Guardar caso</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL NUEVA EMPRESA -->
+<div class="modal-overlay" id="modalEmpresa">
+  <div class="modal" style="width:400px">
+    <div class="modal-header">
+      <div class="modal-title">Nueva empresa médica</div>
+      <button class="modal-close" onclick="closeModal('modalEmpresa')">✕</button>
+    </div>
+    <div class="form-row-single">
+      <label class="form-label">Nombre *</label>
+      <input class="form-input" id="empNombre" placeholder="Clínica San Juan">
+    </div>
+    <div class="form-row-single">
+      <label class="form-label">Email de contacto</label>
+      <input class="form-input" id="empEmail" type="email" placeholder="contacto@clinica.com">
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem">
+      <button class="btn btn-secondary" onclick="closeModal('modalEmpresa')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarEmpresa()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE CASO -->
+<div class="modal-overlay" id="modalDetalle">
+  <div class="modal" style="width:620px">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="detalleTitulo"></div>
+        <div style="font-size:12px;color:#888;margin-top:2px" id="detalleEmpresa"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modalDetalle')">✕</button>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:1rem;flex-wrap:wrap" id="detalleBadges"></div>
+    <div style="background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;margin-bottom:1rem" id="detalleTratamiento"></div>
+    <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap" id="detalleAcciones"></div>
+    <div style="font-weight:700;font-size:13px;margin-bottom:6px">Historial de interacciones</div>
+    <div class="timeline" id="detalleTimeline"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script>
+const SUPA_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
+const SUPA_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
+const sc = supabase.createClient(SUPA_URL, SUPA_KEY);
+
+let currentUser = null;
+let medicamentosTemp = [];
+let editandoCasoId = null;
+
+// ── AUTH ──────────────────────────────────────────────────────────────────
+async function t(method, table, body, q = '') {
+  const { data: { session } } = await sc.auth.getSession();
+  const token = session?.access_token || SUPA_KEY;
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}${q}`, {
+    method,
+    headers: { apikey: SUPA_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json', Prefer: method === 'POST' ? 'return=representation' : '' },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const btn = document.getElementById('loginBtn');
+  if (!email || !pass) return;
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  document.getElementById('loginError').style.display = 'none';
+  const { error } = await sc.auth.signInWithPassword({ email, password: pass });
+  if (error) { btn.disabled = false; btn.textContent = 'Ingresar'; document.getElementById('loginError').style.display = 'block'; return; }
+  const users = await t('GET', 'usuarios', null, `?correo=eq.${encodeURIComponent(email)}&activo=eq.true`);
+  btn.disabled = false; btn.textContent = 'Ingresar';
+  if (!users || !users.length) { document.getElementById('loginError').textContent = 'Sin acceso al panel.'; document.getElementById('loginError').style.display = 'block'; await sc.auth.signOut(); return; }
+  currentUser = users[0];
+  initApp();
+}
+
+async function doLogout() {
+  await sc.auth.signOut();
+  location.reload();
+}
+
+async function initApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('appWrap').classList.add('visible');
+  document.getElementById('topbarUser').textContent = currentUser.nombre || currentUser.correo;
+  await Promise.all([loadDashboard(), loadEmpresasFiltro()]);
+}
+
+// ── PAGES ─────────────────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  if (name === 'casos') loadCasos();
+  if (name === 'empresas') loadEmpresas();
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [casos, empresas] = await Promise.all([
+    t('GET', 'tracking_casos', null, '?select=*,tracking_empresas(nombre)&order=created_at.desc'),
+    t('GET', 'tracking_empresas', null, '?activo=eq.true&select=id')
+  ]);
+  const all = casos || [];
+  const activos = all.filter(c => c.estado === 'activo').length;
+  const alertas = all.filter(c => c.estado === 'alerta');
+  const mesInicio = new Date(); mesInicio.setDate(1); mesInicio.setHours(0,0,0,0);
+  const altas = all.filter(c => c.estado === 'alta' && new Date(c.updated_at || c.created_at) >= mesInicio).length;
+  document.getElementById('s-activos').textContent = activos;
+  document.getElementById('s-alertas').textContent = alertas.length;
+  document.getElementById('s-altas').textContent = altas;
+  document.getElementById('s-empresas').textContent = (empresas || []).length;
+  document.getElementById('alertasBody').innerHTML = alertas.length
+    ? alertas.map(c => `<tr>
+        <td><strong>${c.paciente_nombre}</strong></td>
+        <td>${c.tracking_empresas?.nombre || '—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.diagnostico || '—'}</td>
+        <td><span class="badge badge-red">🚨 Alerta</span></td>
+        <td><button class="btn btn-sm btn-secondary" onclick="verDetalle('${c.id}')">Ver</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:#aaa">Sin alertas activas ✅</td></tr>';
+}
+
+// ── CASOS ─────────────────────────────────────────────────────────────────
+async function loadCasos() {
+  const empresa = document.getElementById('filtroEmpresa').value;
+  const estado = document.getElementById('filtroEstado').value;
+  let q = '?select=*,tracking_empresas(nombre)&order=created_at.desc';
+  if (empresa) q += `&empresa_id=eq.${empresa}`;
+  if (estado) q += `&estado=eq.${estado}`;
+  const casos = await t('GET', 'tracking_casos', null, q) || [];
+  const estadoBadge = { activo: 'badge-green', alerta: 'badge-red', alta: 'badge-blue', derivado: 'badge-yellow', inactivo: 'badge-gray' };
+  const estadoLabel = { activo: '✅ Activo', alerta: '🚨 Alerta', alta: '🏁 Alta', derivado: '➡️ Derivado', inactivo: '⏸ Inactivo' };
+  document.getElementById('casosBody').innerHTML = casos.length
+    ? casos.map((c, i) => `<tr>
+        <td style="color:#aaa;font-weight:700">${casos.length - i}</td>
+        <td><strong>${c.paciente_nombre}</strong><br><span style="font-size:11px;color:#aaa">${c.telefono}</span></td>
+        <td>${c.tracking_empresas?.nombre || '—'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.diagnostico||'').replace(/"/g,'')}">${c.diagnostico || '—'}</td>
+        <td><span class="badge ${estadoBadge[c.estado] || 'badge-gray'}">${estadoLabel[c.estado] || c.estado}</span></td>
+        <td style="font-size:12px;color:#888">${c.proximo_seguimiento ? new Date(c.proximo_seguimiento).toLocaleString('es-EC',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
+        <td style="display:flex;gap:6px">
+          <button class="btn btn-sm btn-secondary" onclick="verDetalle('${c.id}')">Ver</button>
+          <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}')">Estado</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#aaa">Sin casos</td></tr>';
+}
+
+async function loadEmpresasFiltro() {
+  const empresas = await t('GET', 'tracking_empresas', null, '?activo=eq.true&order=nombre') || [];
+  const sel = document.getElementById('filtroEmpresa');
+  const selCaso = document.getElementById('casoEmpresa');
+  empresas.forEach(e => {
+    const opt1 = new Option(e.nombre, e.id); sel.appendChild(opt1);
+    const opt2 = new Option(e.nombre, e.id); selCaso.appendChild(opt2);
+  });
+}
+
+// ── NUEVO CASO ────────────────────────────────────────────────────────────
+function openNuevoCaso() {
+  editandoCasoId = null;
+  medicamentosTemp = [];
+  document.getElementById('modalCasoTitle').textContent = 'Nuevo caso de seguimiento';
+  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? '' : '';
+  });
+  document.getElementById('casoFrecuencia').value = 24;
+  renderMeds();
+  document.getElementById('modalCaso').classList.add('open');
+}
+
+function addMed() {
+  const nombre = document.getElementById('medNombre').value.trim();
+  const dosis = document.getElementById('medDosis').value.trim();
+  if (!nombre) return;
+  medicamentosTemp.push({ nombre, dosis });
+  document.getElementById('medNombre').value = '';
+  document.getElementById('medDosis').value = '';
+  renderMeds();
+}
+
+function removeMed(i) {
+  medicamentosTemp.splice(i, 1);
+  renderMeds();
+}
+
+function renderMeds() {
+  document.getElementById('medsTags').innerHTML = medicamentosTemp.map((m, i) =>
+    `<span class="med-tag">💊 ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}<button onclick="removeMed(${i})">×</button></span>`
+  ).join('');
+}
+
+async function guardarCaso() {
+  const empresa_id = document.getElementById('casoEmpresa').value;
+  const telefono = document.getElementById('casoTelefono').value.trim();
+  const paciente_nombre = document.getElementById('casoNombre').value.trim();
+  const diagnostico = document.getElementById('casoDiagnostico').value.trim();
+  if (!empresa_id || !telefono || !paciente_nombre || !diagnostico) { alert('Empresa, teléfono, nombre y diagnóstico son obligatorios'); return; }
+  const body = {
+    empresa_id,
+    telefono,
+    paciente_nombre,
+    diagnostico,
+    tratamiento: document.getElementById('casoTratamiento').value.trim() || null,
+    medicamentos: medicamentosTemp,
+    frecuencia_horas: parseInt(document.getElementById('casoFrecuencia').value) || 24,
+    estado: 'activo',
+    proximo_seguimiento: new Date().toISOString()
+  };
+  if (editandoCasoId) {
+    await t('PATCH', 'tracking_casos', body, `?id=eq.${editandoCasoId}`);
+    showToast('✓ Caso actualizado');
+  } else {
+    await t('POST', 'tracking_casos', body);
+    showToast('✓ Caso creado. El bot enviará la primera pregunta en el próximo cron.');
+  }
+  closeModal('modalCaso');
+  loadCasos();
+  loadDashboard();
+}
+
+// ── ESTADO CASO ───────────────────────────────────────────────────────────
+async function cambiarEstado(id, estadoActual) {
+  const estados = ['activo', 'alta', 'alerta', 'derivado', 'inactivo'];
+  const siguiente = prompt(`Estado actual: ${estadoActual}\nNuevo estado (${estados.join(' / ')}):`)?.trim().toLowerCase();
+  if (!siguiente || !estados.includes(siguiente)) return;
+  await t('PATCH', 'tracking_casos', { estado: siguiente }, `?id=eq.${id}`);
+  showToast(`✓ Estado actualizado a "${siguiente}"`);
+  loadCasos(); loadDashboard();
+}
+
+// ── DETALLE CASO ──────────────────────────────────────────────────────────
+async function verDetalle(id) {
+  const [casoArr, registros] = await Promise.all([
+    t('GET', 'tracking_casos', null, `?id=eq.${id}&select=*,tracking_empresas(nombre)`),
+    t('GET', 'tracking_registros', null, `?caso_id=eq.${id}&order=created_at.desc&limit=30`)
+  ]);
+  const c = casoArr?.[0]; if (!c) return;
+  const estadoColor = { activo: '#16a34a', alerta: '#dc2626', alta: '#2563eb', derivado: '#ca8a04', inactivo: '#6b7280' };
+  document.getElementById('detalleTitulo').textContent = c.paciente_nombre;
+  document.getElementById('detalleEmpresa').textContent = `${c.tracking_empresas?.nombre || '—'} · ${c.telefono}`;
+  document.getElementById('detalleBadges').innerHTML = `
+    <span class="badge" style="background:#f3f4f6;color:${estadoColor[c.estado]||'#333'}">${c.estado}</span>
+    <span class="badge badge-gray">Cada ${c.frecuencia_horas}h</span>
+    ${(c.medicamentos||[]).map(m => `<span class="badge" style="background:#eff6ff;color:#1d4ed8">💊 ${m.nombre}${m.dosis?` ${m.dosis}`:''}</span>`).join('')}
+  `;
+  document.getElementById('detalleTratamiento').innerHTML = `<strong>Diagnóstico:</strong> ${c.diagnostico || '—'}<br><strong>Tratamiento:</strong> ${c.tratamiento || '—'}`;
+  document.getElementById('detalleAcciones').innerHTML = `
+    <button class="btn btn-sm btn-secondary" onclick="editarCaso('${c.id}')">✏️ Editar</button>
+    <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Cambiar estado</button>
+  `;
+  const dotColor = { 1: 'tl-dot-green', 2: 'tl-dot-yellow', 3: 'tl-dot-red' };
+  document.getElementById('detalleTimeline').innerHTML = (registros || []).length
+    ? registros.map(r => {
+        const vals = r.respuestas || {};
+        const items = Object.entries(vals).map(([k, v]) => `<strong>${k}:</strong> ${v}`).join(' · ');
+        return `<div class="tl-item">
+          <div class="tl-dot ${dotColor[r.nivel_alerta] || 'tl-dot-green'}"></div>
+          <div class="tl-body">
+            <div class="tl-date">${new Date(r.created_at + (r.created_at.endsWith('Z')?'':'Z')).toLocaleString('es-EC')}</div>
+            <div class="tl-content">${items || '—'}</div>
+          </div>
+        </div>`;
+      }).join('')
+    : '<div style="color:#aaa;font-size:13px;padding:1rem 0">Sin interacciones registradas aún.</div>';
+  document.getElementById('modalDetalle').classList.add('open');
+}
+
+async function editarCaso(id) {
+  closeModal('modalDetalle');
+  const casoArr = await t('GET', 'tracking_casos', null, `?id=eq.${id}`);
+  const c = casoArr?.[0]; if (!c) return;
+  editandoCasoId = id;
+  medicamentosTemp = Array.isArray(c.medicamentos) ? [...c.medicamentos] : [];
+  document.getElementById('modalCasoTitle').textContent = 'Editar caso';
+  document.getElementById('casoEmpresa').value = c.empresa_id || '';
+  document.getElementById('casoTelefono').value = c.telefono || '';
+  document.getElementById('casoNombre').value = c.paciente_nombre || '';
+  document.getElementById('casoDiagnostico').value = c.diagnostico || '';
+  document.getElementById('casoTratamiento').value = c.tratamiento || '';
+  document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
+  renderMeds();
+  document.getElementById('modalCaso').classList.add('open');
+}
+
+// ── EMPRESAS ──────────────────────────────────────────────────────────────
+async function loadEmpresas() {
+  const empresas = await t('GET', 'tracking_empresas', null, '?order=nombre&select=*') || [];
+  const casosActivos = await t('GET', 'tracking_casos', null, '?estado=eq.activo&select=empresa_id') || [];
+  const counts = {};
+  casosActivos.forEach(c => { counts[c.empresa_id] = (counts[c.empresa_id] || 0) + 1; });
+  document.getElementById('empresasBody').innerHTML = empresas.length
+    ? empresas.map(e => `<tr>
+        <td><strong>${e.nombre}</strong></td>
+        <td>${e.contacto_email || '—'}</td>
+        <td>${counts[e.id] || 0}</td>
+        <td><span class="badge ${e.activo ? 'badge-green' : 'badge-gray'}">${e.activo ? 'Activa' : 'Inactiva'}</span></td>
+        <td><button class="btn btn-sm btn-secondary" onclick="toggleEmpresa('${e.id}',${e.activo})">${e.activo ? 'Desactivar' : 'Activar'}</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="5" style="text-align:center;padding:2rem;color:#aaa">Sin empresas</td></tr>';
+}
+
+function openNuevaEmpresa() {
+  document.getElementById('empNombre').value = '';
+  document.getElementById('empEmail').value = '';
+  document.getElementById('modalEmpresa').classList.add('open');
+}
+
+async function guardarEmpresa() {
+  const nombre = document.getElementById('empNombre').value.trim();
+  if (!nombre) { alert('El nombre es obligatorio'); return; }
+  await t('POST', 'tracking_empresas', { nombre, contacto_email: document.getElementById('empEmail').value.trim() || null, activo: true });
+  closeModal('modalEmpresa');
+  showToast('✓ Empresa creada');
+  loadEmpresas();
+  // Recargar filtros
+  const sel1 = document.getElementById('filtroEmpresa');
+  const sel2 = document.getElementById('casoEmpresa');
+  [sel1, sel2].forEach(s => { while (s.options.length > (s === sel1 ? 1 : 0)) s.remove(s.options.length - 1); });
+  loadEmpresasFiltro();
+}
+
+async function toggleEmpresa(id, activo) {
+  await t('PATCH', 'tracking_empresas', { activo: !activo }, `?id=eq.${id}`);
+  loadEmpresas();
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+document.getElementById('loginEmail').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+document.getElementById('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+document.getElementById('medNombre').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('medDosis').focus(); });
+document.getElementById('medDosis').addEventListener('keydown', e => { if (e.key === 'Enter') addMed(); });
+
+// Cerrar modal al click fuera
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+window.addEventListener('load', async () => {
+  const { data: { session } } = await sc.auth.getSession();
+  if (session) {
+    const users = await t('GET', 'usuarios', null, `?correo=eq.${encodeURIComponent(session.user.email)}&activo=eq.true`);
+    if (users && users.length) { currentUser = users[0]; initApp(); }
+  }
+});
+</script>
+</body>
+</html>

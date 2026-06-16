@@ -4,6 +4,7 @@ const { alertar } = require('../src/services/telegram');
 const { obtener, guardar } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
 const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratorio');
+const { procesarTracking: _procesarTracking } = require('../src/flows/flujo-tracking');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -143,6 +144,49 @@ module.exports = async function handler(req, res) {
         procesados++;
       } catch (e) {
         console.error('Error procesando seguimiento de laboratorio:', s.id, e.message);
+        errores++;
+      }
+    }
+
+    // Seguimiento tracking externo (empresas médicas)
+    const trackingCasos = await query('GET', 'tracking_casos', null,
+      `?estado=eq.activo&or=(proximo_seguimiento.is.null,proximo_seguimiento.lte.${ahora.toISOString()})`
+    );
+
+    for (const c of trackingCasos || []) {
+      try {
+        const telefono = c.telefono;
+        if (!telefono) continue;
+
+        const sesion = await obtener(telefono);
+        if (sesion && sesion.paso !== 0) continue;
+
+        const meds = Array.isArray(c.medicamentos) ? c.medicamentos : [];
+        const medsTexto = meds.length
+          ? `\n\n💊 Medicamentos actuales:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
+          : '';
+        const mensaje = `🩺 *Seguimiento MediLyft*\n\nHola ${c.paciente_nombre || ''}! Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy del *1 al 10*?\n_(1 = muy mal · 10 = excelente)_`;
+
+        await enviar(telefono, mensaje);
+
+        await guardar(telefono, 400, {
+          caso_id: c.id,
+          empresa_id: c.empresa_id,
+          paciente_nombre: c.paciente_nombre,
+          diagnostico: c.diagnostico,
+          medicamentos: meds,
+          paso_tracking: 1,
+          respuestas: {}
+        });
+
+        const proximoSeguimiento = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
+        await query('PATCH', 'tracking_casos', {
+          proximo_seguimiento: proximoSeguimiento.toISOString()
+        }, `?id=eq.${c.id}`);
+
+        procesados++;
+      } catch (e) {
+        console.error('Error procesando tracking caso:', c.id, e.message);
         errores++;
       }
     }

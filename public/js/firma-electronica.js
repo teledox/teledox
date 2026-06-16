@@ -274,6 +274,7 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
   const titular = info.titular
     || (typeof currentUser !== 'undefined' ? `${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim() : '')
     || 'Médico';
+  const especialidad = (typeof currentUser !== 'undefined' ? currentUser?.especialidad : '') || '';
   const fecha = new Date().toLocaleString('es-EC');
 
   // Registra el documento en MediLyft para que el QR apunte a una página de
@@ -317,6 +318,7 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
     page.drawText('Firmado electronicamente', { x: x + size + 6, y: y + size - 9,  size: 7, font, color });
     page.drawText(titular,                    { x: x + size + 6, y: y + size - 18, size: 7, font, color });
     page.drawText(fecha,                      { x: x + size + 6, y: y + size - 27, size: 6, font, color });
+    if (especialidad) page.drawText(especialidad.toUpperCase(), { x: x + size + 6, y: y + size - 36, size: 6, font, color });
     _logFirma('sello:qr-dibujado', true, `titular="${titular}"`);
     return true;
   } catch (e) {

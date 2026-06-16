@@ -177,7 +177,7 @@ module.exports = async function handler(req, res) {
           ? `\n\n💊 Medicamentos actuales:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
           : '';
         const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
-        const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy del *1 al 10*?\n_(1 = muy mal · 10 = excelente)_`;
+        const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
 
         await enviar(telefono, mensaje);
 

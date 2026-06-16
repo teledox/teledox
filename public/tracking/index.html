@@ -251,6 +251,30 @@ textarea.form-input{resize:vertical;min-height:70px}
   </div>
 </div>
 
+<!-- MODAL CAMBIAR ESTADO -->
+<div class="modal-overlay" id="modalEstado">
+  <div class="modal" style="width:320px">
+    <div class="modal-header">
+      <div class="modal-title">Cambiar estado</div>
+      <button class="modal-close" onclick="closeModal('modalEstado')">✕</button>
+    </div>
+    <div class="form-row-single">
+      <label class="form-label">Nuevo estado</label>
+      <select class="form-input" id="estadoSelect">
+        <option value="activo">✅ Activo</option>
+        <option value="alta">🏁 Alta</option>
+        <option value="alerta">🚨 Alerta</option>
+        <option value="derivado">➡️ Derivado</option>
+        <option value="inactivo">⏸ Inactivo</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem">
+      <button class="btn btn-secondary" onclick="closeModal('modalEstado')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmarEstado()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL NUEVA EMPRESA -->
 <div class="modal-overlay" id="modalEmpresa">
   <div class="modal" style="width:400px">
@@ -484,11 +508,18 @@ async function guardarCaso() {
 }
 
 // ── ESTADO CASO ───────────────────────────────────────────────────────────
-async function cambiarEstado(id, estadoActual) {
-  const estados = ['activo', 'alta', 'alerta', 'derivado', 'inactivo'];
-  const siguiente = prompt(`Estado actual: ${estadoActual}\nNuevo estado (${estados.join(' / ')}):`)?.trim().toLowerCase();
-  if (!siguiente || !estados.includes(siguiente)) return;
-  await t('PATCH', 'tracking_casos', { estado: siguiente }, `?id=eq.${id}`);
+let cambiarEstadoId = null;
+
+function cambiarEstado(id, estadoActual) {
+  cambiarEstadoId = id;
+  document.getElementById('estadoSelect').value = estadoActual;
+  document.getElementById('modalEstado').classList.add('open');
+}
+
+async function confirmarEstado() {
+  const siguiente = document.getElementById('estadoSelect').value;
+  await t('PATCH', 'tracking_casos', { estado: siguiente }, `?id=eq.${cambiarEstadoId}`);
+  closeModal('modalEstado');
   showToast(`✓ Estado actualizado a "${siguiente}"`);
   loadCasos(); loadDashboard();
 }
@@ -518,7 +549,13 @@ async function verDetalle(id) {
   document.getElementById('detalleTimeline').innerHTML = (registros || []).length
     ? registros.map(r => {
         const vals = r.respuestas || {};
-        const items = Object.entries(vals).map(([k, v]) => `<strong>${k}:</strong> ${v}`).join(' · ');
+        const likert = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
+        const medLabel = { '1': 'Sí ✅', '2': 'No ❌' };
+        const items = Object.entries(vals).map(([k, v]) => {
+          if (k === 'bienestar') return `<strong>Bienestar:</strong> ${likert[v] || v}`;
+          if (k === 'medicacion') return `<strong>Medicación:</strong> ${medLabel[v] || v}`;
+          return `<strong>${k}:</strong> ${v}`;
+        }).join(' · ');
         return `<div class="tl-item">
           <div class="tl-dot ${dotColor[r.nivel_alerta] || 'tl-dot-green'}"></div>
           <div class="tl-body">

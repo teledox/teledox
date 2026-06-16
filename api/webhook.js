@@ -122,7 +122,7 @@ module.exports = async function handler(req, res) {
           ? `\n\n💊 Medicamentos:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
           : '';
         const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
-        const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy del *1 al 10*?\n_(1 = muy mal · 10 = excelente)_`;
+        const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
         await guardar(telefono, 400, {
           caso_id: casoT.id,
           empresa_id: casoT.empresa_id,

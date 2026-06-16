@@ -2,13 +2,13 @@ const { query } = require('../services/supabase');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 
-// Evalúa las respuestas de seguimiento y devuelve nivel de alerta 1-3.
+// Evalúa respuestas (escala Likert 1-5) y devuelve nivel de alerta 1-3.
 function evaluar(respuestas) {
   const bienestar = parseInt(respuestas.bienestar);
   let nivel = 1;
   if (!isNaN(bienestar)) {
-    if (bienestar <= 4) nivel = 3;
-    else if (bienestar <= 6) nivel = 2;
+    if (bienestar <= 2) nivel = 3;
+    else if (bienestar === 3) nivel = 2;
   }
   // No tomó medicación → sube al menos a nivel 2
   if (respuestas.medicacion === '2' && nivel < 2) nivel = 2;
@@ -52,15 +52,18 @@ async function procesarTracking(paso, mensaje, datos, telefono) {
   // Actualizar estado del caso si es alerta grave
   if (nivel === 3) {
     await query('PATCH', 'tracking_casos', { estado: 'alerta' }, `?id=eq.${caso_id}`);
-    await alertar(`🚨 <b>ALERTA TRACKING</b>\nPaciente: ${paciente_nombre || telefono}\nDiagnóstico: ${diagnostico}\nBienestar: ${datos.respuestas.bienestar}/10${datos.respuestas.medicacion ? `\nMedicación: ${datos.respuestas.medicacion === '1' ? 'Sí' : 'No'}` : ''}`);
+    const _likert = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
+    await alertar(`🚨 <b>ALERTA TRACKING</b>\nPaciente: ${paciente_nombre || telefono}\nDiagnóstico: ${diagnostico}\nBienestar: ${_likert[datos.respuestas.bienestar] || datos.respuestas.bienestar}${datos.respuestas.medicacion ? `\nMedicación: ${datos.respuestas.medicacion === '1' ? 'Sí' : 'No'}` : ''}`);
   }
 
   await eliminar(telefono);
 
+  const likertLabel = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
+  const bLabel = likertLabel[datos.respuestas.bienestar] || datos.respuestas.bienestar;
   const msgs = {
-    3: `🚨 Hemos registrado su reporte. Su bienestar (${datos.respuestas.bienestar}/10) requiere atención.\n\nEl equipo médico ha sido notificado. Si es una emergencia llame al *911*.`,
-    2: `⚠️ Registramos su reporte (bienestar ${datos.respuestas.bienestar}/10). Su equipo de seguimiento estará pendiente.\n\nSi empeora, llame al *911*.`,
-    1: `✅ ¡Gracias por su reporte diario! (bienestar ${datos.respuestas.bienestar}/10)\n\nTodo se ve bien. Seguiremos en contacto. 👋`
+    3: `🚨 Hemos registrado su reporte (*${bLabel}*). El equipo médico ha sido notificado.\n\nSi es una emergencia llame al *911*.`,
+    2: `⚠️ Registramos su reporte (*${bLabel}*). Su equipo de seguimiento estará pendiente.\n\nSi empeora, llame al *911*.`,
+    1: `✅ ¡Gracias por su reporte diario! (*${bLabel}*)\n\nTodo se ve bien. Seguiremos en contacto. 👋`
   };
 
   return { respuesta: msgs[nivel], terminar: true };

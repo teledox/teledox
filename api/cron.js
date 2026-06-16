@@ -138,7 +138,7 @@ module.exports = async function handler(req, res) {
           enfermedad_id: c.id,
           paciente_id: c.paciente_id,
           paso_cronico: 1
-        });
+        }, 'cronicas');
 
         const proximoSeguimiento = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
         await query('PATCH', 'enfermedades_cronicas', {
@@ -221,7 +221,7 @@ module.exports = async function handler(req, res) {
             empresa_id: c.empresa_id,
             paciente_nombre: c.paciente_nombre,
             diagnostico: c.diagnostico
-          });
+          }, 'tracking');
 
           const rawNext = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
           const horIn   = c.horario_inicio ?? 8;
@@ -288,7 +288,7 @@ module.exports = async function handler(req, res) {
           empresa_id: c.empresa_id,
           paciente_nombre: c.paciente_nombre,
           medicamentos_ahora: medsAhora
-        });
+        }, 'tracking');
 
         // Registrar timestamp para deduplicación en próxima ejecución
         await query('PATCH', 'tracking_casos',

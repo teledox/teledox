@@ -15,16 +15,18 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
   let nuevoPaso = paso;
 
   // Pasos 50+ — flujo B2C (pago directo)
+  // Guarda con _flujo:'b2c' para que el webhook detecte el cambio y no sobreescriba.
   if (paso >= 50 && paso < 90) {
     const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
-    if (!result.terminar) await guardar(telefono, result.paso, result.datos);
+    if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'b2c');
     return result;
   }
 
   // Pasos 90-97 — flujo de seguimiento aprobado por médico (agendar + pago)
+  // Guarda con _flujo:'seguimiento_pago' para que el webhook detecte el cambio.
   if (paso >= 90 && paso <= 97) {
     const result = await procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWhatsApp);
-    if (!result.terminar) await guardar(telefono, result.paso, result.datos);
+    if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'seguimiento_pago');
     return result;
   }
 
@@ -133,7 +135,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       // MODALIDAD B2C — cédula no encontrada en ninguna lista
       datos.cedula = cedulaFinal;
       const result = await procesarB2C(50, cedulaFinal, datos, telefono, nombreWhatsApp);
-      await guardar(telefono, result.paso, result.datos);
+      await guardar(telefono, result.paso, result.datos, 'b2c');
       return result;
     }
 

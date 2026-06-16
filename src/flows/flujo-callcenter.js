@@ -231,7 +231,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
       datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
       datos.cc_paciente_id = null;
       datos.cc_nivel = 1;
-      await guardar(telefono, 301, datos);
+      await guardar(telefono, 301, datos, 'callcenter');
       return {
         respuesta: `📋 *${empresa}* — Ingrese la *cédula* del siguiente paciente:`,
         paso: 301, datos, terminar: false

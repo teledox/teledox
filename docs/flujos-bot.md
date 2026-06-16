@@ -13,29 +13,42 @@
 ## 🗺️ Mapa de ruteo (cómo el webhook decide qué flujo corre)
 
 El bot guarda en cada sesión un número de **`paso`**. `api/webhook.js` mira ese número y
-deriva al flujo correspondiente **por rangos**:
+deriva al flujo correspondiente **por rangos** (sistema legacy, ver sección *"Plan de
+migración"*):
 
 | Rango de `paso` | Flujo | Archivo |
 |---|---|---|
-| `0`–`12`, `39`, `41` | Consulta principal (registro paciente) | `flujo-consulta.js` |
+| `0`–`12`, `39`, `41`, `42` | Consulta principal (registro paciente) | `flujo-consulta.js` |
 | `13`–`17` | Antecedentes médicos | `flujo-antecedentes.js` |
-| `50`–`62` | B2C (pago directo / seguro externo) | `flujo-b2c.js` |
+| `50`–`63` | B2C (pago directo / seguro externo) | `flujo-b2c.js` |
 | `90`–`97` | Seguimiento aprobado por médico (pago) | `flujo-seguimiento-pago.js` |
 | `98` | Reagendar | `flujo-reagendar.js` |
-| `99` | "Ya registrado" (mensaje fijo) | `webhook.js` |
-| `200`+ | Enfermedades crónicas (cuestionarios) | `flujo-cronicas.js` |
-| `300`+ | Call center B2B (agente registra pacientes) | `flujo-callcenter.js` |
+| `99` | ⚰️ **CÓDIGO MUERTO** — ver nota abajo | `webhook.js` |
+| `150` | Subida de resultado de examen de laboratorio | `flujo-seguimiento-laboratorio.js` |
+| `200` | Enfermedades crónicas (cuestionarios) | `flujo-cronicas.js` |
+| `300`–`311` | Call center B2B (agente registra pacientes) | `flujo-callcenter.js` |
+| `400` | Tracking externo (bienestar + medicación) | `flujo-tracking.js` |
 | (sin paso) | Respuesta a recordatorio de seguimiento | `flujo-seguimiento.js` |
 
-> ℹ️ **Detalle de ruteo:** `webhook.js` despacha directo los rangos `13-17`, `98`, `99`,
-> `200+` y `300+`. Todo lo demás (`0-12`, `39`, `41`, `50-97`) cae en
-> `procesarPaso()` de `flujo-consulta.js`, que a su vez delega internamente:
-> `50-89` → `flujo-b2c.js` (en la práctica solo usa `50-62`) y `90-97` →
-> `flujo-seguimiento-pago.js`.
+> ℹ️ **Detalle de ruteo (dos capas):** `webhook.js` despacha los rangos `13-17`, `98`,
+> `150`, `200`, `300+`, `400+` directamente. Los pasos `0-12`, `39`, `41`, `42` y `50-97`
+> caen en `procesarPaso()` de `flujo-consulta.js`, que a su vez delega internamente:
+> `50-89` → `flujo-b2c.js` y `90-97` → `flujo-seguimiento-pago.js`.
+> Esta delegación oculta se elimina en la Fase 2 de la migración.
 
-> ⚠️ **Esta numeración por rangos es la parte frágil del sistema** — ver la sección
-> *"Deuda técnica"* al final. Ya causó varios bugs (pasos que caían en el rango de otro
-> flujo). Al agregar un paso nuevo, mantenelo **dentro del rango de su flujo**.
+> ⚰️ **Paso 99 — código muerto:** la rama `paso === 99` en `webhook.js` nunca se alcanza.
+> `flujo-antecedentes.js` termina con `eliminar(telefono)` — la sesión se borra por
+> completo, nunca queda en `paso: 99`. Si en algún momento se quiere mostrar un mensaje
+> de "ya registrado", debe dispararse desde el flujo que corresponda.
+
+> ℹ️ **Crónicas y tracking no escalan su `paso`:** `flujo-cronicas.js` siempre guarda
+> `paso: 200` (fijo) y usa `datos.paso_cronico` como sub-estado interno. Ídem
+> `flujo-tracking.js` con `paso: 400` y `datos.tipo`. Esto los inmuniza contra colisiones
+> dentro de sus propios rangos.
+
+> ⚠️ **La numeración por rangos sigue siendo el punto más frágil del sistema** — ver
+> la sección *"Plan de migración"* al final. Agregar un paso con el número equivocado
+> lo roba silenciosamente otro flujo.
 
 ---
 
@@ -78,7 +91,9 @@ flowchart TD
   P10 --> P11
   P11 --> P12{"Paso 12\nConfirmar datos"}
   P12 -->|"Corregir"| P4
-  P12 -->|"Confirmar"| REG["Crea consulta + alerta médico"] --> ANT["➡️ Antecedentes (paso 13)"]
+  P12 -->|"Confirmar"| REG["Crea consulta + alerta médico"] --> P42{"Paso 42\n¿Otra consulta?"}
+  P42 -->|"Otra consulta"| P0
+  P42 -->|"Finalizar"| ANT["➡️ Antecedentes (paso 13)"]
 ```
 
 ---
@@ -96,16 +111,9 @@ flowchart TD
   P17 --> FIN([Guarda antecedentes,\ngenera PDF de historia clínica,\nelimina sesión · Fin])
 ```
 
-> ⚠️ **"Paso 99" es código muerto en este camino.** `flujo-antecedentes.js` llama
-> `eliminar(telefono)` y devuelve `terminar:true` — la sesión se borra por completo,
-> no queda guardada en `paso: 99`. Cualquier mensaje posterior (incluido "hola")
-> cae a `procesarPaso(0, ...)` y muestra de nuevo el saludo inicial. La rama
-> "paso 99 → ya registrado" de `webhook.js` no se alcanza desde aquí — habría que
-> confirmar si algún otro flujo deja la sesión en `paso: 99`, o eliminar esa rama.
-
 ---
 
-## 3) 💳 Flujo B2C — pago directo / seguro externo (pasos 50–62)
+## 3) 💳 Flujo B2C — pago directo / seguro externo (pasos 50–63)
 
 Cuando la cédula **no** está en ninguna empresa afiliada.
 
@@ -129,8 +137,11 @@ flowchart TD
   P58 --> NIVb{"Clasifica síntomas"}
   NIVb -->|"Nivel 3 (grave)"| EMERb([🚨 Emergencia → 911\nalerta Telegram · Fin])
   NIVb -->|"Nivel 1 o 2\n(nivel 2 también alerta)"| P59["Paso 59\n¿Forma de pago?\n(Transferencia / Tarjeta)"]
-  P59 --> P60["Paso 60\nEsperando comprobante de pago"]
-  P60 --> FINB2([Registra consulta + facturación · Fin])
+  P59 --> P60["Paso 60\nEsperando comprobante de pago\n(validado con Gemini Vision)"]
+  P60 -->|"Comprobante inválido"| P60
+  P60 -->|"Comprobante válido"| P63{"Paso 63\n¿Otra consulta?"}
+  P63 -->|"Otra consulta"| P50
+  P63 -->|"Finalizar"| ANTb["➡️ Antecedentes (paso 13)"]
 ```
 
 > ℹ️ El flujo B2C **no tiene paso de horario de preferencia** (a diferencia de la
@@ -139,7 +150,7 @@ flowchart TD
 
 ---
 
-## 4) 🏢 Call Center B2B (pasos 300+)
+## 4) 🏢 Call Center B2B (pasos 300–311)
 
 Un agente autenticado con el **código de empresa** registra varios pacientes seguidos.
 
@@ -165,18 +176,27 @@ flowchart TD
 
 ---
 
-## 5) 🩺 Enfermedades crónicas (pasos 200+)
+## 5) 🩺 Enfermedades crónicas (paso 200 — sub-estado en datos)
 
 El cron diario (`api/cron.js`) inicia el cuestionario; el paciente responde por número.
+El `paso` de sesión siempre es **200** (fijo). El progreso interno se lleva en
+`datos.paso_cronico` (contador de pregunta) y `datos.enfermedad_key`.
 
 ```mermaid
 flowchart TD
-  CRON([Cron diario detecta\nseguimiento crónico vencido]) --> P200["Paso 200\nEnvía 1ª pregunta del cuestionario"]
-  P200 --> LOOP["Paso por cada pregunta\n(según enfermedad: HTA, diabetes, etc.)"]
-  LOOP --> EVAL{"Evalúa respuestas"}
-  EVAL -->|"Valores de riesgo"| ALERTA([⚠️ Alerta al médico])
-  EVAL -->|"Normal"| OKc([✅ Registrado · Fin])
+  CRON([Cron diario detecta\nseguimiento crónico vencido]) --> P200["Paso 200\nEnvía 1ª pregunta del cuestionario\n(según datos.enfermedad_key)"]
+  P200 --> LOOP["Paso 200 — siguiente pregunta\n(datos.paso_cronico avanza)"]
+  LOOP --> EVAL{"¿Última pregunta?"}
+  EVAL -->|"No"| LOOP
+  EVAL -->|"Sí"| RESULT{"Evalúa respuestas"}
+  RESULT -->|"Nivel 3 (grave)"| ALERTA3([🚨 Emergencia → 911\nalerta Telegram · crea consulta · Fin])
+  RESULT -->|"Nivel 2 (alerta)"| ALERTA2([⚠️ Alerta al médico\ncrea notificación · Fin])
+  RESULT -->|"Nivel 1 (normal)"| OKc([✅ Registrado · Fin])
 ```
+
+Enfermedades actualmente soportadas: hipertensión, diabetes tipo 1 y 2, EPOC, asma,
+insuficiencia cardíaca, enfermedad renal, tiroides, artritis reumatoide, lupus,
+epilepsia, post-ACV, fibrilación auricular, depresión, obesidad, osteoporosis, VIH.
 
 ---
 
@@ -200,14 +220,14 @@ flowchart TD
 
   NOTIF2 --> REVISA(["Médico revisa la notificación\nen el panel"])
   NOTIF3 --> REVISA
-  REVISA -->|"Aprueba"| P90["➡️ Seguimiento aprobado\n(paso 90, ver sección 8)"]
+  REVISA -->|"Aprueba"| P90["➡️ Seguimiento aprobado\n(paso 90, ver sección 9)"]
   REVISA -->|"Rechaza"| FINr2([Fin — no se notifica\nal paciente])
 ```
 
 > ⚠️ **Las respuestas "2" y "3" NO redirigen automáticamente a "Reagendar" (paso 98).**
 > Solo crean una notificación/alerta para que un médico la revise manualmente desde el
 > panel. Si el médico la aprueba, recién ahí `api/seguimiento-decision.js` arranca una
-> sesión nueva en `paso: 90` (sección 8) — distinto del paso 98 de "Reagendar".
+> sesión nueva en `paso: 90` (sección 9) — distinto del paso 98 de "Reagendar".
 
 ---
 
@@ -221,7 +241,24 @@ flowchart TD
 
 ---
 
-## 8) 🔁 Consulta de seguimiento aprobada por el médico (pasos 90–97)
+## 8) 🧪 Subida de examen de laboratorio (paso 150)
+
+Se llega aquí cuando el paciente responde **"Sí"** al recordatorio de seguimiento de
+laboratorio (`flujo-seguimiento-laboratorio.js`). Ese handler crea la sesión con
+`paso: 150` y le pide la foto/PDF del resultado.
+
+```mermaid
+flowchart TD
+  LAB([Recordatorio lab: ¿ya se hizo el examen?]) --> SINO{"Sí / No"}
+  SINO -->|"No"| FINl([Registra respuesta · Fin])
+  SINO -->|"Sí"| P150["Paso 150\nEsperando foto o PDF del resultado"]
+  P150 -->|"Archivo recibido"| REGl(["Sube a Storage,\nregistra documento · Fin"])
+  P150 -->|"No es archivo"| P150
+```
+
+---
+
+## 9) 🔁 Consulta de seguimiento aprobada por el médico (pasos 90–97)
 
 No se llega aquí escribiendo "hola". Cuando un médico **aprueba** una notificación de
 seguimiento (sección 6) desde el panel, `api/seguimiento-decision.js`:
@@ -255,29 +292,115 @@ flowchart TD
 ```
 
 > ℹ️ En la práctica, `seguimiento-decision.js` ya pre-carga correo, teléfono y lugar
-> de residencia desde el registro del paciente, así que P92-94 normalmente se saltan
-> (solo se preguntan si esos campos están vacíos en `pacientes`).
->
-> Para probarlo manualmente sin pasar por el panel: crear una sesión con
-> `paso: 90` y `datos` con al menos `paciente_id`, `cedula`, `nombreCompleto`,
-> `correo`, `telefonoContacto`, `lugar_residencia` (y opcionalmente `cliente_b2b_id`,
-> `consulta_origen_id`).
+> de residencia desde el registro del paciente, así que P92-94 normalmente se saltan.
 
 ---
 
-## 🧱 Deuda técnica — sobre la numeración por pasos
+## 10) 📡 Tracking externo (paso 400 — sub-estado en datos)
 
-La numeración por **rangos numéricos** (`paso 50–89 = B2C`, `200+ = crónicas`, etc.) es
-el punto más frágil del bot. Ya generó varios bugs reales: pasos que "caían" en el rango
-de otro flujo y eran interceptados por el flujo equivocado (ej. el paso de confirmar
-teléfono colisionaba con B2C; pasos `529`/`551` los robaba el flujo de crónicas).
+El cron de tracking (`api/cron.js`) crea la sesión con `paso: 400` y `datos.tipo` para
+indicar el tipo de interacción. El `paso` siempre es **400** (fijo).
 
-**Por qué es frágil:** el ruteo está hardcodeado por rangos repartidos en `webhook.js`,
-no hay una definición central de estados, y agregar un paso en el número equivocado
-**rompe en silencio**.
+```mermaid
+flowchart TD
+  CRON([Cron detecta tracking activo]) --> TIPO{"datos.tipo"}
 
-**Propuesta de mejora (a futuro):** reemplazar el número por un estado con **nombre**:
-guardar en la sesión `{ flujo: 'consulta', paso: 'telefono' }` en vez de `paso: 41`. El
-webhook derivaría por **`flujo`** (nombre), no por rango numérico — eliminando las
-colisiones de raíz. Es un refactor grande (toca todos los flujos), así que conviene
-hacerlo por etapas y con este documento como guía.
+  TIPO -->|"bienestar"| MSG["Envía escala 1-5\n(Muy mal → Muy bien)"]
+  MSG --> RESP{"Respuesta 1-5"}
+  RESP -->|"Inválida"| MSG
+  RESP -->|"1-2 (grave)"| ALT3([🚨 Alerta al médico\nregistra en tracking_registros · Fin])
+  RESP -->|"3 (regular)"| ALT2([⚠️ Registra en tracking_registros · Fin])
+  RESP -->|"4-5 (bien)"| OK([✅ Registra en tracking_registros · Fin])
+
+  TIPO -->|"med_reminder"| MED["Pregunta si tomó\nsu medicación"]
+  MED --> MEDRESP{"Sí / No"}
+  MEDRESP -->|"Sí"| OKm([✅ Registrado · Fin])
+  MEDRESP -->|"No"| ALTm([⚠️ Alerta Telegram · Fin])
+```
+
+> ℹ️ El flujo de tracking se activa la primera vez que el paciente escribe **hola** y
+> tiene un `tracking_casos` activo. El webhook detecta esto antes de crear una sesión
+> normal y setea `paso: 400` directamente.
+
+---
+
+## 🗓️ Plan de migración — sistema de pasos nombrados
+
+### Problema raíz
+
+El `paso` es un entero en un **namespace global y plano** compartido por los 10 flujos.
+Cualquier número que se elija puede colisionar con otro flujo. Agregar un paso con el
+número equivocado lo roba silenciosamente otro handler y la sesión se rompe sin error.
+
+### Solución
+
+Agregar un campo `_flujo` (string) en la sesión. El webhook routea por **nombre de
+flujo**, no por rango numérico. Cada flujo usa su propio espacio de pasos internos.
+
+**Estado actual de la sesión:**
+```json
+{ "paso": 41, "datos": { "cedula": "...", ... } }
+```
+
+**Estado objetivo:**
+```json
+{ "paso": 41, "datos": { "_flujo": "consulta", "cedula": "...", ... } }
+```
+
+> ℹ️ `_flujo` se guarda dentro de `datos` (no como columna separada) para no requerir
+> cambio de esquema en Supabase. El prefijo `_` lo distingue de datos de negocio.
+
+---
+
+### Fase 0 — Corrección de documentación ✅ COMPLETADA
+
+- Actualizar `flujo-bot.md` con pasos 42, 63, 150, 400 faltantes
+- Marcar paso 99 como código muerto
+- Corregir rango B2C de `50-62` a `50-63`
+- Documentar el plan de migración
+
+---
+
+### Fase 1 — Infraestructura (plomería) ✅ COMPLETADA
+
+**Archivos modificados:**
+- `src/services/sesiones.js` — `guardar(telefono, paso, datos, flujo = null)` acepta
+  el nombre del flujo y lo embebe en `datos._flujo`
+- `api/webhook.js` — extrae `flujo = datos._flujo` y agrega el bloque de ruteo
+  nombrado (`if (flujo) { ... }`) antes del ruteo legacy numérico
+
+**Comportamiento:** sin cambio. Ningún flujo setea `_flujo` todavía; el bloque nuevo
+nunca se ejecuta. Es solo scaffolding para la Fase 2.
+
+---
+
+### Fase 2 — Migrar flujos ✅ COMPLETADA
+
+Patrón de migración por flujo:
+
+1. En el flow, al llamar `guardar()`, pasar el nombre: `guardar(tel, paso, datos, 'nombre')`
+2. En `webhook.js`, agregar el `case 'nombre':` en el bloque `if (flujo)`
+3. Eliminar el `if (paso >= X)` legacy correspondiente
+4. Eliminar la delegación oculta de `flujo-consulta` si aplica
+
+| Orden | Flujo | `_flujo` | Pasos actuales | Complejidad |
+|---|---|---|---|---|
+| 1 | Tracking | `'tracking'` | 400 | Mínima — 1 paso fijo |
+| 2 | Reagendar | `'reagendar'` | 98 | Mínima — 1 paso |
+| 3 | Laboratorio | `'laboratorio'` | 150 | Baja — 1 paso |
+| 4 | Antecedentes | `'antecedentes'` | 13–17 | Baja — lineal |
+| 5 | Call Center | `'callcenter'` | 300–311 | Media |
+| 6 | Crónicas | `'cronicas'` | 200 | Media (ya usa sub-estado) |
+| 7 | B2C | `'b2c'` | 50–63 | Media + remover delegación |
+| 8 | Seguimiento pago | `'seguimiento_pago'` | 90–97 | Media + remover delegación |
+| 9 | Consulta | `'consulta'` | 0–12, 39, 41, 42 | Alta — el más complejo |
+
+---
+
+### Fase 3 — Limpieza final (después de migrar todos los flujos)
+
+- Eliminar todos los `if (paso >= X)` de rangos numéricos en `webhook.js`
+- Eliminar la lista `PASOS_VALIDOS` de `flujo-consulta.js`
+- Eliminar la sub-delegación `flujo-consulta → flujo-b2c` y `flujo-consulta → flujo-seguimiento-pago`
+- Eliminar la rama muerta `paso === 99` de `webhook.js`
+- El webhook queda con un `switch (flujo)` limpio y sin números hardcodeados

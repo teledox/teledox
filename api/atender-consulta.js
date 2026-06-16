@@ -71,7 +71,7 @@ async function dispararSeguimientoCronico(req, res) {
     enfermedad_id: c.id,
     paciente_id: c.paciente_id,
     paso_cronico: 1
-  });
+  }, 'cronicas');
 
   const ahora = new Date();
   const proximoSeguimiento = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);

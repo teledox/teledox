@@ -268,7 +268,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
       const hint = opciones > 0
         ? `Por favor responda únicamente con el número de la opción (1${opciones > 1 ? `-${opciones}` : ''}).`
         : `Por favor ingrese solo el número, ej: 120`;
-      await guardar(telefono, 200, datos);
+      await guardar(telefono, 200, datos, 'cronicas');
       return {
         respuesta: `❌ No entendí su respuesta.\n\n${hint}\n\n${preguntaActual.pregunta}`,
         terminar: false
@@ -282,7 +282,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
   if (pasoCronico < enfDef.pasos.length) {
     const siguientePaso = enfDef.pasos[pasoCronico];
     datos.paso_cronico = pasoCronico + 1;
-    await guardar(telefono, 200, datos);
+    await guardar(telefono, 200, datos, 'cronicas');
     return { respuesta: siguientePaso.pregunta, terminar: false };
   }
 

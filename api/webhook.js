@@ -32,6 +32,8 @@ function getFlows() {
     buscarEmpresaPorCodigo:       require('../src/flows/flujo-callcenter').buscarEmpresaPorCodigo,
     procesarTracking:             require('../src/flows/flujo-tracking').procesarTracking,
     procesarRespuestaMed:         require('../src/flows/flujo-tracking').procesarRespuestaMed,
+    procesarB2C:                  require('../src/flows/flujo-b2c').procesarB2C,
+    procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
   };
 }
 
@@ -102,7 +104,8 @@ module.exports = async function handler(req, res) {
       buscarRespuestaPendiente, procesarRespuestaSeguimiento,
       buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
-      procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed
+      procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
+      procesarB2C, procesarSeguimientoPago
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -130,13 +133,13 @@ module.exports = async function handler(req, res) {
           empresa_id: casoT.empresa_id,
           paciente_nombre: casoT.paciente_nombre,
           diagnostico: casoT.diagnostico
-        });
+        }, 'tracking');
         await enviar(telefono, msgTracking);
         return res.status(200).send('OK');
       }
 
       const result = await procesarPaso(0, mensaje, {}, telefono, nombreWhatsApp);
-      await guardar(telefono, result.paso, result.datos);
+      await guardar(telefono, result.paso, result.datos, 'consulta');
       await despachar(telefono, result);
       return res.status(200).send('OK');
     }
@@ -196,7 +199,10 @@ module.exports = async function handler(req, res) {
     // Una conversación activa de seguimiento crónico (paso 200+) tiene prioridad:
     // sus respuestas (ej. "1", "2", "3") no deben ser interceptadas por recordatorios
     // de medicación/laboratorio pendientes de consultas anteriores.
-    const enCronica = (sesion?.paso || 0) >= 200;
+    // Cualquier sesión con flujo nombrado activo o paso >= 200 tiene prioridad
+    // sobre los interceptores de seguimiento — evita que "Sí/No", "1/2/3" sean
+    // capturados por recordatorios pasados mientras hay una conversación activa.
+    const enCronica = !!sesion?.datos?._flujo || (sesion?.paso || 0) >= 200;
 
     const pendiente = (!esInteractivo && !enCronica) ? await buscarRespuestaPendiente(telefono) : null;
     if (pendiente?.respuesta && esRespuestaSeguimiento(pendiente.respuesta, mensaje)) {
@@ -212,7 +218,7 @@ module.exports = async function handler(req, res) {
     if (pendienteLab?.respuesta && esRespuestaLab(mensaje)) {
       const resultLab = await procesarRespuestaLab(pendienteLab, mensaje, telefono);
       if (resultLab) {
-        if (resultLab.paso) await guardar(telefono, resultLab.paso, resultLab.datos);
+        if (resultLab.paso) await guardar(telefono, resultLab.paso, resultLab.datos, 'laboratorio');
         await enviar(telefono, resultLab.respuesta);
         return res.status(200).send('OK');
       }
@@ -222,6 +228,96 @@ module.exports = async function handler(req, res) {
     let datos;
     ({ paso, datos } = sesion);
     datos = datos || {};
+
+    // ── Ruteo por flujo nombrado (Fase 2) ──────────────────────────────────
+    const flujo = datos._flujo || null;
+
+    if (flujo) {
+      switch (flujo) {
+
+        case 'tracking': {
+          const result = datos.tipo === 'med_reminder'
+            ? await procesarRespuestaMed(mensaje, datos, telefono)
+            : await procesarTracking(paso, mensaje, datos, telefono);
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'callcenter': {
+          const result = await procesarCallCenter(paso, mensaje, datos, telefono);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'callcenter');
+          else await eliminar(telefono);
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'antecedentes': {
+          const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'antecedentes');
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'cronicas': {
+          const result = await procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp);
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'laboratorio': {
+          const result = await procesarSubidaExamen(paso, mensaje, datos, telefono, msg);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'laboratorio');
+          else await eliminar(telefono);
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'reagendar': {
+          const result = await procesarReagendamiento(datos, mensaje, telefono);
+          // Reagendar siempre transiciona a consulta (paso 3) o termina
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'consulta');
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'b2c': {
+          const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'b2c');
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'seguimiento_pago': {
+          const result = await procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWhatsApp);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'seguimiento_pago');
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'consulta': {
+          let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
+          if (result._redirect) {
+            const ccResult = await procesarCallCenter(300, '', result._redirect.datos, telefono);
+            await guardar(telefono, ccResult.paso, ccResult.datos, 'callcenter');
+            await despachar(telefono, ccResult);
+            return res.status(200).send('OK');
+          }
+          // Si la delegación interna (B2C o seguimiento_pago) ya guardó con su propio
+          // _flujo, no sobreescribir — result.datos._flujo diferente a 'consulta' lo indica.
+          const targetFlujo = result.datos?._flujo;
+          if (!result.terminar && (!targetFlujo || targetFlujo === 'consulta')) {
+            await guardar(telefono, result.paso, result.datos, 'consulta');
+          }
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+      }
+    }
+
+    // ── Ruteo legacy por rangos numéricos ──────────────────────────────────
+    // Solo aplica a sesiones sin _flujo creadas antes del deploy de la Fase 2.
+    // Se elimina en la Fase 3 (tras expirar todas las sesiones legacy — máx 6h).
 
     // Paso 400+ — tracking externo: bienestar o recordatorio de medicación
     if (paso >= 400) {
@@ -265,7 +361,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // Paso 98 — reagendar
+    // Paso 98 — reagendar (código muerto: ningún flujo crea sesiones en paso 98)
     if (paso === 98) {
       const result = await procesarReagendamiento(datos, mensaje, telefono);
       if (!result.terminar) await guardar(telefono, result.paso, result.datos);
@@ -273,19 +369,18 @@ module.exports = async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
-    // Paso 99 — ya registrado
+    // Paso 99 — ya registrado (código muerto — ver flujos-bot.md)
     if (paso === 99) {
       await enviar(telefono, `Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nPara una nueva consulta escriba *hola*.`);
       return res.status(200).send('OK');
     }
 
-    // Flujo principal de consulta
+    // Flujo principal de consulta (legacy — sesiones sin _flujo)
     let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
 
-    // Redirección a call center cuando el paso 1 detecta un código de empresa
     if (result._redirect) {
       const ccResult = await procesarCallCenter(300, '', result._redirect.datos, telefono);
-      await guardar(telefono, ccResult.paso, ccResult.datos);
+      await guardar(telefono, ccResult.paso, ccResult.datos, 'callcenter');
       await despachar(telefono, ccResult);
       return res.status(200).send('OK');
     }

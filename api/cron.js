@@ -158,6 +158,17 @@ module.exports = async function handler(req, res) {
         const telefono = c.telefono;
         if (!telefono) continue;
 
+        // Alta automática si se agotó la duración definida
+        if (c.duracion_dias) {
+          const inicio = new Date(c.created_at + (c.created_at.endsWith('Z') ? '' : 'Z'));
+          const diasTranscurridos = (ahora - inicio) / 86400000;
+          if (diasTranscurridos >= c.duracion_dias) {
+            await query('PATCH', 'tracking_casos', { estado: 'alta' }, `?id=eq.${c.id}`);
+            procesados++;
+            continue;
+          }
+        }
+
         const sesion = await obtener(telefono);
         if (sesion && sesion.paso !== 0) continue;
 
@@ -165,7 +176,8 @@ module.exports = async function handler(req, res) {
         const medsTexto = meds.length
           ? `\n\n💊 Medicamentos actuales:\n${meds.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n')}`
           : '';
-        const mensaje = `🩺 *Seguimiento MediLyft*\n\nHola ${c.paciente_nombre || ''}! Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy del *1 al 10*?\n_(1 = muy mal · 10 = excelente)_`;
+        const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
+        const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}${medsTexto}\n\n¿Cómo te sientes hoy del *1 al 10*?\n_(1 = muy mal · 10 = excelente)_`;
 
         await enviar(telefono, mensaje);
 

@@ -52,7 +52,7 @@ async function procesarTracking(paso, mensaje, datos, telefono) {
   // Actualizar estado del caso si es alerta grave
   if (nivel === 3) {
     await query('PATCH', 'tracking_casos', { estado: 'alerta' }, `?id=eq.${caso_id}`);
-    await alertar(`🚨 <b>ALERTA TRACKING</b>\nPaciente: ${paciente_nombre}\nDiagnóstico: ${diagnostico}\nBienestar: ${datos.respuestas.bienestar}/10${datos.respuestas.medicacion ? `\nMedicación: ${datos.respuestas.medicacion === '1' ? 'Sí' : 'No'}` : ''}`);
+    await alertar(`🚨 <b>ALERTA TRACKING</b>\nPaciente: ${paciente_nombre || telefono}\nDiagnóstico: ${diagnostico}\nBienestar: ${datos.respuestas.bienestar}/10${datos.respuestas.medicacion ? `\nMedicación: ${datos.respuestas.medicacion === '1' ? 'Sí' : 'No'}` : ''}`);
   }
 
   await eliminar(telefono);

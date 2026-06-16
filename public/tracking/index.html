@@ -213,14 +213,18 @@ textarea.form-input{resize:vertical;min-height:70px}
         <input class="form-input" id="casoTelefono" placeholder="ej: 593987654321">
       </div>
     </div>
+    <div class="form-row-single">
+      <label class="form-label">Nombre del paciente <span style="color:#aaa;font-weight:400">(opcional)</span></label>
+      <input class="form-input" id="casoNombre" placeholder="Juan Pérez — o dejar vacío si no se comparte">
+    </div>
     <div class="form-row">
       <div>
-        <label class="form-label">Nombre del paciente *</label>
-        <input class="form-input" id="casoNombre" placeholder="Juan Pérez">
+        <label class="form-label">Seguimiento cada (horas) *</label>
+        <input class="form-input" type="number" id="casoFrecuencia" value="24" min="1">
       </div>
       <div>
-        <label class="form-label">Seguimiento cada (horas)</label>
-        <input class="form-input" type="number" id="casoFrecuencia" value="24" min="1">
+        <label class="form-label">Durante (días) <span style="color:#aaa;font-weight:400">— vacío = sin límite</span></label>
+        <input class="form-input" type="number" id="casoDuracion" placeholder="ej: 30" min="1">
       </div>
     </div>
     <div class="form-row-single">
@@ -367,7 +371,7 @@ async function loadDashboard() {
   document.getElementById('s-empresas').textContent = (empresas || []).length;
   document.getElementById('alertasBody').innerHTML = alertas.length
     ? alertas.map(c => `<tr>
-        <td><strong>${c.paciente_nombre}</strong></td>
+        <td><strong>${c.paciente_nombre || c.telefono}</strong></td>
         <td>${c.tracking_empresas?.nombre || '—'}</td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.diagnostico || '—'}</td>
         <td><span class="badge badge-red">🚨 Alerta</span></td>
@@ -389,7 +393,7 @@ async function loadCasos() {
   document.getElementById('casosBody').innerHTML = casos.length
     ? casos.map((c, i) => `<tr>
         <td style="color:#aaa;font-weight:700">${casos.length - i}</td>
-        <td><strong>${c.paciente_nombre}</strong><br><span style="font-size:11px;color:#aaa">${c.telefono}</span></td>
+        <td><strong>${c.paciente_nombre || c.telefono}</strong>${c.paciente_nombre ? `<br><span style="font-size:11px;color:#aaa">${c.telefono}</span>` : ''}</td>
         <td>${c.tracking_empresas?.nombre || '—'}</td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.diagnostico||'').replace(/"/g,'')}">${c.diagnostico || '—'}</td>
         <td><span class="badge ${estadoBadge[c.estado] || 'badge-gray'}">${estadoLabel[c.estado] || c.estado}</span></td>
@@ -422,6 +426,7 @@ function openNuevoCaso() {
     if (el) el.value = el.tagName === 'SELECT' ? '' : '';
   });
   document.getElementById('casoFrecuencia').value = 24;
+  document.getElementById('casoDuracion').value = '';
   renderMeds();
   document.getElementById('modalCaso').classList.add('open');
 }
@@ -450,9 +455,10 @@ function renderMeds() {
 async function guardarCaso() {
   const empresa_id = document.getElementById('casoEmpresa').value;
   const telefono = document.getElementById('casoTelefono').value.trim();
-  const paciente_nombre = document.getElementById('casoNombre').value.trim();
+  const paciente_nombre = document.getElementById('casoNombre').value.trim() || null;
   const diagnostico = document.getElementById('casoDiagnostico').value.trim();
-  if (!empresa_id || !telefono || !paciente_nombre || !diagnostico) { alert('Empresa, teléfono, nombre y diagnóstico son obligatorios'); return; }
+  const duracion_raw = document.getElementById('casoDuracion').value.trim();
+  if (!empresa_id || !telefono || !diagnostico) { alert('Empresa, teléfono y diagnóstico son obligatorios'); return; }
   const body = {
     empresa_id,
     telefono,
@@ -461,6 +467,7 @@ async function guardarCaso() {
     tratamiento: document.getElementById('casoTratamiento').value.trim() || null,
     medicamentos: medicamentosTemp,
     frecuencia_horas: parseInt(document.getElementById('casoFrecuencia').value) || 24,
+    duracion_dias: duracion_raw ? parseInt(duracion_raw) : null,
     estado: 'activo',
     proximo_seguimiento: new Date().toISOString()
   };
@@ -494,11 +501,12 @@ async function verDetalle(id) {
   ]);
   const c = casoArr?.[0]; if (!c) return;
   const estadoColor = { activo: '#16a34a', alerta: '#dc2626', alta: '#2563eb', derivado: '#ca8a04', inactivo: '#6b7280' };
-  document.getElementById('detalleTitulo').textContent = c.paciente_nombre;
+  document.getElementById('detalleTitulo').textContent = c.paciente_nombre || c.telefono;
   document.getElementById('detalleEmpresa').textContent = `${c.tracking_empresas?.nombre || '—'} · ${c.telefono}`;
+  const duracionLabel = c.duracion_dias ? `${c.duracion_dias} días` : 'Sin límite';
   document.getElementById('detalleBadges').innerHTML = `
     <span class="badge" style="background:#f3f4f6;color:${estadoColor[c.estado]||'#333'}">${c.estado}</span>
-    <span class="badge badge-gray">Cada ${c.frecuencia_horas}h</span>
+    <span class="badge badge-gray">Cada ${c.frecuencia_horas}h · ${duracionLabel}</span>
     ${(c.medicamentos||[]).map(m => `<span class="badge" style="background:#eff6ff;color:#1d4ed8">💊 ${m.nombre}${m.dosis?` ${m.dosis}`:''}</span>`).join('')}
   `;
   document.getElementById('detalleTratamiento').innerHTML = `<strong>Diagnóstico:</strong> ${c.diagnostico || '—'}<br><strong>Tratamiento:</strong> ${c.tratamiento || '—'}`;
@@ -536,6 +544,7 @@ async function editarCaso(id) {
   document.getElementById('casoDiagnostico').value = c.diagnostico || '';
   document.getElementById('casoTratamiento').value = c.tratamiento || '';
   document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
+  document.getElementById('casoDuracion').value = c.duracion_dias || '';
   renderMeds();
   document.getElementById('modalCaso').classList.add('open');
 }

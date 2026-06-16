@@ -137,6 +137,34 @@ module.exports = async function handler(req, res) {
       return res.status(200).send('OK');
     }
 
+    // Botón "¿Qué es esto?" de la plantilla de activación tracking
+    if (mensaje === 'que_es_esto') {
+      const { query: qTk } = require('../src/services/supabase');
+      const casosTk = await qTk('GET', 'tracking_casos', null,
+        `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
+      if (casosTk?.[0]) {
+        await enviarBotones(
+          telefono,
+          `MediLyft es el servicio de seguimiento médico de tu clínica. Te contactamos periódicamente para saber cómo evolucionas con tu tratamiento.\n\nNo reemplaza a tu médico — solo lo mantiene informado entre consultas.\n\n¿Quieres activarlo?`,
+          [
+            { id: 'hola',    titulo: '✅ Sí, continuar' },
+            { id: 'ahora_no', titulo: '⏸ Ahora no' }
+          ]
+        );
+      } else {
+        await enviar(telefono, `Para iniciar una consulta médica escribe *hola*. 😊`);
+      }
+      return res.status(200).send('OK');
+    }
+
+    // Botón "Ahora no" — el paciente decidió no activar por el momento
+    if (mensaje === 'ahora_no') {
+      await enviar(telefono,
+        `Entendido 👍\n\nCuando quieras empezar, escríbenos *hola* y activamos tu seguimiento.`
+      );
+      return res.status(200).send('OK');
+    }
+
     let sesion = await obtener(telefono);
 
     // Sesiones abandonadas hace más de 6 horas se consideran expiradas: el paciente

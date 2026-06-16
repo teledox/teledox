@@ -76,16 +76,20 @@ tr:hover td{background:#fafafa}
 select.form-input{background:#fff}
 textarea.form-input{resize:vertical;min-height:70px}
 /* MEDS */
-.meds-input-row{display:flex;gap:8px;margin-top:8px}
-.med-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:8px}
-.med-card{display:flex;align-items:center;gap:8px;border-radius:10px;padding:9px 11px;border:1.5px solid var(--mc-border);background:var(--mc-bg)}
-.med-card-icon{font-size:16px;flex-shrink:0}
+.meds-input-row{display:flex;gap:8px;margin-top:4px}
+.meds-input-row2{display:flex;gap:8px;margin-top:6px;align-items:center}
+.meds-input-label{font-size:11px;color:#888;white-space:nowrap}
+.med-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.med-card{border-radius:10px;padding:10px 12px;border:1.5px solid var(--mc-border);background:var(--mc-bg)}
+.med-card-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.med-card-icon{font-size:15px;flex-shrink:0}
 .med-card-body{flex:1;min-width:0}
-.med-card-name{font-size:12px;font-weight:700;color:var(--mc-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.med-card-name{font-size:12px;font-weight:700;color:var(--mc-text)}
 .med-card-sub{font-size:11px;color:var(--mc-text);opacity:.65;margin-top:1px}
-.med-card-time{font-size:11px;color:var(--mc-text);font-weight:600;flex-shrink:0;white-space:nowrap}
-.med-card-del{background:none;border:none;cursor:pointer;color:var(--mc-text);opacity:.4;font-size:15px;line-height:1;padding:0 0 0 4px;flex-shrink:0;transition:opacity .1s}
+.med-card-meta{font-size:11px;color:var(--mc-text);opacity:.8;font-weight:600;white-space:nowrap}
+.med-card-del{background:none;border:none;cursor:pointer;color:var(--mc-text);opacity:.4;font-size:15px;line-height:1;padding:0;flex-shrink:0;transition:opacity .1s}
 .med-card-del:hover{opacity:.9}
+.med-mini-grid{overflow-x:auto}
 /* separador visual entre secciones del formulario */
 .section-sep{border-top:1.5px dashed #e5e7eb;margin:1.2rem 0 .9rem}
 .section-sep-label{font-size:11px;font-weight:700;color:#aaa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.7rem;display:flex;align-items:center;gap:6px;padding-top:.8rem}
@@ -276,10 +280,23 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="meds-input-row">
         <input class="form-input" id="medNombre" placeholder="Medicamento" style="flex:2">
         <input class="form-input" id="medDosis" placeholder="Dosis (ej: 500mg)" style="flex:1.2">
-        <select class="form-input" id="medHora" style="flex:.9" title="Hora de recordatorio (opcional)">
-          <option value="">sin hora</option>
+      </div>
+      <div class="meds-input-row2">
+        <span class="meds-input-label">Desde</span>
+        <select class="form-input" id="medHoraInicio" style="width:90px"></select>
+        <span class="meds-input-label">· Cada</span>
+        <select class="form-input" id="medFrecuencia" style="width:80px">
+          <option value="1">1 h</option>
+          <option value="2">2 h</option>
+          <option value="4">4 h</option>
+          <option value="6">6 h</option>
+          <option value="8">8 h</option>
+          <option value="12">12 h</option>
+          <option value="24" selected>24 h</option>
         </select>
-        <button class="btn btn-secondary btn-sm" onclick="addMed()">+ Agregar</button>
+        <span class="meds-input-label">· Durante</span>
+        <input class="form-input" id="medDuracion" type="number" placeholder="días (vacío = caso)" min="1" style="width:90px">
+        <button class="btn btn-secondary btn-sm" onclick="addMed()" style="margin-left:auto">+ Agregar</button>
       </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:1.2rem">
@@ -483,7 +500,7 @@ function openNuevoCaso() {
   editandoCasoId = null;
   medicamentosTemp = [];
   document.getElementById('modalCasoTitle').textContent = 'Nuevo caso de seguimiento';
-  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis','medHora'].forEach(id => {
+  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis','medDuracion'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = el.tagName === 'SELECT' ? '' : '';
   });
@@ -498,14 +515,23 @@ function openNuevoCaso() {
 }
 
 function addMed() {
-  const nombre  = document.getElementById('medNombre').value.trim();
-  const dosis   = document.getElementById('medDosis').value.trim();
-  const horaVal = document.getElementById('medHora').value;
+  const nombre      = document.getElementById('medNombre').value.trim();
+  const dosis       = document.getElementById('medDosis').value.trim();
+  const horaInicio  = parseInt(document.getElementById('medHoraInicio').value);
+  const frecuencia  = parseInt(document.getElementById('medFrecuencia').value) || 24;
+  const duracionRaw = document.getElementById('medDuracion').value.trim();
   if (!nombre) return;
-  medicamentosTemp.push({ nombre, dosis: dosis || null, hora: horaVal !== '' ? parseInt(horaVal) : null });
-  document.getElementById('medNombre').value = '';
-  document.getElementById('medDosis').value  = '';
-  document.getElementById('medHora').value   = '';
+  medicamentosTemp.push({
+    nombre,
+    dosis:           dosis || null,
+    hora_inicio:     isNaN(horaInicio) ? 8 : horaInicio,
+    frecuencia_horas: frecuencia,
+    duracion_dias:   duracionRaw ? parseInt(duracionRaw) : null
+  });
+  document.getElementById('medNombre').value  = '';
+  document.getElementById('medDosis').value   = '';
+  document.getElementById('medFrecuencia').value = '24';
+  document.getElementById('medDuracion').value = '';
   renderMeds();
 }
 
@@ -515,32 +541,66 @@ function removeMed(i) {
 }
 
 const MED_COLORS = [
-  { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },  // azul
-  { bg: '#f5f3ff', border: '#ddd6fe', text: '#7c3aed' },  // violeta
-  { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d' },  // verde
-  { bg: '#fff7ed', border: '#fed7aa', text: '#c2410c' },  // naranja
-  { bg: '#fdf4ff', border: '#f5d0fe', text: '#a21caf' },  // fucsia
-  { bg: '#f0fdfa', border: '#99f6e4', text: '#0f766e' },  // teal
+  { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },
+  { bg: '#f5f3ff', border: '#ddd6fe', text: '#7c3aed' },
+  { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d' },
+  { bg: '#fff7ed', border: '#fed7aa', text: '#c2410c' },
+  { bg: '#fdf4ff', border: '#f5d0fe', text: '#a21caf' },
+  { bg: '#f0fdfa', border: '#99f6e4', text: '#0f766e' },
 ];
+
+// Devuelve las horas del día (0-23) en que debe dispararse este med
+function horasDelDia(horaInicio, frecuencia) {
+  const horas = [];
+  let h = horaInicio % 24;
+  while (h < 24) { horas.push(h); h += frecuencia; }
+  return horas;
+}
+
+function renderMedMiniGrid(m, color) {
+  const horaIn  = m.hora_inicio ?? m.hora ?? 8;
+  const freq    = m.frecuencia_horas || 24;
+  const horas   = horasDelDia(horaIn, freq);
+  const maxDias = Math.min(m.duracion_dias || 7, 7);
+  const now     = new Date();
+  const DN      = ['D','L','M','X','J','V','S'];
+  const dias    = Array.from({length: maxDias}, (_, i) => { const d = new Date(now); d.setDate(now.getDate() + i); return d; });
+
+  const heads = dias.map(d => `<th style="text-align:center;padding:2px 3px;font-size:10px;font-weight:500;color:${color.text};opacity:.7">${DN[d.getDay()]}<br><span style="font-size:9px;font-weight:400">${d.getDate()}/${d.getMonth()+1}</span></th>`).join('');
+  const rows  = horas.map(h =>
+    `<tr><td style="font-size:9px;color:${color.text};opacity:.6;text-align:right;padding-right:5px;white-space:nowrap">${String(h).padStart(2,'0')}:00</td>` +
+    dias.map(() => `<td style="text-align:center;padding:2px 3px"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${color.text};opacity:.55"></span></td>`).join('') +
+    '</tr>'
+  ).join('');
+
+  return `<div class="med-mini-grid" style="margin-top:7px;padding-top:7px;border-top:1px solid ${color.border}">
+    <table style="width:100%;border-collapse:collapse"><thead><tr><th style="width:34px"></th>${heads}</tr></thead><tbody>${rows}</tbody></table>
+  </div>`;
+}
 
 function renderMeds() {
   const el = document.getElementById('medGrid');
   if (!el) return;
   if (!medicamentosTemp.length) {
-    el.innerHTML = '<div style="color:#ccc;font-size:12px;grid-column:1/-1;padding:2px 0">Sin medicamentos — agregar arriba</div>';
+    el.innerHTML = '<div style="color:#ccc;font-size:12px;padding:2px 0">Sin medicamentos — agregar abajo</div>';
     return;
   }
   el.innerHTML = medicamentosTemp.map((m, i) => {
-    const c = MED_COLORS[i % MED_COLORS.length];
-    const horaLabel = m.hora != null ? `🕐 ${String(m.hora).padStart(2,'0')}:00` : '';
+    const c       = MED_COLORS[i % MED_COLORS.length];
+    const horaIn  = m.hora_inicio ?? m.hora ?? 8;
+    const freq    = m.frecuencia_horas || 24;
+    const freqLabel = freq === 24 ? '1×/día' : freq === 12 ? '2×/día' : freq === 8 ? '3×/día' : `cada ${freq}h`;
+    const durLabel  = m.duracion_dias ? `${m.duracion_dias} días` : 'sin límite';
     return `<div class="med-card" style="--mc-bg:${c.bg};--mc-border:${c.border};--mc-text:${c.text}">
-      <div class="med-card-icon">💊</div>
-      <div class="med-card-body">
-        <div class="med-card-name">${m.nombre}</div>
-        ${m.dosis ? `<div class="med-card-sub">${m.dosis}</div>` : ''}
+      <div class="med-card-header">
+        <div class="med-card-icon">💊</div>
+        <div class="med-card-body">
+          <div class="med-card-name">${m.nombre}${m.dosis ? ` <span style="font-weight:400;opacity:.7">${m.dosis}</span>` : ''}</div>
+          <div class="med-card-sub">Desde ${String(horaIn).padStart(2,'0')}:00 · ${freqLabel} · ${durLabel}</div>
+        </div>
+        <button class="med-card-del" onclick="removeMed(${i})">×</button>
       </div>
-      ${horaLabel ? `<div class="med-card-time">${horaLabel}</div>` : ''}
-      <button class="med-card-del" onclick="removeMed(${i})">×</button>
+      ${renderMedMiniGrid(m, c)}
     </div>`;
   }).join('');
 }
@@ -711,14 +771,13 @@ async function toggleEmpresa(id, activo) {
 
 // ── HORARIO / PREVIEW ─────────────────────────────────────────────────────
 function buildHoraSelects() {
-  // horaInicio/horaFin: rango del seguimiento. medHora: hora de recordatorio de med.
-  const defs = { horaInicio: 8, horaFin: 21, medHora: null };
+  const defs = { horaInicio: 8, horaFin: 21, medHoraInicio: 8 };
   Object.entries(defs).forEach(([id, def]) => {
     const sel = document.getElementById(id);
     if (!sel) return;
     for (let h = 0; h <= 23; h++) {
       const opt = new Option(`${String(h).padStart(2,'0')}:00`, h);
-      if (def !== null && h === def) opt.selected = true;
+      if (h === def) opt.selected = true;
       sel.appendChild(opt);
     }
   });

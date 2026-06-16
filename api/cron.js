@@ -249,7 +249,14 @@ module.exports = async function handler(req, res) {
     for (const c of casosConMeds || []) {
       try {
         const meds = Array.isArray(c.medicamentos) ? c.medicamentos : [];
-        const medsAhora = meds.filter(m => m.hora === horaActualEC);
+        // Soporta hora_inicio + frecuencia_horas (nuevo) y hora legado (anterior)
+        const medsAhora = meds.filter(m => {
+          const horaIn  = m.hora_inicio ?? m.hora ?? 8;
+          const freq    = m.frecuencia_horas || 24;
+          let h = horaIn % 24;
+          while (h < 24) { if (h === horaActualEC) return true; h += freq; }
+          return false;
+        });
         if (!medsAhora.length) continue;
 
         const tel = c.telefono;
@@ -257,7 +264,8 @@ module.exports = async function handler(req, res) {
 
         // Deduplicar: saltear si ya enviamos en las últimas 20h
         const medRec = c.meds_recordatorios || {};
-        const medKey = `h${horaActualEC}`;
+        // Clave por medicamento + hora para evitar colisiones entre meds distintos
+        const medKey = `${medsAhora.map(m=>m.nombre).join('_').replace(/\s+/g,'').slice(0,20)}_h${horaActualEC}`;
         if (medRec[medKey]) {
           const diff = ahora - new Date(medRec[medKey] + (medRec[medKey].endsWith('Z') ? '' : 'Z'));
           if (diff < 20 * 3600000) continue;

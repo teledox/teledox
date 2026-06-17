@@ -6,29 +6,11 @@ const { registrarPlanillajeB2B } = require('../services/planillaje');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, separarNombre } = require('../utils/validaciones');
-const { procesarB2C } = require('./flujo-b2c');
-const { procesarSeguimientoPago } = require('./flujo-seguimiento-pago');
 const { mensajeBienvenida } = require('./flujo-inicio');
 
 async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
   let nuevoPaso = paso;
-
-  // Pasos 50+ — flujo B2C (pago directo)
-  // Guarda con _flujo:'b2c' para que el webhook detecte el cambio y no sobreescriba.
-  if (paso >= 50 && paso < 90) {
-    const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
-    if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'b2c');
-    return result;
-  }
-
-  // Pasos 90-97 — flujo de seguimiento aprobado por médico (agendar + pago)
-  // Guarda con _flujo:'seguimiento_pago' para que el webhook detecte el cambio.
-  if (paso >= 90 && paso <= 97) {
-    const result = await procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWhatsApp);
-    if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'seguimiento_pago');
-    return result;
-  }
 
   // Paso desconocido/no reconocido — reiniciar sesión para evitar bucles
   // sin salida (en lugar de repetir una respuesta vacía indefinidamente)

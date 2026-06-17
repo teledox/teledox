@@ -12,44 +12,34 @@
 
 ## 🗺️ Mapa de ruteo (cómo el webhook decide qué flujo corre)
 
-El bot guarda en cada sesión un número de **`paso`**. `api/webhook.js` mira ese número y
-deriva al flujo correspondiente **por rangos** (sistema legacy, ver sección *"Plan de
-migración"*):
+Cada sesión guarda `datos._flujo` (string). `api/webhook.js` lee ese campo y despacha
+con un `switch(flujo)`. Los pasos numéricos siguen existiendo como sub-estado interno
+de cada flujo, pero **ya no determinan el ruteo** — solo determinan en qué punto del
+flujo está el paciente.
 
-| Rango de `paso` | Flujo | Archivo |
-|---|---|---|
-| `0`–`12`, `39`, `41`, `42` | Consulta principal (registro paciente) | `flujo-consulta.js` |
-| `13`–`17` | Antecedentes médicos | `flujo-antecedentes.js` |
-| `50`–`63` | B2C (pago directo / seguro externo) | `flujo-b2c.js` |
-| `90`–`97` | Seguimiento aprobado por médico (pago) | `flujo-seguimiento-pago.js` |
-| `98` | Reagendar | `flujo-reagendar.js` |
-| `99` | ⚰️ **CÓDIGO MUERTO** — ver nota abajo | `webhook.js` |
-| `150` | Subida de resultado de examen de laboratorio | `flujo-seguimiento-laboratorio.js` |
-| `200` | Enfermedades crónicas (cuestionarios) | `flujo-cronicas.js` |
-| `300`–`311` | Call center B2B (agente registra pacientes) | `flujo-callcenter.js` |
-| `400` | Tracking externo (bienestar + medicación) | `flujo-tracking.js` |
-| `410`–`411` | Migración tracking → consulta (`_flujo:'tracking_migracion'`) | `flujo-tracking-consulta.js` |
-| (sin paso) | Respuesta a recordatorio de seguimiento | `flujo-seguimiento.js` |
-
-> ℹ️ **Detalle de ruteo (dos capas):** `webhook.js` despacha los rangos `13-17`, `98`,
-> `150`, `200`, `300+`, `400+` directamente. Los pasos `0-12`, `39`, `41`, `42` y `50-97`
-> caen en `procesarPaso()` de `flujo-consulta.js`, que a su vez delega internamente:
-> `50-89` → `flujo-b2c.js` y `90-97` → `flujo-seguimiento-pago.js`.
-> Esta delegación oculta se elimina en la Fase 2 de la migración.
-
-> ⚰️ **Paso 99 — código muerto:** la rama `paso === 99` en `webhook.js` nunca se alcanza.
-> `flujo-antecedentes.js` termina con `eliminar(telefono)` — la sesión se borra por
-> completo, nunca queda en `paso: 99`. Si en algún momento se quiere mostrar un mensaje
-> de "ya registrado", debe dispararse desde el flujo que corresponda.
+| `_flujo` | Pasos internos | Flujo | Archivo |
+|---|---|---|---|
+| `'consulta'` | 0–12, 39, 41, 42 | Consulta principal (registro paciente) | `flujo-consulta.js` |
+| `'antecedentes'` | 13–17 | Antecedentes médicos | `flujo-antecedentes.js` |
+| `'b2c'` | 50–63 | B2C (pago directo / seguro externo) | `flujo-b2c.js` |
+| `'seguimiento_pago'` | 90–97 | Seguimiento aprobado por médico (pago) | `flujo-seguimiento-pago.js` |
+| `'reagendar'` | — | Reagendar (sin sesiones activas actualmente) | `flujo-reagendar.js` |
+| `'laboratorio'` | 150 | Subida de resultado de examen de laboratorio | `flujo-seguimiento-laboratorio.js` |
+| `'cronicas'` | 200 (fijo) | Enfermedades crónicas (cuestionarios) | `flujo-cronicas.js` |
+| `'callcenter'` | 300–311 | Call center B2B (agente registra pacientes) | `flujo-callcenter.js` |
+| `'tracking'` | 400 (fijo) | Tracking externo (bienestar + medicación) | `flujo-tracking.js` |
+| `'tracking_migracion'` | 410–411 | Migración tracking → consulta | `flujo-tracking-consulta.js` |
+| (sin sesión / sin `_flujo`) | — | Fallback → consulta / recordatorio de seguimiento | `flujo-seguimiento.js` |
 
 > ℹ️ **Crónicas y tracking no escalan su `paso`:** `flujo-cronicas.js` siempre guarda
 > `paso: 200` (fijo) y usa `datos.paso_cronico` como sub-estado interno. Ídem
-> `flujo-tracking.js` con `paso: 400` y `datos.tipo`. Esto los inmuniza contra colisiones
-> dentro de sus propios rangos.
+> `flujo-tracking.js` con `paso: 400` y `datos.tipo`. El campo `_flujo` es el único
+> determinante del routing — `paso` es solo contexto interno de cada flujo.
 
-> ⚠️ **La numeración por rangos sigue siendo el punto más frágil del sistema** — ver
-> la sección *"Plan de migración"* al final. Agregar un paso con el número equivocado
-> lo roba silenciosamente otro flujo.
+> ℹ️ **Agregar un nuevo flujo:** crear el archivo `src/flows/flujo-nuevo.js`, elegir un
+> nombre de string único para `_flujo`, y agregar un `case 'nuevo':` en el `switch` de
+> `webhook.js`. Los pasos internos pueden ser cualquier número — no colisionan con otros
+> flujos porque el routing ya no depende de rangos.
 
 ---
 
@@ -451,10 +441,11 @@ Patrón de migración por flujo:
 
 ---
 
-### Fase 3 — Limpieza final (después de migrar todos los flujos)
+### Fase 3 — Limpieza final ✅ COMPLETADA
 
-- Eliminar todos los `if (paso >= X)` de rangos numéricos en `webhook.js`
-- Eliminar la lista `PASOS_VALIDOS` de `flujo-consulta.js`
-- Eliminar la sub-delegación `flujo-consulta → flujo-b2c` y `flujo-consulta → flujo-seguimiento-pago`
-- Eliminar la rama muerta `paso === 99` de `webhook.js`
-- El webhook queda con un `switch (flujo)` limpio y sin números hardcodeados
+- Eliminados todos los `if (paso >= X)` de rangos numéricos en `webhook.js`
+- Eliminada la sub-delegación `flujo-consulta → flujo-b2c` y `flujo-consulta → flujo-seguimiento-pago`
+- Eliminados imports de `flujo-b2c` y `flujo-seguimiento-pago` de `flujo-consulta.js`
+- Eliminadas ramas muertas `paso === 98` y `paso === 99`
+- El webhook queda con un `switch(_flujo)` limpio y sin números hardcodeados
+- Fallback para sesiones sin `_flujo` (usuario sin sesión activa) → ruta a `consulta`

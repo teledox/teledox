@@ -397,79 +397,15 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    // ── Ruteo legacy por rangos numéricos ──────────────────────────────────
-    // Solo aplica a sesiones sin _flujo creadas antes del deploy de la Fase 2.
-    // Se elimina en la Fase 3 (tras expirar todas las sesiones legacy — máx 6h).
-
-    // Paso 400+ — tracking externo: bienestar o recordatorio de medicación
-    if (paso >= 400) {
-      const result = datos.tipo === 'med_reminder'
-        ? await procesarRespuestaMed(mensaje, datos, telefono)
-        : await procesarTracking(paso, mensaje, datos, telefono);
-      await despachar(telefono, result);
-      return res.status(200).send('OK');
-    }
-
-    // Pasos 300+ — flujo call center B2B
-    if (paso >= 300) {
-      const result = await procesarCallCenter(paso, mensaje, datos, telefono);
-      if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      else await eliminar(telefono);
-      await despachar(telefono, result);
-      return res.status(200).send('OK');
-    }
-
-    // Pasos 13-17 — antecedentes médicos
-    if (paso >= 13 && paso <= 17) {
-      const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
-      if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      await despachar(telefono, result);
-      return res.status(200).send('OK');
-    }
-
-    // Paso 200+ — enfermedades crónicas
-    if (paso >= 200) {
-      const result = await procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp);
-      await despachar(telefono, result);
-      return res.status(200).send('OK');
-    }
-
-    // Paso 150 — esperando subida del resultado de examen de laboratorio
-    if (paso === 150) {
-      const result = await procesarSubidaExamen(paso, mensaje, datos, telefono, msg);
-      if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      else await eliminar(telefono);
-      await despachar(telefono, result);
-      return res.status(200).send('OK');
-    }
-
-    // Paso 98 — reagendar (código muerto: ningún flujo crea sesiones en paso 98)
-    if (paso === 98) {
-      const result = await procesarReagendamiento(datos, mensaje, telefono);
-      if (!result.terminar) await guardar(telefono, result.paso, result.datos);
-      await despachar(telefono, result);
-      return res.status(200).send('OK');
-    }
-
-    // Paso 99 — ya registrado (código muerto — ver flujos-bot.md)
-    if (paso === 99) {
-      await enviar(telefono, `Su consulta ya fue registrada. 😊\n\nUn asesor de *MediLyft* le contactará pronto.\n\nPara una nueva consulta escriba *hola*.`);
-      return res.status(200).send('OK');
-    }
-
-    // Flujo principal de consulta (legacy — sesiones sin _flujo)
+    // Fallback: sin _flujo → flujo de consulta (usuario sin sesión activa)
     let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
-
     if (result._redirect) {
       const ccResult = await procesarCallCenter(300, '', result._redirect.datos, telefono);
       await guardar(telefono, ccResult.paso, ccResult.datos, 'callcenter');
       await despachar(telefono, ccResult);
       return res.status(200).send('OK');
     }
-
-    if (!result.terminar) {
-      await guardar(telefono, result.paso, result.datos);
-    }
+    if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'consulta');
     await despachar(telefono, result);
     return res.status(200).send('OK');
 

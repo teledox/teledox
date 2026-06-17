@@ -237,9 +237,6 @@ const ENFERMEDADES = {
   }
 };
 
-// Valida que la respuesta tenga el formato esperado según la pregunta:
-// si la pregunta presenta opciones numeradas (1️⃣2️⃣3️⃣...), la respuesta debe
-// ser uno de esos números; si no, debe ser un valor numérico (entero o decimal).
 function validarRespuestaCronica(pregunta, mensaje) {
   const valor = (mensaje || '').trim();
   const opciones = (pregunta.match(/[1-9]️⃣/g) || []).length;
@@ -247,6 +244,23 @@ function validarRespuestaCronica(pregunta, mensaje) {
     return new RegExp(`^[1-${opciones}]$`).test(valor);
   }
   return /^\d+(\.\d+)?$/.test(valor);
+}
+
+// Convierte una pregunta con opciones 1️⃣2️⃣3️⃣ en botones WhatsApp.
+// Retorna { texto, botones } o null si la pregunta no tiene opciones.
+function preguntaABotones(pregunta) {
+  const lineas = pregunta.split('\n');
+  const opts = lineas.filter(l => /^[1-9]️⃣/.test(l));
+  if (opts.length === 0 || opts.length > 3) return null;
+  const texto = lineas.filter(l => !/^[1-9]️⃣/.test(l)).join('\n').trimEnd();
+  const botones = opts.map((l, i) => {
+    const titulo = l.replace(/^[1-9]️⃣\s*/, '');
+    const corto = titulo.length <= 20 ? titulo
+      : titulo.lastIndexOf(' ', 19) > 0 ? titulo.substring(0, titulo.lastIndexOf(' ', 19))
+      : titulo.substring(0, 20);
+    return { id: String(i + 1), titulo: corto };
+  });
+  return { texto, botones };
 }
 
 async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
@@ -266,13 +280,14 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
     if (!validarRespuestaCronica(preguntaActual.pregunta, mensaje)) {
       const opciones = (preguntaActual.pregunta.match(/[1-9]️⃣/g) || []).length;
       const hint = opciones > 0
-        ? `Por favor responda únicamente con el número de la opción (1${opciones > 1 ? `-${opciones}` : ''}).`
+        ? `Por favor seleccione una opción:`
         : `Por favor ingrese solo el número, ej: 120`;
       await guardar(telefono, 200, datos, 'cronicas');
-      return {
-        respuesta: `❌ No entendí su respuesta.\n\n${hint}\n\n${preguntaActual.pregunta}`,
-        terminar: false
-      };
+      const parsedErr = preguntaABotones(preguntaActual.pregunta);
+      if (parsedErr) {
+        return { respuesta: `❌ No entendí su respuesta.\n\n${hint}\n\n${parsedErr.texto}`, botones: parsedErr.botones, terminar: false };
+      }
+      return { respuesta: `❌ No entendí su respuesta.\n\n${hint}\n\n${preguntaActual.pregunta}`, terminar: false };
     }
     datos.valores = datos.valores || {};
     datos.valores[paramActual] = mensaje.trim();
@@ -283,6 +298,10 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
     const siguientePaso = enfDef.pasos[pasoCronico];
     datos.paso_cronico = pasoCronico + 1;
     await guardar(telefono, 200, datos, 'cronicas');
+    const parsed = preguntaABotones(siguientePaso.pregunta);
+    if (parsed) {
+      return { respuesta: parsed.texto, botones: parsed.botones, terminar: false };
+    }
     return { respuesta: siguientePaso.pregunta, terminar: false };
   }
 

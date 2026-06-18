@@ -126,7 +126,7 @@
         <div class="tab-bar">
           <div class="tab active" onclick="switchTab(this,'tab-datos')">Datos personales</div>
           <div class="tab" onclick="switchTab(this,'tab-consultas')">Consultas</div>
-          <div class="tab" onclick="switchTab(this,'tab-cronicas')">Enfermedades crónicas</div>
+          <div class="tab" onclick="switchTab(this,'tab-cronicas');cargarCronicas(currentPacienteId)">Enfermedades crónicas</div>
           <div class="tab" onclick="switchTab(this,'tab-seguimiento')">Seguimiento</div>
           <div class="tab" onclick="switchTab(this,'tab-documentos');loadDocumentos(currentPacienteId)">Documentos</div>
         </div>
@@ -1496,7 +1496,7 @@
 <script src="/js/perfil.js?v=20260616b"></script>
 <script src="/js/metricas.js?v=20260611"></script>
 <script src="/js/empresas.js?v=20260609b"></script>
-<script src="/js/cronicas-portal.js?v=20260609b"></script>
+<script src="/js/cronicas-portal.js?v=20260618"></script>
 <script src="/js/plantillas.js?v=20260618c"></script>
 <script src="/js/facturacion.js?v=20260609b"></script>
 

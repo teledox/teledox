@@ -49,18 +49,23 @@ async function cargarCronicas(pacienteId) {
 
 async function guardarCronica() {
   const enf = document.getElementById('cronicaEnfermedad').value;
-  if (!enf) { alert('Seleccione una enfermedad'); return; }
-  await supa('POST', 'enfermedades_cronicas', {
+  if (!enf) { showToast('Seleccione una enfermedad'); return; }
+  if (!currentPacienteId) { showToast('Error: no hay paciente seleccionado'); return; }
+  const res = await supa('POST', 'enfermedades_cronicas', {
     paciente_id: currentPacienteId,
     enfermedad: enf,
     codigo_cie10: document.getElementById('cronicaCIE10').value || null,
-    frecuencia_horas: parseInt(document.getElementById('cronicaFrecuencia').value),
+    frecuencia_horas: parseInt(document.getElementById('cronicaFrecuencia').value) || 24,
     fecha_inicio: document.getElementById('cronicaFecha').value || null,
     notas: document.getElementById('cronicaNotas').value || null,
-    medico_id: currentUser.id,
+    medico_id: currentUser?.id,
     activo: true,
     proximo_seguimiento: new Date().toISOString()
   });
+  if (res && !Array.isArray(res) && (res.code || res.error || res.message?.includes('error'))) {
+    showToast('Error al registrar: ' + (res.message || res.error || res.code));
+    return;
+  }
   document.getElementById('formCronica').style.display = 'none';
   document.getElementById('cronicaEnfermedad').value = '';
   document.getElementById('cronicaNotas').value = '';

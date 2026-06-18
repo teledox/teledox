@@ -42,6 +42,7 @@ function getFlows() {
     procesarMigracion:            require('../src/flows/flujo-tracking-consulta').procesarMigracion,
     procesarB2C:                  require('../src/flows/flujo-b2c').procesarB2C,
     procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
+    procesarPreguntaConsulta:     require('../src/flows/flujo-pregunta-consulta').procesarPreguntaConsulta,
   };
 }
 
@@ -138,7 +139,7 @@ module.exports = async function handler(req, res) {
       buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
       procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
-      procesarB2C, procesarSeguimientoPago, procesarMigracion
+      procesarB2C, procesarSeguimientoPago, procesarMigracion, procesarPreguntaConsulta
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -179,6 +180,33 @@ module.exports = async function handler(req, res) {
           );
         }
         return res.status(200).send('OK');
+      }
+
+      // Si el paciente tiene una consulta completada en las últimas 72h, ofrecer
+      // la opción de hacer una pregunta antes de iniciar un flujo nuevo.
+      const { query: qPQ } = require('../src/services/supabase');
+      const pacPQ = await qPQ('GET', 'pacientes', null, `?telefono=eq.${telefono}&select=id,nombre&limit=1`);
+      if (pacPQ?.[0]) {
+        const limite72h = new Date(Date.now() - 72 * 3600000).toISOString();
+        const consultaPQ = await qPQ('GET', 'consultas', null,
+          `?paciente_id=eq.${pacPQ[0].id}&estado=eq.completada&created_at=gte.${limite72h}&order=created_at.desc&limit=1`);
+        if (consultaPQ?.[0]) {
+          const c = consultaPQ[0];
+          const fechaStr = new Date(c.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
+          await guardar(telefono, 500, {
+            _flujo: 'pregunta_consulta',
+            consulta_id: c.id,
+            paciente_id: pacPQ[0].id
+          }, 'pregunta_consulta');
+          await enviarBotones(telefono,
+            `¡Hola ${pacPQ[0].nombre || nombreWhatsApp}! 👋\n\nVemos que tuvo una consulta el ${fechaStr}. ¿En qué le podemos ayudar?`,
+            [
+              { id: 'pq_pregunta', titulo: '❓ Tengo una pregunta' },
+              { id: 'pq_nueva',    titulo: '🏥 Nueva consulta'    }
+            ]
+          );
+          return res.status(200).send('OK');
+        }
       }
 
       const result = await procesarPaso(0, mensaje, {}, telefono, nombreWhatsApp);
@@ -421,6 +449,21 @@ module.exports = async function handler(req, res) {
         case 'tracking_migracion': {
           const result = await procesarMigracion(paso, mensaje, datos, telefono);
           if (!result.terminar) await guardar(telefono, result.paso ?? paso, result.datos ?? datos, 'tracking_migracion');
+          else await eliminar(telefono);
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'pregunta_consulta': {
+          const result = await procesarPreguntaConsulta(paso, mensaje, datos, telefono);
+          if (result._iniciarConsulta) {
+            await eliminar(telefono);
+            const newResult = await procesarPaso(0, '', {}, telefono, nombreWhatsApp);
+            await guardar(telefono, newResult.paso, newResult.datos, 'consulta');
+            await despachar(telefono, newResult);
+            return res.status(200).send('OK');
+          }
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'pregunta_consulta');
           else await eliminar(telefono);
           await despachar(telefono, result);
           return res.status(200).send('OK');

@@ -31,8 +31,8 @@ async function procesarAntecedentes(paso, mensaje, datos, telefono) {
   } else if (paso === 17) {
     datos.otros_antecedentes = mensaje;
 
-    // Guardar antecedentes en BD
-    await guardarAntecedentes(datos);
+    // Guardar antecedentes en BD (solo si hay paciente_id)
+    if (datos.paciente_id) await guardarAntecedentes(datos);
 
     // Generar y subir PDF
     try {

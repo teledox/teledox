@@ -288,7 +288,10 @@ function abrirPlantillaCertificado(soloPreview) {
   document.getElementById('cert-empresa').textContent = (p.clientes_b2b?.nombre_empresa || '—').toUpperCase();
   document.getElementById('cert-cedula').textContent = p.cedula || '—';
   document.getElementById('cert-hc').textContent = p.cedula || '—';
-  document.getElementById('cert-diagnostico').textContent = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
+  const _certDiag = cie10Seleccionados.length
+    ? cie10Seleccionados.map(x => x.n).join(', ')
+    : (document.getElementById('recetaDiagnostico')?.value || c.diagnostico || '');
+  document.getElementById('cert-diagnostico').value = _certDiag.toUpperCase();
   document.getElementById('cert-cie10').value = cie10Seleccionados.map(x => x.c).join(', ');
   const absRadio = document.querySelector('input[name="cert-reposo-tipo"][value="ABSOLUTO"]');
   if (absRadio) absRadio.checked = true;
@@ -346,6 +349,7 @@ function camposVaciosEnModal(modalId) {
   const vacios = [];
   for (const el of campos) {
     if (el.readOnly || el.value.trim()) continue;
+    if (el.offsetParent === null) continue; // skip hidden fields
     const fila = el.closest('.doc-row, .hc-field, .cert-dias-row') || el.parentElement;
     const lbl = fila?.querySelector('.doc-lbl, .hc-label, .form-label');
     const nombre = (lbl?.textContent || el.placeholder || el.id || '').replace(/[:*]+$/, '').trim();
@@ -464,6 +468,29 @@ function abrirPlantillaHistoriaClinica(soloPreview) {
   document.getElementById('hc-evolucion-body').innerHTML = Array.from({ length: 4 }, () =>
     `<tr><td>${evoInput('dd/mm/aaaa')}</td><td>${evoInput('Evolución del paciente...')}</td><td>${evoInput('Prescripción / indicaciones...')}</td></tr>`
   ).join('');
+  // Mostrar campo "Responsable" solo si el paciente es menor de edad
+  const campoResp = document.getElementById('hc-responsable-campo');
+  if (campoResp) {
+    let esMenor = false;
+    if (p.fecha_nacimiento) {
+      // Acepta DD/MM/AAAA o AAAA-MM-DD
+      const raw = String(p.fecha_nacimiento);
+      const fn = raw.includes('/') ? (() => { const [d,m,a] = raw.split('/'); return new Date(+a, +m-1, +d); })() : new Date(raw);
+      if (!isNaN(fn)) {
+        const hoy = new Date();
+        let edad = hoy.getFullYear() - fn.getFullYear();
+        if (hoy.getMonth() < fn.getMonth() || (hoy.getMonth() === fn.getMonth() && hoy.getDate() < fn.getDate())) edad--;
+        esMenor = edad < 18;
+      }
+    }
+    if (!esMenor) {
+      const edadNum = parseInt(p.edad);
+      if (!isNaN(edadNum)) esMenor = edadNum < 18;
+    }
+    campoResp.style.display = esMenor ? '' : 'none';
+    if (!esMenor) document.getElementById('hc-responsable').value = '';
+  }
+
   poblarDatosMedico('hc');
   restaurarDatosDoc('historia');
   if (!soloPreview) document.getElementById('modalHistoriaClinica').classList.add('open');

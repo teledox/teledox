@@ -266,6 +266,9 @@ async function openReceta(consultaId, pacienteId) {
   const linkInput = document.getElementById('recetaLinkInput');
   if (linkInput) linkInput.value = '';
   if (typeof renderEnlacesEnviados === 'function') renderEnlacesEnviados();
+
+  // Preguntas del paciente
+  renderMensajesConsulta();
 }
 
 // ── Enlace de teleconsulta (Meet/Zoom/Teams) ─────────────────────────────
@@ -970,16 +973,17 @@ function buscarCIE10() {
   dd.style.display = 'block';
 }
 
+function _sincronizarDiagnostico() {
+  const diagInput = document.getElementById('recetaDiagnostico');
+  if (!diagInput) return;
+  diagInput.value = cie10Seleccionados.map(x => x.n).join(', ');
+}
+
 function agregarCIE10(codigo, nombre) {
   if (cie10Seleccionados.find(x => x.c === codigo)) { document.getElementById('cie10Search').value = ''; document.getElementById('cie10Dropdown').style.display = 'none'; return; }
   cie10Seleccionados.push({ c: codigo, n: nombre });
   renderCIE10();
-  // El texto del CIE-10 es el diagnóstico — se pega directo en el campo (editable luego)
-  const diagInput = document.getElementById('recetaDiagnostico');
-  if (diagInput) {
-    const actual = diagInput.value.trim();
-    diagInput.value = actual ? `${actual}, ${nombre}` : nombre;
-  }
+  _sincronizarDiagnostico();
   document.getElementById('cie10Search').value = '';
   document.getElementById('cie10Dropdown').style.display = 'none';
 }
@@ -987,6 +991,7 @@ function agregarCIE10(codigo, nombre) {
 function quitarCIE10(codigo) {
   cie10Seleccionados = cie10Seleccionados.filter(x => x.c !== codigo);
   renderCIE10();
+  _sincronizarDiagnostico();
 }
 
 function renderCIE10() {
@@ -996,4 +1001,83 @@ function renderCIE10() {
       <span onclick="quitarCIE10('${x.c}')" style="cursor:pointer;font-size:14px;line-height:1;color:#1e40af">✕</span>
     </span>
   `).join('');
+}
+
+// ── Preguntas del paciente post-consulta ─────────────────────────────────────
+async function renderMensajesConsulta() {
+  const el = document.getElementById('mensajesConsultaList');
+  const badge = document.getElementById('mensajesBadge');
+  if (!el) return;
+
+  const msgs = await supa('GET', 'mensajes_consulta', null,
+    `?consulta_id=eq.${recetaConsultaId}&order=created_at.asc`) || [];
+
+  if (!msgs.length) {
+    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin preguntas del paciente aún.</div>';
+    if (badge) badge.style.display = 'none';
+    return;
+  }
+
+  const sinLeer = msgs.filter(m => !m.leido && m.tipo === 'pregunta_paciente').length;
+  if (badge) {
+    badge.textContent = sinLeer;
+    badge.style.display = sinLeer > 0 ? '' : 'none';
+  }
+
+  el.innerHTML = msgs.map(m => {
+    const esPaciente = m.tipo === 'pregunta_paciente';
+    const fecha = new Date(m.created_at).toLocaleString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    const noLeido = esPaciente && !m.leido;
+
+    return `
+      <div style="margin-bottom:12px">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+          <span style="font-size:12px;font-weight:600;color:${esPaciente ? '#374151' : '#16a34a'}">
+            ${esPaciente ? '👤 Paciente' : '🩺 Médico'}
+          </span>
+          ${noLeido ? '<span style="background:#ef4444;color:#fff;border-radius:999px;font-size:10px;padding:1px 6px;font-weight:700">Nueva</span>' : ''}
+          <span style="font-size:11px;color:#aaa;margin-left:auto">${fecha}</span>
+        </div>
+        <div style="background:${esPaciente ? '#f9fafb' : '#f0fdf4'};border:1px solid ${esPaciente ? '#e5e7eb' : '#bbf7d0'};border-radius:8px;padding:10px 12px;font-size:13px;color:#374151">
+          ${(m.contenido || '').replace(/\n/g, '<br>')}
+        </div>
+        ${esPaciente && !msgs.some(r => r.tipo === 'respuesta_medico' && new Date(r.created_at) > new Date(m.created_at))
+          ? `<div style="margin-top:6px">
+              <textarea id="respTxt_${m.id}" rows="2" placeholder="Escriba la respuesta para el paciente..." style="width:100%;box-sizing:border-box;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:13px;resize:vertical"></textarea>
+              <button onclick="responderMensaje('${m.id}')" class="btn btn-sm btn-success" style="margin-top:4px">
+                📤 Enviar respuesta por WhatsApp
+              </button>
+            </div>`
+          : ''}
+      </div>`;
+  }).join('<hr style="border:none;border-top:1px solid #f3f4f6;margin:4px 0">');
+}
+
+async function responderMensaje(msgId) {
+  const txt = document.getElementById(`respTxt_${msgId}`);
+  const respuesta = txt?.value.trim();
+  if (!respuesta) { showToast('⚠️ Escribe la respuesta antes de enviar'); return; }
+
+  const btn = txt?.nextElementSibling;
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Enviando...'; }
+
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const res = await fetch('/api/responder-mensaje', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token: session?.access_token, mensaje_id: msgId, respuesta })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      showToast('❌ ' + (data.error || 'Error al enviar respuesta'));
+      if (btn) { btn.disabled = false; btn.textContent = '📤 Enviar respuesta por WhatsApp'; }
+    } else {
+      showToast('✓ Respuesta enviada al paciente por WhatsApp');
+      renderMensajesConsulta();
+    }
+  } catch (e) {
+    showToast('❌ Error de conexión: ' + e.message);
+    if (btn) { btn.disabled = false; btn.textContent = '📤 Enviar respuesta por WhatsApp'; }
+  }
 }

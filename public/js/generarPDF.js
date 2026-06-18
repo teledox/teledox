@@ -165,7 +165,7 @@ async function generarHistoriaClinicaPDF() {
 
   const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
   const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
-  const gCB = ids => ids.filter(id => { const el = document.getElementById(id); return el && el.checked; }).map(id => id.replace(/^hcaf-/,'').replace(/-/g,' ')).join(', ') || '—';
+  const gCB = ids => ids.filter(id => { const el = document.getElementById(id); return el && el.checked; }).map(id => id.replace(/^hcaf-/,'').replace(/-/g,' ')).join(', ') || '-';
 
   function buildPage() {
     const page = doc.addPage([595, 842]);
@@ -188,18 +188,18 @@ async function generarHistoriaClinicaPDF() {
   }
   function campo(label, valor, x2 = 44) {
     page.drawText(`${label}:`, { x: x2, y, size: 9, font: bold, color: gris });
-    page.drawText(String(valor || '—'), { x: x2 + 140, y, size: 9, font: normal, color: negro });
+    page.drawText(_pdfSafe(valor) || '-', { x: x2 + 140, y, size: 9, font: normal, color: negro });
     y -= 14;
   }
   function campoDoble(l1, v1, l2, v2) {
     const half = width / 2 - 40;
     campo(l1, v1, 44); y += 14;
     page.drawText(`${l2}:`, { x: 44 + half, y, size: 9, font: bold, color: gris });
-    page.drawText(String(v2 || '—'), { x: 44 + half + 140, y, size: 9, font: normal, color: negro });
+    page.drawText(_pdfSafe(v2) || '-', { x: 44 + half + 140, y, size: 9, font: normal, color: negro });
     y -= 14;
   }
   function wrap(texto, startX, maxW) {
-    const palabras = (texto || '—').split(' '); let linea = '';
+    const palabras = (_pdfSafe(texto) || '-').split(' '); let linea = '';
     for (const p of palabras) {
       const test = linea ? `${linea} ${p}` : p;
       if (normal.widthOfTextAtSize(test, 9) > maxW && linea) {
@@ -268,16 +268,6 @@ async function generarHistoriaClinicaPDF() {
   if (examenNotas) wrap(examenNotas, 44, width - 90);
   y -= 4; checkPage();
 
-  // Signos vitales
-  seccion('SIGNOS VITALES Y ANTROPOMETRÍA');
-  const sv = [['Peso',gV('hc-peso')],['Talla',gV('hc-talla')],['Temperatura',gV('hc-temperatura')],['Pulso',gV('hc-pulso')],['Respiración',gV('hc-respiracion')],['Tensión Arterial',gV('hc-ta')],['Oximetría',gV('hc-oximetria')],['IMC',gV('hc-imc')]];
-  sv.forEach(([l, v], i) => {
-    const xPos = i % 2 === 0 ? 44 : width / 2;
-    page.drawText(`${l}: ${v || '—'}`, { x: xPos, y, size: 9, font: normal, color: negro });
-    if (i % 2 === 1) y -= 14;
-  });
-  y -= 14; checkPage();
-
   // Diagnóstico
   seccion('DIAGNÓSTICO');
   for (let i = 1; i <= 4; i++) {
@@ -301,19 +291,19 @@ async function generarHistoriaClinicaPDF() {
     return (fecha || evolucion || prescripcion) ? { fecha, evolucion, prescripcion } : null;
   }).filter(Boolean);
   if (!evoluciones.length) {
-    page.drawText('—', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
+    page.drawText('-', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
   } else {
     evoluciones.forEach(e => {
-      page.drawText(`${e.fecha || '—'}`, { x: 44, y, size: 9, font: bold, color: negro }); y -= 13;
-      wrap(`Evolución: ${e.evolucion || '—'}`, 54, width - 100);
-      wrap(`Prescripción: ${e.prescripcion || '—'}`, 54, width - 100);
+      page.drawText(_pdfSafe(e.fecha) || '-', { x: 44, y, size: 9, font: bold, color: negro }); y -= 13;
+      wrap(`Evolucion: ${e.evolucion || '-'}`, 54, width - 100);
+      wrap(`Prescripcion: ${e.prescripcion || '-'}`, 54, width - 100);
       y -= 4;
     });
   }
   y -= 16; checkPage();
 
   // Firma
-  const medNomFirma = currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—';
+  const medNomFirma = currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '-';
   const _p12HC = typeof getP12Activo === 'function' ? getP12Activo() : null;
   if (!_p12HC) {
     page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });

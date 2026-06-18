@@ -380,6 +380,16 @@
               <div id="enlacesEnviadosList" style="margin-top:12px"></div>
             </div>
 
+            <div class="card" id="cardMensajesConsulta">
+              <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
+                <span class="card-title">💬 Preguntas del paciente</span>
+                <span id="mensajesBadge" style="display:none;background:#ef4444;color:#fff;border-radius:999px;font-size:11px;font-weight:700;padding:2px 8px;min-width:20px;text-align:center">0</span>
+              </div>
+              <div id="mensajesConsultaList">
+                <div class="empty-state" style="padding:8px 0">Sin preguntas del paciente aún.</div>
+              </div>
+            </div>
+
             <div class="card">
               <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
                 <span class="card-title">💙 Bienestar del paciente</span>
@@ -1033,7 +1043,7 @@
 
         <div class="doc-section"><div class="doc-section-title">C) Motivo de aislamiento/enfermedad</div>
           <div class="doc-grid2">
-            <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><span class="doc-val" id="cert-diagnostico">—</span></div>
+            <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><input class="doc-val-edit" id="cert-diagnostico" placeholder="Diagnóstico del paciente..." /></div>
             <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><input class="doc-val-edit" id="cert-cie10" list="cie10-list" placeholder="Ej: J06, R51" /></div>
             <div class="doc-row">
               <span class="doc-lbl">Presenta síntomas:</span>
@@ -1157,7 +1167,7 @@
                 <label class="hc-radio-label"><input type="radio" name="hc-estado-civil" value="Unión Libre"> Unión Libre</label>
               </div>
             </div>
-            <div class="hc-field"><span class="hc-label">Persona Responsable (Menor)</span><input class="hc-input" id="hc-responsable"/></div>
+            <div class="hc-field" id="hc-responsable-campo" style="display:none"><span class="hc-label">Persona Responsable (Menor)</span><input class="hc-input" id="hc-responsable"/></div>
           </div>
           <div class="hc-grid3">
             <div class="hc-field" style="grid-column:span 2"><span class="hc-label">Lugar de Domicilio</span><input class="hc-input" id="hc-domicilio" placeholder="Provincia, Ciudad y Calle"/></div>
@@ -1222,21 +1232,6 @@
           <textarea class="hc-textarea" id="hc-organos-notas" rows="2" style="margin-top:8px" placeholder="Describe hallazgos con patología..."></textarea>
         </div>
 
-        <!-- Signos vitales -->
-        <div class="hc-section">
-          <div class="hc-section-title">Signos Vitales y Antropometría</div>
-          <div class="hc-signos-grid">
-            <div class="hc-field"><span class="hc-label">Peso (kg)</span><input class="hc-input" id="hc-peso" placeholder="Ej: 70"/></div>
-            <div class="hc-field"><span class="hc-label">Talla (cm)</span><input class="hc-input" id="hc-talla" placeholder="Ej: 170"/></div>
-            <div class="hc-field"><span class="hc-label">Perímetro cefálico</span><input class="hc-input" id="hc-pcef" placeholder="(Pediatría)"/></div>
-            <div class="hc-field"><span class="hc-label">IMC</span><input class="hc-input" id="hc-imc" placeholder="Calculado"/></div>
-            <div class="hc-field"><span class="hc-label">Temperatura (°C)</span><input class="hc-input" id="hc-temperatura" placeholder="Ej: 36.5"/></div>
-            <div class="hc-field"><span class="hc-label">Pulso (lpm)</span><input class="hc-input" id="hc-pulso" placeholder="Ej: 72"/></div>
-            <div class="hc-field"><span class="hc-label">Respiración (rpm)</span><input class="hc-input" id="hc-respiracion" placeholder="Ej: 18"/></div>
-            <div class="hc-field"><span class="hc-label">Oximetría (%)</span><input class="hc-input" id="hc-oximetria" placeholder="Ej: 98"/></div>
-            <div class="hc-field" style="grid-column:span 2"><span class="hc-label">Tensión Arterial (mmHg)</span><input class="hc-input" id="hc-ta" placeholder="Ej: 120/80"/></div>
-          </div>
-        </div>
 
         <!-- Examen físico regional -->
         <div class="hc-section">
@@ -1448,15 +1443,15 @@
 <script src="/js/notificaciones.js?v=20260610"></script>
 <script src="/js/agendamiento.js?v=20260609b"></script>
 <script src="/js/firma-electronica.js?v=20260616c"></script>
-<script src="/js/generarPDF.js?v=20260612c"></script>
-<script src="/js/receta.js?v=20260617b"></script>
+<script src="/js/generarPDF.js?v=20260618"></script>
+<script src="/js/receta.js?v=20260618"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260612e"></script>
 <script src="/js/perfil.js?v=20260616b"></script>
 <script src="/js/metricas.js?v=20260611"></script>
 <script src="/js/empresas.js?v=20260609b"></script>
 <script src="/js/cronicas-portal.js?v=20260609b"></script>
-<script src="/js/plantillas.js?v=20260612"></script>
+<script src="/js/plantillas.js?v=20260618"></script>
 <script src="/js/facturacion.js?v=20260609b"></script>
 
 <script>

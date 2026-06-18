@@ -2,7 +2,8 @@
   "name": "medilyft",
   "version": "2.0.0",
   "scripts": {
-    "test:bot": "node --env-file=.env.local scripts/test-bot/repl.js"
+    "test:bot": "node --env-file=.env.local scripts/test-bot/repl.js",
+    "test:bot:run": "node --env-file=.env.local scripts/test-bot/run.js"
   },
   "dependencies": {
     "twilio": "^5.0.0",

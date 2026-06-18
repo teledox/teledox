@@ -21,10 +21,20 @@ async function procesarTracking(paso, mensaje, datos, telefono) {
   const bienestarRaw = mensaje.trim();
   const bienestar    = parseInt(bienestarRaw);
 
-  // Respuesta inválida: pedir de nuevo (sesión permanece activa)
+  // Respuesta inválida: pedir de nuevo con lista interactiva
   if (isNaN(bienestar) || bienestar < 1 || bienestar > 5) {
     return {
-      respuesta: 'Por favor responda del *1 al 5*:\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien',
+      respuesta: 'Por favor selecciona cómo te sientes hoy:',
+      lista: {
+        secciones: [{ titulo: 'Bienestar de hoy', filas: [
+          { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
+          { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+          { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
+          { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
+          { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+        ]}],
+        botonTexto: 'Seleccionar'
+      },
       terminar: false
     };
   }
@@ -36,6 +46,16 @@ async function procesarTracking(paso, mensaje, datos, telefono) {
     respuestas: { tipo: 'bienestar', bienestar: bienestarRaw },
     nivel_alerta: nivel
   });
+
+  // Actualizar flag bienestar_alto: true si los últimos 2 registros son nivel 1
+  if (nivel === 1) {
+    const ultimos2 = await query('GET', 'tracking_registros', null,
+      `?caso_id=eq.${caso_id}&order=created_at.desc&limit=2`);
+    const dosBien = (ultimos2 || []).length >= 2 && (ultimos2 || []).every(r => r.nivel_alerta === 1);
+    if (dosBien) await query('PATCH', 'tracking_casos', { bienestar_alto: true }, `?id=eq.${caso_id}`);
+  } else {
+    await query('PATCH', 'tracking_casos', { bienestar_alto: false }, `?id=eq.${caso_id}`);
+  }
 
   if (nivel === 3) {
     await query('PATCH', 'tracking_casos', { estado: 'alerta' }, `?id=eq.${caso_id}`);
@@ -60,10 +80,14 @@ async function procesarRespuestaMed(mensaje, datos, telefono) {
   const m    = mensaje.trim();
   const tomo = esSi(m) ? true : /^(no|2)$/i.test(m) ? false : null;
 
-  // Respuesta no reconocida: pedir de nuevo (sesión permanece activa)
+  // Respuesta no reconocida: pedir de nuevo con botones
   if (tomo === null) {
     return {
-      respuesta: 'Por favor responda:\n\n1️⃣ Sí, ya los tomé\n2️⃣ No los tomé todavía',
+      respuesta: '¿Ya tomó su medicación?',
+      botones: [
+        { id: '1', titulo: '✅ Sí, ya tomé' },
+        { id: '2', titulo: '❌ No todavía' }
+      ],
       terminar: false
     };
   }

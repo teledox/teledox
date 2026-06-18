@@ -1,5 +1,5 @@
 const { query } = require('../src/services/supabase');
-const { enviar, enviarTemplate, enviarBotones } = require('../src/services/whatsapp');
+const { enviar, enviarTemplate, enviarBotones, enviarLista } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
 const { obtener, guardar } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
@@ -211,9 +211,19 @@ module.exports = async function handler(req, res) {
           // Ya activado — la ventana de 24h debería estar abierta.
           // Enviamos el check-in diario como texto libre.
           const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
-          const mensaje = `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
 
-          await enviar(telefono, mensaje);
+          await enviarLista(
+            telefono,
+            `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?`,
+            [{ titulo: 'Bienestar de hoy', filas: [
+              { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
+              { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+              { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
+              { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
+              { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+            ]}],
+            'Seleccionar'
+          );
 
           await guardar(telefono, 400, {
             tipo: 'bienestar',
@@ -276,11 +286,17 @@ module.exports = async function handler(req, res) {
         if (sesionMed && sesionMed.paso !== 0) continue;
 
         const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
-        const lista  = medsAhora.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n');
+        const listaStr = medsAhora.map(m => `• ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}`).join('\n');
         const plural = medsAhora.length > 1 ? 'los' : 'lo';
-        const msgMed = `💊 *Recordatorio de medicación*\n\n${saludo}\n\nEs hora de tomar:\n${lista}\n\n¿Ya ${plural} tomó?\n\n1️⃣ Sí\n2️⃣ No`;
 
-        await enviar(tel, msgMed);
+        await enviarBotones(
+          tel,
+          `💊 *Recordatorio de medicación*\n\n${saludo}\n\nEs hora de tomar:\n${listaStr}\n\n¿Ya ${plural} tomó?`,
+          [
+            { id: '1', titulo: '✅ Sí, ya tomé' },
+            { id: '2', titulo: '❌ No todavía' }
+          ]
+        );
 
         await guardar(tel, 400, {
           tipo: 'med_reminder',

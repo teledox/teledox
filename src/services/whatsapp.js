@@ -7,23 +7,27 @@ const HEADERS = {
   'Content-Type': 'application/json',
 };
 
-async function _post(payload) {
-  try {
-    const res = await fetch(API_URL, {
-      method: 'POST',
-      headers: HEADERS,
-      body: JSON.stringify(payload),
-    });
-    if (!res.ok) {
-      const err = await res.json();
-      console.error('WhatsApp API error:', JSON.stringify(err));
-      return false;
+async function _post(payload, retries = 2) {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: HEADERS,
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.error(`WhatsApp API error (intento ${attempt + 1}/${retries + 1}):`, JSON.stringify(err));
+        if (attempt < retries) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      return true;
+    } catch (e) {
+      console.error(`WhatsApp fetch error (intento ${attempt + 1}/${retries + 1}):`, e.message);
+      if (attempt < retries) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
     }
-    return true;
-  } catch (e) {
-    console.error('WhatsApp fetch error:', e.message);
-    return false;
   }
+  return false;
 }
 
 // ── Mensaje de texto plano ────────────────────────────────────────────────

@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const { WA_VERIFY_TOKEN } = require('../src/config');
 const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
@@ -65,6 +66,18 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+
+  // Verificación de firma Meta (X-Hub-Signature-256)
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+  if (appSecret) {
+    const sigHeader = req.headers['x-hub-signature-256'] || '';
+    const rawBody   = typeof req.rawBody === 'string' ? req.rawBody : JSON.stringify(req.body);
+    const expected  = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
+    if (sigHeader && sigHeader !== expected) {
+      console.warn('Firma Meta inválida — posible replay o spoofing:', sigHeader);
+      return res.status(401).send('Unauthorized');
+    }
+  }
 
   // Declarados fuera del try para poder reportarlos en el catch si algo falla
   let telefono = null;
@@ -356,7 +369,10 @@ module.exports = async function handler(req, res) {
 
         case 'b2c': {
           const result = await procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
-          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'b2c');
+          const targetFlujoB2C = result.datos?._flujo;
+          if (!result.terminar && (!targetFlujoB2C || targetFlujoB2C === 'b2c')) {
+            await guardar(telefono, result.paso, result.datos, 'b2c');
+          }
           await despachar(telefono, result);
           return res.status(200).send('OK');
         }

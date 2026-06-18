@@ -366,6 +366,7 @@ textarea.form-input{resize:vertical;min-height:70px}
     <div style="background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;margin-bottom:1rem" id="detalleTratamiento"></div>
     <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap" id="detalleAcciones"></div>
     <div style="font-weight:700;font-size:13px;margin-bottom:6px">Historial de interacciones</div>
+    <div id="detalleStats"></div>
     <div class="timeline" id="detalleTimeline"></div>
   </div>
 </div>
@@ -472,7 +473,7 @@ async function loadCasos() {
   document.getElementById('casosBody').innerHTML = casos.length
     ? casos.map((c, i) => `<tr>
         <td style="color:#aaa;font-weight:700">${casos.length - i}</td>
-        <td><strong>${c.paciente_nombre || c.telefono}</strong>${c.paciente_nombre ? `<br><span style="font-size:11px;color:#aaa">${c.telefono}</span>` : ''}</td>
+        <td><strong>${c.paciente_nombre || c.telefono}</strong>${c.bienestar_alto ? ' <span title="Buen bienestar reciente" style="font-size:11px">⭐</span>' : ''}${c.paciente_nombre ? `<br><span style="font-size:11px;color:#aaa">${c.telefono}</span>` : ''}</td>
         <td>${c.tracking_empresas?.nombre || '—'}</td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.diagnostico||'').replace(/"/g,'')}">${c.diagnostico || '—'}</td>
         <td><span class="badge ${estadoBadge[c.estado] || 'badge-gray'}">${estadoLabel[c.estado] || c.estado}</span></td>
@@ -685,8 +686,25 @@ async function verDetalle(id) {
   document.getElementById('detalleAcciones').innerHTML = `
     <button class="btn btn-sm btn-secondary" onclick="editarCaso('${c.id}')">✏️ Editar</button>
     <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Estado</button>
+    ${c.activado && c.estado === 'activo' ? `<button class="btn btn-sm btn-secondary" onclick="enviarCheckIn('${c.id}')">📤 Check-in ahora</button>` : ''}
     ${puedeProponerConsulta ? `<button class="btn btn-sm btn-primary" onclick="proponerConsulta('${c.id}')">📋 Proponer consulta</button>` : ''}
   `;
+  // Stats de historial
+  const total = (registros || []).length;
+  const byNivel = {}; (registros || []).forEach(r => { byNivel[r.nivel_alerta] = (byNivel[r.nivel_alerta] || 0) + 1; });
+  const first = registros?.[registros.length - 1]?.nivel_alerta;
+  const last  = registros?.[0]?.nivel_alerta;
+  const trend = total >= 2 ? (last < first ? '↗ Mejorando' : last > first ? '↘ Empeorando' : '→ Estable') : '—';
+  document.getElementById('detalleStats').innerHTML = total
+    ? `<div style="display:flex;gap:14px;font-size:12px;padding:8px 10px;background:#f9fafb;border-radius:8px;margin-bottom:10px;flex-wrap:wrap">
+        <span style="color:#555">📊 ${total} registro${total !== 1 ? 's' : ''}</span>
+        ${byNivel[1] ? `<span style="color:#16a34a">✅ ${byNivel[1]} bien</span>` : ''}
+        ${byNivel[2] ? `<span style="color:#ca8a04">⚠️ ${byNivel[2]} alerta</span>` : ''}
+        ${byNivel[3] ? `<span style="color:#dc2626">🚨 ${byNivel[3]} emergencia</span>` : ''}
+        <span style="color:#6b7280;margin-left:auto">${trend}</span>
+      </div>`
+    : '';
+
   const dotColor = { 1: 'tl-dot-green', 2: 'tl-dot-yellow', 3: 'tl-dot-red' };
   document.getElementById('detalleTimeline').innerHTML = (registros || []).length
     ? registros.map(r => {
@@ -708,6 +726,13 @@ async function verDetalle(id) {
       }).join('')
     : '<div style="color:#aaa;font-size:13px;padding:1rem 0">Sin interacciones registradas aún.</div>';
   document.getElementById('modalDetalle').classList.add('open');
+}
+
+async function enviarCheckIn(id) {
+  if (!confirm('¿Enviar el check-in de bienestar ahora? Se activará en el próximo ciclo del cron.')) return;
+  await t('PATCH', 'tracking_casos', { proximo_seguimiento: new Date().toISOString() }, `?id=eq.${id}`);
+  alert('✅ Check-in programado para el próximo ciclo.');
+  closeModal('modalDetalle');
 }
 
 async function proponerConsulta(id) {

@@ -65,3 +65,4 @@ ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS meds_recordatorios   JSONB  
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS activado             BOOLEAN    DEFAULT false;
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS propuesta_pendiente  BOOLEAN    DEFAULT false;
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS propuesta_enviada_at TIMESTAMPTZ DEFAULT NULL;
+ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS bienestar_alto       BOOLEAN    DEFAULT false;

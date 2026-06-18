@@ -256,6 +256,7 @@ async function openReceta(consultaId, pacienteId) {
   if (typeof renderPreviewsGuardados === 'function') renderPreviewsGuardados();
 
   // Timeline de seguimiento de esta consulta + enfermedades crónicas del paciente
+  if (typeof renderBienestarConsulta === 'function') renderBienestarConsulta();
   if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
   if (typeof renderRecordatoriosConsulta === 'function') renderRecordatoriosConsulta();
   if (typeof renderCronicasConsulta === 'function') renderCronicasConsulta();
@@ -406,6 +407,7 @@ async function renderRecordatoriosConsulta() {
             <div class="detail-label">${r.tipo === 'fin_tratamiento' ? 'Cierre de tratamiento' : 'Medicamento'} ${r.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
             <div class="detail-value">${r.medicamento || '—'}</div>
             <div style="font-size:12px;color:#888;margin-top:4px">${fmtCada(r)} · Hasta: ${new Date(r.fecha_fin).toLocaleDateString('es-EC')}</div>
+            ${r.tipo === 'medicamento' ? renderMedGrid(r.frecuencia_horas) : ''}
           </div>
           ${r.activo
             ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorioConsulta('${r.id}')">🔕 Desactivar</button>`
@@ -838,6 +840,114 @@ async function activarSeguimientoCronico() {
     console.error('Error activando seguimiento crónico:', e);
     showToast(`Error: ${e.message}`);
   }
+}
+
+// ── Bienestar del paciente ──────────────────────────────────────────────────
+const BIENESTAR_COLORES = ['', '#16a34a', '#84cc16', '#f59e0b', '#ea580c', '#dc2626'];
+const BIENESTAR_LABELS  = ['', 'Excelente', 'Bien', 'Regular', 'Mal', 'Muy mal'];
+
+async function renderBienestarConsulta() {
+  const statsEl = document.getElementById('bienestarStatsConsulta');
+  const dotEl   = document.getElementById('bienestarTimelineConsulta');
+  if (!dotEl) return;
+
+  const recsBienestar = await supa('GET', 'recordatorios', null,
+    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=1`) || [];
+  const recBienestar = recsBienestar[0];
+
+  const btn = document.getElementById('btnActivarBienestar');
+  if (btn) {
+    if (recBienestar?.activo) {
+      btn.textContent = '🔕 Desactivar';
+      btn.style.cssText = 'font-size:12px;white-space:nowrap;background:#fee2e2;color:#dc2626;border-color:#fecaca';
+      btn.onclick = () => desactivarBienestar(recBienestar.id);
+    } else {
+      btn.textContent = '💙 Activar check-in diario';
+      btn.style.cssText = 'font-size:12px;white-space:nowrap';
+      btn.onclick = activarBienestar;
+    }
+  }
+
+  const resp = await supa('GET', 'seguimiento_respuestas', null,
+    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=12`) || [];
+
+  if (!resp.length) {
+    if (statsEl) statsEl.innerHTML = '';
+    dotEl.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin check-ins de bienestar aún. Activa el seguimiento para empezar.</div>';
+    return;
+  }
+
+  if (statsEl) {
+    const total    = resp.length;
+    const buenos   = resp.filter(r => (r.nivel_bienestar || 0) <= 2).length;
+    const ultimo   = resp[0].nivel_bienestar;
+    const penult   = resp[1]?.nivel_bienestar;
+    const tendencia = !penult ? '→' : ultimo < penult ? '↗' : ultimo > penult ? '↘' : '→';
+    const colorTend = tendencia === '↗' ? '#16a34a' : tendencia === '↘' ? '#dc2626' : '#888';
+    statsEl.innerHTML = `
+      <div style="display:flex;gap:16px;padding:8px 0 10px;font-size:12px;color:#555;border-bottom:1px solid #f5f5f5;margin-bottom:10px;flex-wrap:wrap">
+        <span><strong>${total}</strong> check-ins</span>
+        <span><strong>${Math.round(buenos / total * 100)}%</strong> bien/excelente</span>
+        <span>Último: <strong style="color:${BIENESTAR_COLORES[ultimo] || '#888'}">${BIENESTAR_LABELS[ultimo] || '—'}</strong></span>
+        <span style="color:${colorTend};font-weight:700;font-size:15px">${tendencia}</span>
+      </div>`;
+  }
+
+  dotEl.innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0">
+      ${[...resp].reverse().map(r => {
+        const n   = r.nivel_bienestar || 0;
+        const dia = new Date(r.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
+        return `<div title="${BIENESTAR_LABELS[n] || '?'} · ${dia}" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default">
+          <div style="width:22px;height:22px;border-radius:50%;background:${BIENESTAR_COLORES[n] || '#d1d5db'};box-shadow:0 1px 3px rgba(0,0,0,.18)"></div>
+          <div style="font-size:9px;color:#9ca3af;line-height:1">${new Date(r.created_at).getDate()}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+async function activarBienestar() {
+  const ahora = new Date();
+  const prox  = new Date(ahora);
+  prox.setUTCDate(prox.getUTCDate() + 1);
+  prox.setUTCHours(13, 0, 0, 0); // 8am Ecuador (UTC-5)
+
+  await supa('POST', 'recordatorios', {
+    paciente_id:      recetaPacienteId,
+    consulta_id:      recetaConsultaId,
+    tipo:             'bienestar',
+    medicamento:      'Check-in de bienestar diario',
+    frecuencia_horas: 24,
+    activo:           true,
+    fecha_proximo:    prox.toISOString(),
+    fecha_fin:        new Date(ahora.getTime() + 30 * 86400000).toISOString()
+  });
+  showToast('💙 Check-in de bienestar activado — el bot preguntará al paciente cada 24h');
+  renderBienestarConsulta();
+}
+
+async function desactivarBienestar(recId) {
+  await supa('PATCH', 'recordatorios', { activo: false }, `?id=eq.${recId}`);
+  showToast('🔕 Check-in de bienestar desactivado');
+  renderBienestarConsulta();
+}
+
+// ── Dot-grid visual de horas de recordatorio para un medicamento ─────────────
+function renderMedGrid(frecuenciaHoras) {
+  if (!frecuenciaHoras || frecuenciaHoras >= 24) {
+    return `<div style="display:flex;gap:4px;margin-top:6px;align-items:center">
+      <div title="8:00" style="width:11px;height:11px;border-radius:50%;background:#f97316"></div>
+      <span style="font-size:10px;color:#aaa">8:00</span>
+    </div>`;
+  }
+  const slots = [];
+  for (let h = 8; h <= 20; h += frecuenciaHoras) slots.push(h);
+  return `<div style="display:flex;gap:4px;margin-top:6px;align-items:center;flex-wrap:wrap">
+    ${slots.map(h => `<div title="${h}:00" style="display:flex;align-items:center;gap:2px">
+      <div style="width:10px;height:10px;border-radius:50%;background:#f97316"></div>
+      <span style="font-size:9px;color:#aaa">${h}h</span>
+    </div>`).join('')}
+  </div>`;
 }
 
 function _normCIE10(s) {

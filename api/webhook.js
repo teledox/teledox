@@ -10,12 +10,13 @@ const { alertar } = require('../src/services/telegram');
 const { esSi } = require('../src/utils/validaciones');
 
 // ¿El mensaje es una respuesta plausible al recordatorio de seguimiento pendiente?
-// medicamento → Sí/No · fin_tratamiento → 1/2/3
+// medicamento → Sí/No · fin_tratamiento → 1/2/3 · bienestar → 1/2/3/4/5
 function esRespuestaSeguimiento(respuestaPendiente, mensaje) {
   const tipo = respuestaPendiente?.recordatorios?.tipo;
   const m = (mensaje || '').trim().toLowerCase();
   if (tipo === 'medicamento') return esSi(m) || /^no$/.test(m);
   if (tipo === 'fin_tratamiento') return ['1', '2', '3'].includes(m);
+  if (tipo === 'bienestar') return ['1', '2', '3', '4', '5'].includes(m);
   return false;
 }
 
@@ -326,6 +327,21 @@ module.exports = async function handler(req, res) {
         if (resultLab.paso) await guardar(telefono, resultLab.paso, resultLab.datos, 'laboratorio');
         await enviar(telefono, resultLab.respuesta);
         return res.status(200).send('OK');
+      }
+    }
+
+    // Bienestar interactivo (lista_reply 1-5): se envía con enviarLista, no como texto libre,
+    // por lo que no pasa por el interceptor de texto de arriba. Check separado aquí.
+    if (esInteractivo && !enCronica) {
+      const pendienteBienestar = await buscarRespuestaPendiente(telefono);
+      if (pendienteBienestar?.respuesta?.recordatorios?.tipo === 'bienestar') {
+        if (['1', '2', '3', '4', '5'].includes(mensaje)) {
+          const resp = await procesarRespuestaSeguimiento(pendienteBienestar, mensaje, telefono);
+          if (resp) {
+            await enviar(telefono, resp);
+            return res.status(200).send('OK');
+          }
+        }
       }
     }
 

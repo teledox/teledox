@@ -63,6 +63,39 @@ module.exports = async function handler(req, res) {
           mensaje = `💊 *Recordatorio MediLyft*\n\nHola ${paciente.nombre || ''}! Es hora de tomar su medicamento:\n\n*${r.medicamento}*\n${r.dosis ? `Dosis: ${r.dosis}` : ''}\n\n¿Ya tomó su medicamento?\n\nResponda *Sí* o *No*`;
         } else if (r.tipo === 'fin_tratamiento') {
           mensaje = `🏥 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Su tratamiento con *${r.medicamento}* ha finalizado.\n\n¿Cómo se siente ahora?\n\n1️⃣ Me siento mejor\n2️⃣ Mejoré pero aún tengo síntomas\n3️⃣ No mejoré o me siento peor\n\nResponda con el número de su opción.`;
+        } else if (r.tipo === 'bienestar') {
+          // Check-in diario de bienestar para pacientes del panel principal (escala 1-5)
+          await enviarLista(
+            telefono,
+            `💙 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Tu médico quiere saber cómo estás hoy.`,
+            [{ titulo: 'Bienestar de hoy', filas: [
+              { id: '1', titulo: '⭐⭐⭐⭐⭐ Excelente', descripcion: 'Me siento muy bien' },
+              { id: '2', titulo: '⭐⭐⭐⭐ Bien',        descripcion: 'Me siento bien' },
+              { id: '3', titulo: '⭐⭐⭐ Regular',       descripcion: 'Más o menos' },
+              { id: '4', titulo: '⭐⭐ Mal',            descripcion: 'Me siento mal' },
+              { id: '5', titulo: '⭐ Muy mal',          descripcion: 'Necesito atención urgente' }
+            ]}],
+            'Seleccionar'
+          );
+
+          await query('POST', 'seguimiento_respuestas', {
+            recordatorio_id: r.id,
+            paciente_id:     r.paciente_id,
+            consulta_id:     r.consulta_id || null,
+            tipo:            'bienestar',
+            pregunta:        '¿Cómo te sientes hoy?'
+          });
+
+          const proximoEnvioBienestar = new Date(ahora.getTime() + r.frecuencia_horas * 3600000);
+          if (proximoEnvioBienestar <= new Date(r.fecha_fin)) {
+            await query('PATCH', 'recordatorios', {
+              fecha_proximo: proximoEnvioBienestar.toISOString()
+            }, `?id=eq.${r.id}`);
+          } else {
+            await query('PATCH', 'recordatorios', { activo: false }, `?id=eq.${r.id}`);
+          }
+          procesados++;
+          continue;
         }
 
         if (!mensaje) continue;

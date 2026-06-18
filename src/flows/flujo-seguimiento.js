@@ -55,6 +55,47 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
     }
   }
 
+  if (recordatorio?.tipo === 'bienestar') {
+    const nivel = parseInt(mensaje);
+    if (![1, 2, 3, 4, 5].includes(nivel)) {
+      return `Por favor selecciona una opción del 1 al 5 en el menú de bienestar. 💙`;
+    }
+
+    await query('PATCH', 'seguimiento_respuestas', {
+      respuesta:        String(nivel),
+      nivel_bienestar:  nivel
+    }, `?id=eq.${r.id}`);
+
+    const nombrePac = `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim();
+
+    if (nivel === 4) {
+      await crearNotificacion(
+        'seguimiento', `💙 Bienestar bajo — ${nombrePac}`,
+        `${nombrePac} reportó bienestar nivel ${nivel}/5 (Mal). Revisar.`,
+        paciente.id, recordatorio?.consulta_id || null,
+        { origen: 'seguimiento', categoria: 'medio', etiqueta: 'BIENESTAR', estado_validacion: 'pendiente', seguimiento_respuesta_id: r.id }
+      );
+    } else if (nivel === 5) {
+      await alertar(`🔴 <b>Bienestar muy bajo</b>\nPaciente: ${nombrePac}\nNivel: 5/5 (Muy mal)\nTeléfono: ${telefono}`);
+      await crearNotificacion(
+        'seguimiento', `🔴 Bienestar crítico — ${nombrePac}`,
+        `${nombrePac} reportó bienestar nivel 5/5 (Muy mal). Requiere atención prioritaria.`,
+        paciente.id, recordatorio?.consulta_id || null,
+        { origen: 'seguimiento', categoria: 'grave', etiqueta: 'BIENESTAR', estado_validacion: 'pendiente', seguimiento_respuesta_id: r.id }
+      );
+    }
+
+    const respuestas = [
+      '',
+      '💙 ¡Qué bueno saberlo! Nos alegra que te sientas excelente.',
+      '💙 Bien, sigue cuidándote.',
+      '💙 Gracias por contarnos. Si algo cambia, escríbenos *hola*.',
+      '💙 Entendido. Tu médico estará informado. Si lo necesitas escríbenos *hola*.',
+      '💙 Lamentamos que te sientas así. Hemos notificado a tu médico con prioridad. Si es urgente llama al *911*.'
+    ];
+    return respuestas[nivel];
+  }
+
   return null;
 }
 

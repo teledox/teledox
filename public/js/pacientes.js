@@ -66,24 +66,108 @@ async function showPacienteDetalle(id) {
     </tr>`).join('')}</tbody></table>`
     : '<div class="empty-state">Sin consultas</div>';
 
-  const seguimientos = await supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&order=activo.desc,created_at.desc`) || [];
-  const segActivos = seguimientos.filter(s => s.activo);
+  const [seguimientos, labSeguimientos, cronicas, ultimoBienestar] = await Promise.all([
+    supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&order=tipo.asc,activo.desc,created_at.desc`).then(r => r || []),
+    supa('GET', 'seguimiento_laboratorio', null, `?paciente_id=eq.${id}&order=created_at.desc&limit=5&select=*,consultas(created_at,diagnostico)`).then(r => r || []),
+    supa('GET', 'enfermedades_cronicas', null, `?paciente_id=eq.${id}&order=activo.desc,created_at.desc`).then(r => r || []),
+    supa('GET', 'seguimiento_respuestas', null, `?paciente_id=eq.${id}&tipo=eq.bienestar&respuesta=not.is.null&order=created_at.desc&limit=5`).then(r => r || [])
+  ]);
+
   const fmtCada = s => s.frecuencia_horas < 1 ? `cada ${Math.round(s.frecuencia_horas * 60)} min` : `cada ${s.frecuencia_horas}h`;
-  document.getElementById('seguimientoList').innerHTML = seguimientos.length
-    ? `${segActivos.length ? `<div style="margin-bottom:10px"><button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="desactivarTodosSeguimientos('${id}')">🔕 Desactivar todos (${segActivos.length})</button></div>` : ''}
-      ${seguimientos.map(s => `<div class="detail-item" style="margin-bottom:8px;${s.activo ? '' : 'opacity:.55'}">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <div>
-            <div class="detail-label">${s.tipo === 'fin_tratamiento' ? 'Cierre de tratamiento' : 'Medicamento'} ${s.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
-            <div class="detail-value">${s.medicamento || '—'}</div>
-            <div style="font-size:12px;color:#888;margin-top:4px">${fmtCada(s)} · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div>
+  const _BW_COL = ['','#16a34a','#84cc16','#f59e0b','#ea580c','#dc2626'];
+  const _BW_LBL = ['','Excelente','Bien','Regular','Mal','Muy mal'];
+  const _btnDes = (recId) => `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorio('${recId}','${id}')">🔕 Desactivar</button>`;
+  const _btnRea = (recId) => `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorio('${recId}','${id}')">🔔 Reactivar</button>`;
+
+  // ── Sección Bienestar ────────────────────────────────────────────────────
+  const recBienestar = seguimientos.filter(s => s.tipo === 'bienestar');
+  const dotsBienestar = ultimoBienestar.length
+    ? `<div style="display:flex;gap:4px;margin-top:6px;align-items:center;flex-wrap:wrap">
+        ${[...ultimoBienestar].reverse().map(r => {
+          const n = r.nivel_bienestar || 0;
+          return `<div title="${_BW_LBL[n]} · ${new Date(r.created_at).toLocaleDateString('es-EC')}" style="width:14px;height:14px;border-radius:50%;background:${_BW_COL[n]||'#d1d5db'}"></div>`;
+        }).join('')}
+        ${ultimoBienestar[0]?.nivel_bienestar
+          ? `<span style="font-size:11px;color:#555;margin-left:3px">Último: <strong style="color:${_BW_COL[ultimoBienestar[0].nivel_bienestar]}">${_BW_LBL[ultimoBienestar[0].nivel_bienestar]}</strong></span>`
+          : ''}
+      </div>` : '';
+
+  let htmlBienestar = `<div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">💙 Bienestar</div>`;
+  htmlBienestar += recBienestar.length
+    ? recBienestar.map(b => `
+        <div class="detail-item" style="margin-bottom:8px;${b.activo ? '' : 'opacity:.55'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div>
+              <div class="detail-label">Check-in diario ${b.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
+              <div style="font-size:12px;color:#888;margin-top:2px">${fmtCada(b)} · Hasta: ${new Date(b.fecha_fin).toLocaleDateString('es-EC')}</div>
+              ${dotsBienestar}
+            </div>
+            ${b.activo ? _btnDes(b.id) : _btnRea(b.id)}
           </div>
-          ${s.activo
-            ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorio('${s.id}','${id}')">🔕 Desactivar</button>`
-            : `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorio('${s.id}','${id}')">🔔 Reactivar</button>`}
-        </div>
-      </div>`).join('')}`
-    : '<div class="empty-state">Sin seguimientos</div>';
+        </div>`).join('')
+    : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin check-in de bienestar — actívalo desde la consulta.</div>`;
+
+  // ── Sección Medicamentos ─────────────────────────────────────────────────
+  const recMeds = seguimientos.filter(s => s.tipo === 'medicamento' || s.tipo === 'fin_tratamiento');
+  const medsActivos = recMeds.filter(m => m.activo).length;
+  let htmlMeds = `<div style="font-size:13px;font-weight:600;color:#374151;margin-top:16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
+    <span>💊 Medicamentos</span>
+    ${medsActivos > 1 ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="desactivarTodosSeguimientos('${id}')">🔕 Todos (${medsActivos})</button>` : ''}
+  </div>`;
+  htmlMeds += recMeds.length
+    ? recMeds.map(s => `
+        <div class="detail-item" style="margin-bottom:8px;${s.activo ? '' : 'opacity:.55'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div style="flex:1;min-width:0">
+              <div class="detail-label">${s.tipo === 'fin_tratamiento' ? 'Cierre de tratamiento' : 'Medicamento'} ${s.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
+              <div class="detail-value">${s.medicamento || '—'}</div>
+              <div style="font-size:12px;color:#888;margin-top:4px">${fmtCada(s)} · Hasta: ${new Date(s.fecha_fin).toLocaleDateString('es-EC')}</div>
+              ${s.tipo === 'medicamento' && typeof renderMedGrid === 'function' ? renderMedGrid(s.frecuencia_horas) : ''}
+            </div>
+            ${s.activo ? _btnDes(s.id) : _btnRea(s.id)}
+          </div>
+        </div>`).join('')
+    : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin seguimiento de medicamentos.</div>`;
+
+  // ── Sección Laboratorio ──────────────────────────────────────────────────
+  const _LAB = {
+    pendiente:  { cls: 'badge-yellow', label: '⏳ Pendiente' },
+    confirmado: { cls: 'badge-green',  label: '✅ Realizado' },
+    sin_examen: { cls: 'badge-red',    label: '🔴 Sin respuesta' }
+  };
+  let htmlLab = `<div style="font-size:13px;font-weight:600;color:#374151;margin-top:16px;margin-bottom:8px">🧪 Laboratorio</div>`;
+  htmlLab += labSeguimientos.length
+    ? labSeguimientos.map(l => {
+        const est = _LAB[l.estado] || { cls: 'badge-gray', label: l.estado };
+        const fechaCons = l.consultas?.created_at ? new Date(l.consultas.created_at).toLocaleDateString('es-EC') : '—';
+        const diag = (l.consultas?.diagnostico || '').slice(0, 40) || '—';
+        return `<div class="detail-item" style="margin-bottom:6px">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div>
+              <div class="detail-label">${fechaCons} — ${diag}</div>
+              <div style="margin-top:3px"><span class="badge ${est.cls}">${est.label}</span></div>
+            </div>
+            <button class="btn btn-sm" onclick="openReceta('${l.consulta_id}','${id}')">➡️ Ver</button>
+          </div>
+        </div>`;
+      }).join('')
+    : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin seguimiento de exámenes de laboratorio.</div>`;
+
+  // ── Sección Crónicas ─────────────────────────────────────────────────────
+  let htmlCronicas = `<div style="font-size:13px;font-weight:600;color:#374151;margin-top:16px;margin-bottom:8px">🏥 Enfermedades crónicas</div>`;
+  htmlCronicas += cronicas.length
+    ? cronicas.map(c => `
+        <div class="detail-item" style="margin-bottom:6px;${c.activo ? '' : 'opacity:.55'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+            <div>
+              <div class="detail-label">${(typeof NOMBRES_ENFERMEDAD !== 'undefined' && NOMBRES_ENFERMEDAD[c.enfermedad]) || c.enfermedad} ${c.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Inactivo</span>'}</div>
+              <div style="font-size:12px;color:#888;margin-top:2px">Cada ${c.frecuencia_horas || 24}h${c.proximo_seguimiento ? ' · Próx: ' + new Date(c.proximo_seguimiento).toLocaleDateString('es-EC') : ''}</div>
+            </div>
+          </div>
+        </div>`).join('')
+    : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin enfermedades crónicas registradas.</div>`;
+
+  document.getElementById('seguimientoList').innerHTML = htmlBienestar + htmlMeds + htmlLab + htmlCronicas;
 
   showPage('paciente-detalle');
   document.querySelectorAll('#page-paciente-detalle .tab').forEach(t => t.classList.remove('active'));

@@ -129,8 +129,10 @@ function cerrarConfirmAccion(confirmado) {
 // ===== COPIAR INFO DE CONSULTA — MODAL PER-FIELD =====
 
 function copiarInfoConsulta() {
-  const consulta = window.currentConsultaData || {};
-  const paciente = window.currentPacienteData || {};
+  // currentConsultaData/currentPacienteData se declaran con `let` en config.js —
+  // no son propiedades de window, se acceden directamente por nombre.
+  const consulta = currentConsultaData || {};
+  const paciente = currentPacienteData || {};
   const nivelMap = { 1: 'Leve', 2: 'Medio', 3: 'Grave' };
   const ts = consulta.created_at;
   const fecha = ts
@@ -143,16 +145,18 @@ function copiarInfoConsulta() {
     { label: 'Nombre',          value: [paciente.nombre, paciente.apellidos].filter(Boolean).join(' ').trim() },
     { label: 'Cédula',          value: paciente.cedula || '' },
     { label: 'Teléfono',        value: paciente.telefono || '' },
+    { label: 'Correo',          value: paciente.correo || '' },
     { label: 'Fecha nacimiento',value: paciente.fecha_nacimiento || '' },
     { label: 'Sexo',            value: paciente.sexo || '' },
+    { label: 'Residencia',      value: paciente.lugar_residencia || '' },
     { label: 'Empresa',         value: paciente.clientes_b2b?.nombre_empresa || '' },
     { sep: 'Consulta' },
     { label: 'Fecha consulta',  value: fecha },
     { label: 'Estado',          value: consulta.estado || '' },
     { label: 'Nivel síntomas',  value: consulta.nivel_sintomas ? (nivelMap[consulta.nivel_sintomas] || '') : '' },
-    { label: 'Síntomas',        value: consulta.sintomas_descripcion || '',                            multi: true },
+    { label: 'Síntomas',        value: consulta.sintomas_descripcion || '',                             multi: true },
     { label: 'Diagnóstico',     value: document.getElementById('recetaDiagnostico')?.value?.trim() || '' },
-    { label: 'Notas clínicas',  value: document.getElementById('recetaNotas')?.value?.trim() || '',   multi: true },
+    { label: 'Notas clínicas',  value: document.getElementById('recetaNotas')?.value?.trim() || '',    multi: true },
     { label: 'Indicaciones',    value: document.getElementById('recetaIndicaciones')?.value?.trim() || '', multi: true },
   ];
 

@@ -15,8 +15,9 @@ const ENFERMEDADES = {
       const s = parseInt(vals.sistolica), d = parseInt(vals.diastolica);
       if (isNaN(s) || isNaN(d)) return { nivel: 1, msg: '✅ Valores registrados. Gracias.' };
       if (s >= 180 || d >= 110) return { nivel: 3, msg: `🚨 EMERGENCIA: Presión ${s}/${d} mmHg — CRISIS HIPERTENSIVA. Llame al 911 AHORA.` };
-      if (s < 90 || d < 60) return { nivel: 3, msg: `🚨 EMERGENCIA: Presión ${s}/${d} mmHg — HIPOTENSIÓN GRAVE. Llame al 911.` };
-      if (s >= 160 || d >= 100) return { nivel: 2, msg: `⚠️ Presión ${s}/${d} mmHg — Muy alta. Contacte a su médico hoy.` };
+      if (s < 90 || d < 60)    return { nivel: 3, msg: `🚨 EMERGENCIA: Presión ${s}/${d} mmHg — HIPOTENSIÓN GRAVE. Llame al 911.` };
+      if (vals.sintomas === '3') return { nivel: 3, msg: `🚨 EMERGENCIA: Visión borrosa o cefalea intensa — síntomas de crisis hipertensiva. Llame al 911 AHORA.` };
+      if (s >= 160 || d >= 100 || vals.sintomas === '2') return { nivel: 2, msg: `⚠️ Presión ${s}/${d} mmHg${vals.sintomas === '2' ? ' con síntomas' : ''} — Alta. Contacte a su médico hoy.` };
       if (s >= 130 || d >= 85) return { nivel: 2, msg: `⚠️ Presión ${s}/${d} mmHg — Elevada. Monitoree con frecuencia.` };
       return { nivel: 1, msg: `✅ Presión ${s}/${d} mmHg — Normal. ¡Excelente control!` };
     }
@@ -28,11 +29,12 @@ const ENFERMEDADES = {
       { param: 'sintomas', pregunta: '¿Tiene síntomas?\n1️⃣ Sin síntomas\n2️⃣ Temblor, sudoración o mareo\n3️⃣ Confusión o pérdida de conocimiento' }
     ],
     evaluar: (vals) => {
+      if (vals.sintomas === '3') return { nivel: 3, msg: `🚨 EMERGENCIA: Confusión o pérdida de conocimiento — hipoglucemia o cetoacidosis severa. LLAME AL 911.` };
       const g = parseInt(vals.glucosa);
       if (isNaN(g)) return { nivel: 1, msg: '✅ Valores registrados.' };
       if (g < 54 || g > 400) return { nivel: 3, msg: `🚨 EMERGENCIA: Glucosa ${g} mg/dL. LLAME AL 911.` };
       if (g < 70) return { nivel: 3, msg: `🚨 HIPOGLUCEMIA GRAVE: Glucosa ${g} mg/dL. Tome azúcar ahora y llame al médico.` };
-      if (g > 300) return { nivel: 2, msg: `⚠️ HIPERGLUCEMIA: Glucosa ${g} mg/dL. Contacte a su médico urgente.` };
+      if (g > 300 || vals.sintomas === '2') return { nivel: 2, msg: `⚠️ ${g > 300 ? `Glucosa ${g} mg/dL — Hiperglucemia.` : 'Síntomas de hipoglucemia.'} Contacte a su médico urgente.` };
       if (g > 180) return { nivel: 2, msg: `⚠️ Glucosa ${g} mg/dL — Elevada. Revise su dosis de insulina.` };
       return { nivel: 1, msg: `✅ Glucosa ${g} mg/dL — En rango. ¡Buen control!` };
     }
@@ -49,8 +51,8 @@ const ENFERMEDADES = {
       if (g < 54 || g > 400) return { nivel: 3, msg: `🚨 EMERGENCIA: Glucosa ${g} mg/dL. LLAME AL 911.` };
       if (g < 70) return { nivel: 3, msg: `🚨 HIPOGLUCEMIA: Glucosa ${g} mg/dL. Tome azúcar ahora.` };
       if (g > 300) return { nivel: 2, msg: `⚠️ Glucosa ${g} mg/dL — Muy alta. Contacte a su médico.` };
-      if (g > 180) return { nivel: 2, msg: `⚠️ Glucosa ${g} mg/dL — Elevada. Revise dieta y medicación.` };
-      return { nivel: 1, msg: `✅ Glucosa ${g} mg/dL — En rango. ¡Buen control!` };
+      if (g > 180 || vals.medicacion === '2') return { nivel: 2, msg: `⚠️ ${g > 180 ? `Glucosa ${g} mg/dL — Elevada.` : 'Sin medicación hoy.'} Revise dieta y medicación.` };
+      return { nivel: 1, msg: `✅ Glucosa ${g} mg/dL — En rango. ${vals.medicacion === '1' ? '¡Buen control!' : 'Recuerde tomar su medicación.'}` };
     }
   },
   'epoc': {
@@ -60,10 +62,11 @@ const ENFERMEDADES = {
       { param: 'disnea', pregunta: '¿Cómo está su respiración hoy?\n1️⃣ Normal para mí\n2️⃣ Un poco más difícil\n3️⃣ Muy difícil o agitada' }
     ],
     evaluar: (vals) => {
+      if (vals.disnea === '3') return { nivel: 3, msg: `🚨 EMERGENCIA: Dificultad respiratoria severa — exacerbación de EPOC. LLAME AL 911.` };
       const s = parseInt(vals.spo2);
       if (isNaN(s)) return { nivel: 1, msg: '✅ Valores registrados.' };
       if (s < 85) return { nivel: 3, msg: `🚨 EMERGENCIA: SpO2 ${s}% — PELIGRO VITAL. Llame al 911.` };
-      if (s < 88) return { nivel: 2, msg: `⚠️ SpO2 ${s}% — Muy baja. Contacte médico urgente.` };
+      if (s < 88 || vals.disnea === '2') return { nivel: 2, msg: `⚠️ SpO2 ${s}%${vals.disnea === '2' ? ' con dificultad respiratoria' : ''} — Baja. Contacte médico urgente.` };
       if (s < 91) return { nivel: 2, msg: `⚠️ SpO2 ${s}% — Baja. Monitoree de cerca.` };
       return { nivel: 1, msg: `✅ SpO2 ${s}% — Aceptable. Continúe con su tratamiento.` };
     }
@@ -78,7 +81,8 @@ const ENFERMEDADES = {
       const s = parseInt(vals.spo2);
       if (isNaN(s)) return { nivel: 1, msg: '✅ Valores registrados.' };
       if (s < 90) return { nivel: 3, msg: `🚨 EMERGENCIA: SpO2 ${s}% — CRISIS ASMÁTICA. Llame al 911.` };
-      if (s < 94 || vals.rescatador === '3') return { nivel: 2, msg: `⚠️ SpO2 ${s}% o uso frecuente de rescatador. Contacte a su médico.` };
+      if (vals.rescatador === '3' && s < 94) return { nivel: 3, msg: `🚨 EMERGENCIA: Uso excesivo de rescatador con SpO2 ${s}% — CRISIS ASMÁTICA. Llame al 911.` };
+      if (s < 94 || vals.rescatador === '3') return { nivel: 2, msg: `⚠️ SpO2 ${s}%${vals.rescatador === '3' ? ' y uso frecuente de rescatador' : ''} — Contacte a su médico.` };
       return { nivel: 1, msg: `✅ SpO2 ${s}% — Asma controlada. ¡Bien!` };
     }
   },
@@ -145,8 +149,8 @@ const ENFERMEDADES = {
       { param: 'sintomas', pregunta: '¿Tiene síntomas nuevos?\n1️⃣ Sin síntomas nuevos\n2️⃣ Erupciones, dolor articular o fatiga\n3️⃣ Múltiples síntomas o empeoramiento súbito' }
     ],
     evaluar: (vals) => {
-      if (vals.fiebre === '3' || vals.sintomas === '3') return { nivel: 2, msg: `⚠️ Posible brote de lupus. Contacte a su médico hoy.` };
-      if (vals.fiebre === '2' || vals.sintomas === '2') return { nivel: 2, msg: `⚠️ Síntomas leves. Monitoree y reporte si empeoran.` };
+      if (vals.fiebre === '3' || vals.sintomas === '3') return { nivel: 3, msg: `🚨 EMERGENCIA: Fiebre alta o empeoramiento súbito en lupus — posible brote grave o infección. Llame al 911 o vaya a urgencias.` };
+      if (vals.fiebre === '2' || vals.sintomas === '2') return { nivel: 2, msg: `⚠️ Síntomas leves de lupus. Su médico le contactará. Monitoree y reporte si empeoran.` };
       return { nivel: 1, msg: `✅ Sin actividad de lupus. ¡Excelente!` };
     }
   },
@@ -171,8 +175,9 @@ const ENFERMEDADES = {
     ],
     evaluar: (vals) => {
       const pa = parseInt(vals.pa_sistolica);
-      if (vals.sintomas === '3') return { nivel: 3, msg: `🚨 POSIBLE NUEVO ACV. Llame al 911 INMEDIATAMENTE.` };
-      if (pa >= 180 || vals.sintomas === '2') return { nivel: 2, msg: `⚠️ PA ${pa} mmHg o síntomas neurológicos. Contacte médico urgente.` };
+      if (vals.sintomas === '3' || vals.sintomas === '2') return { nivel: 3, msg: `🚨 POSIBLE NUEVO ACV O TIA. Llame al 911 INMEDIATAMENTE. No conduzca, no espere.` };
+      if (pa >= 180) return { nivel: 3, msg: `🚨 EMERGENCIA: PA ${pa} mmHg — Muy alta en paciente post-ACV. Llame al 911.` };
+      if (pa >= 160) return { nivel: 2, msg: `⚠️ PA ${pa} mmHg — Elevada. Contacte a su médico HOY.` };
       return { nivel: 1, msg: `✅ PA ${pa} mmHg — Sin síntomas nuevos. ¡Buen control!` };
     }
   },
@@ -230,8 +235,8 @@ const ENFERMEDADES = {
       { param: 'sintomas', pregunta: '¿Tiene síntomas nuevos?\n1️⃣ Sin síntomas\n2️⃣ Fiebre, fatiga o pérdida de peso\n3️⃣ Síntomas severos o infección' }
     ],
     evaluar: (vals) => {
-      if (vals.sintomas === '3') return { nivel: 2, msg: `⚠️ Síntomas severos reportados. Contacte a su médico hoy.` };
-      if (vals.medicacion === '3') return { nivel: 2, msg: `⚠️ Sin medicación ARV hoy. La adherencia es fundamental. Tome su medicación ahora.` };
+      if (vals.sintomas === '3') return { nivel: 3, msg: `🚨 EMERGENCIA: Síntomas severos o infección en paciente VIH — posible infección oportunista. Vaya a urgencias AHORA.` };
+      if (vals.medicacion === '3' || vals.sintomas === '2') return { nivel: 2, msg: `⚠️ ${vals.medicacion === '3' ? 'Sin medicación ARV hoy. La adherencia es fundamental.' : 'Síntomas reportados (fiebre, fatiga o pérdida de peso).'} Contacte a su médico hoy.` };
       return { nivel: 1, msg: `✅ ${vals.medicacion === '1' ? 'Medicación tomada.' : 'Recuerde completar sus dosis.'} ¡Siga adelante!` };
     }
   }

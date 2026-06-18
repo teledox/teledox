@@ -352,27 +352,79 @@ async function generarCertificadoPDF() {
   const negro   = rgb(0.05, 0.05, 0.05);
   const blanco  = rgb(1, 1, 1);
   const grisOsc = rgb(0.3, 0.3, 0.3);
-  const teal    = rgb(0.0, 0.69, 0.68);
 
   const gV  = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
   const gR  = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
   const gCB = id => document.getElementById(id)?.checked || false;
 
-  // Overlay helper: draws value text just above the template underline
-  // yTop = pdfplumber "top" coordinate of the underline stroke
+  // ── WHITE-OUT todos los valores pre-rellenos de Vital Club ─────────────────
+  // wo(x, yTop, w, h): blanquea el área de VALOR (justo encima del underline en pdfplumber top=yTop)
+  const wo = (x, yTop, w, h) => page.drawRectangle({ x, y: H - yTop - (h - 3), width: w, height: h, color: blanco });
+
+  // Logo Vital Club (top center, ~top=0-78)
+  page.drawRectangle({ x: 215, y: H - 78, width: 165, height: 78, color: blanco });
+
+  // Sección A (underlines top=132,147,162,177,192)
+  [132, 147, 162, 177, 192].forEach(t => wo(208, t, 361, 16));
+
+  // Sección B (underlines top=233,248,263,278,293,307,322)
+  [233, 248, 263, 278, 293, 307, 322].forEach(t => wo(208, t, 361, 16));
+
+  // Sección C — diagnóstico + CIE10 (top=373,388)
+  [373, 388].forEach(t => wo(208, t, 361, 16));
+
+  // Checkboxes filas (borrar marcas pre-rellenas)
+  wo(213, 393, 58, 24); wo(519, 393, 58, 24);
+  wo(213, 411, 58, 24); wo(519, 411, 58, 24);
+
+  // Tipo contingencia (top=448)
+  wo(208, 448, 361, 16);
+
+  // Caja descripción (top=473-533)
+  page.drawRectangle({ x: 46, y: H - 534, width: 521, height: 61, color: blanco });
+
+  // Tipo reposo + días + desde + hasta (top=538-625)
+  page.drawRectangle({ x: 30, y: H - 626, width: 534, height: 90, color: blanco });
+
+  // Área firma — extendida para cubrir nombre pre-relleno "MARIA LORENA..." (top=676-761)
+  page.drawRectangle({ x: 30, y: H - 761, width: 534, height: 87, color: blanco });
+
+  // ── Logo MediLyft (SVG → PNG vía canvas) ───────────────────────────────────
+  try {
+    const svgR = await fetch('/landing/logo.svg');
+    const svgT = await svgR.text();
+    const blobUrl = URL.createObjectURL(new Blob([svgT], { type: 'image/svg+xml' }));
+    const pngBytes = await new Promise((res, rej) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = 64; c.height = 64;
+        c.getContext('2d').drawImage(img, 0, 0, 64, 64);
+        URL.revokeObjectURL(blobUrl);
+        c.toBlob(b => { const r = new FileReader(); r.onload = e => res(new Uint8Array(e.target.result)); r.readAsArrayBuffer(b); }, 'image/png');
+      };
+      img.onerror = rej; img.src = blobUrl;
+    });
+    const logoImg = await doc.embedPng(pngBytes);
+    page.drawImage(logoImg, { x: 266, y: H - 66, width: 64, height: 50 });
+    page.drawText('MediLyft', { x: 270, y: H - 76, size: 10, font: bold, color: negro });
+  } catch (_) {
+    page.drawText('MediLyft', { x: 265, y: H - 55, size: 15, font: bold, color: negro });
+  }
+
+  // ── Overlay helper ───────────────────────────────────────────────────────────
   const V = (val, x, yTop, maxW) => {
     const v = _pdfSafe(String(val || ''));
     if (v) page.drawText(v, { x, y: H - yTop + 3, size: 8, font: normal, color: negro, maxWidth: maxW || 355 });
   };
 
-  // SECCIÓN A — datos del establecimiento (underlines at top=132, 147, 162, 177, 192)
+  // SECCIÓN A
   V(gV('cert-establecimiento'),           210, 132);
   V(gV('cert-correo-medico'),             210, 147);
   V(gV('cert-tel-emisor'),                210, 162);
   V(gV('cert-direccion-establecimiento'), 210, 177);
   V(gV('cert-lugar-fecha-emision'),       210, 192);
 
-  // SECCIÓN B — datos del paciente (underlines at top=233, 248, 263, 278, 293, 307, 322)
+  // SECCIÓN B
   V(gV('cert-paciente'),       210, 233);
   V(gV('cert-direccion'),      210, 248);
   V(gV('cert-telefono'),       210, 263);
@@ -381,22 +433,20 @@ async function generarCertificadoPDF() {
   V(gV('cert-cedula'),         210, 307);
   V(gV('cert-hc'),             210, 322);
 
-  // SECCIÓN C — diagnóstico (underlines at top=373 y 388)
+  // SECCIÓN C
   V(gV('cert-diagnostico'), 210, 373);
   V(gV('cert-cie10'),        210, 388);
 
-  // Checkboxes fila 1 (top=395-410): Síntomas SI (x=225-255) / NO (x=532-562)
+  // Checkboxes
   if (gR('cert-sintomas') === 'SI') page.drawText('X', { x: 234, y: H - 406, size: 10, font: bold, color: negro });
   if (gR('cert-sintomas') === 'NO') page.drawText('X', { x: 541, y: H - 406, size: 10, font: bold, color: negro });
-
-  // Checkboxes fila 2 (top=413-428): Enfermedad (x=225-255) / Aislamiento (x=532-562)
   if (gCB('cert-tipo-enfermedad'))  page.drawText('X', { x: 234, y: H - 424, size: 10, font: bold, color: negro });
   if (gCB('cert-tipo-aislamiento')) page.drawText('X', { x: 541, y: H - 424, size: 10, font: bold, color: negro });
 
-  // Tipo de contingencia (underline top=448)
+  // Tipo contingencia
   V(gV('cert-tipo-contingencia'), 210, 448);
 
-  // Descripción (caja x=45-569, top=473-533 → y_pdf=309-369)
+  // Descripción
   const descWords = _pdfSafe(gV('cert-descripcion') || '').split(' ');
   let dLinea = '', dY = H - 483;
   for (const w of descWords) {
@@ -408,25 +458,18 @@ async function generarCertificadoPDF() {
   }
   if (dLinea && dY >= H - 530) page.drawText(dLinea, { x: 50, y: dY, size: 8, font: normal, color: negro });
 
-  // Tipo de reposo (entre caja desc y campo días, top≈543)
+  // Tipo de reposo
   const tipoRep = gR('cert-reposo-tipo') || 'ABSOLUTO';
   page.drawText('Tipo de reposo: REPOSO ' + tipoRep, { x: 50, y: H - 543, size: 8, font: bold, color: negro });
 
-  // Días concedidos (underline top=555)
+  // Días / Desde / Hasta
   const diasNum   = gV('cert-dias-num');
   const diasLetra = gV('cert-dias-letra');
   V([diasNum ? diasNum + ' dias' : '', diasLetra ? '(' + diasLetra + ')' : ''].filter(Boolean).join(' '), 210, 555);
-
-  // Desde (underline top=583)
   V([gV('cert-desde'), gV('cert-desde-letra')].filter(Boolean).join('   '), 210, 583);
-
-  // Hasta (underline top=612)
   V([gV('cert-hasta'), gV('cert-hasta-letra')].filter(Boolean).join('   '), 210, 612);
 
-  // White-out datos pre-rellenos de Vital Club (top=720-752 → y_pdf=90-122)
-  page.drawRectangle({ x: 195, y: H - 758, width: 260, height: 54, color: blanco });
-
-  // Línea de firma + datos del médico real
+  // Médico (sobre área blanqueada)
   const docNom = _pdfSafe(gV('cert-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre||''} ${currentUser.apellidos||''}`.trim() : ''));
   const docReg = _pdfSafe(gV('cert-reg-medico') || (currentUser?.numero_registro ? 'Reg. MSP: ' + currentUser.numero_registro : ''));
   const docEsp = _pdfSafe(currentUser?.especialidad || 'MEDICINA GENERAL');
@@ -448,7 +491,7 @@ async function generarPedidoPDF() {
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
-  const azul   = rgb(1.0, 0.353, 0.373);
+  const azul   = rgb(0.145, 0.388, 0.922);
   const gris   = rgb(0.4, 0.4, 0.4);
   const negro  = rgb(0, 0, 0);
   const blanco = rgb(1, 1, 1);

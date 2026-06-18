@@ -192,12 +192,12 @@ const ENFERMEDADES = {
   'depresion': {
     nombre: 'Depresión Crónica',
     pasos: [
-      { param: 'estado_animo', pregunta: '¿Cómo se siente hoy?\n1️⃣ Bien o regular\n2️⃣ Triste o sin energía\n3️⃣ Muy mal o con pensamientos negativos intensos' },
+      { param: 'estado_animo', pregunta: '¿Cómo se siente hoy?\n1️⃣ Bien o regular\n2️⃣ Triste o sin energía\n3️⃣ Muy mal / en crisis' },
       { param: 'medicacion', pregunta: '¿Tomó su medicación hoy?\n1️⃣ Sí\n2️⃣ No' }
     ],
     evaluar: (vals) => {
-      if (vals.estado_animo === '3') return { nivel: 2, msg: `⚠️ Estado de ánimo muy bajo. Su médico le contactará pronto. Recuerde que no está solo/a. 💙` };
-      if (vals.estado_animo === '2') return { nivel: 2, msg: `⚠️ Síntomas depresivos reportados. Recomendamos hablar con su médico.` };
+      if (vals.estado_animo === '3') return { nivel: 3, msg: `🆘 Gracias por contarnos cómo se siente. Eso toma mucho valor.\n\nSu equipo médico fue notificado y le contactará muy pronto. No está solo/a. 💙` };
+      if (vals.estado_animo === '2') return { nivel: 2, msg: `⚠️ Síntomas depresivos reportados. Su médico le contactará pronto. Recuerde que no está solo/a. 💙` };
       return { nivel: 1, msg: `✅ Gracias por su reporte. Continúe con su tratamiento. ¡Ánimo! 💙` };
     }
   },

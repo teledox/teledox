@@ -1,5 +1,10 @@
 const crypto = require('crypto');
 const { WA_VERIFY_TOKEN } = require('../src/config');
+
+function detectarCrisis(texto) {
+  return /(suicid|matar(me|nos)|no quiero (vivir|seguir|estar|existir)|quiero (morir|no vivir)|acabar (con mi vida|conmigo|con todo)|hacerme daño|quitarme la vida|ya no quiero (vivir|seguir)|me quiero morir|pensamientos? de (muerte|daño|suicid))/i
+    .test(String(texto || ''));
+}
 const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
 const { esSi } = require('../src/utils/validaciones');
@@ -100,6 +105,19 @@ module.exports = async function handler(req, res) {
     let mensaje = '';
     if (msg.type === 'text') {
       mensaje = (msg.text?.body || '').trim();
+
+      // Detector global de crisis — intercepta ANTES de cualquier flujo
+      if (detectarCrisis(mensaje)) {
+        await alertar(
+          `🆘 <b>CRISIS DETECTADA</b>\nTeléfono: ${telefono}\nNombre: ${nombreWhatsApp}\nMensaje: ${mensaje}`
+        );
+        await enviar(telefono,
+          `🆘 Gracias por contarnos cómo te sientes. Eso toma mucho valor.\n\n` +
+          `Si estás pensando en hacerte daño, por favor llama al *911* ahora o ve a la sala de emergencias más cercana.\n\n` +
+          `Tu equipo médico fue notificado y se comunicará contigo muy pronto. No estás solo/a. 💙`
+        );
+        return res.status(200).send('OK');
+      }
     } else if (msg.type === 'interactive') {
       const ir = msg.interactive;
       if (ir?.type === 'button_reply') {

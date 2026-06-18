@@ -1,7 +1,7 @@
 /**
- * api/empresa-codigo.js
- * Guarda o elimina el codigo_acceso de una empresa B2B.
- * Usa service_role para bypass de RLS.
+ * api/b2b-admin.js
+ * Operaciones admin B2B (antes empresa-codigo.js + empleados-b2b.js).
+ * Requiere body.action: 'codigo' | 'empleados'
  */
 
 const SUPA_URL         = process.env.SUPABASE_URL;
@@ -15,7 +15,7 @@ function decodeJWT(token) {
 }
 
 async function verificarAdmin(token) {
-  if (!token) throw new Error('Sin token');
+  if (!token) throw new Error('Sin token de autenticación');
   const email = decodeJWT(token).email;
   if (!email) throw new Error('Token inválido');
   const res = await fetch(
@@ -24,8 +24,8 @@ async function verificarAdmin(token) {
   );
   const rows = await res.json().catch(() => []);
   const u = rows?.[0];
-  if (!u) throw new Error('Usuario no encontrado');
-  if (u.rol !== 'admin') throw new Error('Solo admins pueden modificar códigos');
+  if (!u) throw new Error(`Usuario no encontrado: ${email}`);
+  if (u.rol !== 'admin') throw new Error(`Sin permisos de admin (rol: ${u.rol})`);
   return u.id;
 }
 
@@ -35,12 +35,36 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { token, empresa_id, codigo } = req.body || {};
+  const { token, action, empresa_id, codigo, cedulas } = req.body || {};
   if (!empresa_id) return res.status(400).json({ error: 'Falta empresa_id' });
 
   try {
     await verificarAdmin(token);
 
+    if (action === 'empleados') {
+      if (!Array.isArray(cedulas) || !cedulas.length)
+        return res.status(400).json({ error: 'Falta cedulas[]' });
+
+      const rows = cedulas.map(c => ({ empresa_id, cedula: String(c).trim() }));
+      const r = await fetch(
+        `${SUPA_URL}/rest/v1/empleados_b2b?on_conflict=empresa_id%2Ccedula`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey':        SUPA_SERVICE_KEY,
+            'Authorization': `Bearer ${SUPA_SERVICE_KEY}`,
+            'Content-Type':  'application/json',
+            'Prefer':        'resolution=ignore-duplicates,return=representation'
+          },
+          body: JSON.stringify(rows)
+        }
+      );
+      if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
+      const insertadas = await r.json().catch(() => []);
+      return res.status(200).json({ ok: true, insertadas: insertadas.length, total: cedulas.length });
+    }
+
+    // action === 'codigo' (default)
     const r = await fetch(`${SUPA_URL}/rest/v1/clientes_b2b?id=eq.${empresa_id}`, {
       method: 'PATCH',
       headers: {
@@ -51,15 +75,11 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({ codigo_acceso: codigo || null })
     });
-
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({}));
-      throw new Error(err.message || `HTTP ${r.status}`);
-    }
-
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.message || `HTTP ${r.status}`); }
     return res.status(200).json({ ok: true });
+
   } catch (e) {
-    console.error('[empresa-codigo]', e.message);
+    console.error('[b2b-admin]', e.message);
     return res.status(500).json({ error: e.message });
   }
 };

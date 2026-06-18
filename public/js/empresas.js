@@ -170,10 +170,10 @@ async function subirCedulas() {
       let errorMsg = null;
       for (let i = 0; i < cedulas.length; i += LOTE) {
         const lote = cedulas.slice(i, i + LOTE);
-        const r = await fetch('/api/empleados-b2b', {
+        const r = await fetch('/api/b2b-admin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token, empresa_id: empresaId, cedulas: lote })
+          body: JSON.stringify({ token, action: 'empleados', empresa_id: empresaId, cedulas: lote })
         });
         if (!r.ok) {
           const body = await r.json().catch(() => ({}));
@@ -252,10 +252,10 @@ function autoGenerarCodigo() {
 async function _patchCodigo(empresaId, codigo) {
   const { data: { session } } = await supabaseClient.auth.getSession();
   const token = session?.access_token;
-  const r = await fetch('/api/empresa-codigo', {
+  const r = await fetch('/api/b2b-admin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ token, empresa_id: empresaId, codigo: codigo || null })
+    body: JSON.stringify({ token, action: 'codigo', empresa_id: empresaId, codigo: codigo || null })
   });
   const result = await r.json();
   if (!r.ok) throw new Error(result.error || `HTTP ${r.status}`);

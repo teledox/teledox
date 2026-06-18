@@ -234,7 +234,9 @@ async function generarHistoriaClinicaPDF() {
   wrap(gV('hc-motivo') || '—', 44, width - 90); y -= 4; checkPage();
 
   seccion('ANTECEDENTES PERSONALES');
-  wrap(gV('hc-ant-personales') || '—', 44, width - 90); y -= 4; checkPage();
+  const _cronicas = gV('hc-cronicas-texto');
+  if (_cronicas) { campo('Enf. crónicas activas', _cronicas); checkPage(); }
+  wrap(gV('hc-ant-personales') || '-', 44, width - 90); y -= 4; checkPage();
 
   seccion('ANTECEDENTES FAMILIARES');
   wrap(gCB(['hcaf-cardiopatia','hcaf-diabetes','hcaf-enf-cardiovascular','hcaf-hipertension','hcaf-cancer','hcaf-tuberculosis','hcaf-enf-mental','hcaf-enf-infecciosa','hcaf-mal-formacion','hcaf-otro']), 44, width - 90);

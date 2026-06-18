@@ -271,6 +271,7 @@ function abrirPlantillaReceta(soloPreview) {
   document.getElementById('rec-indicaciones').value = document.getElementById('recetaIndicaciones').value || '';
   poblarDatosMedico('rec');
   restaurarDatosDoc('receta');
+  _renderCronicasStrip('rec-cronicas-lista');
   if (!soloPreview) document.getElementById('modalReceta').classList.add('open');
 }
 
@@ -304,6 +305,7 @@ function abrirPlantillaCertificado(soloPreview) {
   actualizarDiasLetra(); actualizarHastaFecha();
   poblarDatosMedico('cert');
   restaurarDatosDoc('certificado');
+  _renderCronicasStrip('cert-cronicas-lista');
   if (!soloPreview) document.getElementById('modalCertificado').classList.add('open');
 }
 
@@ -322,6 +324,7 @@ function abrirPlantillaLaboratorio(soloPreview) {
   document.getElementById('lab-instrucciones').value = '';
   poblarDatosMedico('lab');
   restaurarDatosDoc('laboratorio');
+  _renderCronicasStrip('lab-cronicas-lista');
   if (!soloPreview) document.getElementById('modalLaboratorio').classList.add('open');
 }
 
@@ -496,6 +499,8 @@ function abrirPlantillaHistoriaClinica(soloPreview) {
 
   poblarDatosMedico('hc');
   restaurarDatosDoc('historia');
+  document.getElementById('hc-cronicas-nueva').value = '';
+  renderCronicasHC();
   if (!soloPreview) document.getElementById('modalHistoriaClinica').classList.add('open');
 }
 
@@ -607,6 +612,62 @@ async function generarDocumentoDesdeModalInterconsulta() {
 }
 
 // Inicializar listeners de modales después de que el DOM cargue
+// ── Enfermedades crónicas en tira informativa (receta / cert / lab) ──────────
+async function _renderCronicasStrip(spanId) {
+  const el = document.getElementById(spanId);
+  if (!el || !recetaPacienteId) return;
+  const cronicas = await supa('GET', 'enfermedades_cronicas', null,
+    `?paciente_id=eq.${recetaPacienteId}&activo=eq.true&order=created_at.asc`) || [];
+  el.style.fontStyle = cronicas.length ? 'normal' : 'italic';
+  el.textContent = cronicas.length
+    ? cronicas.map(c => NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad).join(' · ')
+    : 'Sin enfermedades crónicas registradas';
+}
+
+// ── Enfermedades crónicas en Historia Clínica (con gestión) ──────────────────
+async function renderCronicasHC() {
+  const tags = document.getElementById('hc-cronicas-tags');
+  const hidden = document.getElementById('hc-cronicas-texto');
+  if (!tags || !recetaPacienteId) return;
+  const cronicas = await supa('GET', 'enfermedades_cronicas', null,
+    `?paciente_id=eq.${recetaPacienteId}&activo=eq.true&order=created_at.asc`) || [];
+  if (!cronicas.length) {
+    tags.innerHTML = '<span style="font-size:11px;color:#bbb;font-style:italic">Sin enfermedades crónicas registradas</span>';
+    if (hidden) hidden.value = '';
+    return;
+  }
+  tags.innerHTML = cronicas.map(c => {
+    const n = NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad;
+    const cie = c.codigo_cie10 ? ` · ${c.codigo_cie10}` : '';
+    return `<span style="background:#fff0f0;border:1px solid #ffc5c7;color:#c0392b;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600">${n}${cie}</span>`;
+  }).join('');
+  if (hidden) hidden.value = cronicas.map(c =>
+    (NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad) + (c.codigo_cie10 ? ` (${c.codigo_cie10})` : '')
+  ).join(', ');
+}
+
+async function agregarCronicaDesdeHC() {
+  const sel = document.getElementById('hc-cronicas-nueva');
+  const enfermedad = sel?.value;
+  if (!enfermedad || !recetaPacienteId) return;
+  const existing = await supa('GET', 'enfermedades_cronicas', null,
+    `?paciente_id=eq.${recetaPacienteId}&enfermedad=eq.${enfermedad}&limit=1`) || [];
+  if (existing.length) {
+    if (!existing[0].activo) await supa('PATCH', 'enfermedades_cronicas', { activo: true }, `?id=eq.${existing[0].id}`);
+    else { showToast('Ya está registrada como activa'); sel.value = ''; return; }
+  } else {
+    await supa('POST', 'enfermedades_cronicas', {
+      paciente_id: recetaPacienteId,
+      enfermedad,
+      activo: true,
+      frecuencia_horas: FRECUENCIAS_DEFAULT[enfermedad] || 24
+    });
+  }
+  sel.value = '';
+  await renderCronicasHC();
+  showToast(`✓ ${NOMBRES_ENFERMEDAD[enfermedad] || enfermedad} registrada`);
+}
+
 window.addEventListener('load', () => {
   ['modalReceta', 'modalCertificado', 'modalLaboratorio', 'modalHistoriaClinica', 'modalInterconsulta'].forEach(id => {
     const el = document.getElementById(id);

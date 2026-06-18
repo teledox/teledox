@@ -964,6 +964,10 @@
   <div class="plantilla-modal">
     <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalReceta()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
+      <div id="rec-cronicas-strip" style="background:#fff5f5;border:1px solid #ffd5d6;border-radius:8px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:#c0392b;white-space:nowrap">Crónicas:</span>
+        <span id="rec-cronicas-lista" style="font-size:11px;color:#777;font-style:italic">—</span>
+      </div>
       <div class="doc-sheet" id="docReceta">
         <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Receta Médica</div><div class="receta-num">N° <span id="rec-numero">—</span></div><div style="font-size:10px;color:#555;text-align:right" id="rec-fecha-header">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
@@ -1016,6 +1020,10 @@
   <div class="plantilla-modal">
     <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalCertificado()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body" style="max-height:80vh;overflow-y:auto">
+      <div id="cert-cronicas-strip" style="background:#fff5f5;border:1px solid #ffd5d6;border-radius:8px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:#c0392b;white-space:nowrap">Crónicas:</span>
+        <span id="cert-cronicas-lista" style="font-size:11px;color:#777;font-style:italic">—</span>
+      </div>
       <div class="doc-sheet" id="docCertificado">
         <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Certificado Médico</div><div style="font-size:10px;color:#555;text-align:right" id="cert-lugar-fecha">—</div></div></div>
 
@@ -1077,6 +1085,10 @@
   <div class="plantilla-modal">
     <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalLaboratorio()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
+      <div id="lab-cronicas-strip" style="background:#fff5f5;border:1px solid #ffd5d6;border-radius:8px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;color:#c0392b;white-space:nowrap">Crónicas:</span>
+        <span id="lab-cronicas-lista" style="font-size:11px;color:#777;font-style:italic">—</span>
+      </div>
       <div class="doc-sheet" id="docLaboratorio">
         <div class="doc-header"><div class="doc-logo-area"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="42" height="42" style="flex-shrink:0"><path d="M18,7 h54 c9,0 16,7 16,16 v37 c0,9-7,16-16,16 h-26 l-16,17 5-17 h-17 c-9,0-16-7-16-16 v-37 c0-9,7-16,16-16 z" fill="none" stroke="#FF5A5F" stroke-width="6" stroke-linejoin="round"/><path d="M50,20 c12-2,20,4,22,15 2,10-4,18-12,22-3,2-5,6-5,11" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><path d="M50,20 c-9,0-16,6-16,15 0,8 5,15 12,18" fill="none" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/><line x1="46" y1="53" x2="55" y2="68" stroke="#FF5A5F" stroke-width="5.5" stroke-linecap="round"/></svg><div><div class="doc-org-name" style="color:#FF5A5F">MediLyft</div><div class="doc-org-sub">Teleconsultas médicas · Ecuador</div></div></div><div><div class="doc-title">Pedido de Laboratorio</div><div style="font-size:10px;color:#555;text-align:right" id="lab-fecha">—</div></div></div>
         <div class="doc-section"><div class="doc-section-title">Datos del paciente</div>
@@ -1188,6 +1200,40 @@
         <div class="hc-section">
           <div class="hc-section-title">Antecedentes Personales</div>
           <textarea class="hc-textarea" id="hc-ant-personales" rows="3" placeholder="Antecedentes médicos personales relevantes..."></textarea>
+        </div>
+
+        <!-- Enfermedades Crónicas Activas -->
+        <div class="hc-section">
+          <div class="hc-section-title" style="display:flex;justify-content:space-between;align-items:center">
+            <span>Enfermedades Crónicas Activas</span>
+          </div>
+          <div id="hc-cronicas-tags" style="display:flex;flex-wrap:wrap;gap:6px;min-height:24px;margin-bottom:10px">
+            <span style="font-size:11px;color:#bbb;font-style:italic">—</span>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="hc-cronicas-nueva" style="flex:1;font-size:11px;padding:5px 8px;border:1px solid #e5e7eb;border-radius:6px;color:#333;background:#fafafa">
+              <option value="">Seleccionar para agregar...</option>
+              <option value="hipertension">Hipertensión Arterial</option>
+              <option value="diabetes_tipo1">Diabetes Tipo 1</option>
+              <option value="diabetes_tipo2">Diabetes Tipo 2</option>
+              <option value="epoc">EPOC</option>
+              <option value="asma">Asma</option>
+              <option value="insuficiencia_cardiaca">Insuficiencia Cardíaca</option>
+              <option value="enfermedad_renal">Enfermedad Renal Crónica</option>
+              <option value="tiroides">Trastorno Tiroideo</option>
+              <option value="artritis_reumatoide">Artritis Reumatoide</option>
+              <option value="lupus">Lupus Eritematoso Sistémico</option>
+              <option value="epilepsia">Epilepsia</option>
+              <option value="post_acv">Post ACV</option>
+              <option value="fibrilacion_auricular">Fibrilación Auricular</option>
+              <option value="depresion">Depresión Crónica</option>
+              <option value="obesidad">Obesidad/Sobrepeso</option>
+              <option value="osteoporosis">Osteoporosis</option>
+              <option value="vih">VIH/SIDA</option>
+            </select>
+            <button class="btn btn-sm" style="background:#FF5A5F;color:white;border-color:#FF5A5F;white-space:nowrap;font-size:12px" onclick="agregarCronicaDesdeHC()">+ Registrar</button>
+          </div>
+          <input type="hidden" id="hc-cronicas-texto" />
         </div>
 
         <!-- Antecedentes familiares -->
@@ -1443,7 +1489,7 @@
 <script src="/js/notificaciones.js?v=20260610"></script>
 <script src="/js/agendamiento.js?v=20260609b"></script>
 <script src="/js/firma-electronica.js?v=20260616c"></script>
-<script src="/js/generarPDF.js?v=20260618"></script>
+<script src="/js/generarPDF.js?v=20260618b"></script>
 <script src="/js/receta.js?v=20260618"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260612e"></script>
@@ -1451,7 +1497,7 @@
 <script src="/js/metricas.js?v=20260611"></script>
 <script src="/js/empresas.js?v=20260609b"></script>
 <script src="/js/cronicas-portal.js?v=20260609b"></script>
-<script src="/js/plantillas.js?v=20260618b"></script>
+<script src="/js/plantillas.js?v=20260618c"></script>
 <script src="/js/facturacion.js?v=20260609b"></script>
 
 <script>

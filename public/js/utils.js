@@ -125,3 +125,141 @@ function cerrarConfirmAccion(confirmado) {
   if (confirmado && ok) ok();
   if (!confirmado && cancel) cancel();
 }
+
+// ===== COPIAR INFO DE CONSULTA =====
+
+function buildCopyText(consulta, paciente, extras) {
+  const f = v => (v && String(v).trim()) ? String(v).trim() : '[POR LLENAR]';
+  const nivelMap = { 1: 'Leve', 2: 'Medio', 3: 'Grave' };
+  const nombre = [paciente.nombre, paciente.apellidos].filter(Boolean).join(' ').trim();
+  const ts = consulta.created_at;
+  const fecha = ts
+    ? new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(ts) ? ts : ts + 'Z')
+        .toLocaleString('es-EC', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    : '[POR LLENAR]';
+  const nivel = consulta.nivel_sintomas ? (nivelMap[consulta.nivel_sintomas] || String(consulta.nivel_sintomas)) : '';
+
+  return [
+    '=== INFORMACIÓN DE CONSULTA ===',
+    '',
+    '── PACIENTE ──',
+    `Nombre:           ${f(nombre)}`,
+    `Cédula:           ${f(paciente.cedula)}`,
+    `Teléfono:         ${f(paciente.telefono)}`,
+    `Fecha nacimiento: ${f(paciente.fecha_nacimiento)}`,
+    `Sexo:             ${f(paciente.sexo)}`,
+    `Empresa:          ${f(paciente.clientes_b2b?.nombre_empresa)}`,
+    '',
+    '── CONSULTA ──',
+    `Fecha:            ${fecha}`,
+    `Estado:           ${f(consulta.estado)}`,
+    `Nivel síntomas:   ${f(nivel)}`,
+    `Síntomas:         ${f(consulta.sintomas_descripcion)}`,
+    `Diagnóstico:      ${f(extras.diagnostico)}`,
+    `Notas clínicas:   ${f(extras.notas)}`,
+    `Indicaciones:     ${f(extras.indicaciones)}`,
+  ].join('\n');
+}
+
+function copiarInfoConsulta() {
+  const consulta = window.currentConsultaData || {};
+  const paciente = window.currentPacienteData || {};
+  const extras = {
+    diagnostico: document.getElementById('recetaDiagnostico')?.value?.trim() || '',
+    notas: document.getElementById('recetaNotas')?.value?.trim() || '',
+    indicaciones: document.getElementById('recetaIndicaciones')?.value?.trim() || '',
+  };
+
+  const nombre = [paciente.nombre, paciente.apellidos].filter(Boolean).join(' ').trim();
+  const emptyFields = [];
+  if (!nombre) emptyFields.push({ key: 'nombre', label: 'Nombre completo' });
+  if (!(paciente.cedula || '').trim()) emptyFields.push({ key: 'cedula', label: 'Cédula' });
+  if (!(paciente.telefono || '').trim()) emptyFields.push({ key: 'telefono', label: 'Teléfono' });
+  if (!(consulta.sintomas_descripcion || '').trim()) emptyFields.push({ key: 'sintomas', label: 'Síntomas' });
+
+  if (emptyFields.length > 0) {
+    _showCopyForm(emptyFields, consulta, paciente, extras);
+  } else {
+    _doCopy(consulta, paciente, extras);
+  }
+}
+
+function _showCopyForm(emptyFields, consulta, paciente, extras) {
+  const panel = document.getElementById('copyInfoPanel');
+  if (!panel) return;
+  panel.style.display = 'block';
+  panel.innerHTML = `
+    <div style="font-size:12px;font-weight:600;color:#1d4ed8;margin-bottom:8px">
+      ${emptyFields.length} campo(s) vacío(s) — complétalos o ignóralos:
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin-bottom:10px">
+      ${emptyFields.map(f => `
+        <div>
+          <label style="font-size:11px;color:#555;font-weight:600">${f.label}</label>
+          <input type="text" id="copyField_${f.key}" class="form-control"
+            style="margin-top:2px;font-size:13px;padding:5px 8px" placeholder="${f.label}..." />
+        </div>
+      `).join('')}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="_copyFromForm()">📋 Copiar ahora</button>
+      <button class="btn btn-sm" onclick="_skipCopyForm()">Omitir vacíos</button>
+    </div>
+  `;
+  window._copyInfoCtx = { emptyFields, consulta, paciente, extras };
+}
+
+function _copyFromForm() {
+  const ctx = window._copyInfoCtx || {};
+  const paciente = { ...(ctx.paciente || {}) };
+  const consulta = { ...(ctx.consulta || {}) };
+  (ctx.emptyFields || []).forEach(f => {
+    const val = (document.getElementById('copyField_' + f.key)?.value || '').trim();
+    if (!val) return;
+    if (f.key === 'nombre') {
+      const parts = val.split(/\s+/);
+      paciente.nombre = parts[0] || paciente.nombre;
+      paciente.apellidos = parts.slice(1).join(' ') || paciente.apellidos;
+    } else if (f.key === 'cedula') {
+      paciente.cedula = val;
+    } else if (f.key === 'telefono') {
+      paciente.telefono = val;
+    } else if (f.key === 'sintomas') {
+      consulta.sintomas_descripcion = val;
+    }
+  });
+  _doCopy(consulta, paciente, ctx.extras || {});
+}
+
+function _skipCopyForm() {
+  const ctx = window._copyInfoCtx || {};
+  _doCopy(ctx.consulta || {}, ctx.paciente || {}, ctx.extras || {});
+}
+
+async function _doCopy(consulta, paciente, extras) {
+  const panel = document.getElementById('copyInfoPanel');
+  if (panel) panel.style.display = 'none';
+  window._copyInfoCtx = null;
+
+  const text = buildCopyText(consulta, paciente, extras);
+  try {
+    await navigator.clipboard.writeText(text);
+    _showCopiado();
+  } catch {
+    showToast('❌ No se pudo acceder al portapapeles');
+  }
+}
+
+function _showCopiado() {
+  const btn = document.getElementById('btnCopiarInfo');
+  if (!btn) return;
+  const prev = btn.innerHTML;
+  btn.innerHTML = '✓ ¡Copiado!';
+  btn.style.cssText += ';background:#dcfce7;color:#16a34a;border-color:#bbf7d0';
+  setTimeout(() => {
+    btn.innerHTML = prev;
+    btn.style.background = '';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+  }, 2000);
+}

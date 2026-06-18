@@ -225,10 +225,14 @@ async function openReceta(consultaId, pacienteId) {
   currentConsultaData = (consultaRes || [])[0] || {};
 
   const init = ((_pacData.nombre || '?')[0] + (_pacData.apellidos || '?')[0]).toUpperCase();
-  document.getElementById('recetaPacienteHeader').innerHTML = `
+  const hdr = document.getElementById('recetaPacienteHeader');
+  hdr.style.flexWrap = 'wrap';
+  hdr.innerHTML = `
     <div class="patient-avatar-lg">${init}</div>
     <div><div class="patient-name">${_pacData.nombre || ''} ${_pacData.apellidos || ''}</div>
     <div class="patient-meta">Cédula: ${_pacData.cedula || '—'} · ${_pacData.clientes_b2b?.nombre_empresa || '—'} · Tel: ${_pacData.telefono || '—'}</div></div>
+    <button class="btn btn-sm" id="btnCopiarInfo" onclick="copiarInfoConsulta()" style="margin-left:auto;white-space:nowrap">📋 Copiar info</button>
+    <div id="copyInfoPanel" style="display:none;flex-basis:100%;margin-top:8px;background:#f0f6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px"></div>
   `;
   showPage('receta');
 

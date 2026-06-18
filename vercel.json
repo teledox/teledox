@@ -7,5 +7,11 @@
     "api/enviar-docs.js": { "maxDuration": 15 },
     "api/cron.js":      { "maxDuration": 30 },
     "api/compress.js":  { "maxDuration": 15 }
-  }
+  },
+  "redirects": [
+    { "source": "/", "destination": "/landing/", "permanent": true }
+  ],
+  "rewrites": [
+    { "source": "/plataforma", "destination": "/index.html" }
+  ]
 }

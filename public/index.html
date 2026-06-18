@@ -921,6 +921,17 @@
   </div>
 </div>
 
+<!-- MODAL COPIAR INFO CONSULTA -->
+<div class="popup-overlay" id="copyInfoModal" onclick="if(event.target===this)cerrarCopyModal()">
+  <div class="popup-box" style="width:560px;max-width:95vw;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+      <div class="popup-title" style="margin:0">📋 Información de la consulta</div>
+      <button onclick="cerrarCopyModal()" style="border:none;background:none;font-size:18px;cursor:pointer;color:#888;line-height:1;padding:2px 6px">✕</button>
+    </div>
+    <div id="copyInfoModalBody"></div>
+  </div>
+</div>
+
 <div class="alert-new" id="toastAlert"></div>
 <div id="printRoot"></div>
 <datalist id="cie10-list"></datalist>
@@ -1414,7 +1425,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
 <script src="/js/config.js?v=20260609b"></script>
-<script src="/js/utils.js?v=20260617"></script>
+<script src="/js/utils.js?v=20260617b"></script>
 <script src="/js/realtime.js?v=20260609b"></script>
 <script src="/js/auth.js?v=20260609b"></script>
 <script src="/js/nav.js?v=20260609b"></script>
@@ -1425,7 +1436,7 @@
 <script src="/js/agendamiento.js?v=20260609b"></script>
 <script src="/js/firma-electronica.js?v=20260616c"></script>
 <script src="/js/generarPDF.js?v=20260612c"></script>
-<script src="/js/receta.js?v=20260617"></script>
+<script src="/js/receta.js?v=20260617b"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260612e"></script>
 <script src="/js/perfil.js?v=20260616b"></script>

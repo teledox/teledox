@@ -312,7 +312,10 @@ function abrirPlantillaLaboratorio(soloPreview) {
   document.getElementById('lab-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
   document.getElementById('lab-edad').textContent = p.edad ? `${p.edad} años` : '—';
   document.getElementById('lab-cedula').textContent = p.cedula || '—';
-  document.getElementById('lab-diagnostico').textContent = (document.getElementById('recetaDiagnostico').value || c.diagnostico || '—').toUpperCase();
+  const _labDiag = cie10Seleccionados.length
+    ? cie10Seleccionados.map(x => x.n).join(', ')
+    : (document.getElementById('recetaDiagnostico')?.value || c.diagnostico || '');
+  document.getElementById('lab-diagnostico').value = _labDiag.toUpperCase();
   document.getElementById('lab-fecha').textContent = new Date().toLocaleDateString('es-EC');
   document.querySelectorAll('#docLaboratorio .lab-check').forEach(cb => cb.checked = false);
   document.getElementById('lab-otros-examenes').value = '';

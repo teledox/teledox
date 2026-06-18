@@ -298,6 +298,12 @@ function abrirPlantillaCertificado(soloPreview) {
   if (absRadio) absRadio.checked = true;
   const siRadio = document.querySelector('input[name="cert-sintomas"][value="SI"]');
   if (siRadio) siRadio.checked = true;
+  const cbEnf = document.getElementById('cert-tipo-enfermedad');
+  if (cbEnf) cbEnf.checked = true;
+  const cbAis = document.getElementById('cert-tipo-aislamiento');
+  if (cbAis) cbAis.checked = false;
+  const selCont = document.getElementById('cert-tipo-contingencia');
+  if (selCont) selCont.value = 'ENFERMEDAD GENERAL';
   document.getElementById('cert-descripcion').value = c.sintomas_descripcion || '';
   const fechaHoy = hoy.toISOString().split('T')[0];
   document.getElementById('cert-desde').value = fechaHoy;

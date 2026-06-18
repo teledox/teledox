@@ -410,88 +410,161 @@ async function generarInterconsultaPDF() {
 async function generarCertificadoPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
   const doc = await PDFDocument.create();
-  const brand = rgb(1.0, 0.353, 0.373);
-  const gris  = rgb(0.4, 0.4, 0.4);
-  const negro = rgb(0, 0, 0);
-  const blanco = rgb(1, 1, 1);
+
+  const azulOscuro = rgb(0.10, 0.22, 0.38);
+  const azulMed    = rgb(0.16, 0.34, 0.60);
+  const azulClaro  = rgb(0.88, 0.94, 0.99);
+  const grisClaro  = rgb(0.95, 0.96, 0.97);
+  const verdeClaro = rgb(0.86, 0.96, 0.86);
+  const negro      = rgb(0.08, 0.08, 0.08);
+  const gris       = rgb(0.38, 0.38, 0.38);
+  const blanco     = rgb(1, 1, 1);
+  const bordeCol   = rgb(0.78, 0.84, 0.90);
+
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
 
   const page = doc.addPage([595, 842]);
   const { width, height } = page.getSize();
-  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
-  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
+
+  const gV  = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
+  const gR  = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
   const gCB = id => document.getElementById(id)?.checked || false;
 
-  page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
-  page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
-  page.drawText('Certificado Médico', { x: 40, y: height - 62, size: 11, font: normal, color: blanco });
-  page.drawText(gV('cert-lugar-fecha') || `Fecha: ${new Date().toLocaleDateString('es-EC')}`, { x: width - 220, y: height - 52, size: 9, font: normal, color: blanco });
+  const L = 40, R = width - 40, W = R - L;
+  const LBL = 185, RH = 18;
+  const VX = L + LBL, VW = W - LBL;
 
-  let y = height - 95;
+  let y = height;
 
-  function seccion(titulo) {
-    page.drawRectangle({ x: 40, y: y - 4, width: width - 80, height: 20, color: rgb(0.99, 0.95, 0.95) });
-    page.drawText(titulo, { x: 44, y, size: 10, font: bold, color: brand }); y -= 26;
+  // ── HEADER ──────────────────────────────────────────────────────────────────
+  const HDR = 58;
+  page.drawRectangle({ x: 0, y: height - HDR, width, height: HDR, color: azulOscuro });
+  page.drawText('MEDILYFT', { x: L, y: height - 24, size: 15, font: bold, color: blanco });
+  page.drawText('Teleconsultas medicas · Ecuador', { x: L, y: height - 39, size: 7.5, font: normal, color: rgb(0.78, 0.87, 0.96) });
+  const titulo = 'CERTIFICADO MEDICO';
+  const tW = bold.widthOfTextAtSize(titulo, 13);
+  page.drawText(titulo, { x: (width - tW) / 2, y: height - 33, size: 13, font: bold, color: blanco });
+  const fechaHdr = gV('cert-lugar-fecha') || new Date().toLocaleDateString('es-EC');
+  page.drawText(fechaHdr, { x: R - normal.widthOfTextAtSize(fechaHdr, 7.5), y: height - 39, size: 7.5, font: normal, color: rgb(0.82, 0.90, 0.97) });
+
+  y = height - HDR - 8;
+
+  function secHdr(t) {
+    page.drawRectangle({ x: L, y: y - 3, width: W, height: RH + 3, color: azulMed });
+    page.drawText(_pdfSafe(t), { x: L + 6, y: y + 2, size: 9, font: bold, color: blanco });
+    y -= RH + 3 + 2;
   }
-  function campo(label, valor) {
-    page.drawText(`${label}:`, { x: 44, y, size: 9, font: bold, color: gris });
-    page.drawText(String(valor || '—'), { x: 220, y, size: 9, font: normal, color: negro }); y -= 14;
+
+  function fila(lbl, val, valBg) {
+    const bg = valBg || azulClaro;
+    page.drawRectangle({ x: L, y: y - 2, width: LBL, height: RH, color: grisClaro });
+    page.drawText(_pdfSafe(lbl), { x: L + 5, y: y + 2, size: 7.5, font: bold, color: gris });
+    page.drawRectangle({ x: VX, y: y - 2, width: VW, height: RH, color: bg });
+    const v = _pdfSafe(String(val || ''));
+    if (v) page.drawText(v, { x: VX + 5, y: y + 2, size: 8, font: normal, color: negro });
+    page.drawLine({ start: { x: L, y: y - 2 }, end: { x: R, y: y - 2 }, thickness: 0.3, color: bordeCol });
+    y -= RH;
   }
-  function wrap(texto) {
-    const palabras = (texto || '—').split(' '); let linea = '';
-    for (const p of palabras) {
-      const test = linea ? `${linea} ${p}` : p;
-      if (normal.widthOfTextAtSize(test, 9) > width - 90 && linea) {
-        page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; linea = p;
-      } else linea = test;
+
+  function filaCheckbox(lbl, items) {
+    page.drawRectangle({ x: L, y: y - 2, width: LBL, height: RH, color: grisClaro });
+    page.drawText(_pdfSafe(lbl), { x: L + 5, y: y + 2, size: 7.5, font: bold, color: gris });
+    page.drawRectangle({ x: VX, y: y - 2, width: VW, height: RH, color: azulClaro });
+    let cx = VX + 6;
+    for (const it of items) {
+      page.drawRectangle({ x: cx, y: y + 1, width: 8, height: 8, color: blanco, borderColor: rgb(0.5, 0.5, 0.5), borderWidth: 0.7 });
+      if (it.on) {
+        page.drawLine({ start: { x: cx + 1, y: y + 4 }, end: { x: cx + 3, y: y + 1 }, thickness: 1.2, color: azulMed });
+        page.drawLine({ start: { x: cx + 3, y: y + 1 }, end: { x: cx + 7, y: y + 7 }, thickness: 1.2, color: azulMed });
+      }
+      const tl = _pdfSafe(it.label);
+      page.drawText(tl, { x: cx + 12, y: y + 2, size: 8, font: normal, color: negro });
+      cx += 12 + normal.widthOfTextAtSize(tl, 8) + 18;
     }
-    if (linea) { page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; }
+    page.drawLine({ start: { x: L, y: y - 2 }, end: { x: R, y: y - 2 }, thickness: 0.3, color: bordeCol });
+    y -= RH;
   }
 
-  seccion('A) DATOS DEL ESTABLECIMIENTO DE SALUD');
-  campo('Nombre del establecimiento', gV('cert-establecimiento'));
-  campo('Correo del médico', gV('cert-correo-medico'));
-  campo('Teléfono del emisor', gV('cert-tel-emisor'));
-  campo('Dirección del establecimiento', gV('cert-direccion-establecimiento'));
-  campo('Lugar y fecha de emisión', gV('cert-lugar-fecha-emision'));
-  y -= 4;
+  function filaTexto(lbl, txt) {
+    const safe = _pdfSafe(txt) || '-';
+    const words = safe.split(' ');
+    const lines = []; let line = '';
+    for (const w of words) {
+      const test = line ? line + ' ' + w : w;
+      if (normal.widthOfTextAtSize(test, 8) > VW - 10 && line) { lines.push(line); line = w; }
+      else line = test;
+    }
+    if (line) lines.push(line);
+    const h = Math.max(RH, lines.length * 12 + 6);
+    page.drawRectangle({ x: L, y: y - h + RH, width: LBL, height: h, color: grisClaro });
+    page.drawText(_pdfSafe(lbl), { x: L + 5, y: y + 2, size: 7.5, font: bold, color: gris });
+    page.drawRectangle({ x: VX, y: y - h + RH, width: VW, height: h, color: azulClaro });
+    let ty = y + 2;
+    for (const l of lines) { page.drawText(l, { x: VX + 5, y: ty, size: 8, font: normal, color: negro }); ty -= 12; }
+    page.drawLine({ start: { x: L, y: y - h + RH - 1 }, end: { x: R, y: y - h + RH - 1 }, thickness: 0.3, color: bordeCol });
+    y -= h;
+  }
 
-  seccion('B) DATOS DEL PACIENTE');
-  campo('Apellidos y nombres', gV('cert-paciente'));
-  campo('Dirección domiciliaria', gV('cert-direccion'));
-  campo('Número de teléfono', gV('cert-telefono'));
-  campo('Puesto de trabajo', gV('cert-puesto-trabajo'));
-  campo('Número de identificación', gV('cert-cedula'));
-  campo('Número de historia clínica', gV('cert-hc'));
-  campo('Institución/empresa de trabajo', gV('cert-empresa'));
-  y -= 4;
+  // ── SECCIÓN A ────────────────────────────────────────────────────────────────
+  y -= 2;
+  secHdr('A) DATOS DEL ESTABLECIMIENTO DE SALUD');
+  fila('Nombre del establecimiento', gV('cert-establecimiento'));
+  fila('Correo del medico', gV('cert-correo-medico'));
+  fila('Telefono del emisor', gV('cert-tel-emisor'));
+  fila('Direccion del establecimiento', gV('cert-direccion-establecimiento'));
+  fila('Lugar y fecha de emision', gV('cert-lugar-fecha-emision'));
+  y -= 5;
 
-  seccion('C) MOTIVO DE AISLAMIENTO/ENFERMEDAD');
-  campo('Diagnóstico', gV('cert-diagnostico'));
-  campo('Código CIE-10', gV('cert-cie10'));
-  campo('Presenta síntomas', gR('cert-sintomas'));
-  page.drawText('Descripción de la enfermedad:', { x: 44, y, size: 9, font: bold, color: gris }); y -= 14;
-  wrap(gV('cert-descripcion'));
-  y -= 4;
-  campo('Reposo médico', gR('cert-reposo-tipo'));
-  campo('Total de días concedidos', `${gV('cert-dias-num') || '—'} (${gV('cert-dias-letra') || '—'})`);
-  campo('Desde', `${gV('cert-desde') || '—'} — ${gV('cert-desde-letra') || '—'}`);
-  campo('Hasta', `${gV('cert-hasta') || '—'} — ${gV('cert-hasta-letra') || '—'}`);
-  y -= 30;
+  // ── SECCIÓN B ────────────────────────────────────────────────────────────────
+  secHdr('B) DATOS DEL PACIENTE');
+  fila('Apellidos y nombres', gV('cert-paciente'));
+  fila('Direccion domiciliaria', gV('cert-direccion'));
+  fila('Numero de telefono', gV('cert-telefono'));
+  fila('Institucion/empresa de trabajo', gV('cert-empresa'));
+  fila('Puesto de trabajo', gV('cert-puesto-trabajo'));
+  fila('Numero de identificacion', gV('cert-cedula'));
+  fila('Numero de historia clinica', gV('cert-hc'));
+  y -= 5;
 
-  // Firma
-  const medNom = gV('cert-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—');
+  // ── SECCIÓN C ────────────────────────────────────────────────────────────────
+  secHdr('C) MOTIVO DE AISLAMIENTO/ENFERMEDAD');
+  fila('Diagnostico', gV('cert-diagnostico'));
+  fila('Codigo CIE-10', gV('cert-cie10'));
+  filaCheckbox('Presenta Sintomas', [
+    { label: 'SI', on: gR('cert-sintomas') === 'SI' },
+    { label: 'NO', on: gR('cert-sintomas') === 'NO' }
+  ]);
+  filaCheckbox('Tipo de caso', [
+    { label: 'Enfermedad', on: gCB('cert-tipo-enfermedad') },
+    { label: 'Aislamiento/teletrabajo', on: gCB('cert-tipo-aislamiento') }
+  ]);
+  fila('Tipo de Contingencia', gV('cert-tipo-contingencia'));
+  filaTexto('Descripcion de la enfermedad', gV('cert-descripcion'));
+  y -= 5;
+
+  // ── REPOSO MÉDICO ─────────────────────────────────────────────────────────────
+  secHdr('REPOSO MEDICO');
+  const tipoRep = gR('cert-reposo-tipo') || 'ABSOLUTO';
+  fila('Tipo de reposo', 'REPOSO ' + tipoRep, verdeClaro);
+  fila('Total de dias concedidos', (gV('cert-dias-num') || '-') + ' dias   (' + (gV('cert-dias-letra') || '-') + ')');
+  fila('Desde', (gV('cert-desde') || '-') + '   ' + (gV('cert-desde-letra') || '-'));
+  fila('Hasta', (gV('cert-hasta') || '-') + '   ' + (gV('cert-hasta-letra') || '-'));
+  y -= 14;
+
+  // ── FIRMA ─────────────────────────────────────────────────────────────────────
+  const medNom = _pdfSafe(gV('cert-nombre-medico') || (currentUser ? ('Dr. ' + (currentUser.nombre || '') + ' ' + (currentUser.apellidos || '')).trim() : '-'));
   const _p12Cert = typeof getP12Activo === 'function' ? getP12Activo() : null;
   if (!_p12Cert) {
-    page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
-    page.drawText(medNom, { x: width - 215, y: y - 14, size: 9, font: normal, color: gris });
+    const sigX = R - 180;
+    page.drawLine({ start: { x: sigX, y }, end: { x: R, y }, thickness: 0.5, color: gris });
+    page.drawText(medNom, { x: sigX, y: y - 13, size: 8, font: normal, color: gris });
     const reg = gV('cert-reg-medico');
-    if (reg) page.drawText(reg, { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
-    page.drawText('Firma y sello', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
+    if (reg) page.drawText(reg, { x: sigX, y: y - 25, size: 7.5, font: normal, color: gris });
+    page.drawText('Firma y sello', { x: sigX, y: y - 37, size: 7.5, font: normal, color: gris });
   }
-  page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
-  page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
+  page.drawLine({ start: { x: L, y: 55 }, end: { x: R, y: 55 }, thickness: 0.4, color: gris });
+  page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: L, y: 42, size: 7, font: normal, color: gris });
   await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Certificado medico' });
 
   return await guardarPDFConFirma(doc, 'Certificado medico');

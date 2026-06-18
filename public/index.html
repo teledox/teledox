@@ -1058,6 +1058,12 @@
               <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-sintomas" value="SI" style="accent-color:#FF5A5F" checked> SI</label>
               <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="radio" name="cert-sintomas" value="NO" style="accent-color:#FF5A5F"> NO</label>
             </div>
+            <div class="doc-row">
+              <span class="doc-lbl">Tipo de caso:</span>
+              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="checkbox" id="cert-tipo-enfermedad" style="accent-color:#1a4a8a" checked> Enfermedad</label>
+              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555;margin-left:8px"><input type="checkbox" id="cert-tipo-aislamiento" style="accent-color:#1a4a8a"> Aislamiento/teletrabajo</label>
+            </div>
+            <div class="doc-row"><span class="doc-lbl">Tipo de contingencia:</span><select class="doc-val-edit" id="cert-tipo-contingencia" style="font-size:10px"><option value="ENFERMEDAD GENERAL">Enfermedad General</option><option value="ACCIDENTE DE TRABAJO">Accidente de Trabajo</option><option value="ENFERMEDAD PROFESIONAL">Enfermedad Profesional</option><option value="MATERNIDAD">Maternidad</option></select></div>
           </div>
           <div class="doc-section" style="margin-top:8px"><div class="doc-section-title" style="background:#f3f4f6;color:#555">Descripción de la enfermedad</div><textarea class="doc-textarea" id="cert-descripcion" placeholder="Descripción del caso..."></textarea></div>
         </div>
@@ -1489,7 +1495,7 @@
 <script src="/js/notificaciones.js?v=20260610"></script>
 <script src="/js/agendamiento.js?v=20260609b"></script>
 <script src="/js/firma-electronica.js?v=20260616c"></script>
-<script src="/js/generarPDF.js?v=20260618b"></script>
+<script src="/js/generarPDF.js?v=20260618c"></script>
 <script src="/js/receta.js?v=20260618"></script>
 <script src="/js/documentos.js?v=20260609b"></script>
 <script src="/js/usuarios.js?v=20260612e"></script>
@@ -1497,7 +1503,7 @@
 <script src="/js/metricas.js?v=20260611"></script>
 <script src="/js/empresas.js?v=20260609b"></script>
 <script src="/js/cronicas-portal.js?v=20260618"></script>
-<script src="/js/plantillas.js?v=20260618c"></script>
+<script src="/js/plantillas.js?v=20260618d"></script>
 <script src="/js/facturacion.js?v=20260609b"></script>
 
 <script>

@@ -6,7 +6,9 @@ const { registrarPlanillajeB2B } = require('../services/planillaje');
 const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, separarNombre } = require('../utils/validaciones');
+const { procesarB2C, BOTONES_PAGO } = require('./flujo-b2c');
 const { mensajeBienvenida } = require('./flujo-inicio');
+const { query } = require('../services/supabase');
 
 async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
@@ -14,7 +16,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
 
   // Paso desconocido/no reconocido — reiniciar sesión para evitar bucles
   // sin salida (en lugar de repetir una respuesta vacía indefinidamente)
-  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 12, 42];
+  const PASOS_VALIDOS = [0, 1, 2, 3, 39, 4, 5, 6, 7, 8, 41, 9, 10, 11, 42];
   if (!PASOS_VALIDOS.includes(paso)) {
     await eliminar(telefono);
     return {
@@ -117,8 +119,9 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       // MODALIDAD B2C — cédula no encontrada en ninguna lista
       datos.cedula = cedulaFinal;
       const result = await procesarB2C(50, cedulaFinal, datos, telefono, nombreWhatsApp);
-      await guardar(telefono, result.paso, result.datos, 'b2c');
-      return result;
+      const b2cDatos = { ...result.datos, _flujo: 'b2c' };
+      await guardar(telefono, result.paso, b2cDatos, 'b2c');
+      return { ...result, datos: b2cDatos };
     }
 
   } else if (paso === 2) {
@@ -145,15 +148,26 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       };
     } else if (nivel === 2) {
       await alertar(`⚠️ <b>SÍNTOMAS MEDIOS - ATENCIÓN URGENTE</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+
+      if (!datos.empresa_id) {
+        // B2C: requiere pago incluso en nivel 2 (urgente pero no emergencia)
+        const b2cDatos = { ...datos, _flujo: 'b2c', modalidad: 'b2c' };
+        await guardar(telefono, 59, b2cDatos, 'b2c');
+        return {
+          respuesta: `⚠️ Sus síntomas requieren atención médica urgente.\n\nNuestro equipo ya ha sido notificado.\n\nPara gestionar su teleconsulta de forma *prioritaria*, el costo es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+          paso: 59, datos: b2cDatos, terminar: false,
+          botones: BOTONES_PAGO
+        };
+      }
+
       const consulta = await crearConsulta({ paciente_id: datos.paciente_id, nivel_sintomas: 2, sintomas_descripcion: mensaje, estado: 'pendiente' });
       await crearNotificacion('urgente', '⚠️ Síntomas medios', `Paciente ${datos.nombre_paciente} requiere atención urgente`, datos.paciente_id, consulta?.id, {
-        origen: datos.empresa_id ? 'b2b' : 'b2c',
+        origen: 'b2b',
         categoria: 'medio',
         etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
                 : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
                 : null,
       });
-      // Registrar planillaje B2B automáticamente (no debe interrumpir el flujo si falla)
       if (datos.empresa_id) {
         try {
           await registrarPlanillajeB2B(datos, consulta?.id);
@@ -168,6 +182,21 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       };
     } else {
       const datosCompletos = datos.paciente_id && datos.nombreCompleto?.trim() && datos.telefono && datos.correo && datos.lugar_residencia;
+
+      if (!datos.empresa_id) {
+        // B2C: siempre requiere pago — no puede continuar sin verificar comprobante
+        const b2cDatos = { ...datos, _flujo: 'b2c', modalidad: datos.modalidad || 'b2c' };
+        await guardar(telefono, 59, b2cDatos, 'b2c');
+        const resumen = datosCompletos
+          ? `\n\nYa tenemos sus datos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}`
+          : '';
+        return {
+          respuesta: `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.${resumen}\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+          paso: 59, datos: b2cDatos, terminar: false,
+          botones: BOTONES_PAGO
+        };
+      }
+
       if (datosCompletos) {
         return {
           respuesta: `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nYa tenemos estos datos suyos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n\n¿Desea usar estos datos o prefiere actualizarlos?`,
@@ -186,8 +215,12 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
     const m = mensaje.trim().toLowerCase();
     if (m === 'usar' || m.includes('usar mis datos')) {
       return {
-        respuesta: `*Horario de preferencia* para la teleconsulta\n(ej: mañana martes a las 10:00 AM):`,
-        paso: 11, datos, terminar: false
+        respuesta: `Perfecto. ¿Cuándo necesita la atención?`,
+        paso: 11, datos, terminar: false,
+        botones: [
+          { id: 'pronto',  titulo: '⚡ Cita lo más pronto posible' },
+          { id: 'esperar', titulo: '🕐 Cita, puedo esperar'        },
+        ]
       };
     } else {
       respuesta = `Entendido, actualicemos sus datos.\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
@@ -254,80 +287,98 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
 
   } else if (paso === 10) {
     datos.lugar_residencia = mensaje;
-    respuesta = `*Horario de preferencia* para la teleconsulta\n(ej: mañana martes a las 10:00 AM):`;
-    nuevoPaso = 11;
-
-  } else if (paso === 11) {
-    datos.horario = mensaje;
     return {
-      respuesta: `Confirme sus datos:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad}\n📅 *Nacimiento:* ${datos.fecha_nacimiento}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n🕐 *Horario:* ${datos.horario}`,
-      paso: 12, datos, terminar: false,
+      respuesta: `Perfecto. ¿Cuándo necesita la atención?`,
+      paso: 11, datos, terminar: false,
       botones: [
-        { id: 'confirmar', titulo: '✅ Confirmar'     },
-        { id: 'corregir',  titulo: '✏️ Corregir datos' },
+        { id: 'pronto',  titulo: '⚡ Cita lo más pronto posible' },
+        { id: 'esperar', titulo: '🕐 Cita, puedo esperar'        },
       ]
     };
 
-  } else if (paso === 12) {
-    if (mensaje.toLowerCase() === 'confirmar' || mensaje.toLowerCase() === '✅ confirmar') {
-      await actualizar(datos.cedula, {
-        nombre: datos.nombre,
-        apellidos: datos.apellidos,
-        edad: datos.edad,
-        fecha_nacimiento: datos.fecha_nacimiento,
-        sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
-        correo: datos.correo,
-        telefono: datos.telefono,
-        lugar_residencia: datos.lugar_residencia,
-        updated_at: new Date().toISOString()
-      });
+  } else if (paso === 11) {
+    const mp = mensaje.trim().toLowerCase();
+    datos.prioridad = (mp === 'pronto' || mp.includes('pronto')) ? 'pronto' : 'esperar';
 
-      const consulta = await crearConsulta({
-        paciente_id: datos.paciente_id,
-        nivel_sintomas: 1,
-        sintomas_descripcion: datos.sintomas,
-        estado: 'pendiente'
-      });
+    if (!datos.empresa_id) {
+      const b2cDatos = { ...datos, _flujo: 'b2c', modalidad: datos.modalidad || 'b2c' };
+      await guardar(telefono, 59, b2cDatos, 'b2c');
+      return {
+        respuesta: `Para confirmar su teleconsulta necesitamos verificar el pago.\n\nEl costo es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+        paso: 59, datos: b2cDatos, terminar: false,
+        botones: BOTONES_PAGO
+      };
+    }
 
-      await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta', `${datos.nombreCompleto} solicita teleconsulta para ${datos.horario}`, datos.paciente_id, consulta?.id, {
+    await actualizar(datos.cedula, {
+      nombre: datos.nombre,
+      apellidos: datos.apellidos,
+      edad: datos.edad,
+      fecha_nacimiento: datos.fecha_nacimiento,
+      sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
+      correo: datos.correo,
+      telefono: datos.telefono,
+      lugar_residencia: datos.lugar_residencia,
+      updated_at: new Date().toISOString()
+    });
+
+    const consulta = await crearConsulta({
+      paciente_id: datos.paciente_id,
+      nivel_sintomas: 1,
+      sintomas_descripcion: datos.sintomas,
+      estado: 'pendiente'
+    });
+
+    const prioridadTexto = datos.prioridad === 'pronto' ? 'lo más pronto posible' : 'cuando haya disponibilidad';
+    await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta',
+      `${datos.nombreCompleto} solicita teleconsulta (${prioridadTexto})`,
+      datos.paciente_id, consulta?.id, {
         origen: datos.empresa_id ? 'b2b' : 'b2c',
         categoria: 'leve',
         etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
                 : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
                 : null,
       });
-      await alertar(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nSíntomas: ${datos.sintomas}\nHorario: ${datos.horario}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
+    await alertar(`📅 <b>NUEVA TELECONSULTA - MEDILYFT</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nSíntomas: ${datos.sintomas}\nPrioridad: ${prioridadTexto}\nTeléfono: ${datos.telefono}\nCorreo: ${datos.correo}\nResidencia: ${datos.lugar_residencia}`);
 
-      // Registrar planillaje B2B automáticamente al confirmar (no debe interrumpir el flujo si falla)
-      if (datos.empresa_id) {
-        try {
-          await registrarPlanillajeB2B(datos, consulta?.id);
-        } catch (e) {
-          await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nError: ${e.message}`);
-        }
+    if (datos.empresa_id) {
+      try {
+        await registrarPlanillajeB2B(datos, consulta?.id);
+      } catch (e) {
+        await alertar(`⚠️ <b>Error registrando planillaje B2B</b>\nPaciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa}\nError: ${e.message}`);
       }
-
-      return {
-        respuesta: `🎉 *¡Consulta registrada exitosamente!*\n\n👤 ${datos.nombreCompleto} — ${datos.cedula}\n\nUn asesor de *MediLyft* le confirmará su teleconsulta a la brevedad.`,
-        paso: 42, datos, terminar: false,
-        botones: [
-          { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
-          { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
-        ]
-      };
-    } else {
-      datos = { cedula: datos.cedula, paciente_id: datos.paciente_id, nombre_paciente: datos.nombre_paciente, empresa: datos.empresa, empresa_id: datos.empresa_id, seguro: datos.seguro, sintomas: datos.sintomas, nivel: datos.nivel };
-      respuesta = `Entendido, volvamos a empezar.\n\n👤 *Nombre y apellidos completos* (2 nombres y 2 apellidos):`;
-      nuevoPaso = 4;
     }
+
+    return {
+      respuesta: `🎉 *¡Consulta registrada exitosamente!*\n\n👤 ${datos.nombreCompleto} — ${datos.cedula}\n\nUn médico de *MediLyft* le atenderá a la brevedad.`,
+      paso: 42, datos, terminar: false,
+      botones: [
+        { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
+        { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
+      ]
+    };
 
   } else if (paso === 42) {
     if (mensaje === 'otra_consulta' || mensaje.toLowerCase().includes('otra consulta')) {
       return mensajeBienvenida(nombreWhatsApp);
     } else {
+      // Si el paciente ya tiene antecedentes registrados, no volver a preguntar
+      if (datos.paciente_id) {
+        const existentes = await query('GET', 'antecedentes', null,
+          `?paciente_id=eq.${datos.paciente_id}&limit=1`).catch(() => []);
+        if (existentes?.length) {
+          await eliminar(telefono);
+          return {
+            respuesta: `✅ Su historia clínica ya se encuentra registrada en nuestro sistema.\n\n¡Gracias por confiar en *MediLyft*! Hasta pronto 💙`,
+            paso: 0, datos: {}, terminar: true
+          };
+        }
+      }
+      const datosAnt = { ...datos, _flujo: 'antecedentes' };
+      await guardar(telefono, 13, datosAnt, 'antecedentes');
       return {
         respuesta: `Para completar su historia clínica necesitamos algunas preguntas más:\n\n💊 ¿Tiene *alergias* conocidas a medicamentos o alimentos?\n\nResponda *No* o descríbalas brevemente.`,
-        paso: 13, datos, terminar: false
+        paso: 13, datos: datosAnt, terminar: false
       };
     }
   }

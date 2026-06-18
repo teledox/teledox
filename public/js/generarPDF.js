@@ -4,122 +4,206 @@
 function _pdfSafe(s) {
   return String(s == null ? '' : s)
     .normalize('NFC')
-    .replace(/[‘’‚‹›]/g, "'")
-    .replace(/[“”„«»]/g, '"')
+    .replace(/[''‚‹›]/g, "'")
+    .replace(/[""„«»]/g, '"')
     .replace(/[–—−]/g, '-')
     .replace(/…/g, '...')
-    .replace(/[     ]/g, ' ')
+    .replace(/[     ]/g, ' ')
     .replace(/[​-‍﻿]/g, '')
     .replace(/[^\x09\x0A\x0D\x20-\x7E¡-ÿ]/g, '');
 }
 
+// Helper compartido: incrusta el logo SVG de MediLyft como PNG en el doc.
+// Retorna el objeto de imagen (o null si falla). Llamar con await.
+async function _embedLogo(doc) {
+  try {
+    const svgR = await fetch('/landing/logo.svg');
+    if (!svgR.ok) return null;
+    const svgT = await svgR.text();
+    const blobUrl = URL.createObjectURL(new Blob([svgT], { type: 'image/svg+xml' }));
+    const pngBytes = await new Promise((res, rej) => {
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = 48; c.height = 48;
+        c.getContext('2d').drawImage(img, 0, 0, 48, 48);
+        URL.revokeObjectURL(blobUrl);
+        c.toBlob(b => { const r = new FileReader(); r.onload = e => res(new Uint8Array(e.target.result)); r.readAsArrayBuffer(b); }, 'image/png');
+      };
+      img.onerror = rej; img.src = blobUrl;
+    });
+    return await doc.embedPng(pngBytes);
+  } catch (_) { return null; }
+}
+
+// Dibuja cabecera estándar MediLyft en una página (logo + título + subtítulo opcional).
+function _drawHeader(pg, logoImg, titulo, subtitulo, H, bold, normal, negro, grisOsc) {
+  if (logoImg) pg.drawImage(logoImg, { x: 272, y: H - 52, width: 48, height: 38 });
+  pg.drawText('MediLyft', { x: 258, y: H - 62, size: 10, font: bold, color: negro });
+  pg.drawText(titulo,     { x: 258 - titulo.length * 3.2, y: H - 77, size: 13, font: bold, color: negro });
+  if (subtitulo) pg.drawText(subtitulo, { x: 258, y: H - 89, size: 7.5, font: normal, color: grisOsc });
+}
+
+// ===== RECETA MÉDICA PDF =====
 async function generarRecetaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
-  const resp = await fetch('/templates/receta.pdf');
-  if (!resp.ok) { showToast('Error: plantilla receta.pdf no encontrada'); return; }
-  const doc  = await PDFDocument.load(new Uint8Array(await resp.arrayBuffer()));
-  const page = doc.getPage(0);
-  const H    = page.getHeight();
+  const doc  = await PDFDocument.create();
+  const page = doc.addPage([595, 842]);
+  const H = 842;
 
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
   const negro   = rgb(0.05, 0.05, 0.05);
-  const blanco  = rgb(1, 1, 1);
   const grisOsc = rgb(0.3, 0.3, 0.3);
-  const teal    = rgb(0.0, 0.69, 0.68);
+  const azul    = rgb(0.09, 0.27, 0.55);
+  const grisBg  = rgb(0.93, 0.94, 0.96);
+  const blanco  = rgb(1, 1, 1);
 
   const gV = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
   const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
 
-  const p   = currentPacienteData || {};
-  const u   = currentUser || {};
+  const p = currentPacienteData || {};
+  const u = currentUser || {};
   const medNom = _pdfSafe(gV('rec-nombre-medico') || `${u.nombre||''} ${u.apellidos||''}`.trim());
   const medReg = _pdfSafe(u.numero_registro ? 'Reg. MSP: ' + u.numero_registro : (gV('rec-reg-medico') || ''));
   const medEsp = _pdfSafe(gV('rec-esp-medico') || u.especialidad || 'MEDICINA GENERAL');
 
-
-  // Right side: receta number (after "RECETA No." label, top≈99 → y_pdf=735)
+  const logoImg = await _embedLogo(doc);
+  _drawHeader(page, logoImg, 'RECETA MEDICA', null, H, bold, normal, negro, grisOsc);
   const recNum = gV('rec-numero');
-  if (recNum) page.drawText(recNum, { x: 470, y: H - 105, size: 8, font: bold, color: negro });
+  if (recNum) page.drawText('N° ' + recNum, { x: 258, y: H - 90, size: 8, font: normal, color: grisOsc });
 
-  // PATIENT ROW (pdfplumber top=142-153 → text at y_pdf = H-151)
-  const PY = H - 151;
-  page.drawText(_pdfSafe((p.nombre   ||'').toUpperCase()), { x: 24,  y: PY, size: 7, font: normal, color: negro, maxWidth: 104 });
-  page.drawText(_pdfSafe((p.apellidos||'').toUpperCase()), { x: 134, y: PY, size: 7, font: normal, color: negro, maxWidth: 104 });
-  page.drawText(gV('rec-cedula'),      { x: 244, y: PY, size: 7, font: normal, color: negro, maxWidth: 64  });
-  page.drawText(gV('rec-edad'),        { x: 314, y: PY, size: 7, font: normal, color: negro, maxWidth: 72  });
-  page.drawText(gV('rec-sexo'),        { x: 394, y: PY, size: 7, font: normal, color: negro, maxWidth: 50  });
-  page.drawText(gV('rec-hoja') || '1', { x: 450, y: PY, size: 7, font: normal, color: negro, maxWidth: 34  });
-  page.drawText(gV('rec-atencion'),    { x: 490, y: PY, size: 7, font: normal, color: negro, maxWidth: 82  });
+  let y = H - 100;
+  const LM = 36, RM = 559, INNER = RM - LM;
 
-  // ALERGIAS ROW (pdfplumber top=164-175 → text at y_pdf = H-171)
-  const AY = H - 171;
-  const alergia = gR('rec-alergias') || 'NO';
-  if (alergia === 'SI') page.drawRectangle({ x: 68, y: AY, width: 5, height: 5, color: negro });
-  else                  page.drawRectangle({ x: 82, y: AY, width: 5, height: 5, color: negro });
-  const esp = gV('rec-alergias-especificar');
-  if (esp) page.drawText(esp, { x: 138, y: AY, size: 7, font: normal, color: negro, maxWidth: 168 });
-  const peso = gV('rec-peso');
-  if (peso)  page.drawText(peso + ' kg',  { x: 344, y: AY, size: 7, font: normal, color: negro, maxWidth: 42 });
-  const talla = gV('rec-talla');
-  if (talla) page.drawText(talla + ' cm', { x: 450, y: AY, size: 7, font: normal, color: negro, maxWidth: 32 });
+  const drawSec = titulo => {
+    page.drawRectangle({ x: LM, y: y - 5, width: INNER, height: 16, color: grisBg });
+    page.drawText(titulo, { x: LM + 4, y, size: 8.5, font: bold, color: azul });
+    y -= 19;
+  };
+  const drawFila = (label, valor, lw) => {
+    const lw_ = lw || 140;
+    page.drawText(label + ':', { x: LM + 4, y, size: 7.5, font: bold, color: grisOsc, maxWidth: lw_ });
+    const v = _pdfSafe(String(valor || ''));
+    if (v) page.drawText(v, { x: LM + lw_ + 6, y, size: 8, font: normal, color: negro, maxWidth: INNER - lw_ - 8 });
+    y -= 14;
+  };
+  const drawWrap = (txt, x, maxW, size) => {
+    const words = _pdfSafe(txt || '').trim().split(' '); if (!words[0]) return;
+    let lin = '';
+    for (const w of words) {
+      const t = lin ? lin + ' ' + w : w;
+      if (normal.widthOfTextAtSize(t, size) > maxW && lin) {
+        page.drawText(lin, { x, y, size, font: normal, color: negro }); y -= size + 3; lin = w;
+      } else lin = t;
+    }
+    if (lin) page.drawText(lin, { x, y, size, font: normal, color: negro });
+    y -= size + 3;
+  };
 
-  // MEDICINES (template box content area top=200-221 → y_pdf start = H-207, 3 medicines max at 7.5pt)
+  // ── DATOS DEL PACIENTE ──────────────────────────────────────────────────────
+  drawSec('DATOS DEL PACIENTE');
+  const nomPac = _pdfSafe(`${p.apellidos||''} ${p.nombre||''}`.trim() || gV('rec-paciente'));
+  page.drawText('Nombre:', { x: LM+4, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(nomPac, { x: LM+55, y, size:8, font:normal, color:negro, maxWidth:195 });
+  page.drawText('N° Atencion:', { x: LM+270, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(gV('rec-atencion'), { x: LM+345, y, size:8, font:normal, color:negro, maxWidth:170 });
+  y -= 13;
+  page.drawText('Cedula:', { x: LM+4, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(gV('rec-cedula'), { x: LM+50, y, size:8, font:normal, color:negro, maxWidth:90 });
+  page.drawText('Edad:', { x: LM+165, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(gV('rec-edad'), { x: LM+196, y, size:8, font:normal, color:negro, maxWidth:60 });
+  page.drawText('Sexo:', { x: LM+270, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(gV('rec-sexo'), { x: LM+298, y, size:8, font:normal, color:negro, maxWidth:60 });
+  page.drawText('Hoja:', { x: LM+380, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(gV('rec-hoja') || '1', { x: LM+408, y, size:8, font:normal, color:negro, maxWidth:50 });
+  y -= 16;
+
+  // ── DIAGNÓSTICO Y ALERGIAS ──────────────────────────────────────────────────
+  drawSec('DIAGNOSTICO Y ALERGIAS');
+  const diagStr = _pdfSafe([gV('rec-diagnostico'), gV('rec-cie10') ? '(' + gV('rec-cie10') + ')' : ''].filter(Boolean).join(' '));
+  page.drawText('Diagnostico:', { x: LM+4, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(diagStr, { x: LM+78, y, size:8, font:normal, color:negro, maxWidth:INNER-80 });
+  y -= 13;
+  const aval = gR('rec-alergias') || 'NO';
+  page.drawText('Alergias:', { x: LM+4, y, size:7.5, font:bold, color:grisOsc });
+  page.drawRectangle({ x: LM+56, y: y-1, width:8, height:8, color:blanco, borderColor:grisOsc, borderWidth:0.5 });
+  if (aval === 'SI') page.drawText('X', { x: LM+57, y, size:7, font:bold, color:negro });
+  page.drawText('SI', { x: LM+67, y, size:7.5, font:normal, color:negro });
+  page.drawRectangle({ x: LM+84, y: y-1, width:8, height:8, color:blanco, borderColor:grisOsc, borderWidth:0.5 });
+  if (aval === 'NO') page.drawText('X', { x: LM+85, y, size:7, font:bold, color:negro });
+  page.drawText('NO', { x: LM+95, y, size:7.5, font:normal, color:negro });
+  const alerEsp = gV('rec-alergias-especificar');
+  if (alerEsp) { page.drawText('Detalle:', { x: LM+120, y, size:7.5, font:bold, color:grisOsc }); page.drawText(alerEsp, { x: LM+158, y, size:7.5, font:normal, color:negro, maxWidth:130 }); }
+  const peso = gV('rec-peso'), talla = gV('rec-talla');
+  if (peso)  { page.drawText('Peso:',  { x: LM+308, y, size:7.5, font:bold, color:grisOsc }); page.drawText(peso  +' kg', { x: LM+334, y, size:7.5, font:normal, color:negro, maxWidth:55 }); }
+  if (talla) { page.drawText('Talla:', { x: LM+400, y, size:7.5, font:bold, color:grisOsc }); page.drawText(talla +' cm', { x: LM+428, y, size:7.5, font:normal, color:negro, maxWidth:55 }); }
+  y -= 16;
+
+  // ── MEDICAMENTOS | INDICACIONES (2 columnas) ────────────────────────────────
+  const MEDW = Math.floor(INNER * 0.57), INDX = LM + MEDW + 10, INDW = INNER - MEDW - 10;
+  page.drawRectangle({ x: LM,   y: y-5, width: MEDW, height: 16, color: grisBg });
+  page.drawText('MEDICAMENTOS', { x: LM+4, y, size:8.5, font:bold, color:azul });
+  page.drawRectangle({ x: INDX, y: y-5, width: INDW, height: 16, color: grisBg });
+  page.drawText('INDICACIONES', { x: INDX+4, y, size:8.5, font:bold, color:azul });
+  y -= 19;
+
   const meds = [...document.querySelectorAll('#rec-meds-body tr')].map(tr => {
     const nombre = tr.querySelector('.med-nombre')?.value.trim();
     if (!nombre) return null;
     const frecSel = tr.querySelector('.med-frecuencia');
     return {
       nombre: _pdfSafe(nombre),
-      dosis:  _pdfSafe(tr.querySelector('.med-dosis')?.value.trim()  || ''),
+      dosis:  _pdfSafe(tr.querySelector('.med-dosis')?.value.trim() || ''),
       frec:   _pdfSafe(frecSel?.value ? (frecSel.selectedOptions[0]?.textContent || '') : ''),
-      dias:   _pdfSafe(tr.querySelector('.med-dias')?.value.trim()   || '')
+      dias:   _pdfSafe(tr.querySelector('.med-dias')?.value.trim() || '')
     };
   }).filter(Boolean);
 
-  let medY = H - 207;
-  for (let i = 0; i < Math.min(meds.length, 3); i++) {
+  let medY = y;
+  for (let i = 0; i < Math.min(meds.length, 6); i++) {
     const m = meds[i];
-    page.drawText(`${i+1}. ${m.nombre}${m.dosis ? ' ' + m.dosis : ''}`, { x: 35, y: medY, size: 7.5, font: bold, color: negro, maxWidth: 290 });
-    medY -= 9;
+    page.drawText(`${i+1}. ${m.nombre}${m.dosis ? ' ' + m.dosis : ''}`, { x: LM+4, y: medY, size:8, font:bold, color:negro, maxWidth: MEDW-8 });
+    medY -= 11;
     if (m.frec || m.dias) {
-      page.drawText([m.frec, m.dias ? m.dias + ' dia(s)' : ''].filter(Boolean).join(' - '), { x: 42, y: medY, size: 6.5, font: normal, color: grisOsc, maxWidth: 283 });
-      medY -= 9;
+      page.drawText([m.frec, m.dias ? m.dias + ' dia(s)' : ''].filter(Boolean).join(' - '), { x: LM+14, y: medY, size:7, font:normal, color:grisOsc, maxWidth: MEDW-18 });
+      medY -= 10;
     }
   }
 
-  // INDICACIONES (right column x=331-565, same medicine row height)
+  let indY = y;
   const indicTxt = gV('rec-indicaciones');
   if (indicTxt) {
-    let indY = H - 207;
-    for (const linea of indicTxt.split(/[\r\n]+/).filter(l => l.trim()).slice(0, 4)) {
-      page.drawText(_pdfSafe(linea), { x: 335, y: indY, size: 7.5, font: normal, color: negro, maxWidth: 226 });
-      indY -= 9;
+    for (const lin of indicTxt.split(/[\r\n]+/).filter(l => l.trim()).slice(0, 14)) {
+      const words2 = _pdfSafe(lin).split(' '); let lin2 = '';
+      for (const w of words2) {
+        const t = lin2 ? lin2 + ' ' + w : w;
+        if (normal.widthOfTextAtSize(t, 7.5) > INDW - 8 && lin2) {
+          page.drawText(lin2, { x: INDX+4, y: indY, size:7.5, font:normal, color:negro }); indY -= 11; lin2 = w;
+        } else lin2 = t;
+      }
+      if (lin2) page.drawText(lin2, { x: INDX+4, y: indY, size:7.5, font:normal, color:negro });
+      indY -= 11;
     }
   }
 
-  // DIAGNÓSTICO (template row top=223-243 → text at y_pdf = H-237)
-  const diagStr = gV('rec-diagnostico') + (gV('rec-cie10') ? ` (${gV('rec-cie10')})` : '');
-  page.drawText(diagStr, { x: 35, y: H - 237, size: 8, font: normal, color: negro, maxWidth: 526 });
+  y = Math.min(medY, indY) - 6;
 
-  // MEDIDAS NO FARMACOLÓGICAS (template label at top=327 → content starts at y_pdf = H-345)
-  const medFarm = gV('rec-medidas-no-farmacologicas');
-  if (medFarm) {
-    const words = medFarm.split(' '); let linea = '', mfY = H - 345;
-    for (const w of words) {
-      const test = linea ? linea + ' ' + w : w;
-      if (normal.widthOfTextAtSize(test, 7.5) > 360 && linea) {
-        page.drawText(_pdfSafe(linea), { x: 32, y: mfY, size: 7.5, font: normal, color: negro }); mfY -= 10; linea = w;
-      } else linea = test;
-    }
-    if (linea) page.drawText(_pdfSafe(linea), { x: 32, y: mfY, size: 7.5, font: normal, color: negro });
+  // ── MEDIDAS NO FARMACOLÓGICAS ───────────────────────────────────────────────
+  const mfTxt = gV('rec-medidas-no-farmacologicas');
+  if (mfTxt) {
+    y -= 4;
+    drawSec('MEDIDAS NO FARMACOLOGICAS');
+    drawWrap(mfTxt, LM + 4, INNER - 8, 7.5);
+    y -= 4;
   }
 
-  // DOCTOR (right column x=411-576, NOMBRE top=263-274 → y_pdf = H-271)
-  page.drawText(medNom,  { x: 415, y: H - 271, size: 8.5, font: bold,   color: negro,   maxWidth: 158 });
-  if (medReg) page.drawText(medReg, { x: 415, y: H - 283, size: 7.5, font: normal, color: grisOsc, maxWidth: 158 });
-  if (medEsp) page.drawText(medEsp, { x: 415, y: H - 295, size: 7.5, font: normal, color: grisOsc, maxWidth: 158 });
+  // ── FIRMA ──────────────────────────────────────────────────────────────────
+  y -= 20;
+  page.drawLine({ start:{x:248, y}, end:{x:480, y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
+  if (medNom) page.drawText(medNom, { x:252, y:y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
+  if (medReg) page.drawText(medReg, { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+  if (medEsp) page.drawText(medEsp, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
   await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Receta medica' });
   return await guardarPDFConFirma(doc, 'Receta medica');
@@ -129,138 +213,230 @@ async function generarRecetaPDF() {
 async function generarHistoriaClinicaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
-  const resp = await fetch('/templates/historial-clinico.pdf');
-  if (!resp.ok) { showToast('Error: plantilla historial-clinico.pdf no encontrada'); return; }
-  const doc   = await PDFDocument.load(new Uint8Array(await resp.arrayBuffer()));
+  const doc  = await PDFDocument.create();
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
   const negro   = rgb(0.05, 0.05, 0.05);
-  const gris    = rgb(0.35, 0.35, 0.35);
-  const H = 842;
+  const grisOsc = rgb(0.3, 0.3, 0.3);
+  const azul    = rgb(0.09, 0.27, 0.55);
+  const grisBg  = rgb(0.93, 0.94, 0.96);
+  const blanco  = rgb(1, 1, 1);
+  const H = 842, LM = 36, RM = 559, INNER = RM - LM;
 
   const gV  = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
   const gR  = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
   const gCB = id => document.getElementById(id)?.checked || false;
 
-  // Escribe valor en el campo del template usando coordenadas pdfplumber
-  // x, yBot = coordenadas del borde inferior del label en pdfplumber
-  const V = (pg, val, x, yBot, maxW) => {
-    const v = _pdfSafe(String(val || ''));
-    if (v) pg.drawText(v, { x, y: H - yBot + 1, size: 7.5, font: normal, color: negro, maxWidth: maxW || 240 });
+  const u = currentUser || {};
+  const docNom = _pdfSafe(`${u.nombre||''} ${u.apellidos||''}`.trim());
+  const docReg = _pdfSafe(u.numero_registro ? 'Reg. MSP: ' + u.numero_registro : '');
+  const docEsp = _pdfSafe(u.especialidad || 'MEDICINA GENERAL');
+
+  const logoImg = await _embedLogo(doc);
+
+  const mkPage = subtitulo => {
+    const pg = doc.addPage([595, H]);
+    _drawHeader(pg, logoImg, 'HISTORIA CLINICA', subtitulo, H, bold, normal, negro, grisOsc);
+    return pg;
   };
-  const MX = (pg, x, yTop) => pg.drawText('X', { x, y: H - yTop - 7, size: 9, font: bold, color: negro });
 
-  const p1 = doc.getPage(0);
-  const p2 = doc.getPage(1);
-  const p3 = doc.getPage(2);
-
-  // ── PÁGINA 1 — Identificación ──────────────────────────────────────────────
-  // No. de Historial (label bot=122, x=134)
-  V(p1, gV('hc-historial'),  260, 122, 75);
-  // Nombre Completo (label bot=144, x=133)
-  V(p1, gV('hc-nombre'),     260, 144, 290);
-  // Primer / Segundo Apellido (label bot=166)
-  V(p1, gV('hc-primer-ap'),  110, 166, 190);
-  V(p1, gV('hc-segundo-ap'), 408, 166, 140);
-  // Cédula / Edad (label bot=188)
-  V(p1, gV('hc-cedula'),     115, 188, 250);
-  V(p1, gV('hc-edad'),       444, 188, 85);
-  // Sexo (radio): Femenino x=89, Masculino x=220 (label top=198)
-  if (gR('hc-sexo') === 'F' || gR('hc-sexo').toLowerCase().includes('fem')) MX(p1, 80, 198);
-  else MX(p1, 211, 198);
-  // Fecha de Nacimiento (label bot=210, x=329)
-  V(p1, gV('hc-fecha-nac'), 442, 210, 115);
-  // Lugar de Nacimiento (label bot=232)
-  V(p1, gV('hc-lugar-nac'), 262, 232, 295);
-  // Estado Civil (label top=242): Soltero x=131, Casado x=212, Divorciado x=296, Viudo x=397, Unión x=471
-  const ecHC = { 'Soltero':122, 'Casado':203, 'Divorciado':287, 'Viudo':388, 'Union Libre':462, 'Unión Libre':462 };
-  const ecHCx = ecHC[gR('hc-estado-civil')];
-  if (ecHCx) MX(p1, ecHCx, 242);
-  // Domicilio (label bot=276)
-  V(p1, gV('hc-domicilio'), 250, 276, 295);
-  // Ocupación / Teléfono (label bot=298)
-  V(p1, gV('hc-ocupacion'), 100, 298, 195);
-  V(p1, gV('hc-telefono'),  430, 298, 130);
-  // Motivo de consulta (área bajo label top=338)
-  V(p1, gV('hc-motivo'), 33, 388, 520);
-  // Antecedentes personales (área bajo label top=391, texto en y≈H-470)
-  const antPers = [gV('hc-cronicas-texto'), gV('hc-ant-personales')].filter(Boolean).join(' | ');
-  if (antPers) p1.drawText(_pdfSafe(antPers), { x: 33, y: H - 470, size: 7.5, font: normal, color: negro, maxWidth: 520 });
-  // Antecedentes Familiares checkboxes (top=541 y top=566)
-  const afPos = [
-    ['hcaf-cardiopatia',24,541],['hcaf-diabetes',131,541],['hcaf-enf-cardiovascular',221,541],
-    ['hcaf-hipertension',385,541],['hcaf-cancer',498,541],
-    ['hcaf-tuberculosis',24,566],['hcaf-enf-mental',141,566],['hcaf-enf-infecciosa',252,566],
-    ['hcaf-mal-formacion',380,566],['hcaf-otro',507,566],
-  ];
-  afPos.forEach(([id, x, yTop]) => { if (gCB(id)) MX(p1, x, yTop); });
-  const antFamNotas = gV('hc-ant-familiares-notas');
-  if (antFamNotas) p1.drawText(antFamNotas, { x: 33, y: H - 610, size: 7.5, font: normal, color: negro, maxWidth: 520 });
-  // Enfermedad o Problema Actual (label top=669, texto bajo)
-  V(p1, gV('hc-enfermedad'), 33, 720, 520);
-
-  // ── PÁGINA 2 — Órganos / Signos Vitales ───────────────────────────────────
-  // CP/SP para órganos — fila 1 (labels top=71): CP/SP headers top=62
-  const orgFila1 = [
-    ['hco-card', 86, 104],['hco-resp', 202, 220],['hco-cardv', 332, 348],
-    ['hco-dig',  434, 450],['hco-gen',  524, 542],
-  ];
-  const orgFila2 = [
-    ['hco-uri',  70, 86],['hco-musc', 216, 234],['hco-end', 314, 330],
-    ['hco-hem', 434, 452],['hco-nerv', 526, 542],
-  ];
-  [...orgFila1, ...orgFila2].forEach(([radio, cpX, spX], i) => {
-    const yTop = i < 5 ? 62 : 90;
-    const val = gR(radio);
-    if (val === 'CP') MX(p2, cpX, yTop);
-    if (val === 'SP') MX(p2, spX, yTop);
+  // Helpers que operan sobre una página y un objeto de estado {y}
+  const mk = (pg, state) => ({
+    sec: titulo => {
+      pg.drawRectangle({ x: LM, y: state.y - 5, width: INNER, height: 16, color: grisBg });
+      pg.drawText(titulo, { x: LM + 4, y: state.y, size: 8.5, font: bold, color: azul });
+      state.y -= 19;
+    },
+    fila: (label, valor, lw) => {
+      const lw_ = lw || 150;
+      pg.drawText(label + ':', { x: LM+4, y: state.y, size:7.5, font:bold, color:grisOsc, maxWidth: lw_ });
+      const v = _pdfSafe(String(valor || ''));
+      if (v) pg.drawText(v, { x: LM+lw_+6, y: state.y, size:8, font:normal, color:negro, maxWidth: INNER-lw_-8 });
+      state.y -= 14;
+    },
+    wrap: (txt, x, maxW, size) => {
+      const words = _pdfSafe(txt || '').trim().split(' '); if (!words[0]) return;
+      let lin = '';
+      for (const w of words) {
+        const t = lin ? lin + ' ' + w : w;
+        if (normal.widthOfTextAtSize(t, size) > maxW && lin) {
+          pg.drawText(lin, { x, y: state.y, size, font:normal, color:negro }); state.y -= size+3; lin = w;
+        } else lin = t;
+      }
+      if (lin) pg.drawText(lin, { x, y: state.y, size, font:normal, color:negro });
+      state.y -= size + 3;
+    },
+    cb: (x, checked) => {
+      pg.drawRectangle({ x, y: state.y-1, width:8, height:8, color:blanco, borderColor:grisOsc, borderWidth:0.5 });
+      if (checked) pg.drawText('X', { x: x+1, y: state.y, size:7, font:bold, color:negro });
+    },
   });
-  // Examen físico regional — usa mismas posiciones pero en área diferente (approximado top=120)
-  const efPos = [
-    ['hce-cab',55,120],['hce-cue',205,120],['hce-tor',330,120],
-    ['hce-abd',55,130],['hce-pel',205,130],['hce-ext',330,130],
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // PÁGINA 1 — Identificación + Antecedentes
+  // ══════════════════════════════════════════════════════════════════════════════
+  const p1 = mkPage('Pag. 1 — Identificacion y Antecedentes');
+  const s1 = { y: H - 98 };
+  const h1 = mk(p1, s1);
+
+  h1.sec('FICHA DE IDENTIFICACION');
+  h1.fila('Nombre Completo',  gV('hc-nombre'));
+  h1.fila('N° Historial',     gV('hc-historial'));
+  h1.fila('N° Cedula',        gV('hc-cedula'));
+  h1.fila('Edad',             gV('hc-edad'));
+  h1.fila('Fecha Nacimiento', gV('hc-fecha-nac'));
+  h1.fila('Sexo',             gR('hc-sexo'));
+  h1.fila('Lugar Nacimiento', gV('hc-lugar-nac'));
+  h1.fila('Estado Civil',     gR('hc-estado-civil'));
+  h1.fila('Domicilio',        gV('hc-domicilio'));
+  h1.fila('Ocupacion',        gV('hc-ocupacion'));
+  h1.fila('Telefono',         gV('hc-telefono'));
+  s1.y -= 4;
+
+  h1.sec('MOTIVO DE LA CONSULTA');
+  h1.wrap(gV('hc-motivo'), LM+4, INNER-8, 7.5);
+  s1.y -= 4;
+
+  h1.sec('ANTECEDENTES PERSONALES');
+  const ants = [gV('hc-cronicas-texto'), gV('hc-ant-personales')].filter(Boolean).join(' | ');
+  h1.wrap(ants, LM+4, INNER-8, 7.5);
+  s1.y -= 4;
+
+  h1.sec('ANTECEDENTES FAMILIARES');
+  const afItems = [
+    ['hcaf-cardiopatia','Cardiopatia'],['hcaf-diabetes','Diabetes'],['hcaf-enf-cardiovascular','Enf. Cardiovascular'],
+    ['hcaf-hipertension','Hipertension'],['hcaf-cancer','Cancer'],
+    ['hcaf-tuberculosis','Tuberculosis'],['hcaf-enf-mental','Enf. Mental'],['hcaf-enf-infecciosa','Enf. Infecciosa'],
+    ['hcaf-mal-formacion','Mal Formacion'],['hcaf-otro','Otro'],
   ];
-  efPos.forEach(([radio, x, yTop]) => {
-    const val = gR(radio);
-    if (val === 'CP') p2.drawText('CP', { x, y: H-yTop-7, size: 7, font: bold, color: negro });
-    if (val === 'SP') p2.drawText('SP', { x, y: H-yTop-7, size: 7, font: bold, color: negro });
+  const COL_AF = Math.floor(INNER / 5);
+  [0, 1].forEach(row => {
+    afItems.slice(row * 5, row * 5 + 5).forEach(([id, label], col) => {
+      const xAF = LM + 4 + col * COL_AF;
+      h1.cb(xAF, gCB(id));
+      p1.drawText(label, { x: xAF+11, y: s1.y, size:7, font:normal, color:negro });
+    });
+    s1.y -= 13;
   });
-  // Signos Vitales (label bots: Peso/Talla=234, Temperatura/Pulso/Respiración=256, T/A/Oximetría=278)
-  V(p2, gV('hc-peso')        ? gV('hc-peso') + ' kg'  : '', 100, 234, 70);
-  V(p2, gV('hc-talla')       ? gV('hc-talla') + ' cm' : '', 245, 234, 70);
-  V(p2, gV('hc-temperatura') || '', 145, 256, 75);
-  V(p2, gV('hc-pulso')       || '', 295, 256, 75);
-  V(p2, gV('hc-respiracion') || '', 460, 256, 75);
-  V(p2, gV('hc-tension-arterial') || '', 145, 278, 85);
-  V(p2, gV('hc-oximetria')   || '', 345, 278, 75);
-  // Diagnóstico (aproximado, área baja de página 2)
+  h1.wrap(gV('hc-ant-familiares-notas'), LM+4, INNER-8, 7.5);
+  s1.y -= 4;
+
+  h1.sec('ENFERMEDAD O PROBLEMA ACTUAL');
+  h1.wrap(gV('hc-enfermedad'), LM+4, INNER-8, 7.5);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // PÁGINA 2 — Órganos / Signos Vitales / Diagnóstico / Tratamiento
+  // ══════════════════════════════════════════════════════════════════════════════
+  const p2 = mkPage('Pag. 2 — Examen y Diagnostico');
+  const s2 = { y: H - 98 };
+  const h2 = mk(p2, s2);
+  const cpColor = rgb(0.75, 0.1, 0.1), spColor = rgb(0.1, 0.5, 0.18);
+
+  h2.sec('REVISION DE ORGANOS Y SISTEMAS');
+  const organos = [
+    ['hco-card','Cardiologia'],['hco-resp','Respiratorio'],['hco-cardv','Cardiovascular'],['hco-dig','Digestivo'],['hco-gen','Genital'],
+    ['hco-uri','Urinario'],['hco-musc','Musculo Esquel.'],['hco-end','Endocrino'],['hco-hem','Hemo Linfatico'],['hco-nerv','Nervioso'],
+  ];
+  const COL_ORG = Math.floor(INNER / 5);
+  [0, 1].forEach(row => {
+    organos.slice(row*5, row*5+5).forEach(([radio, label], col) => {
+      const xO = LM + 4 + col * COL_ORG;
+      const val = gR(radio);
+      p2.drawText(label, { x: xO, y: s2.y, size:6.5, font:bold, color:grisOsc, maxWidth: COL_ORG-6 });
+      p2.drawText(val || '—', { x: xO, y: s2.y-9, size:7.5, font:bold, color: val==='CP'?cpColor:(val==='SP'?spColor:grisOsc) });
+    });
+    s2.y -= 22;
+  });
+  h2.wrap(gV('hc-organos-notas'), LM+4, INNER-8, 7.5);
+  s2.y -= 4;
+
+  h2.sec('EXAMEN FISICO REGIONAL');
+  const regiones = [
+    ['hce-cab','Cabeza'],['hce-cue','Cuello'],['hce-tor','Torax'],
+    ['hce-abd','Abdomen'],['hce-pel','Pelvis'],['hce-ext','Extremidades'],
+  ];
+  const COL_REG = Math.floor(INNER / 6);
+  regiones.forEach(([radio, label], col) => {
+    const xR = LM + 4 + col * COL_REG;
+    const val = gR(radio);
+    p2.drawText(label, { x: xR, y: s2.y, size:6.5, font:bold, color:grisOsc });
+    p2.drawText(val || '—', { x: xR, y: s2.y-9, size:7.5, font:bold, color: val==='CP'?cpColor:(val==='SP'?spColor:grisOsc) });
+  });
+  s2.y -= 22;
+  h2.wrap(gV('hc-examen-notas'), LM+4, INNER-8, 7.5);
+  s2.y -= 4;
+
+  h2.sec('SIGNOS VITALES');
+  const svRow1 = [
+    ['Peso',        gV('hc-peso')  ? gV('hc-peso')  + ' kg' : ''],
+    ['Talla',       gV('hc-talla') ? gV('hc-talla') + ' cm' : ''],
+    ['Temperatura', gV('hc-temperatura')],
+    ['Pulso',       gV('hc-pulso')],
+    ['Respiracion', gV('hc-respiracion')],
+  ];
+  svRow1.forEach(([lbl, val], i) => {
+    const xSV = LM + 4 + i * Math.floor(INNER / 5);
+    p2.drawText(lbl + ':', { x: xSV, y: s2.y,    size:7,   font:bold,   color:grisOsc });
+    p2.drawText(val || '—', { x: xSV, y: s2.y-10, size:7.5, font:normal, color:negro });
+  });
+  s2.y -= 23;
+  [['T/A', gV('hc-tension-arterial')], ['Oximetria', gV('hc-oximetria')]].forEach(([lbl, val], i) => {
+    const xSV = LM + 4 + i * 130;
+    p2.drawText(lbl + ':', { x: xSV, y: s2.y,    size:7,   font:bold,   color:grisOsc });
+    p2.drawText(val || '—', { x: xSV, y: s2.y-10, size:7.5, font:normal, color:negro });
+  });
+  s2.y -= 23;
+
+  h2.sec('DIAGNOSTICO');
   for (let i = 1; i <= 4; i++) {
-    const dx = gV(`hc-dx-${i}`);
-    if (dx) {
-      const tipo = gR(`hc-dx-tipo-${i}`);
-      p2.drawText(`${i}. ${_pdfSafe(dx)}${tipo ? ' [' + tipo + ']' : ''}`, { x: 33, y: H - 340 - (i-1)*14, size: 7.5, font: normal, color: negro, maxWidth: 520 });
-    }
+    const dx = gV(`hc-dx-${i}`); if (!dx) continue;
+    const tipo = gR(`hc-dx-tipo-${i}`), cie = gV(`hc-dx-cie-${i}`);
+    p2.drawText(`${i}. ${dx}${cie ? ' (' + cie + ')' : ''}${tipo ? ' [' + tipo + ']' : ''}`, { x: LM+4, y: s2.y, size:8, font:normal, color:negro, maxWidth: INNER-8 });
+    s2.y -= 13;
   }
-  // Tratamiento
-  const trat = gV('hc-tratamiento');
-  if (trat) p2.drawText(_pdfSafe(trat), { x: 33, y: H - 430, size: 7.5, font: normal, color: negro, maxWidth: 520 });
+  s2.y -= 4;
 
-  // ── PÁGINA 3 — Evolución ───────────────────────────────────────────────────
+  h2.sec('TRATAMIENTO');
+  h2.wrap(gV('hc-tratamiento'), LM+4, INNER-8, 7.5);
+
+  // ══════════════════════════════════════════════════════════════════════════════
+  // PÁGINA 3 — Evolución + Firma
+  // ══════════════════════════════════════════════════════════════════════════════
+  const p3 = mkPage('Pag. 3 — Evolucion y Prescripcion');
+  const s3 = { y: H - 98 };
+  const h3 = mk(p3, s3);
+
+  h3.sec('EVOLUCION Y PRESCRIPCION');
+
+  const COL_FEC = 80, COL_EVO = 260, COL_PRE = INNER - COL_FEC - COL_EVO - 10;
+  p3.drawRectangle({ x: LM, y: s3.y-5, width: INNER, height: 14, color: rgb(0.85,0.87,0.90) });
+  p3.drawText('Fecha',       { x: LM+4,                  y: s3.y, size:7.5, font:bold, color:azul });
+  p3.drawText('Evolucion',   { x: LM+COL_FEC+4,           y: s3.y, size:7.5, font:bold, color:azul });
+  p3.drawText('Prescripcion',{ x: LM+COL_FEC+COL_EVO+8,  y: s3.y, size:7.5, font:bold, color:azul });
+  s3.y -= 18;
+
   const evoluciones = [...document.querySelectorAll('#hc-evolucion-body tr')].map(tr => {
     const inputs = tr.querySelectorAll('input');
     if (inputs.length < 3) return null;
     const fecha = inputs[0].value.trim(), evolucion = inputs[1].value.trim(), prescripcion = inputs[2].value.trim();
     return (fecha || evolucion || prescripcion) ? { fecha, evolucion, prescripcion } : null;
   }).filter(Boolean);
-  let evY = H - 100;
-  evoluciones.slice(0, 8).forEach(e => {
-    if (e.fecha)        p3.drawText(_pdfSafe(e.fecha),        { x: 33,  y: evY, size: 7, font: bold,   color: negro, maxWidth: 90  });
-    if (e.evolucion)    p3.drawText(_pdfSafe(e.evolucion),    { x: 133, y: evY, size: 7, font: normal, color: negro, maxWidth: 178 });
-    if (e.prescripcion) p3.drawText(_pdfSafe(e.prescripcion), { x: 323, y: evY, size: 7, font: normal, color: negro, maxWidth: 235 });
-    evY -= 22;
+
+  evoluciones.slice(0, 12).forEach(e => {
+    if (e.fecha)        p3.drawText(_pdfSafe(e.fecha),        { x: LM+4,                y: s3.y, size:7.5, font:bold,   color:negro, maxWidth: COL_FEC-6 });
+    if (e.evolucion)    p3.drawText(_pdfSafe(e.evolucion),    { x: LM+COL_FEC+4,         y: s3.y, size:7.5, font:normal, color:negro, maxWidth: COL_EVO-6 });
+    if (e.prescripcion) p3.drawText(_pdfSafe(e.prescripcion), { x: LM+COL_FEC+COL_EVO+8, y: s3.y, size:7.5, font:normal, color:negro, maxWidth: COL_PRE-4 });
+    p3.drawLine({ start:{x:LM, y:s3.y-5}, end:{x:RM, y:s3.y-5}, thickness:0.3, color:rgb(0.85,0.85,0.85) });
+    s3.y -= 18;
   });
 
-  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: gris, tipoDocumento: 'Historia clinica' });
+  s3.y -= 20;
+  p3.drawLine({ start:{x:248, y:s3.y}, end:{x:480, y:s3.y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
+  if (docNom) p3.drawText(docNom, { x:252, y:s3.y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
+  if (docReg) p3.drawText(docReg, { x:252, y:s3.y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+  if (docEsp) p3.drawText(docEsp, { x:252, y:s3.y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+
+  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: grisOsc, tipoDocumento: 'Historia clinica' });
   return await guardarPDFConFirma(doc, 'Historia clinica');
 }
 
@@ -268,73 +444,106 @@ async function generarHistoriaClinicaPDF() {
 async function generarInterconsultaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
-  const resp = await fetch('/templates/interconsulta.pdf');
-  if (!resp.ok) { showToast('Error: plantilla interconsulta.pdf no encontrada'); return; }
-  const doc  = await PDFDocument.load(new Uint8Array(await resp.arrayBuffer()));
+  const doc  = await PDFDocument.create();
+  const page = doc.addPage([595, 842]);
+  const H = 842;
+
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
   const negro   = rgb(0.05, 0.05, 0.05);
-  const gris    = rgb(0.35, 0.35, 0.35);
-  const page = doc.getPage(0);
-  const H = page.getHeight();
+  const grisOsc = rgb(0.3, 0.3, 0.3);
+  const azul    = rgb(0.09, 0.27, 0.55);
+  const grisBg  = rgb(0.93, 0.94, 0.96);
+  const blanco  = rgb(1, 1, 1);
 
   const gV = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
   const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
 
-  const V = (val, x, yBot, maxW) => {
-    const v = _pdfSafe(String(val || ''));
-    if (v) page.drawText(v, { x, y: H - yBot + 1, size: 7.5, font: normal, color: negro, maxWidth: maxW || 240 });
+  const u = currentUser || {};
+  const logoImg = await _embedLogo(doc);
+  _drawHeader(page, logoImg, 'INTERCONSULTA', null, H, bold, normal, negro, grisOsc);
+
+  let y = H - 100;
+  const LM = 36, RM = 559, INNER = RM - LM;
+
+  const drawSec = titulo => {
+    page.drawRectangle({ x: LM, y: y-5, width: INNER, height: 16, color: grisBg });
+    page.drawText(titulo, { x: LM+4, y, size:8.5, font:bold, color:azul });
+    y -= 19;
   };
-  const MX = (x, yTop) => page.drawText('X', { x, y: H - yTop - 7, size: 9, font: bold, color: negro });
-
-  // Identificación (coordenadas pdfplumber)
-  V(gV('inter-historial'),  265, 127, 170);   // No. de Historial (bot=127)
-  V(gV('inter-nombre'),     265, 149, 290);   // Nombre Completo (bot=149)
-  V(gV('inter-cedula'),     115, 193, 250);   // Cédula (bot=193)
-  V(gV('inter-edad'),       444, 193, 80);    // Edad
-  // Sexo: Femenino x=88, Masculino x=220 (top=203)
-  if (gR('inter-sexo') === 'F' || gR('inter-sexo').toLowerCase().includes('fem')) MX(79, 203);
-  else if (gR('inter-sexo')) MX(211, 203);
-  V(gV('inter-fecha-nac'), 445, 215, 115);    // Fecha Nacimiento
-  V(gV('inter-domicilio'), 250, 281, 295);    // Domicilio (bot=281)
-  V(gV('inter-telefono'),  430, 303, 130);    // Teléfono (bot=303)
-  // Estado Civil (top=247): Soltero x=127, Casado x=243, Viudo x=363, Unión Libre x=471
-  const ecI = { 'Soltero':118, 'Casado':234, 'Viudo':354, 'Union Libre':462, 'Unión Libre':462 };
-  const ecIx = ecI[gR('inter-estado-civil')];
-  if (ecIx) MX(ecIx, 247);
-
-  // Interconsulta
-  V(gV('inter-de-servicio'), 185, 370, 130);  // Enviado del Servicio (bot=370)
-  V(gV('inter-al-servicio'), 430, 370, 130);  // Al Servicio (bot=370)
-  V(gV('inter-diagnostico'), 110, 403, 350);  // Diagnóstico (bot=403)
-  V(gV('inter-cie10-val'),   490, 400, 65);   // CIE-10
-  // PRE/DEF (top=380): PRE x=521, DEF x=546
-  const dxT = gR('inter-dx-tipo');
-  if (dxT === 'PRE' || dxT === 'PRESUNTIVO') MX(513, 380);
-  if (dxT === 'DEF' || dxT === 'DEFINITIVO') MX(537, 380);
-
-  // Justificación (área grande, top=436 → texto desde y=H-460)
-  const just = _pdfSafe(gV('inter-justificacion'));
-  if (just) {
-    const words = just.split(' '); let linea = '', jY = H - 460;
+  const drawFila = (label, valor, lw) => {
+    const lw_ = lw || 150;
+    page.drawText(label + ':', { x: LM+4, y, size:7.5, font:bold, color:grisOsc, maxWidth: lw_ });
+    const v = _pdfSafe(String(valor || ''));
+    if (v) page.drawText(v, { x: LM+lw_+6, y, size:8, font:normal, color:negro, maxWidth: INNER-lw_-8 });
+    y -= 14;
+  };
+  const drawWrap = (txt, x, maxW, size) => {
+    const words = _pdfSafe(txt || '').trim().split(' '); if (!words[0]) return;
+    let lin = '';
     for (const w of words) {
-      if (jY < H - 505) break;
-      const test = linea ? linea + ' ' + w : w;
-      if (normal.widthOfTextAtSize(test, 7.5) > 520 && linea) {
-        page.drawText(linea, { x: 33, y: jY, size: 7.5, font: normal, color: negro }); jY -= 10; linea = w;
-      } else linea = test;
+      const t = lin ? lin + ' ' + w : w;
+      if (normal.widthOfTextAtSize(t, size) > maxW && lin) {
+        page.drawText(lin, { x, y, size, font:normal, color:negro }); y -= size+3; lin = w;
+      } else lin = t;
     }
-    if (linea) page.drawText(linea, { x: 33, y: jY, size: 7.5, font: normal, color: negro });
-  }
+    if (lin) page.drawText(lin, { x, y, size, font:normal, color:negro });
+    y -= size + 3;
+  };
 
-  // Fecha de solicitud / Nombre del profesional
-  V(gV('inter-fecha') || new Date().toLocaleDateString('es-EC'), 185, 522, 220);
-  const medNom = _pdfSafe(currentUser ? `Dr. ${currentUser.nombre||''} ${currentUser.apellidos||''}`.trim() : '');
-  V(medNom, 215, 552, 300);
-  const medReg = currentUser?.numero_registro ? _pdfSafe('Reg. MSP: ' + currentUser.numero_registro) : '';
-  if (medReg) page.drawText(medReg, { x: 215, y: H - 565, size: 7, font: normal, color: gris, maxWidth: 300 });
+  // ── IDENTIFICACIÓN DEL PACIENTE ─────────────────────────────────────────────
+  drawSec('IDENTIFICACION DEL PACIENTE');
+  drawFila('Nombre Completo', gV('inter-nombre'));
+  drawFila('N° Historial',    gV('inter-historial'));
+  drawFila('N° Cedula',       gV('inter-cedula'));
+  drawFila('Edad',            gV('inter-edad'));
+  drawFila('Fecha Nacimiento',gV('inter-fecha-nac'));
+  drawFila('Sexo',            gR('inter-sexo'));
+  drawFila('Estado Civil',    gR('inter-estado-civil'));
+  drawFila('Domicilio',       gV('inter-domicilio'));
+  drawFila('Ocupacion',       gV('inter-ocupacion'));
+  drawFila('Telefono',        gV('inter-telefono'));
+  y -= 4;
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Interconsulta medica' });
+  // ── INTERCONSULTA ───────────────────────────────────────────────────────────
+  drawSec('INTERCONSULTA');
+  drawFila('Enviado del Servicio de', gV('inter-de-servicio'));
+  drawFila('Al Servicio de',          gV('inter-al-servicio'));
+
+  page.drawText('Diagnostico:', { x: LM+4, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(_pdfSafe(gV('inter-diagnostico')), { x: LM+80, y, size:8, font:normal, color:negro, maxWidth:265 });
+  page.drawText('CIE-10:', { x: LM+360, y, size:7.5, font:bold, color:grisOsc });
+  page.drawText(gV('inter-cie10-val'), { x: LM+400, y, size:8, font:normal, color:negro, maxWidth:55 });
+  const dxT = gR('inter-dx-tipo');
+  page.drawRectangle({ x: LM+460, y: y-1, width:8, height:8, color:blanco, borderColor:grisOsc, borderWidth:0.5 });
+  if (dxT === 'PRE') page.drawText('X', { x: LM+461, y, size:7, font:bold, color:negro });
+  page.drawText('PRE', { x: LM+471, y, size:7, font:normal, color:negro });
+  page.drawRectangle({ x: LM+492, y: y-1, width:8, height:8, color:blanco, borderColor:grisOsc, borderWidth:0.5 });
+  if (dxT === 'DEF') page.drawText('X', { x: LM+493, y, size:7, font:bold, color:negro });
+  page.drawText('DEF', { x: LM+503, y, size:7, font:normal, color:negro });
+  y -= 16;
+  y -= 4;
+
+  // ── JUSTIFICACIÓN ───────────────────────────────────────────────────────────
+  drawSec('JUSTIFICACION CLINICA');
+  drawWrap(gV('inter-justificacion'), LM+4, INNER-8, 7.5);
+  y -= 10;
+
+  // ── FECHA Y FIRMA ───────────────────────────────────────────────────────────
+  const fechaSol = gV('inter-fecha') || new Date().toLocaleDateString('es-EC');
+  page.drawText('Fecha de solicitud: ' + fechaSol, { x: LM+4, y, size:8, font:normal, color:negro });
+  y -= 26;
+
+  const medNom = _pdfSafe(`Dr. ${u.nombre||''} ${u.apellidos||''}`.trim());
+  const medReg = _pdfSafe(u.numero_registro ? 'Reg. MSP: ' + u.numero_registro : '');
+  const medEsp = _pdfSafe(u.especialidad || 'MEDICINA GENERAL');
+
+  page.drawLine({ start:{x:248, y}, end:{x:480, y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
+  if (medNom) page.drawText(medNom, { x:252, y:y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
+  if (medReg) page.drawText(medReg, { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+  if (medEsp) page.drawText(medEsp, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Interconsulta medica' });
   return await guardarPDFConFirma(doc, 'Interconsulta medica');
 }
 
@@ -358,30 +567,9 @@ async function generarCertificadoPDF() {
   const gR  = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
   const gCB = id => document.getElementById(id)?.checked || false;
 
-  // ── Logo MediLyft ──────────────────────────────────────────────────────────
-  try {
-    const svgR = await fetch('/landing/logo.svg');
-    if (svgR.ok) {
-      const svgT = await svgR.text();
-      const blobUrl = URL.createObjectURL(new Blob([svgT], { type: 'image/svg+xml' }));
-      const pngBytes = await new Promise((res, rej) => {
-        const img = new Image();
-        img.onload = () => {
-          const c = document.createElement('canvas'); c.width = 48; c.height = 48;
-          c.getContext('2d').drawImage(img, 0, 0, 48, 48);
-          URL.revokeObjectURL(blobUrl);
-          c.toBlob(b => { const r = new FileReader(); r.onload = e => res(new Uint8Array(e.target.result)); r.readAsArrayBuffer(b); }, 'image/png');
-        };
-        img.onerror = rej; img.src = blobUrl;
-      });
-      const logoImg = await doc.embedPng(pngBytes);
-      page.drawImage(logoImg, { x: 272, y: H - 52, width: 48, height: 38 });
-    }
-  } catch (_) {}
-  page.drawText('MediLyft', { x: 258, y: H - 62, size: 10, font: bold, color: negro });
-  page.drawText('CERTIFICADO MEDICO', { x: 196, y: H - 77, size: 13, font: bold, color: negro });
+  const logoImg = await _embedLogo(doc);
+  _drawHeader(page, logoImg, 'CERTIFICADO MEDICO', null, H, bold, normal, negro, grisOsc);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
   let y = H - 98;
   const LM = 36, RM = 559, LW = 166, INNER = RM - LM;
 
@@ -400,7 +588,7 @@ async function generarCertificadoPDF() {
 
   function cb(x, checked) {
     page.drawRectangle({ x, y: y - 1, width: 8, height: 8, color: blanco, borderColor: grisOsc, borderWidth: 0.5 });
-    if (checked) page.drawText('X', { x: x + 1, y, size: 7, font: bold, color: negro });
+    if (checked) page.drawText('X', { x: x + 1, y: y, size: 7, font: bold, color: negro });
   }
 
   // ── SECCIÓN A ──────────────────────────────────────────────────────────────

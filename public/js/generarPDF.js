@@ -38,17 +38,6 @@ async function generarRecetaPDF() {
   const medReg = _pdfSafe(u.numero_registro ? 'Reg. MSP: ' + u.numero_registro : (gV('rec-reg-medico') || ''));
   const medEsp = _pdfSafe(gV('rec-esp-medico') || u.especialidad || 'MEDICINA GENERAL');
 
-  // White-out Vital Club logo (left side x=0-292, top=0-140 → y_pdf=702-842)
-  page.drawRectangle({ x: 0, y: H - 140, width: 293, height: 140, color: blanco });
-
-  // MediLyft branding
-  page.drawText('MEDILYFT', { x: 18, y: H - 28, size: 15, font: bold,   color: teal    });
-  page.drawText('Teleconsultas Medicas', { x: 18, y: H - 43, size: 8, font: normal, color: grisOsc });
-  page.drawLine({ start:{x:18, y: H - 50}, end:{x:280, y: H - 50}, thickness: 0.5, color: rgb(0.8,0.8,0.8) });
-  if (medNom) page.drawText(medNom, { x: 18, y: H - 63, size: 9,   font: bold,   color: negro   });
-  if (medEsp) page.drawText(medEsp, { x: 18, y: H - 75, size: 8,   font: normal, color: grisOsc });
-  if (medReg) page.drawText(medReg, { x: 18, y: H - 87, size: 7.5, font: normal, color: grisOsc });
-  if (u.telefono) page.drawText(_pdfSafe('Tel: ' + u.telefono), { x: 18, y: H - 99, size: 7.5, font: normal, color: grisOsc });
 
   // Right side: receta number (after "RECETA No." label, top≈99 → y_pdf=735)
   const recNum = gV('rec-numero');
@@ -139,255 +128,213 @@ async function generarRecetaPDF() {
 // ===== HISTORIA CLÍNICA PDF =====
 async function generarHistoriaClinicaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
-  const doc = await PDFDocument.create();
-  const brand = rgb(1.0, 0.353, 0.373);
-  const gris  = rgb(0.4, 0.4, 0.4);
-  const negro = rgb(0, 0, 0);
-  const blanco = rgb(1, 1, 1);
+
+  const resp = await fetch('/templates/historial-clinico.pdf');
+  if (!resp.ok) { showToast('Error: plantilla historial-clinico.pdf no encontrada'); return; }
+  const doc   = await PDFDocument.load(new Uint8Array(await resp.arrayBuffer()));
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
+  const negro   = rgb(0.05, 0.05, 0.05);
+  const gris    = rgb(0.35, 0.35, 0.35);
+  const H = 842;
 
-  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
-  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
-  const gCB = ids => ids.filter(id => { const el = document.getElementById(id); return el && el.checked; }).map(id => id.replace(/^hcaf-/,'').replace(/-/g,' ')).join(', ') || '-';
+  const gV  = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
+  const gR  = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
+  const gCB = id => document.getElementById(id)?.checked || false;
 
-  function buildPage() {
-    const page = doc.addPage([595, 842]);
-    const { width, height } = page.getSize();
-    page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
-    page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
-    page.drawText('Historia Clínica', { x: 40, y: height - 62, size: 11, font: normal, color: blanco });
-    page.drawText(`Fecha: ${new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 52, size: 9, font: normal, color: blanco });
-    const medNom = currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '';
-    if (medNom) page.drawText(medNom, { x: width - 185, y: height - 64, size: 8, font: normal, color: blanco });
-    return { page, y: height - 90, width, height };
-  }
+  // Escribe valor en el campo del template usando coordenadas pdfplumber
+  // x, yBot = coordenadas del borde inferior del label en pdfplumber
+  const V = (pg, val, x, yBot, maxW) => {
+    const v = _pdfSafe(String(val || ''));
+    if (v) pg.drawText(v, { x, y: H - yBot + 1, size: 7.5, font: normal, color: negro, maxWidth: maxW || 240 });
+  };
+  const MX = (pg, x, yTop) => pg.drawText('X', { x, y: H - yTop - 7, size: 9, font: bold, color: negro });
 
-  let { page, y, width } = buildPage();
+  const p1 = doc.getPage(0);
+  const p2 = doc.getPage(1);
+  const p3 = doc.getPage(2);
 
-  function seccion(titulo) {
-    page.drawRectangle({ x: 40, y: y - 4, width: width - 80, height: 20, color: rgb(0.99, 0.95, 0.95) });
-    page.drawText(titulo, { x: 44, y, size: 10, font: bold, color: brand });
-    y -= 26;
-  }
-  function campo(label, valor, x2 = 44) {
-    page.drawText(`${label}:`, { x: x2, y, size: 9, font: bold, color: gris });
-    page.drawText(_pdfSafe(valor) || '-', { x: x2 + 140, y, size: 9, font: normal, color: negro });
-    y -= 14;
-  }
-  function campoDoble(l1, v1, l2, v2) {
-    const half = width / 2 - 40;
-    campo(l1, v1, 44); y += 14;
-    page.drawText(`${l2}:`, { x: 44 + half, y, size: 9, font: bold, color: gris });
-    page.drawText(_pdfSafe(v2) || '-', { x: 44 + half + 140, y, size: 9, font: normal, color: negro });
-    y -= 14;
-  }
-  function wrap(texto, startX, maxW) {
-    const palabras = (_pdfSafe(texto) || '-').split(' '); let linea = '';
-    for (const p of palabras) {
-      const test = linea ? `${linea} ${p}` : p;
-      if (normal.widthOfTextAtSize(test, 9) > maxW && linea) {
-        page.drawText(linea, { x: startX, y, size: 9, font: normal, color: negro }); y -= 13; linea = p;
-      } else linea = test;
-    }
-    if (linea) { page.drawText(linea, { x: startX, y, size: 9, font: normal, color: negro }); y -= 13; }
-  }
+  // ── PÁGINA 1 — Identificación ──────────────────────────────────────────────
+  // No. de Historial (label bot=122, x=134)
+  V(p1, gV('hc-historial'),  260, 122, 75);
+  // Nombre Completo (label bot=144, x=133)
+  V(p1, gV('hc-nombre'),     260, 144, 290);
+  // Primer / Segundo Apellido (label bot=166)
+  V(p1, gV('hc-primer-ap'),  110, 166, 190);
+  V(p1, gV('hc-segundo-ap'), 408, 166, 140);
+  // Cédula / Edad (label bot=188)
+  V(p1, gV('hc-cedula'),     115, 188, 250);
+  V(p1, gV('hc-edad'),       444, 188, 85);
+  // Sexo (radio): Femenino x=89, Masculino x=220 (label top=198)
+  if (gR('hc-sexo') === 'F' || gR('hc-sexo').toLowerCase().includes('fem')) MX(p1, 80, 198);
+  else MX(p1, 211, 198);
+  // Fecha de Nacimiento (label bot=210, x=329)
+  V(p1, gV('hc-fecha-nac'), 442, 210, 115);
+  // Lugar de Nacimiento (label bot=232)
+  V(p1, gV('hc-lugar-nac'), 262, 232, 295);
+  // Estado Civil (label top=242): Soltero x=131, Casado x=212, Divorciado x=296, Viudo x=397, Unión x=471
+  const ecHC = { 'Soltero':122, 'Casado':203, 'Divorciado':287, 'Viudo':388, 'Union Libre':462, 'Unión Libre':462 };
+  const ecHCx = ecHC[gR('hc-estado-civil')];
+  if (ecHCx) MX(p1, ecHCx, 242);
+  // Domicilio (label bot=276)
+  V(p1, gV('hc-domicilio'), 250, 276, 295);
+  // Ocupación / Teléfono (label bot=298)
+  V(p1, gV('hc-ocupacion'), 100, 298, 195);
+  V(p1, gV('hc-telefono'),  430, 298, 130);
+  // Motivo de consulta (área bajo label top=338)
+  V(p1, gV('hc-motivo'), 33, 388, 520);
+  // Antecedentes personales (área bajo label top=391, texto en y≈H-470)
+  const antPers = [gV('hc-cronicas-texto'), gV('hc-ant-personales')].filter(Boolean).join(' | ');
+  if (antPers) p1.drawText(_pdfSafe(antPers), { x: 33, y: H - 470, size: 7.5, font: normal, color: negro, maxWidth: 520 });
+  // Antecedentes Familiares checkboxes (top=541 y top=566)
+  const afPos = [
+    ['hcaf-cardiopatia',24,541],['hcaf-diabetes',131,541],['hcaf-enf-cardiovascular',221,541],
+    ['hcaf-hipertension',385,541],['hcaf-cancer',498,541],
+    ['hcaf-tuberculosis',24,566],['hcaf-enf-mental',141,566],['hcaf-enf-infecciosa',252,566],
+    ['hcaf-mal-formacion',380,566],['hcaf-otro',507,566],
+  ];
+  afPos.forEach(([id, x, yTop]) => { if (gCB(id)) MX(p1, x, yTop); });
+  const antFamNotas = gV('hc-ant-familiares-notas');
+  if (antFamNotas) p1.drawText(antFamNotas, { x: 33, y: H - 610, size: 7.5, font: normal, color: negro, maxWidth: 520 });
+  // Enfermedad o Problema Actual (label top=669, texto bajo)
+  V(p1, gV('hc-enfermedad'), 33, 720, 520);
 
-  function checkPage() {
-    if (y < 80) {
-      page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
-      page.drawText('MediLyft · Historia Clínica · Continúa en la siguiente hoja', { x: 40, y: 40, size: 7, font: normal, color: gris });
-      const np = buildPage(); page = np.page; y = np.y; width = np.width;
-    }
-  }
-
-  // Identificación
-  seccion('FICHA DE IDENTIFICACIÓN');
-  campo('No. de historial', gV('hc-historial'));
-  campo('Nombre completo', gV('hc-nombre'));
-  campoDoble('Primer apellido', gV('hc-primer-ap'), 'Segundo apellido', gV('hc-segundo-ap')); y -= 0;
-  campoDoble('Cédula', gV('hc-cedula'), 'Edad', gV('hc-edad'));
-  campoDoble('Sexo', gR('hc-sexo'), 'Fecha nacimiento', gV('hc-fecha-nac'));
-  campo('Lugar de nacimiento', gV('hc-lugar-nac'));
-  campo('Estado civil', gR('hc-estado-civil'));
-  campo('Domicilio', gV('hc-domicilio'));
-  campoDoble('Ocupación', gV('hc-ocupacion'), 'Teléfono', gV('hc-telefono'));
-  y -= 4; checkPage();
-
-  seccion('MOTIVO DE LA CONSULTA');
-  wrap(gV('hc-motivo') || '—', 44, width - 90); y -= 4; checkPage();
-
-  seccion('ANTECEDENTES PERSONALES');
-  const _cronicas = gV('hc-cronicas-texto');
-  if (_cronicas) { campo('Enf. crónicas activas', _cronicas); checkPage(); }
-  wrap(gV('hc-ant-personales') || '-', 44, width - 90); y -= 4; checkPage();
-
-  seccion('ANTECEDENTES FAMILIARES');
-  wrap(gCB(['hcaf-cardiopatia','hcaf-diabetes','hcaf-enf-cardiovascular','hcaf-hipertension','hcaf-cancer','hcaf-tuberculosis','hcaf-enf-mental','hcaf-enf-infecciosa','hcaf-mal-formacion','hcaf-otro']), 44, width - 90);
-  const antFamNotes = gV('hc-ant-familiares-notas');
-  if (antFamNotes) wrap(antFamNotes, 44, width - 90);
-  y -= 4; checkPage();
-
-  seccion('ENFERMEDAD O PROBLEMA ACTUAL');
-  wrap(gV('hc-enfermedad') || '—', 44, width - 90); y -= 4; checkPage();
-
-  // Revisión de órganos y sistemas (CP = Con patología · SP = Sin patología)
-  function listaCpSp(items) {
-    items.forEach(([n, id], i) => {
-      const xPos = i % 2 === 0 ? 44 : width / 2;
-      page.drawText(`${n}: ${gR(id)}`, { x: xPos, y, size: 9, font: normal, color: negro });
-      if (i % 2 === 1) y -= 14;
-    });
-    if (items.length % 2 === 1) y -= 14;
-  }
-
-  seccion('REVISIÓN DE ÓRGANOS Y SISTEMAS (CP = Con patología · SP = Sin patología)');
-  listaCpSp([['Cardiopatía','hco-card'],['Respiratorio','hco-resp'],['Cardiovascular','hco-cardv'],['Digestivo','hco-dig'],['Genital','hco-gen'],['Urinario','hco-uri'],['Músculo Esquel.','hco-musc'],['Endócrino','hco-end'],['Hemo Linfático','hco-hem'],['Nervioso','hco-nerv']]);
-  const organosNotas = gV('hc-organos-notas');
-  if (organosNotas) wrap(organosNotas, 44, width - 90);
-  y -= 4; checkPage();
-
-  // Examen físico regional (CP = Con patología · SP = Sin patología)
-  seccion('EXAMEN FÍSICO REGIONAL (CP = Con patología · SP = Sin patología)');
-  listaCpSp([['Cabeza','hce-cab'],['Cuello','hce-cue'],['Tórax','hce-tor'],['Abdomen','hce-abd'],['Pelvis','hce-pel'],['Extremidades','hce-ext']]);
-  const examenNotas = gV('hc-examen-notas');
-  if (examenNotas) wrap(examenNotas, 44, width - 90);
-  y -= 4; checkPage();
-
-  // Diagnóstico
-  seccion('DIAGNÓSTICO');
+  // ── PÁGINA 2 — Órganos / Signos Vitales ───────────────────────────────────
+  // CP/SP para órganos — fila 1 (labels top=71): CP/SP headers top=62
+  const orgFila1 = [
+    ['hco-card', 86, 104],['hco-resp', 202, 220],['hco-cardv', 332, 348],
+    ['hco-dig',  434, 450],['hco-gen',  524, 542],
+  ];
+  const orgFila2 = [
+    ['hco-uri',  70, 86],['hco-musc', 216, 234],['hco-end', 314, 330],
+    ['hco-hem', 434, 452],['hco-nerv', 526, 542],
+  ];
+  [...orgFila1, ...orgFila2].forEach(([radio, cpX, spX], i) => {
+    const yTop = i < 5 ? 62 : 90;
+    const val = gR(radio);
+    if (val === 'CP') MX(p2, cpX, yTop);
+    if (val === 'SP') MX(p2, spX, yTop);
+  });
+  // Examen físico regional — usa mismas posiciones pero en área diferente (approximado top=120)
+  const efPos = [
+    ['hce-cab',55,120],['hce-cue',205,120],['hce-tor',330,120],
+    ['hce-abd',55,130],['hce-pel',205,130],['hce-ext',330,130],
+  ];
+  efPos.forEach(([radio, x, yTop]) => {
+    const val = gR(radio);
+    if (val === 'CP') p2.drawText('CP', { x, y: H-yTop-7, size: 7, font: bold, color: negro });
+    if (val === 'SP') p2.drawText('SP', { x, y: H-yTop-7, size: 7, font: bold, color: negro });
+  });
+  // Signos Vitales (label bots: Peso/Talla=234, Temperatura/Pulso/Respiración=256, T/A/Oximetría=278)
+  V(p2, gV('hc-peso')        ? gV('hc-peso') + ' kg'  : '', 100, 234, 70);
+  V(p2, gV('hc-talla')       ? gV('hc-talla') + ' cm' : '', 245, 234, 70);
+  V(p2, gV('hc-temperatura') || '', 145, 256, 75);
+  V(p2, gV('hc-pulso')       || '', 295, 256, 75);
+  V(p2, gV('hc-respiracion') || '', 460, 256, 75);
+  V(p2, gV('hc-tension-arterial') || '', 145, 278, 85);
+  V(p2, gV('hc-oximetria')   || '', 345, 278, 75);
+  // Diagnóstico (aproximado, área baja de página 2)
   for (let i = 1; i <= 4; i++) {
-    const dxV = gV(`hc-dx-${i}`);
-    if (dxV) {
+    const dx = gV(`hc-dx-${i}`);
+    if (dx) {
       const tipo = gR(`hc-dx-tipo-${i}`);
-      page.drawText(`${i}. ${dxV}  [${tipo}]`, { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
+      p2.drawText(`${i}. ${_pdfSafe(dx)}${tipo ? ' [' + tipo + ']' : ''}`, { x: 33, y: H - 340 - (i-1)*14, size: 7.5, font: normal, color: negro, maxWidth: 520 });
     }
   }
-  y -= 4; checkPage();
+  // Tratamiento
+  const trat = gV('hc-tratamiento');
+  if (trat) p2.drawText(_pdfSafe(trat), { x: 33, y: H - 430, size: 7.5, font: normal, color: negro, maxWidth: 520 });
 
-  seccion('PLANES DE TRATAMIENTO');
-  wrap(gV('hc-tratamiento') || '—', 44, width - 90);
-  y -= 4; checkPage();
-
-  seccion('EVOLUCIÓN Y PRESCRIPCIONES');
+  // ── PÁGINA 3 — Evolución ───────────────────────────────────────────────────
   const evoluciones = [...document.querySelectorAll('#hc-evolucion-body tr')].map(tr => {
     const inputs = tr.querySelectorAll('input');
     if (inputs.length < 3) return null;
     const fecha = inputs[0].value.trim(), evolucion = inputs[1].value.trim(), prescripcion = inputs[2].value.trim();
     return (fecha || evolucion || prescripcion) ? { fecha, evolucion, prescripcion } : null;
   }).filter(Boolean);
-  if (!evoluciones.length) {
-    page.drawText('-', { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
-  } else {
-    evoluciones.forEach(e => {
-      page.drawText(_pdfSafe(e.fecha) || '-', { x: 44, y, size: 9, font: bold, color: negro }); y -= 13;
-      wrap(`Evolucion: ${e.evolucion || '-'}`, 54, width - 100);
-      wrap(`Prescripcion: ${e.prescripcion || '-'}`, 54, width - 100);
-      y -= 4;
-    });
-  }
-  y -= 16; checkPage();
+  let evY = H - 100;
+  evoluciones.slice(0, 8).forEach(e => {
+    if (e.fecha)        p3.drawText(_pdfSafe(e.fecha),        { x: 33,  y: evY, size: 7, font: bold,   color: negro, maxWidth: 90  });
+    if (e.evolucion)    p3.drawText(_pdfSafe(e.evolucion),    { x: 133, y: evY, size: 7, font: normal, color: negro, maxWidth: 178 });
+    if (e.prescripcion) p3.drawText(_pdfSafe(e.prescripcion), { x: 323, y: evY, size: 7, font: normal, color: negro, maxWidth: 235 });
+    evY -= 22;
+  });
 
-  // Firma
-  const medNomFirma = currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '-';
-  const _p12HC = typeof getP12Activo === 'function' ? getP12Activo() : null;
-  if (!_p12HC) {
-    page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
-    page.drawText(medNomFirma, { x: width - 215, y: y - 14, size: 9, font: normal, color: gris });
-    page.drawText('Médico tratante · MediLyft', { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
-  }
-  page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
-  page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Historia clinica' });
-
+  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: gris, tipoDocumento: 'Historia clinica' });
   return await guardarPDFConFirma(doc, 'Historia clinica');
 }
 
 // ===== INTERCONSULTA PDF =====
 async function generarInterconsultaPDF() {
   const { PDFDocument, rgb, StandardFonts } = PDFLib;
-  const doc = await PDFDocument.create();
-  const brand = rgb(1.0, 0.353, 0.373);
-  const gris  = rgb(0.4, 0.4, 0.4);
-  const negro = rgb(0, 0, 0);
-  const blanco = rgb(1, 1, 1);
+
+  const resp = await fetch('/templates/interconsulta.pdf');
+  if (!resp.ok) { showToast('Error: plantilla interconsulta.pdf no encontrada'); return; }
+  const doc  = await PDFDocument.load(new Uint8Array(await resp.arrayBuffer()));
   const bold   = await doc.embedFont(StandardFonts.HelveticaBold);
   const normal = await doc.embedFont(StandardFonts.Helvetica);
+  const negro   = rgb(0.05, 0.05, 0.05);
+  const gris    = rgb(0.35, 0.35, 0.35);
+  const page = doc.getPage(0);
+  const H = page.getHeight();
 
-  const page = doc.addPage([595, 842]);
-  const { width, height } = page.getSize();
-  const gV = id => { const el = document.getElementById(id); return _pdfSafe(el ? (el.value || el.textContent || '').trim() : ''); };
-  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || "—");
+  const gV = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
+  const gR = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
 
-  page.drawRectangle({ x: 0, y: height - 75, width, height: 75, color: brand });
-  page.drawText('MEDILYFT', { x: 40, y: height - 42, size: 20, font: bold, color: blanco });
-  page.drawText('Hoja de Interconsulta', { x: 40, y: height - 62, size: 11, font: normal, color: blanco });
-  page.drawText(`Fecha: ${gV('inter-fecha') || new Date().toLocaleDateString('es-EC')}`, { x: width - 185, y: height - 52, size: 9, font: normal, color: blanco });
+  const V = (val, x, yBot, maxW) => {
+    const v = _pdfSafe(String(val || ''));
+    if (v) page.drawText(v, { x, y: H - yBot + 1, size: 7.5, font: normal, color: negro, maxWidth: maxW || 240 });
+  };
+  const MX = (x, yTop) => page.drawText('X', { x, y: H - yTop - 7, size: 9, font: bold, color: negro });
 
-  let y = height - 95;
+  // Identificación (coordenadas pdfplumber)
+  V(gV('inter-historial'),  265, 127, 170);   // No. de Historial (bot=127)
+  V(gV('inter-nombre'),     265, 149, 290);   // Nombre Completo (bot=149)
+  V(gV('inter-cedula'),     115, 193, 250);   // Cédula (bot=193)
+  V(gV('inter-edad'),       444, 193, 80);    // Edad
+  // Sexo: Femenino x=88, Masculino x=220 (top=203)
+  if (gR('inter-sexo') === 'F' || gR('inter-sexo').toLowerCase().includes('fem')) MX(79, 203);
+  else if (gR('inter-sexo')) MX(211, 203);
+  V(gV('inter-fecha-nac'), 445, 215, 115);    // Fecha Nacimiento
+  V(gV('inter-domicilio'), 250, 281, 295);    // Domicilio (bot=281)
+  V(gV('inter-telefono'),  430, 303, 130);    // Teléfono (bot=303)
+  // Estado Civil (top=247): Soltero x=127, Casado x=243, Viudo x=363, Unión Libre x=471
+  const ecI = { 'Soltero':118, 'Casado':234, 'Viudo':354, 'Union Libre':462, 'Unión Libre':462 };
+  const ecIx = ecI[gR('inter-estado-civil')];
+  if (ecIx) MX(ecIx, 247);
 
-  function seccion(titulo) {
-    page.drawRectangle({ x: 40, y: y - 4, width: width - 80, height: 20, color: rgb(0.99, 0.95, 0.95) });
-    page.drawText(titulo, { x: 44, y, size: 10, font: bold, color: brand }); y -= 26;
-  }
-  function campo(label, valor) {
-    page.drawText(`${label}:`, { x: 44, y, size: 9, font: bold, color: gris });
-    page.drawText(String(valor || '—'), { x: 190, y, size: 9, font: normal, color: negro }); y -= 14;
-  }
-  function campoDoble(l1, v1, l2, v2) {
-    campo(l1, v1); y += 14;
-    page.drawText(`${l2}:`, { x: width / 2 + 4, y, size: 9, font: bold, color: gris });
-    page.drawText(String(v2 || '—'), { x: width / 2 + 4 + 140, y, size: 9, font: normal, color: negro }); y -= 14;
-  }
-  function wrap(texto) {
-    const palabras = (texto || '—').split(' '); let linea = '';
-    for (const p of palabras) {
-      const test = linea ? `${linea} ${p}` : p;
-      if (normal.widthOfTextAtSize(test, 9) > width - 90 && linea) {
-        page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; linea = p;
+  // Interconsulta
+  V(gV('inter-de-servicio'), 185, 370, 130);  // Enviado del Servicio (bot=370)
+  V(gV('inter-al-servicio'), 430, 370, 130);  // Al Servicio (bot=370)
+  V(gV('inter-diagnostico'), 110, 403, 350);  // Diagnóstico (bot=403)
+  V(gV('inter-cie10-val'),   490, 400, 65);   // CIE-10
+  // PRE/DEF (top=380): PRE x=521, DEF x=546
+  const dxT = gR('inter-dx-tipo');
+  if (dxT === 'PRE' || dxT === 'PRESUNTIVO') MX(513, 380);
+  if (dxT === 'DEF' || dxT === 'DEFINITIVO') MX(537, 380);
+
+  // Justificación (área grande, top=436 → texto desde y=H-460)
+  const just = _pdfSafe(gV('inter-justificacion'));
+  if (just) {
+    const words = just.split(' '); let linea = '', jY = H - 460;
+    for (const w of words) {
+      if (jY < H - 505) break;
+      const test = linea ? linea + ' ' + w : w;
+      if (normal.widthOfTextAtSize(test, 7.5) > 520 && linea) {
+        page.drawText(linea, { x: 33, y: jY, size: 7.5, font: normal, color: negro }); jY -= 10; linea = w;
       } else linea = test;
     }
-    if (linea) { page.drawText(linea, { x: 44, y, size: 9, font: normal, color: negro }); y -= 13; }
+    if (linea) page.drawText(linea, { x: 33, y: jY, size: 7.5, font: normal, color: negro });
   }
 
-  seccion('DATOS DEL PACIENTE');
-  campo('No. de historial', gV('inter-historial'));
-  campo('Nombre completo', gV('inter-nombre'));
-  campoDoble('Cédula', gV('inter-cedula'), 'Edad', gV('inter-edad'));
-  campoDoble('Sexo', gR('inter-sexo'), 'Fecha nacimiento', gV('inter-fecha-nac'));
-  campo('Estado civil', gR('inter-estado-civil'));
-  campo('Domicilio', gV('inter-domicilio'));
-  campo('Teléfono', gV('inter-telefono'));
-  y -= 4;
+  // Fecha de solicitud / Nombre del profesional
+  V(gV('inter-fecha') || new Date().toLocaleDateString('es-EC'), 185, 522, 220);
+  const medNom = _pdfSafe(currentUser ? `Dr. ${currentUser.nombre||''} ${currentUser.apellidos||''}`.trim() : '');
+  V(medNom, 215, 552, 300);
+  const medReg = currentUser?.numero_registro ? _pdfSafe('Reg. MSP: ' + currentUser.numero_registro) : '';
+  if (medReg) page.drawText(medReg, { x: 215, y: H - 565, size: 7, font: normal, color: gris, maxWidth: 300 });
 
-  seccion('DATOS DE INTERCONSULTA');
-  campo('Enviado del servicio de', gV('inter-de-servicio'));
-  campo('Al servicio de', gV('inter-al-servicio'));
-  campo('Diagnóstico', gV('inter-diagnostico'));
-  campo('CIE-10', gV('inter-cie10-val'));
-  campo('Tipo diagnóstico', gR('inter-dx-tipo'));
-  y -= 4;
-
-  seccion('JUSTIFICACIÓN');
-  wrap(gV('inter-justificacion') || '—');
-  y -= 30;
-
-  // Firma
-  const medNom = currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '—';
-  const reg = currentUser?.numero_registro || '';
-  page.drawText(`Fecha de solicitud: ${gV('inter-fecha')}`, { x: 44, y, size: 9, font: normal, color: negro }); y -= 14;
-  page.drawText(`Profesional: ${medNom}`, { x: 44, y, size: 9, font: normal, color: negro }); y -= 30;
-  const _p12Inter = typeof getP12Activo === 'function' ? getP12Activo() : null;
-  if (!_p12Inter) {
-    page.drawLine({ start: { x: width - 220, y }, end: { x: width - 40, y }, thickness: 0.5, color: gris });
-    page.drawText(medNom, { x: width - 215, y: y - 14, size: 9, font: normal, color: gris });
-    if (reg) page.drawText(`Reg. MSP: ${reg}`, { x: width - 215, y: y - 26, size: 8, font: normal, color: gris });
-    page.drawText('Firma y sello', { x: width - 215, y: y - 38, size: 8, font: normal, color: gris });
-  }
-  page.drawLine({ start: { x: 40, y: 55 }, end: { x: width - 40, y: 55 }, thickness: 0.5, color: gris });
-  page.drawText('Documento generado por MediLyft · Confidencial · LOPDP Ecuador', { x: 40, y: 40, size: 7, font: normal, color: gris });
   await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: gris, tipoDocumento: 'Interconsulta medica' });
-
   return await guardarPDFConFirma(doc, 'Interconsulta medica');
 }
 
@@ -410,11 +357,6 @@ async function generarCertificadoPDF() {
   const gV  = id => { const el = document.getElementById(id); return _pdfSafe((el ? (el.value || el.textContent || '') : '').trim()); };
   const gR  = name => _pdfSafe(document.querySelector(`input[name="${name}"]:checked`)?.value || '');
   const gCB = id => document.getElementById(id)?.checked || false;
-
-  // White-out Vital Club logo/sello centrado (x=269-319, top=20-70 → y_pdf=772-822)
-  page.drawRectangle({ x: 254, y: H - 72, width: 92, height: 57, color: blanco });
-  const mltW = bold.widthOfTextAtSize('MEDILYFT', 9);
-  page.drawText('MEDILYFT', { x: (595 - mltW) / 2, y: H - 52, size: 9, font: bold, color: teal });
 
   // Overlay helper: draws value text just above the template underline
   // yTop = pdfplumber "top" coordinate of the underline stroke

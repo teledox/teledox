@@ -38,9 +38,15 @@ async function _embedLogo(doc) {
 // Dibuja cabecera estándar MediLyft en una página (logo + título + subtítulo opcional).
 function _drawHeader(pg, logoImg, titulo, subtitulo, H, bold, normal, negro, grisOsc) {
   if (logoImg) pg.drawImage(logoImg, { x: 272, y: H - 52, width: 48, height: 38 });
-  pg.drawText('MediLyft', { x: 258, y: H - 62, size: 10, font: bold, color: negro });
-  pg.drawText(titulo,     { x: 258 - titulo.length * 3.2, y: H - 77, size: 13, font: bold, color: negro });
-  if (subtitulo) pg.drawText(subtitulo, { x: 258, y: H - 89, size: 7.5, font: normal, color: grisOsc });
+  const medW = bold.widthOfTextAtSize('MediLyft', 10);
+  pg.drawText('MediLyft', { x: (595 - medW) / 2, y: H - 62, size: 10, font: bold, color: negro });
+  const titW = bold.widthOfTextAtSize(titulo, 13);
+  pg.drawText(titulo, { x: (595 - titW) / 2, y: H - 77, size: 13, font: bold, color: negro });
+  if (subtitulo) {
+    const subW = normal.widthOfTextAtSize(subtitulo, 7.5);
+    pg.drawText(subtitulo, { x: (595 - subW) / 2, y: H - 89, size: 7.5, font: normal, color: grisOsc });
+  }
+  pg.drawLine({ start: { x: 36, y: H - 94 }, end: { x: 559, y: H - 94 }, thickness: 0.4, color: PDFLib.rgb(0.82, 0.82, 0.82) });
 }
 
 // ===== RECETA MÉDICA PDF =====
@@ -252,6 +258,7 @@ async function generarHistoriaClinicaPDF() {
       pg.drawText(label + ':', { x: LM+4, y: state.y, size:7.5, font:bold, color:grisOsc, maxWidth: lw_ });
       const v = _pdfSafe(String(valor || ''));
       if (v) pg.drawText(v, { x: LM+lw_+6, y: state.y, size:8, font:normal, color:negro, maxWidth: INNER-lw_-8 });
+      pg.drawLine({ start:{x:LM, y:state.y-5}, end:{x:RM, y:state.y-5}, thickness:0.3, color:rgb(0.89,0.89,0.89) });
       state.y -= 14;
     },
     wrap: (txt, x, maxW, size) => {
@@ -294,12 +301,23 @@ async function generarHistoriaClinicaPDF() {
   s1.y -= 4;
 
   h1.sec('MOTIVO DE LA CONSULTA');
-  h1.wrap(gV('hc-motivo'), LM+4, INNER-8, 7.5);
+  const motivoTxt = gV('hc-motivo');
+  const motivoYstart = s1.y;
+  h1.wrap(motivoTxt, LM+4, INNER-8, 7.5);
+  if (s1.y > motivoYstart - 48) {
+    p1.drawRectangle({ x: LM, y: motivoYstart - 52, width: INNER, height: 52, color: blanco, borderColor: rgb(0.85,0.85,0.85), borderWidth: 0.4 });
+    s1.y = motivoYstart - 56;
+  }
   s1.y -= 4;
 
   h1.sec('ANTECEDENTES PERSONALES');
-  const ants = [gV('hc-cronicas-texto'), gV('hc-ant-personales')].filter(Boolean).join(' | ');
+  const ants = gV('hc-ant-personales');
+  const antsYstart = s1.y;
   h1.wrap(ants, LM+4, INNER-8, 7.5);
+  if (s1.y > antsYstart - 48) {
+    p1.drawRectangle({ x: LM, y: antsYstart - 52, width: INNER, height: 52, color: blanco, borderColor: rgb(0.85,0.85,0.85), borderWidth: 0.4 });
+    s1.y = antsYstart - 56;
+  }
   s1.y -= 4;
 
   h1.sec('ANTECEDENTES FAMILIARES');
@@ -322,7 +340,12 @@ async function generarHistoriaClinicaPDF() {
   s1.y -= 4;
 
   h1.sec('ENFERMEDAD O PROBLEMA ACTUAL');
+  const enfYstart = s1.y;
   h1.wrap(gV('hc-enfermedad'), LM+4, INNER-8, 7.5);
+  if (s1.y > enfYstart - 60) {
+    p1.drawRectangle({ x: LM, y: enfYstart - 64, width: INNER, height: 64, color: blanco, borderColor: rgb(0.85,0.85,0.85), borderWidth: 0.4 });
+    s1.y = enfYstart - 68;
+  }
 
   // ══════════════════════════════════════════════════════════════════════════════
   // PÁGINA 2 — Órganos / Signos Vitales / Diagnóstico / Tratamiento
@@ -332,20 +355,28 @@ async function generarHistoriaClinicaPDF() {
   const h2 = mk(p2, s2);
   const cpColor = rgb(0.75, 0.1, 0.1), spColor = rgb(0.1, 0.5, 0.18);
 
+  const grisLine = rgb(0.78, 0.78, 0.78);
+  const CELL_H = 30;
+
+  // Dibuja una celda de tabla con label arriba y valor abajo
+  const drawCell = (pg, x, y, w, label, val, color) => {
+    pg.drawRectangle({ x, y: y - CELL_H + 2, width: w, height: CELL_H, color: blanco, borderColor: grisLine, borderWidth: 0.4 });
+    pg.drawText(label, { x: x+4, y: y - 6,  size: 6.5, font: bold,   color: grisOsc, maxWidth: w - 6 });
+    pg.drawText(val || '—', { x: x+4, y: y - 19, size: 8.5, font: bold,   color: color || grisOsc, maxWidth: w - 6 });
+  };
+
   h2.sec('REVISION DE ORGANOS Y SISTEMAS');
   const organos = [
     ['hco-card','Cardiologia'],['hco-resp','Respiratorio'],['hco-cardv','Cardiovascular'],['hco-dig','Digestivo'],['hco-gen','Genital'],
     ['hco-uri','Urinario'],['hco-musc','Musculo Esquel.'],['hco-end','Endocrino'],['hco-hem','Hemo Linfatico'],['hco-nerv','Nervioso'],
   ];
-  const COL_ORG = Math.floor(INNER / 5);
+  const COL_ORG = INNER / 5;
   [0, 1].forEach(row => {
     organos.slice(row*5, row*5+5).forEach(([radio, label], col) => {
-      const xO = LM + 4 + col * COL_ORG;
       const val = gR(radio);
-      p2.drawText(label, { x: xO, y: s2.y, size:6.5, font:bold, color:grisOsc, maxWidth: COL_ORG-6 });
-      p2.drawText(val || '—', { x: xO, y: s2.y-9, size:7.5, font:bold, color: val==='CP'?cpColor:(val==='SP'?spColor:grisOsc) });
+      drawCell(p2, LM + col * COL_ORG, s2.y, COL_ORG, label, val, val==='CP'?cpColor:(val==='SP'?spColor:null));
     });
-    s2.y -= 22;
+    s2.y -= CELL_H + 2;
   });
   h2.wrap(gV('hc-organos-notas'), LM+4, INNER-8, 7.5);
   s2.y -= 4;
@@ -355,37 +386,31 @@ async function generarHistoriaClinicaPDF() {
     ['hce-cab','Cabeza'],['hce-cue','Cuello'],['hce-tor','Torax'],
     ['hce-abd','Abdomen'],['hce-pel','Pelvis'],['hce-ext','Extremidades'],
   ];
-  const COL_REG = Math.floor(INNER / 6);
+  const COL_REG = INNER / 6;
   regiones.forEach(([radio, label], col) => {
-    const xR = LM + 4 + col * COL_REG;
     const val = gR(radio);
-    p2.drawText(label, { x: xR, y: s2.y, size:6.5, font:bold, color:grisOsc });
-    p2.drawText(val || '—', { x: xR, y: s2.y-9, size:7.5, font:bold, color: val==='CP'?cpColor:(val==='SP'?spColor:grisOsc) });
+    drawCell(p2, LM + col * COL_REG, s2.y, COL_REG, label, val, val==='CP'?cpColor:(val==='SP'?spColor:null));
   });
-  s2.y -= 22;
+  s2.y -= CELL_H + 2;
   h2.wrap(gV('hc-examen-notas'), LM+4, INNER-8, 7.5);
   s2.y -= 4;
 
   h2.sec('SIGNOS VITALES');
-  const svRow1 = [
+  const svItems1 = [
     ['Peso',        gV('hc-peso')  ? gV('hc-peso')  + ' kg' : ''],
     ['Talla',       gV('hc-talla') ? gV('hc-talla') + ' cm' : ''],
     ['Temperatura', gV('hc-temperatura')],
     ['Pulso',       gV('hc-pulso')],
     ['Respiracion', gV('hc-respiracion')],
   ];
-  svRow1.forEach(([lbl, val], i) => {
-    const xSV = LM + 4 + i * Math.floor(INNER / 5);
-    p2.drawText(lbl + ':', { x: xSV, y: s2.y,    size:7,   font:bold,   color:grisOsc });
-    p2.drawText(val || '—', { x: xSV, y: s2.y-10, size:7.5, font:normal, color:negro });
-  });
-  s2.y -= 23;
-  [['T/A', gV('hc-tension-arterial')], ['Oximetria', gV('hc-oximetria')]].forEach(([lbl, val], i) => {
-    const xSV = LM + 4 + i * 130;
-    p2.drawText(lbl + ':', { x: xSV, y: s2.y,    size:7,   font:bold,   color:grisOsc });
-    p2.drawText(val || '—', { x: xSV, y: s2.y-10, size:7.5, font:normal, color:negro });
-  });
-  s2.y -= 23;
+  svItems1.forEach(([lbl, val], i) => drawCell(p2, LM + i * (INNER/5), s2.y, INNER/5, lbl, val, negro));
+  s2.y -= CELL_H + 2;
+  const svItems2 = [
+    ['T/A (mmHg)',   gV('hc-tension-arterial')],
+    ['Oximetria (%)', gV('hc-oximetria')],
+  ];
+  svItems2.forEach(([lbl, val], i) => drawCell(p2, LM + i * (INNER/2), s2.y, INNER/2, lbl, val, negro));
+  s2.y -= CELL_H + 6;
 
   h2.sec('DIAGNOSTICO');
   for (let i = 1; i <= 4; i++) {
@@ -430,11 +455,12 @@ async function generarHistoriaClinicaPDF() {
     s3.y -= 18;
   });
 
-  s3.y -= 20;
-  p3.drawLine({ start:{x:248, y:s3.y}, end:{x:480, y:s3.y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
-  if (docNom) p3.drawText(docNom, { x:252, y:s3.y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
-  if (docReg) p3.drawText(docReg, { x:252, y:s3.y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
-  if (docEsp) p3.drawText(docEsp, { x:252, y:s3.y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+  // Firma siempre anclada al tercio inferior de la página
+  const firmaY = Math.min(s3.y - 20, 200);
+  p3.drawLine({ start:{x:248, y:firmaY}, end:{x:480, y:firmaY}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
+  if (docNom) p3.drawText(docNom, { x:252, y:firmaY-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
+  if (docReg) p3.drawText(docReg, { x:252, y:firmaY-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+  if (docEsp) p3.drawText(docEsp, { x:252, y:firmaY-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
   await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: grisOsc, tipoDocumento: 'Historia clinica' });
   return await guardarPDFConFirma(doc, 'Historia clinica');

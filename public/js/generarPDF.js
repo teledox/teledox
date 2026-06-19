@@ -75,11 +75,10 @@ async function generarRecetaPDF() {
   const medEsp = _pdfSafe(gV('rec-esp-medico') || u.especialidad || 'MEDICINA GENERAL');
 
   const logoImg = await _embedLogo(doc);
-  _drawHeader(page, logoImg, 'RECETA MEDICA', null, H, bold, normal, negro, grisOsc);
   const recNum = gV('rec-numero');
-  if (recNum) page.drawText('N° ' + recNum, { x: 258, y: H - 90, size: 8, font: normal, color: grisOsc });
+  _drawHeader(page, logoImg, 'RECETA MEDICA', recNum ? 'N° ' + recNum : null, H, bold, normal, negro, grisOsc);
 
-  let y = H - 100;
+  let y = H - 110;
   const LM = 36, RM = 559, INNER = RM - LM;
 
   const drawSec = titulo => {

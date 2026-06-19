@@ -283,7 +283,7 @@ async function generarHistoriaClinicaPDF() {
   // PÁGINA 1 — Identificación + Antecedentes
   // ══════════════════════════════════════════════════════════════════════════════
   const p1 = mkPage('Pag. 1 — Identificacion y Antecedentes');
-  const s1 = { y: H - 98 };
+  const s1 = { y: H - 110 };
   const h1 = mk(p1, s1);
 
   h1.sec('FICHA DE IDENTIFICACION');
@@ -351,7 +351,7 @@ async function generarHistoriaClinicaPDF() {
   // PÁGINA 2 — Órganos / Signos Vitales / Diagnóstico / Tratamiento
   // ══════════════════════════════════════════════════════════════════════════════
   const p2 = mkPage('Pag. 2 — Examen y Diagnostico');
-  const s2 = { y: H - 98 };
+  const s2 = { y: H - 110 };
   const h2 = mk(p2, s2);
   const cpColor = rgb(0.75, 0.1, 0.1), spColor = rgb(0.1, 0.5, 0.18);
 
@@ -428,7 +428,7 @@ async function generarHistoriaClinicaPDF() {
   // PÁGINA 3 — Evolución + Firma
   // ══════════════════════════════════════════════════════════════════════════════
   const p3 = mkPage('Pag. 3 — Evolucion y Prescripcion');
-  const s3 = { y: H - 98 };
+  const s3 = { y: H - 110 };
   const h3 = mk(p3, s3);
 
   h3.sec('EVOLUCION Y PRESCRIPCION');

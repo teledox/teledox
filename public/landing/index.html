@@ -26,11 +26,14 @@
     html{scroll-behavior:smooth;background:#fff}
     body{font-family:'Inter',sans-serif;color:var(--dark);background:transparent;overflow-x:hidden}
     /* ── SPLINE DE FONDO (secciones blancas) ── */
-    .page-spline{
-      position:fixed;inset:0;z-index:-1;width:100%;height:100%;
-      pointer-events:none;border:0;opacity:0;transition:opacity 1.4s ease
+    .page-spline-wrap{
+      position:fixed;inset:0;z-index:-1;pointer-events:none;
+      transform:scale(2.1);transform-origin:center center;
+      opacity:0;transition:opacity 1.4s ease;
+      filter:grayscale(1) sepia(1) saturate(7) hue-rotate(-22deg) brightness(1.05)
     }
-    .page-spline.loaded{opacity:.6;transform:scale(2.1);filter:grayscale(1) sepia(1) saturate(7) hue-rotate(-22deg) brightness(1.05)}
+    .page-spline-wrap.loaded{opacity:.6}
+    .page-spline{width:100%;height:100%;display:block;border:0;pointer-events:none}
 
     /* ── NAV ── */
     nav{
@@ -84,13 +87,14 @@
       background-size:42px 42px;pointer-events:none
     }
     /* ── SPLINE FONDO HERO ── */
-    .hero-spline{
-      position:absolute;inset:0;z-index:1;
-      pointer-events:none;border:0;width:100%;height:100%;
-      transform:scale(1.6);transform-origin:center center;
-      opacity:0;transition:opacity 1.2s ease
+    .hero-spline-wrap{
+      position:absolute;inset:0;z-index:1;pointer-events:none;
+      transform:scale(1.45);transform-origin:center center;
+      opacity:0;transition:opacity 1.2s ease;
+      filter:saturate(1.9) contrast(1.28) brightness(1.14)
     }
-    .hero-spline.loaded{opacity:1;transform:scale(1.45);filter:saturate(1.9) contrast(1.28) brightness(1.14)}
+    .hero-spline-wrap.loaded{opacity:1}
+    .hero-spline{width:100%;height:100%;display:block;border:0;pointer-events:none}
     .hero-scrim{
       position:absolute;inset:0;z-index:2;pointer-events:none;
       background:radial-gradient(ellipse 72% 62% at 50% 45%,rgba(255,255,255,.78) 0%,rgba(255,255,255,.45) 55%,transparent 100%)
@@ -389,7 +393,7 @@
       nav ul a.page-link{padding:6px 12px;font-size:13px}
       .btn-nav{padding:9px 14px;font-size:13px}
       .hero{padding:110px 18px 70px;min-height:auto}
-      .hero-spline,.hero-scrim,.page-spline{display:none}
+      .hero-spline-wrap,.hero-scrim,.page-spline-wrap{display:none}
       .hero h1{letter-spacing:-1.2px}
       .hero h1 .hl::after{bottom:-9px;height:12px}
       .hero-actions{width:100%}
@@ -410,7 +414,7 @@
 </head>
 <body>
 
-<spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer>
+<div class="page-spline-wrap"><spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer></div>
 
 <!-- ── NAV ── -->
 <nav>
@@ -434,7 +438,7 @@
 
 <!-- ── HERO ── -->
 <section class="hero">
-  <spline-viewer class="hero-spline" loading-anim-type="none" url="https://prod.spline.design/WFbtac88CPy1U7CO/scene.splinecode"></spline-viewer>
+  <div class="hero-spline-wrap"><spline-viewer class="hero-spline" loading-anim-type="none" url="https://prod.spline.design/WFbtac88CPy1U7CO/scene.splinecode"></spline-viewer></div>
   <div class="hero-scrim"></div>
   <h1 class="fade-up">Estamos contigo<br/>en cada paso hacia<br/><span class="hl">tu bienestar.</span></h1>
   <p class="hero-sub fade-up">Consulta con un médico <b>en minutos</b>, recibe tu tratamiento, obtén tu <b>receta electrónica</b> y mantén un <b>seguimiento continuo</b> de tu salud, enfermedades crónicas o procesos de recuperación, todo desde un solo lugar.</p>
@@ -685,7 +689,8 @@
   // Reveal suave de la animación Spline (evento load + respaldo por tiempo)
   (function(){
     document.querySelectorAll('.hero-spline,.page-spline').forEach(s=>{
-      const show=()=>s.classList.add('loaded');
+      const wrap=s.parentElement;
+      const show=()=>wrap.classList.add('loaded');
       s.addEventListener('load',show);
       setTimeout(show,3500);
     });

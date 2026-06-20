@@ -6,7 +6,7 @@
 // dentro de esta función, para desbloquear la clave privada con node-forge.
 // ─────────────────────────────────────────────────────────────────────────
 
-const SIG_PLACEHOLDER_BYTES   = 12000;
+const SIG_PLACEHOLDER_BYTES   = 16000;
 const SIG_PLACEHOLDER_HEX_LEN = SIG_PLACEHOLDER_BYTES * 2;
 const BYTE_RANGE_PLACEHOLDER  = 9999999999;
 

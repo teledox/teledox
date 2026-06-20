@@ -389,3 +389,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 
 /* ── Checkbox "Completada" en tabla de consultas ─────────────────────────── */
 .chk-completar { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: #555; cursor: pointer; white-space: nowrap; }
+
+/* ── Botones de días activos (seguimiento diagnóstico) ───────────────────── */
+.bw-dia-btn { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 6px; border: 1.5px solid #e5e7eb; background: #fff; cursor: pointer; font-size: 12px; font-weight: 700; color: #666; transition: all 0.12s; }
+.bw-dia-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }

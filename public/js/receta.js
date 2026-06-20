@@ -843,93 +843,255 @@ async function activarSeguimientoCronico() {
   }
 }
 
-// ── Bienestar del paciente ──────────────────────────────────────────────────
+// ── Seguimiento diagnóstico (bienestar) ────────────────────────────────────
 const BIENESTAR_COLORES = ['', '#16a34a', '#84cc16', '#f59e0b', '#ea580c', '#dc2626'];
 const BIENESTAR_LABELS  = ['', 'Excelente', 'Bien', 'Regular', 'Mal', 'Muy mal'];
 
+function _bwComputeSlots(frecuencia, horarioIn, horarioFin, diasActivos, maxDias) {
+  const slots = [];
+  const now   = new Date();
+  const limit = new Date(now.getTime() + maxDias * 24 * 3600000);
+  let t = new Date(now);
+  t.setMinutes(0, 0, 0);
+  t = new Date(t.getTime() + 3600000);
+  for (let i = 0; i < 24 * 7 && t < limit; i++) {
+    if (diasActivos.includes(t.getDay()) && t.getHours() >= horarioIn && t.getHours() < horarioFin) break;
+    t = new Date(t.getTime() + 3600000);
+  }
+  let iter = 0;
+  while (t < limit && iter < 200) {
+    iter++;
+    slots.push(new Date(t));
+    t = new Date(t.getTime() + frecuencia * 3600000);
+    t.setMinutes(0, 0, 0);
+    for (let i = 0; i < 24 * 7; i++) {
+      if (diasActivos.includes(t.getDay()) && t.getHours() >= horarioIn && t.getHours() < horarioFin) break;
+      t = new Date(t.getTime() + 3600000);
+    }
+  }
+  return slots;
+}
+
+function renderPreviewGridBienestar() {
+  const frecuencia  = parseInt(document.getElementById('bw-frecuencia')?.value) || 24;
+  const horarioIn   = parseInt(document.getElementById('bw-hora-inicio')?.value) || 8;
+  const horarioFin  = parseInt(document.getElementById('bw-hora-fin')?.value) || 21;
+  const durDias     = parseInt(document.getElementById('bw-duracion')?.value) || null;
+  const diasActivos = Array.from(document.querySelectorAll('.bw-dia-btn.active')).map(b => parseInt(b.dataset.dia));
+  const el          = document.getElementById('bw-preview-grid');
+  if (!el) return;
+
+  if (!diasActivos.length) {
+    el.innerHTML = '<div style="color:#aaa;font-size:11px;text-align:center;padding:8px">Selecciona al menos un día.</div>';
+    return;
+  }
+
+  const maxDias     = Math.min(durDias || 7, 7);
+  const slots       = _bwComputeSlots(frecuencia, horarioIn, horarioFin, diasActivos, maxDias);
+  const now         = new Date();
+  const diasNombres = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+  const cols = [];
+  for (let i = 0; i < maxDias; i++) {
+    const d = new Date(now); d.setDate(now.getDate() + i); d.setHours(0,0,0,0);
+    cols.push(d);
+  }
+
+  const horasSet = new Set(slots.map(s => s.getHours()));
+  const horas    = [...horasSet].sort((a, b) => a - b);
+  const lookup   = {};
+  slots.forEach(s => {
+    const k = s.toDateString();
+    if (!lookup[k]) lookup[k] = new Set();
+    lookup[k].add(s.getHours());
+  });
+
+  if (!horas.length) {
+    el.innerHTML = '<div style="color:#aaa;font-size:11px;text-align:center;padding:8px">Sin mensajes — revisa la frecuencia y el horario.</div>';
+    return;
+  }
+
+  let html = `<div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px;overflow-x:auto;margin-top:10px">
+    <div style="font-size:10px;color:#6b7280;margin-bottom:6px">Vista previa · ${String(horarioIn).padStart(2,'0')}:00–${String(horarioFin).padStart(2,'0')}:00 · ${slots.length} mensaje${slots.length!==1?'s':''}</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr><th style="width:36px"></th>`;
+
+  cols.forEach(d => {
+    const inactivo = !diasActivos.includes(d.getDay());
+    const label    = d.toDateString() === now.toDateString() ? 'Hoy' : diasNombres[d.getDay()];
+    const fecha    = `${d.getDate()}/${d.getMonth()+1}`;
+    html += `<th style="text-align:center;padding:3px 4px;font-weight:600;color:${inactivo?'#ccc':'#555'}">${label}<br><span style="font-weight:400">${fecha}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  horas.forEach(h => {
+    html += `<tr><td style="color:#aaa;font-size:10px;text-align:right;padding-right:6px;white-space:nowrap">${String(h).padStart(2,'0')}:00</td>`;
+    cols.forEach(d => {
+      const inactivo   = !diasActivos.includes(d.getDay());
+      const tieneSlot  = lookup[d.toDateString()]?.has(h);
+      if (inactivo)       html += '<td style="text-align:center;color:#e5e7eb;font-size:10px">—</td>';
+      else if (tieneSlot) html += '<td style="text-align:center"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#2563eb"></span></td>';
+      else                html += '<td></td>';
+    });
+    html += '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+  el.innerHTML = html;
+}
+
 async function renderBienestarConsulta() {
-  const statsEl = document.getElementById('bienestarStatsConsulta');
-  const dotEl   = document.getElementById('bienestarTimelineConsulta');
-  if (!dotEl) return;
+  const el = document.getElementById('bienestarContent');
+  if (!el) return;
 
   const recsBienestar = await supa('GET', 'recordatorios', null,
     `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=1`) || [];
   const recBienestar = recsBienestar[0];
 
-  const btn = document.getElementById('btnActivarBienestar');
-  if (btn) {
-    if (recBienestar?.activo) {
-      btn.textContent = '🔕 Desactivar';
-      btn.style.cssText = 'font-size:12px;white-space:nowrap;background:#fee2e2;color:#dc2626;border-color:#fecaca';
-      btn.onclick = () => desactivarBienestar(recBienestar.id);
-    } else {
-      btn.textContent = '💙 Activar check-in diario';
-      btn.style.cssText = 'font-size:12px;white-space:nowrap';
-      btn.onclick = activarBienestar;
+  // ── Estado inactivo: mostrar configurador de horario ──────────────────────
+  if (!recBienestar?.activo) {
+    el.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div>
+          <label class="form-label" style="font-size:11px">Seguimiento cada (horas)</label>
+          <input class="form-control" type="number" id="bw-frecuencia" value="24" min="1" oninput="renderPreviewGridBienestar()" style="font-size:13px">
+        </div>
+        <div>
+          <label class="form-label" style="font-size:11px">Durante (días) <span style="font-weight:400;color:#aaa">— vacío = sin límite</span></label>
+          <input class="form-control" type="number" id="bw-duracion" placeholder="ej: 30" min="1" oninput="renderPreviewGridBienestar()" style="font-size:13px">
+        </div>
+      </div>
+      <div style="margin-bottom:10px">
+        <label class="form-label" style="font-size:11px;margin-bottom:6px;display:block">Días activos</label>
+        <div style="display:flex;gap:6px">
+          <button type="button" class="bw-dia-btn active" data-dia="1" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">L</button>
+          <button type="button" class="bw-dia-btn active" data-dia="2" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">M</button>
+          <button type="button" class="bw-dia-btn active" data-dia="3" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">X</button>
+          <button type="button" class="bw-dia-btn active" data-dia="4" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">J</button>
+          <button type="button" class="bw-dia-btn active" data-dia="5" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">V</button>
+          <button type="button" class="bw-dia-btn active" data-dia="6" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">S</button>
+          <button type="button" class="bw-dia-btn" data-dia="0" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">D</button>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+        <div>
+          <label class="form-label" style="font-size:11px">Desde</label>
+          <select class="form-control" id="bw-hora-inicio" onchange="renderPreviewGridBienestar()" style="font-size:13px"></select>
+        </div>
+        <div>
+          <label class="form-label" style="font-size:11px">Hasta</label>
+          <select class="form-control" id="bw-hora-fin" onchange="renderPreviewGridBienestar()" style="font-size:13px"></select>
+        </div>
+      </div>
+      <div id="bw-preview-grid"></div>
+      <button class="btn btn-primary" id="btnActivarBienestar" onclick="activarBienestar()" style="width:100%;margin-top:12px;background:#2563eb;border-color:#2563eb">
+        💙 Activar seguimiento diagnóstico
+      </button>`;
+
+    const selIn  = document.getElementById('bw-hora-inicio');
+    const selFin = document.getElementById('bw-hora-fin');
+    for (let h = 0; h <= 23; h++) {
+      const o1 = new Option(`${String(h).padStart(2,'0')}:00`, h);
+      if (h === 8)  o1.selected = true;
+      selIn.appendChild(o1);
+      const o2 = new Option(`${String(h).padStart(2,'0')}:00`, h);
+      if (h === 21) o2.selected = true;
+      selFin.appendChild(o2);
     }
-  }
-
-  const resp = await supa('GET', 'seguimiento_respuestas', null,
-    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=12`) || [];
-
-  if (!resp.length) {
-    if (statsEl) statsEl.innerHTML = '';
-    dotEl.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin check-ins de bienestar aún. Activa el seguimiento para empezar.</div>';
+    renderPreviewGridBienestar();
     return;
   }
 
-  if (statsEl) {
+  // ── Estado activo: mostrar stats + dots + botón desactivar ────────────────
+  const resp = await supa('GET', 'seguimiento_respuestas', null,
+    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=12`) || [];
+
+  const fmtConf = `Cada ${recBienestar.frecuencia_horas}h · ${recBienestar.fecha_fin
+    ? 'hasta ' + new Date(recBienestar.fecha_fin).toLocaleDateString('es-EC')
+    : 'sin límite'}`;
+
+  let statsHtml = '';
+  if (resp.length) {
     const total    = resp.length;
     const buenos   = resp.filter(r => (r.nivel_bienestar || 0) <= 2).length;
     const ultimo   = resp[0].nivel_bienestar;
     const penult   = resp[1]?.nivel_bienestar;
     const tendencia = !penult ? '→' : ultimo < penult ? '↗' : ultimo > penult ? '↘' : '→';
     const colorTend = tendencia === '↗' ? '#16a34a' : tendencia === '↘' ? '#dc2626' : '#888';
-    statsEl.innerHTML = `
+    statsHtml = `
       <div style="display:flex;gap:16px;padding:8px 0 10px;font-size:12px;color:#555;border-bottom:1px solid #f5f5f5;margin-bottom:10px;flex-wrap:wrap">
         <span><strong>${total}</strong> check-ins</span>
-        <span><strong>${Math.round(buenos / total * 100)}%</strong> bien/excelente</span>
-        <span>Último: <strong style="color:${BIENESTAR_COLORES[ultimo] || '#888'}">${BIENESTAR_LABELS[ultimo] || '—'}</strong></span>
+        <span><strong>${Math.round(buenos/total*100)}%</strong> bien/excelente</span>
+        <span>Último: <strong style="color:${BIENESTAR_COLORES[ultimo]||'#888'}">${BIENESTAR_LABELS[ultimo]||'—'}</strong></span>
         <span style="color:${colorTend};font-weight:700;font-size:15px">${tendencia}</span>
       </div>`;
   }
 
-  dotEl.innerHTML = `
-    <div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0">
-      ${[...resp].reverse().map(r => {
-        const n   = r.nivel_bienestar || 0;
-        const dia = new Date(r.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
-        return `<div title="${BIENESTAR_LABELS[n] || '?'} · ${dia}" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default">
-          <div style="width:22px;height:22px;border-radius:50%;background:${BIENESTAR_COLORES[n] || '#d1d5db'};box-shadow:0 1px 3px rgba(0,0,0,.18)"></div>
-          <div style="font-size:9px;color:#9ca3af;line-height:1">${new Date(r.created_at).getDate()}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  const dotsHtml = resp.length
+    ? `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0">
+        ${[...resp].reverse().map(r => {
+          const n   = r.nivel_bienestar || 0;
+          const dia = new Date(r.created_at).toLocaleDateString('es-EC',{day:'2-digit',month:'short'});
+          return `<div title="${BIENESTAR_LABELS[n]||'?'} · ${dia}" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default">
+            <div style="width:22px;height:22px;border-radius:50%;background:${BIENESTAR_COLORES[n]||'#d1d5db'};box-shadow:0 1px 3px rgba(0,0,0,.18)"></div>
+            <div style="font-size:9px;color:#9ca3af;line-height:1">${new Date(r.created_at).getDate()}</div>
+          </div>`;
+        }).join('')}
+      </div>`
+    : '<div class="empty-state" style="padding:8px 0">Sin check-ins de bienestar aún.</div>';
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:12px;color:#555;display:flex;align-items:center;gap:6px">
+        <span class="badge badge-blue">Activo</span>
+        <span>${fmtConf}</span>
+      </div>
+      <button id="btnActivarBienestar" class="btn btn-sm" onclick="desactivarBienestar('${recBienestar.id}')"
+        style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap;font-size:12px">
+        🔕 Desactivar
+      </button>
+    </div>
+    ${statsHtml}
+    ${dotsHtml}`;
 }
 
 async function activarBienestar() {
-  const ahora = new Date();
-  const prox  = new Date(ahora);
-  prox.setUTCDate(prox.getUTCDate() + 1);
-  prox.setUTCHours(13, 0, 0, 0); // 8am Ecuador (UTC-5)
+  const ahora       = new Date();
+  const frecuencia  = parseInt(document.getElementById('bw-frecuencia')?.value) || 24;
+  const duracion    = parseInt(document.getElementById('bw-duracion')?.value) || null;
+  const horarioIn   = parseInt(document.getElementById('bw-hora-inicio')?.value) || 8;
+  const horarioFin  = parseInt(document.getElementById('bw-hora-fin')?.value) || 21;
+  const diasActivos = Array.from(document.querySelectorAll('.bw-dia-btn.active')).map(b => parseInt(b.dataset.dia));
+
+  // Primer slot válido según días y horario
+  let prox = new Date(ahora);
+  prox.setMinutes(0, 0, 0);
+  prox = new Date(prox.getTime() + 3600000);
+  for (let i = 0; i < 24 * 7; i++) {
+    if (diasActivos.includes(prox.getDay()) && prox.getHours() >= horarioIn && prox.getHours() < horarioFin) break;
+    prox = new Date(prox.getTime() + 3600000);
+  }
+
+  const fechaFin = duracion
+    ? new Date(ahora.getTime() + duracion * 86400000).toISOString()
+    : new Date(ahora.getTime() + 365 * 86400000).toISOString();
 
   await supa('POST', 'recordatorios', {
     paciente_id:      recetaPacienteId,
     consulta_id:      recetaConsultaId,
     tipo:             'bienestar',
-    medicamento:      'Check-in de bienestar diario',
-    frecuencia_horas: 24,
+    medicamento:      'Check-in de bienestar',
+    frecuencia_horas: frecuencia,
     activo:           true,
     fecha_proximo:    prox.toISOString(),
-    fecha_fin:        new Date(ahora.getTime() + 30 * 86400000).toISOString()
+    fecha_fin:        fechaFin
   });
-  showToast('💙 Check-in de bienestar activado — el bot preguntará al paciente cada 24h');
+  showToast('💙 Seguimiento diagnóstico activado');
   renderBienestarConsulta();
 }
 
 async function desactivarBienestar(recId) {
   await supa('PATCH', 'recordatorios', { activo: false }, `?id=eq.${recId}`);
-  showToast('🔕 Check-in de bienestar desactivado');
+  showToast('🔕 Seguimiento diagnóstico desactivado');
   renderBienestarConsulta();
 }
 

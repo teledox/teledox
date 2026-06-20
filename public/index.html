@@ -368,63 +368,51 @@
             </div>
 
             <div class="card">
-              <div class="card-header" style="display:flex;justify-content:space-between;align-items:center">
-                <span class="card-title">💙 Bienestar del paciente</span>
-                <button id="btnActivarBienestar" class="btn btn-sm btn-primary" onclick="activarBienestar()" style="white-space:nowrap;font-size:12px">
-                  💙 Activar check-in diario
-                </button>
+              <div class="card-header">
+                <span class="card-title">💙 Seguimiento diagnóstico</span>
               </div>
-              <div id="bienestarStatsConsulta"></div>
-              <div id="bienestarTimelineConsulta">
-                <div class="empty-state" style="padding:8px 0">Sin check-ins aún.</div>
+              <div id="bienestarContent">
+                <div class="empty-state" style="padding:8px 0">Cargando...</div>
               </div>
             </div>
 
             <div class="card">
-              <div class="card-header"><span class="card-title">💊 Medicamentos para seguimiento del bot</span></div>
-              <div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem">
-                <div style="font-size:12px;color:#555;margin-bottom:10px">El bot enviará un recordatorio de cada medicamento según la <strong>frecuencia</strong>, durante los <strong>días</strong> indicados. Independiente del PDF de receta. Al pulsar <strong>Activar seguimiento</strong> quedan guardados y el bot empieza a contactar al paciente.</div>
-                <table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración (días)</th><th style="text-align:center">🔔 Notif.</th></tr></thead><tbody id="seg-meds-body"></tbody></table>
-                <button class="btn btn-sm" onclick="addFilaSeguimiento()" style="margin-top:8px">+ Agregar medicamento</button>
-              </div>
-              <!-- Fila 2: Seguimiento de tratamiento (medicamentos) -->
-              <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:1rem;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-                <div>
-                  <div style="font-size:13px;font-weight:600;color:#ea580c">🔔 Seguimiento de tratamiento (medicamentos)</div>
-                  <div style="font-size:12px;color:#888;margin-top:2px">El bot enviará recordatorios de medicamentos al paciente según la frecuencia indicada arriba</div>
-                </div>
-                <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316;white-space:nowrap">
-                  🔔 Activar seguimiento de tratamiento
-                </button>
-              </div>
-            </div>
-
-            <div class="card">
-              <div class="card-header"><span class="card-title">🔁 Seguimiento de esta consulta</span></div>
-              <div id="segTimelineConsulta"></div>
-              <div style="font-size:13px;font-weight:600;color:#374151;margin-top:14px">Seguimientos activos</div>
-              <div id="segRecordatoriosConsulta" style="margin-top:6px"></div>
-            </div>
-
-            <div class="card">
-              <div class="card-header"><span class="card-title">🧪 Seguimiento de examen de laboratorio</span></div>
-              <div style="font-size:12px;color:#888;margin-bottom:6px">El bot pregunta al paciente si ya se realizó el examen y le pide subir el resultado</div>
-              <div id="segLaboratorioInfo"></div>
-            </div>
-
-            <div class="card">
-              <div class="card-header"><span class="card-title">🏥 Enfermedades crónicas</span></div>
+              <div class="card-header"><span class="card-title">🏥 Enfermedad crónica</span></div>
               <div id="consultaCronicasList"></div>
-              <!-- Fila 3: Seguimiento enfermedad crónica -->
               <div style="background:#f0f6ff;border:1px solid #bfdbfe;border-radius:10px;padding:1rem;margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
                 <div>
-                  <div style="font-size:13px;font-weight:600;color:#2563eb">🏥 Seguimiento de enfermedad crónica</div>
-                  <div style="font-size:12px;color:#888;margin-top:2px">Activa el seguimiento periódico para pacientes con enfermedades crónicas (hipertensión, diabetes, etc.)</div>
+                  <div style="font-size:13px;font-weight:600;color:#2563eb">🏥 Activar seguimiento crónico</div>
+                  <div style="font-size:12px;color:#888;margin-top:2px">El bot contactará al paciente según la frecuencia de la enfermedad crónica registrada</div>
                 </div>
                 <button class="btn btn-primary" id="btnActivarCronica" onclick="activarSeguimientoCronico()" style="background:#2563eb;border-color:#2563eb;white-space:nowrap">
-                  🏥 Activar seguimiento crónico
+                  🏥 Activar
                 </button>
               </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">💊 Seguimiento medicamentos</span></div>
+              <div style="background:#f0fff4;border:1px solid #bbf7d0;border-radius:10px;padding:1rem">
+                <div style="font-size:12px;color:#555;margin-bottom:10px">El bot enviará un recordatorio por cada medicamento según la <strong>frecuencia</strong> y <strong>duración</strong> indicadas.</div>
+                <table class="receta-med-table"><thead><tr><th>Medicamento</th><th>Dosis</th><th>Frecuencia</th><th>Duración (días)</th><th style="text-align:center">🔔 Notif.</th></tr></thead><tbody id="seg-meds-body"></tbody></table>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+                  <button class="btn btn-sm" onclick="addFilaSeguimiento()">+ Agregar medicamento</button>
+                  <button class="btn btn-primary" id="btnActivarSeguimiento" onclick="activarSeguimiento()" style="background:#f97316;border-color:#f97316;white-space:nowrap">
+                    🔔 Activar seguimiento
+                  </button>
+                </div>
+              </div>
+              <div style="margin-top:14px">
+                <div id="segTimelineConsulta"></div>
+                <div style="font-size:13px;font-weight:600;color:#374151;margin-top:10px;margin-bottom:6px">Seguimientos activos</div>
+                <div id="segRecordatoriosConsulta"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header"><span class="card-title">🧪 Seguimiento de pedidos de laboratorio</span></div>
+              <div style="font-size:12px;color:#888;margin-bottom:6px">El bot pregunta al paciente si ya se realizó el examen y le pide subir el resultado</div>
+              <div id="segLaboratorioInfo"></div>
             </div>
           </div>
         </div>

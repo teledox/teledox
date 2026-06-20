@@ -202,9 +202,12 @@ async function openReceta(consultaId, pacienteId) {
 
   // Reset campos, PDFs y botones de acción
   pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
-  actualizarCheckboxDocs();
-  const btnEnviar = document.getElementById('btnEnviarDocs');
-  if (btnEnviar) { btnEnviar.disabled = false; btnEnviar.textContent = '📤 Enviar documentos al paciente'; btnEnviar.style.background = '#FF5A5F'; btnEnviar.style.borderColor = '#FF5A5F'; }
+  actualizarEstadoDocs();
+  ['receta','certificado','pedido','historia','interconsulta'].forEach(t => {
+    const si = document.getElementById(`sent-${t}`); if (si) si.style.display = 'none';
+    const bi = document.getElementById(`btn-enviar-${t}`);
+    if (bi) { bi.style.background = ''; bi.style.borderColor = ''; bi.textContent = '📤 Enviar'; }
+  });
   const btnSeg = document.getElementById('btnActivarSeguimiento');
   if (btnSeg) { btnSeg.disabled = false; btnSeg.textContent = '🔔 Activar seguimiento de tratamiento'; btnSeg.style.background = '#f97316'; btnSeg.style.borderColor = '#f97316'; }
   const btnCronica = document.getElementById('btnActivarCronica');
@@ -242,6 +245,14 @@ async function openReceta(consultaId, pacienteId) {
     medicamentosData = (receta.medicamentos || []).map(m => ({ ...m, id: Date.now() + Math.random() }));
     cie10Seleccionados = receta.cie10_codigos || [];
     renderCIE10();
+  } else {
+    if (currentConsultaData.diagnostico) {
+      document.getElementById('recetaDiagnostico').value = currentConsultaData.diagnostico;
+    }
+    try {
+      const savedCIE = localStorage.getItem(`cie10_${consultaId}`);
+      if (savedCIE) { cie10Seleccionados = JSON.parse(savedCIE); renderCIE10(); }
+    } catch (_) {}
   }
 
   // Card de medicamentos de seguimiento (independiente del PDF)
@@ -251,6 +262,14 @@ async function openReceta(consultaId, pacienteId) {
   documentosGuardados = {};
   const docsGuardados = await supa('GET', 'documentos_datos', null, `?consulta_id=eq.${consultaId}`);
   (docsGuardados || []).forEach(d => { documentosGuardados[d.tipo] = d.datos; });
+
+  // Restore sent indicators from documentos table
+  const _tipoMapInv = { receta: 'receta', certificado: 'certificado', pedido_laboratorio: 'pedido', historia_clinica: 'historia', interconsulta: 'interconsulta' };
+  const docsEnviados = await supa('GET', 'documentos', null, `?consulta_id=eq.${consultaId}&enviado_paciente=eq.true`);
+  (docsEnviados || []).forEach(d => {
+    const key = _tipoMapInv[d.tipo];
+    if (key) { const si = document.getElementById(`sent-${key}`); if (si) si.style.display = ''; }
+  });
 
   // Re-pintar los mini-previews de los documentos ya generados/guardados
   if (typeof renderPreviewsGuardados === 'function') renderPreviewsGuardados();
@@ -640,41 +659,33 @@ async function guardarRecetaBD() {
 // PDFs generados localmente (antes de enviar)
 let pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
 
-function actualizarCheckboxDocs() {
-  const mapa = {
-    receta: 'receta', certificado: 'certificado', pedido: 'pedido',
-    historia: 'historia', interconsulta: 'interconsulta'
-  };
-  Object.keys(mapa).forEach(tipo => {
-    const chk = document.getElementById(`chk-${tipo}`);
+function actualizarEstadoDocs() {
+  ['receta', 'certificado', 'pedido', 'historia', 'interconsulta'].forEach(tipo => {
     const status = document.getElementById(`status-${tipo}`);
+    const btn = document.getElementById(`btn-enviar-${tipo}`);
     const generado = pdfGenerados[tipo] !== null;
-    if (chk) { chk.disabled = !generado; chk.checked = generado; }
     if (status) {
       status.textContent = generado ? '✓ Generada' : 'No generada';
       status.className = `doc-check-status ${generado ? 'generado' : 'pendiente'}`;
     }
+    if (btn && btn.style.background !== 'rgb(22, 163, 74)') btn.disabled = !generado;
   });
 }
 
-// ── BOTÓN 1: Enviar documentos al paciente por WhatsApp ──────────────────
-async function enviarDocumentos() {
+// ── Enviar un documento individual al paciente por WhatsApp ──────────────
+async function enviarDocumento(tipo) {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico antes de enviar'); return; }
+  const pdfBytes = pdfGenerados[tipo];
+  if (!pdfBytes) { alert('Primero genere el documento'); return; }
 
-  const docsMarcados = Object.entries(pdfGenerados).filter(([k, v]) => {
-    if (!v) return false;
-    const chk = document.getElementById(`chk-${k}`);
-    return chk && chk.checked;
-  });
-  if (!docsMarcados.length) { alert('Genere al menos un documento y selecciónelo para enviar'); return; }
+  const btn = document.getElementById(`btn-enviar-${tipo}`);
+  if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
+  showToast('⏳ Enviando documento...');
 
-  showToast('⏳ Enviando documentos al paciente...');
   try {
-    const ahora = new Date();
-
-    // Guardar/actualizar receta en BD si tiene medicamentos
-    if (medicamentosData.length > 0) {
+    if (tipo === 'receta' && medicamentosData.length > 0) {
+      const ahora = new Date();
       const payload = {
         consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser.id,
         medicamentos: medicamentosData, diagnostico,
@@ -685,29 +696,19 @@ async function enviarDocumentos() {
         fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias)) * 86400000).toISOString()
       };
       const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);
-      if (existing?.length > 0) {
-        await supa('PATCH', 'recetas', payload, `?id=eq.${existing[0].id}`);
-      } else {
-        await supa('POST', 'recetas', payload);
-      }
+      if (existing?.length > 0) await supa('PATCH', 'recetas', payload, `?id=eq.${existing[0].id}`);
+      else await supa('POST', 'recetas', payload);
     }
 
-    // Subir solo los PDFs seleccionados y marcarlos como enviados
     const tipoMap = { receta: 'receta', certificado: 'certificado', pedido: 'pedido_laboratorio', historia: 'historia_clinica', interconsulta: 'interconsulta' };
-    for (const [key, pdfBytes] of docsMarcados) {
-      await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, tipoMap[key], pdfBytes, true);
-    }
+    await upsertDocumentoStorage(recetaPacienteId, recetaConsultaId, tipoMap[tipo], pdfBytes, true);
 
-    // Actualizar consulta → completada
     await supa('PATCH', 'consultas', {
       diagnostico,
       notas_medico: document.getElementById('recetaNotas').value,
-      estado: 'completada',
       medico_id: currentUser.id
     }, `?id=eq.${recetaConsultaId}`);
 
-    // Enviar por WhatsApp via backend
-    // Limpiar número: solo dígitos; si empieza en 0 → Ecuador (593)
     const telefonoPaciente = _pacData?.telefono
       ? (() => { const d = String(_pacData.telefono).replace(/\D/g, ''); return d.startsWith('0') ? '593' + d.slice(1) : d; })()
       : null;
@@ -716,34 +717,31 @@ async function enviarDocumentos() {
       const waRes = await fetch('/api/enviar-docs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          paciente_id: recetaPacienteId,
-          consulta_id: recetaConsultaId,
-          telefono: telefonoPaciente
-        })
+        body: JSON.stringify({ paciente_id: recetaPacienteId, consulta_id: recetaConsultaId, telefono: telefonoPaciente })
       });
       const waData = await waRes.json();
-      console.log(`[enviar-docs] Número WhatsApp usado: ${waData.numero || telefonoPaciente} (original en BD: ${_pacData.telefono})`);
+      console.log(`[enviar-doc] ${tipo} → ${waData.numero || telefonoPaciente}`);
       if (waData.errores?.length) {
         const detalle = waData.errores[0]?.detalle?.error?.message || JSON.stringify(waData.errores[0]?.detalle);
-        showToast(`⚠️ Error WhatsApp (enviado a ${waData.numero || telefonoPaciente}): ${detalle}`);
-        console.error('[enviar-docs] Errores WhatsApp:', waData.errores);
+        showToast(`⚠️ Error WhatsApp: ${detalle}`);
+        console.error('[enviar-doc] Errores:', waData.errores);
       } else if (waData.enviados > 0) {
-        showToast(`✓ ${waData.enviados} documento(s) enviado(s) a ${waData.numero || telefonoPaciente} por WhatsApp`);
+        showToast(`✓ Documento enviado a ${waData.numero || telefonoPaciente} por WhatsApp`);
       } else {
-        showToast('⚠️ No se enviaron documentos — revisa la consola del navegador');
-        console.error('[enviar-docs] Respuesta:', waData);
+        showToast('⚠️ No se envió — revisa la consola');
+        console.error('[enviar-doc] Respuesta:', waData);
       }
     } else {
-      showToast(`✓ ${docsMarcados.length} documento(s) guardado(s) — paciente sin teléfono registrado`);
+      showToast(`✓ Documento guardado — paciente sin teléfono registrado`);
     }
 
-    // TEMPORAL (testing): no se deshabilita el botón para poder reenviar y probar la recepción.
-    const btn = document.getElementById('btnEnviarDocs');
-    if (btn) { btn.textContent = '✓ Documentos enviados — reenviar'; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
+    const si = document.getElementById(`sent-${tipo}`);
+    if (si) si.style.display = '';
+    if (btn) { btn.textContent = '✓ Reenviar'; btn.disabled = false; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   } catch (e) {
-    console.error('Error al enviar documentos:', e);
+    console.error('Error al enviar documento:', e);
     showToast(`Error: ${e.message}`);
+    if (btn) { btn.textContent = '📤 Enviar'; btn.disabled = false; }
   }
 }
 
@@ -1081,3 +1079,21 @@ async function responderMensaje(msgId) {
     if (btn) { btn.disabled = false; btn.textContent = '📤 Enviar respuesta por WhatsApp'; }
   }
 }
+
+// Autosave diagnosis + cie10 to consultas table (debounced)
+document.addEventListener('DOMContentLoaded', () => {
+  let _diagTimer = null;
+  const diagEl = document.getElementById('recetaDiagnostico');
+  if (diagEl) {
+    diagEl.addEventListener('input', () => {
+      clearTimeout(_diagTimer);
+      _diagTimer = setTimeout(async () => {
+        if (!recetaConsultaId) return;
+        try {
+          await supa('PATCH', 'consultas', { diagnostico: diagEl.value.trim() }, `?id=eq.${recetaConsultaId}`);
+          localStorage.setItem(`cie10_${recetaConsultaId}`, JSON.stringify(cie10Seleccionados));
+        } catch (_) {}
+      }, 1500);
+    });
+  }
+});

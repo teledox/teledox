@@ -341,7 +341,7 @@ async function generarDocumentoDesdeModalLaboratorio() {
     const pdfBytes = await generarPedidoPDF();
     pdfGenerados.pedido = pdfBytes;
     await guardarDatosDoc('laboratorio');
-    actualizarCheckboxDocs();
+    actualizarEstadoDocs();
     cerrarModal('modalLaboratorio');
     renderPreviewDoc('laboratorio');
     showToast('✓ Pedido de Laboratorio generado — listo para enviar al paciente');
@@ -556,7 +556,7 @@ async function generarDocumentoDesdeModalReceta() {
     pdfGenerados.receta = pdfBytes;
     await guardarDatosDoc('receta');
     await guardarRecetaBD();
-    actualizarCheckboxDocs();
+    actualizarEstadoDocs();
     cerrarModal('modalReceta');
     renderPreviewDoc('receta');
     showToast('✓ Receta Médica generada — lista para enviar al paciente');
@@ -573,7 +573,7 @@ async function generarDocumentoDesdeModalCertificado() {
     const pdfBytes = await generarCertificadoPDF();
     pdfGenerados.certificado = pdfBytes;
     await guardarDatosDoc('certificado');
-    actualizarCheckboxDocs();
+    actualizarEstadoDocs();
     cerrarModal('modalCertificado');
     renderPreviewDoc('certificado');
     showToast('✓ Certificado Médico generado — listo para enviar al paciente');
@@ -590,7 +590,7 @@ async function generarDocumentoDesdeModalHC() {
     const pdfBytes = await generarHistoriaClinicaPDF();
     pdfGenerados.historia = pdfBytes;
     await guardarDatosDoc('historia');
-    actualizarCheckboxDocs();
+    actualizarEstadoDocs();
     cerrarModal('modalHistoriaClinica');
     renderPreviewDoc('historia');
     showToast('✓ Historia Clínica generada — lista para enviar al paciente');
@@ -607,7 +607,7 @@ async function generarDocumentoDesdeModalInterconsulta() {
     const pdfBytes = await generarInterconsultaPDF();
     pdfGenerados.interconsulta = pdfBytes;
     await guardarDatosDoc('interconsulta');
-    actualizarCheckboxDocs();
+    actualizarEstadoDocs();
     cerrarModal('modalInterconsulta');
     renderPreviewDoc('interconsulta');
     showToast('✓ Interconsulta generada — lista para enviar al paciente');

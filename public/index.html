@@ -316,50 +316,55 @@
             </div>
             <div class="card">
               <div class="card-header">
-                <span class="card-title">📤 Seleccionar documentos a enviar al paciente</span>
-                <span style="font-size:12px;color:#888">Solo los documentos generados pueden seleccionarse</span>
+                <span class="card-title">📤 Enviar documentos al paciente</span>
               </div>
-              <div class="doc-seleccion">
-                <div class="doc-check-item">
-                  <input type="checkbox" id="chk-receta" disabled>
-                  <label class="doc-check-label" for="chk-receta">💊 Receta médica</label>
-                  <span class="doc-check-status pendiente" id="status-receta">No generada</span>
+              <div style="display:flex;flex-direction:column;gap:0">
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
+                  <span style="font-size:18px;width:24px;text-align:center">💊</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:#111">Receta médica</div>
+                    <span class="doc-check-status pendiente" id="status-receta">No generada</span>
+                  </div>
+                  <span id="sent-receta" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-receta" onclick="enviarDocumento('receta')" disabled style="white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div class="doc-check-item">
-                  <input type="checkbox" id="chk-certificado" disabled>
-                  <label class="doc-check-label" for="chk-certificado">📄 Certificado médico</label>
-                  <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
+                  <span style="font-size:18px;width:24px;text-align:center">📄</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:#111">Certificado médico</div>
+                    <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
+                  </div>
+                  <span id="sent-certificado" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-certificado" onclick="enviarDocumento('certificado')" disabled style="white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div class="doc-check-item">
-                  <input type="checkbox" id="chk-pedido" disabled>
-                  <label class="doc-check-label" for="chk-pedido">🔬 Pedido de laboratorio</label>
-                  <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
+                  <span style="font-size:18px;width:24px;text-align:center">🔬</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:#111">Pedido de laboratorio</div>
+                    <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
+                  </div>
+                  <span id="sent-pedido" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-pedido" onclick="enviarDocumento('pedido')" disabled style="white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div class="doc-check-item">
-                  <input type="checkbox" id="chk-historia" disabled>
-                  <label class="doc-check-label" for="chk-historia">📋 Historia clínica</label>
-                  <span class="doc-check-status pendiente" id="status-historia">No generada</span>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
+                  <span style="font-size:18px;width:24px;text-align:center">📋</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:#111">Historia clínica</div>
+                    <span class="doc-check-status pendiente" id="status-historia">No generada</span>
+                  </div>
+                  <span id="sent-historia" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-historia" onclick="enviarDocumento('historia')" disabled style="white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div class="doc-check-item">
-                  <input type="checkbox" id="chk-interconsulta" disabled>
-                  <label class="doc-check-label" for="chk-interconsulta">🔄 Interconsulta</label>
-                  <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
+                <div style="display:flex;align-items:center;gap:10px;padding:10px 0">
+                  <span style="font-size:18px;width:24px;text-align:center">🔄</span>
+                  <div style="flex:1;min-width:0">
+                    <div style="font-size:13px;font-weight:600;color:#111">Interconsulta</div>
+                    <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
+                  </div>
+                  <span id="sent-interconsulta" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-interconsulta" onclick="enviarDocumento('interconsulta')" disabled style="white-space:nowrap">📤 Enviar</button>
                 </div>
               </div>
-              <div style="font-size:12px;color:#888;margin-top:10px;background:#f0fff4;border-radius:8px;padding:10px 14px;border:1px solid #bbf7d0">
-                Los documentos seleccionados llegarán en PDF no editable al WhatsApp del paciente al momento de hacer clic en <strong>Enviar</strong>.
-              </div>
-            </div>
-
-            <!-- Fila 1: Enviar documentos -->
-            <div style="background:#fff5f5;border:1px solid #fecaca;border-radius:10px;padding:1rem;margin-top:1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
-              <div>
-                <div style="font-size:13px;font-weight:600;color:#dc2626">📤 Enviar documentos por WhatsApp</div>
-                <div style="font-size:12px;color:#888;margin-top:2px">Envía al paciente los documentos seleccionados arriba (receta, certificado, pedido de lab, etc.)</div>
-              </div>
-              <button class="btn btn-primary" id="btnEnviarDocs" onclick="enviarDocumentos()" style="background:#FF5A5F;border-color:#FF5A5F;white-space:nowrap">
-                📤 Enviar documentos al paciente
-              </button>
             </div>
           </div>
 

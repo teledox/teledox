@@ -273,107 +273,69 @@
             <div class="card" style="margin-bottom:1rem">
               <div class="card-header"><span class="card-title">📄 Plantillas clínicas</span></div>
               <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div><strong>📋 Historia Clínica</strong><span style="font-size:12px;color:#888;margin-left:8px">Ficha completa del paciente</span></div>
-                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
+                  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                    <span id="sent-historia" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                    <span id="status-historia" class="doc-check-status pendiente">No generada</span>
+                    <button class="btn btn-sm" id="btn-enviar-historia" onclick="enviarDocumento('historia')" disabled style="white-space:nowrap">📤 Enviar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirPlantillaHistoriaClinica()">📋 Abrir plantilla</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo con los datos del paciente pre-cargados. Completa los campos clínicos y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
                 <div class="doc-preview-slot" id="preview-historia"></div>
               </div>
               <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div><strong>💊 Receta Médica</strong><span style="font-size:12px;color:#888;margin-left:8px">Medicamentos + diagnóstico + firma</span></div>
-                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaReceta()">📋 Abrir plantilla</button>
+                  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                    <span id="sent-receta" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                    <span id="status-receta" class="doc-check-status pendiente">No generada</span>
+                    <button class="btn btn-sm" id="btn-enviar-receta" onclick="enviarDocumento('receta')" disabled style="white-space:nowrap">📤 Enviar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirPlantillaReceta()">📋 Abrir plantilla</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario completo (alergias, peso/talla, medicamentos, indicaciones, medidas no farmacológicas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
                 <div class="doc-preview-slot" id="preview-receta"></div>
               </div>
               <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div><strong>📄 Certificado Médico</strong><span style="font-size:12px;color:#888;margin-left:8px">Establecimiento + datos laborales + reposo</span></div>
-                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaCertificado()">📋 Abrir plantilla</button>
+                  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                    <span id="sent-certificado" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                    <span id="status-certificado" class="doc-check-status pendiente">No generada</span>
+                    <button class="btn btn-sm" id="btn-enviar-certificado" onclick="enviarDocumento('certificado')" disabled style="white-space:nowrap">📤 Enviar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirPlantillaCertificado()">📋 Abrir plantilla</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario oficial (establecimiento, datos laborales, tipo de contingencia, días de reposo) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
                 <div class="doc-preview-slot" id="preview-certificado"></div>
               </div>
-              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div><strong>🔬 Pedido de Laboratorio</strong><span style="font-size:12px;color:#888;margin-left:8px">Exámenes seleccionables por categoría</span></div>
-                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaLaboratorio()">📋 Abrir plantilla</button>
+                  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                    <span id="sent-pedido" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                    <span id="status-pedido" class="doc-check-status pendiente">No generada</span>
+                    <button class="btn btn-sm" id="btn-enviar-pedido" onclick="enviarDocumento('pedido')" disabled style="white-space:nowrap">📤 Enviar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirPlantillaLaboratorio()">📋 Abrir plantilla</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Abre el formulario con los exámenes organizados por categoría (selecciona con casillas) y usa <strong>Generar para envío</strong> para adjuntarlo al envío por WhatsApp.</div>
                 <div class="doc-preview-slot" id="preview-laboratorio"></div>
               </div>
-
-              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-top:1rem">
-                <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem">
+                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
                   <div><strong>🔄 Interconsulta</strong><span style="font-size:12px;color:#888;margin-left:8px">Derivación a especialista</span></div>
-                  <button class="btn btn-sm btn-primary" onclick="abrirPlantillaInterconsulta()">📋 Abrir plantilla</button>
+                  <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+                    <span id="sent-interconsulta" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
+                    <span id="status-interconsulta" class="doc-check-status pendiente">No generada</span>
+                    <button class="btn btn-sm" id="btn-enviar-interconsulta" onclick="enviarDocumento('interconsulta')" disabled style="white-space:nowrap">📤 Enviar</button>
+                    <button class="btn btn-sm btn-primary" onclick="abrirPlantillaInterconsulta()">📋 Abrir plantilla</button>
+                  </div>
                 </div>
                 <div style="font-size:12px;color:#888;margin-top:8px;padding:8px 10px;background:#f9f9f9;border-radius:6px">Genera la hoja de interconsulta para derivar al paciente a otro servicio o especialista médico.</div>
                 <div class="doc-preview-slot" id="preview-interconsulta"></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title">📤 Enviar documentos al paciente</span>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:8px">
-                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-                    <span style="font-size:15px">💊</span>
-                    <span style="font-size:13px;font-weight:600;color:#111">Receta médica</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span class="doc-check-status pendiente" id="status-receta">No generada</span>
-                    <span id="sent-receta" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
-                  </div>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-receta" onclick="enviarDocumento('receta')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
-                </div>
-                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-                    <span style="font-size:15px">📄</span>
-                    <span style="font-size:13px;font-weight:600;color:#111">Certificado médico</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
-                    <span id="sent-certificado" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
-                  </div>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-certificado" onclick="enviarDocumento('certificado')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
-                </div>
-                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-                    <span style="font-size:15px">🔬</span>
-                    <span style="font-size:13px;font-weight:600;color:#111">Pedido de laboratorio</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
-                    <span id="sent-pedido" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
-                  </div>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-pedido" onclick="enviarDocumento('pedido')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
-                </div>
-                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-                    <span style="font-size:15px">📋</span>
-                    <span style="font-size:13px;font-weight:600;color:#111">Historia clínica</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span class="doc-check-status pendiente" id="status-historia">No generada</span>
-                    <span id="sent-historia" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
-                  </div>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-historia" onclick="enviarDocumento('historia')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
-                </div>
-                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
-                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-                    <span style="font-size:15px">🔄</span>
-                    <span style="font-size:13px;font-weight:600;color:#111">Interconsulta</span>
-                  </div>
-                  <div style="display:flex;align-items:center;gap:8px">
-                    <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
-                    <span id="sent-interconsulta" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
-                  </div>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-interconsulta" onclick="enviarDocumento('interconsulta')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
-                </div>
               </div>
             </div>
           </div>

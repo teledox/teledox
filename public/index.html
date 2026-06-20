@@ -318,51 +318,61 @@
               <div class="card-header">
                 <span class="card-title">📤 Enviar documentos al paciente</span>
               </div>
-              <div style="display:flex;flex-direction:column;gap:0">
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
-                  <span style="font-size:18px;width:24px;text-align:center">💊</span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:#111">Receta médica</div>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                    <span style="font-size:15px">💊</span>
+                    <span style="font-size:13px;font-weight:600;color:#111">Receta médica</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
                     <span class="doc-check-status pendiente" id="status-receta">No generada</span>
+                    <span id="sent-receta" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
                   </div>
-                  <span id="sent-receta" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-receta" onclick="enviarDocumento('receta')" disabled style="white-space:nowrap">📤 Enviar</button>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-receta" onclick="enviarDocumento('receta')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
-                  <span style="font-size:18px;width:24px;text-align:center">📄</span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:#111">Certificado médico</div>
+                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                    <span style="font-size:15px">📄</span>
+                    <span style="font-size:13px;font-weight:600;color:#111">Certificado médico</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
                     <span class="doc-check-status pendiente" id="status-certificado">No generada</span>
+                    <span id="sent-certificado" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
                   </div>
-                  <span id="sent-certificado" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-certificado" onclick="enviarDocumento('certificado')" disabled style="white-space:nowrap">📤 Enviar</button>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-certificado" onclick="enviarDocumento('certificado')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
-                  <span style="font-size:18px;width:24px;text-align:center">🔬</span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:#111">Pedido de laboratorio</div>
+                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                    <span style="font-size:15px">🔬</span>
+                    <span style="font-size:13px;font-weight:600;color:#111">Pedido de laboratorio</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
                     <span class="doc-check-status pendiente" id="status-pedido">No generada</span>
+                    <span id="sent-pedido" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
                   </div>
-                  <span id="sent-pedido" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-pedido" onclick="enviarDocumento('pedido')" disabled style="white-space:nowrap">📤 Enviar</button>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-pedido" onclick="enviarDocumento('pedido')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f3f4f6">
-                  <span style="font-size:18px;width:24px;text-align:center">📋</span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:#111">Historia clínica</div>
+                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                    <span style="font-size:15px">📋</span>
+                    <span style="font-size:13px;font-weight:600;color:#111">Historia clínica</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
                     <span class="doc-check-status pendiente" id="status-historia">No generada</span>
+                    <span id="sent-historia" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
                   </div>
-                  <span id="sent-historia" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-historia" onclick="enviarDocumento('historia')" disabled style="white-space:nowrap">📤 Enviar</button>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-historia" onclick="enviarDocumento('historia')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
                 </div>
-                <div style="display:flex;align-items:center;gap:10px;padding:10px 0">
-                  <span style="font-size:18px;width:24px;text-align:center">🔄</span>
-                  <div style="flex:1;min-width:0">
-                    <div style="font-size:13px;font-weight:600;color:#111">Interconsulta</div>
-                    <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
+                <div style="position:relative;padding:10px 104px 10px 12px;background:#f9fafb;border-radius:8px;border:1px solid #efefef">
+                  <div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+                    <span style="font-size:15px">🔄</span>
+                    <span style="font-size:13px;font-weight:600;color:#111">Interconsulta</span>
                   </div>
-                  <span id="sent-interconsulta" style="display:none;font-size:11px;font-weight:600;color:#16a34a;white-space:nowrap">✓ Enviado</span>
-                  <button class="btn btn-sm btn-primary" id="btn-enviar-interconsulta" onclick="enviarDocumento('interconsulta')" disabled style="white-space:nowrap">📤 Enviar</button>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span class="doc-check-status pendiente" id="status-interconsulta">No generada</span>
+                    <span id="sent-interconsulta" style="display:none;font-size:11px;font-weight:600;color:#16a34a">✓ Enviado</span>
+                  </div>
+                  <button class="btn btn-sm btn-primary" id="btn-enviar-interconsulta" onclick="enviarDocumento('interconsulta')" disabled style="position:absolute;top:50%;right:12px;transform:translateY(-50%);white-space:nowrap">📤 Enviar</button>
                 </div>
               </div>
             </div>

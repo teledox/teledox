@@ -30,9 +30,10 @@
       position:fixed;inset:0;z-index:-1;pointer-events:none;
       transform:scale(2.1);transform-origin:center center;
       opacity:0;transition:opacity 1.4s ease;
-      filter:grayscale(1) sepia(1) saturate(7) hue-rotate(-22deg) brightness(1.05)
+      mix-blend-mode:screen;
+      filter:saturate(2.6) hue-rotate(-12deg) brightness(1.12)
     }
-    .page-spline-wrap.loaded{opacity:.6}
+    .page-spline-wrap.loaded{opacity:1}
     .page-spline{width:100%;height:100%;display:block;border:0;pointer-events:none}
 
     /* ── NAV ── */
@@ -413,7 +414,7 @@
   </style>
 </head>
 <body>
-<!-- BUILD-MARKER: v9-hero220-bright -->
+<!-- BUILD-MARKER: v10-wave-screen-blend-fondo-blanco -->
 
 <div class="page-spline-wrap"><spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer></div>
 

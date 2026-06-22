@@ -1144,7 +1144,8 @@ async function activarBienestar() {
     frecuencia_horas: frecuencia,
     activo:           true,
     fecha_proximo:    prox.toISOString(),
-    fecha_fin:        fechaFin
+    fecha_fin:        fechaFin,
+    telefono:         _pacData.telefono || ''
   });
   showToast('💙 Seguimiento diagnóstico activado');
   renderBienestarConsulta();

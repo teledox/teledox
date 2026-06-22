@@ -1098,6 +1098,9 @@ async function renderBienestarConsulta() {
               ${r.activo ? `<button onclick="event.stopPropagation();desactivarBienestar('${r.id}')"
                 style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer">
                 🔕</button>` : ''}
+              <button onclick="event.stopPropagation();eliminarBienestar('${r.id}')"
+                style="background:transparent;color:#d1d5db;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer"
+                title="Eliminar caso">🗑️</button>
               <span id="bw-chevron-${r.id}" style="font-size:11px;color:#aaa">▼</span>
             </div>
           </div>
@@ -1175,6 +1178,14 @@ async function activarBienestarTest() {
 async function desactivarBienestar(recId) {
   await supa('PATCH', 'recordatorios', { activo: false }, `?id=eq.${recId}`);
   showToast('🔕 Seguimiento diagnóstico desactivado');
+  renderBienestarConsulta();
+}
+
+async function eliminarBienestar(recId) {
+  if (!confirm('¿Eliminar este caso de seguimiento y su historial de mensajes?')) return;
+  await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
+  await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+  showToast('🗑️ Caso eliminado');
   renderBienestarConsulta();
 }
 

@@ -847,6 +847,15 @@ async function activarSeguimientoCronico() {
 const BIENESTAR_COLORES = ['', '#16a34a', '#84cc16', '#f59e0b', '#ea580c', '#dc2626'];
 const BIENESTAR_LABELS  = ['', 'Excelente', 'Bien', 'Regular', 'Mal', 'Muy mal'];
 
+function _bwTs(ts) {
+  const d = new Date(/Z|[+-]\d\d:\d\d$/.test(ts) ? ts : ts + 'Z');
+  return isNaN(d) ? '—' : d.toLocaleString('es-EC', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+function _bwDate(ts) {
+  const d = new Date(/Z|[+-]\d\d:\d\d$/.test(ts) ? ts : ts + 'Z');
+  return isNaN(d) ? '—' : d.toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
+}
+
 function _bwComputeSlots(frecuencia, horarioIn, horarioFin, diasActivos, maxDias) {
   const slots = [];
   const now   = new Date();
@@ -873,7 +882,7 @@ function _bwComputeSlots(frecuencia, horarioIn, horarioFin, diasActivos, maxDias
 }
 
 function renderPreviewGridBienestar() {
-  const frecuencia  = parseInt(document.getElementById('bw-frecuencia')?.value) || 24;
+  const frecuencia  = parseFloat(document.getElementById('bw-frecuencia')?.value) || 24;
   const horarioIn   = parseInt(document.getElementById('bw-hora-inicio')?.value) || 8;
   const horarioFin  = parseInt(document.getElementById('bw-hora-fin')?.value) || 21;
   const durDias     = parseInt(document.getElementById('bw-duracion')?.value) || null;
@@ -939,130 +948,180 @@ function renderPreviewGridBienestar() {
   el.innerHTML = html;
 }
 
+function _renderBienestarForm(el) {
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label class="form-label" style="font-size:11px">Seguimiento cada (horas)</label>
+        <input class="form-control" type="number" id="bw-frecuencia" value="24" min="0.1" step="0.1"
+          oninput="renderPreviewGridBienestar()" style="font-size:13px">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:11px">Durante (días) <span style="font-weight:400;color:#aaa">— vacío = sin límite</span></label>
+        <input class="form-control" type="number" id="bw-duracion" placeholder="ej: 30" min="1"
+          oninput="renderPreviewGridBienestar()" style="font-size:13px">
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <label class="form-label" style="font-size:11px;margin-bottom:6px;display:block">Días activos</label>
+      <div style="display:flex;gap:6px">
+        <button type="button" class="bw-dia-btn active" data-dia="1" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">L</button>
+        <button type="button" class="bw-dia-btn active" data-dia="2" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">M</button>
+        <button type="button" class="bw-dia-btn active" data-dia="3" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">X</button>
+        <button type="button" class="bw-dia-btn active" data-dia="4" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">J</button>
+        <button type="button" class="bw-dia-btn active" data-dia="5" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">V</button>
+        <button type="button" class="bw-dia-btn active" data-dia="6" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">S</button>
+        <button type="button" class="bw-dia-btn" data-dia="0" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">D</button>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
+      <div>
+        <label class="form-label" style="font-size:11px">Desde</label>
+        <select class="form-control" id="bw-hora-inicio" onchange="renderPreviewGridBienestar()" style="font-size:13px"></select>
+      </div>
+      <div>
+        <label class="form-label" style="font-size:11px">Hasta</label>
+        <select class="form-control" id="bw-hora-fin" onchange="renderPreviewGridBienestar()" style="font-size:13px"></select>
+      </div>
+    </div>
+    <div id="bw-preview-grid"></div>
+    <button class="btn btn-primary" onclick="activarBienestar()"
+      style="width:100%;margin-top:12px;background:#2563eb;border-color:#2563eb">
+      💙 Activar seguimiento diagnóstico
+    </button>`;
+
+  const selIn  = document.getElementById('bw-hora-inicio');
+  const selFin = document.getElementById('bw-hora-fin');
+  for (let h = 0; h <= 23; h++) {
+    const o1 = new Option(`${String(h).padStart(2,'0')}:00`, h);
+    if (h === 8)  o1.selected = true;
+    selIn.appendChild(o1);
+    const o2 = new Option(`${String(h).padStart(2,'0')}:00`, h);
+    if (h === 21) o2.selected = true;
+    selFin.appendChild(o2);
+  }
+  renderPreviewGridBienestar();
+}
+
+function _toggleBienestarForm() {
+  const wrap = document.getElementById('bw-form-wrap');
+  if (!wrap) return;
+  const open = wrap.style.display !== 'none';
+  if (open) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  _renderBienestarForm(wrap);
+}
+
+function _toggleBienestarDetail(recId) {
+  const el = document.getElementById(`bw-detail-${recId}`);
+  const ch = document.getElementById(`bw-chevron-${recId}`);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (ch) ch.textContent = open ? '▼' : '▲';
+}
+
 async function renderBienestarConsulta() {
   const el = document.getElementById('bienestarContent');
   if (!el) return;
 
-  const recsBienestar = await supa('GET', 'recordatorios', null,
-    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=1`) || [];
-  const recBienestar = recsBienestar[0];
+  const recs = await supa('GET', 'recordatorios', null,
+    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc`) || [];
 
-  // ── Estado inactivo: mostrar configurador de horario ──────────────────────
-  if (!recBienestar?.activo) {
-    el.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div>
-          <label class="form-label" style="font-size:11px">Seguimiento cada (horas)</label>
-          <input class="form-control" type="number" id="bw-frecuencia" value="24" min="0.1" step="0.1" oninput="renderPreviewGridBienestar()" style="font-size:13px">
-        </div>
-        <div>
-          <label class="form-label" style="font-size:11px">Durante (días) <span style="font-weight:400;color:#aaa">— vacío = sin límite</span></label>
-          <input class="form-control" type="number" id="bw-duracion" placeholder="ej: 30" min="1" oninput="renderPreviewGridBienestar()" style="font-size:13px">
-        </div>
-      </div>
-      <div style="margin-bottom:10px">
-        <label class="form-label" style="font-size:11px;margin-bottom:6px;display:block">Días activos</label>
-        <div style="display:flex;gap:6px">
-          <button type="button" class="bw-dia-btn active" data-dia="1" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">L</button>
-          <button type="button" class="bw-dia-btn active" data-dia="2" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">M</button>
-          <button type="button" class="bw-dia-btn active" data-dia="3" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">X</button>
-          <button type="button" class="bw-dia-btn active" data-dia="4" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">J</button>
-          <button type="button" class="bw-dia-btn active" data-dia="5" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">V</button>
-          <button type="button" class="bw-dia-btn active" data-dia="6" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">S</button>
-          <button type="button" class="bw-dia-btn" data-dia="0" onclick="this.classList.toggle('active');renderPreviewGridBienestar()">D</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px">
-        <div>
-          <label class="form-label" style="font-size:11px">Desde</label>
-          <select class="form-control" id="bw-hora-inicio" onchange="renderPreviewGridBienestar()" style="font-size:13px"></select>
-        </div>
-        <div>
-          <label class="form-label" style="font-size:11px">Hasta</label>
-          <select class="form-control" id="bw-hora-fin" onchange="renderPreviewGridBienestar()" style="font-size:13px"></select>
-        </div>
-      </div>
-      <div id="bw-preview-grid"></div>
-      <button class="btn btn-primary" id="btnActivarBienestar" onclick="activarBienestar()" style="width:100%;margin-top:12px;background:#2563eb;border-color:#2563eb">
-        💙 Activar seguimiento diagnóstico
-      </button>`;
-
-    const selIn  = document.getElementById('bw-hora-inicio');
-    const selFin = document.getElementById('bw-hora-fin');
-    for (let h = 0; h <= 23; h++) {
-      const o1 = new Option(`${String(h).padStart(2,'0')}:00`, h);
-      if (h === 8)  o1.selected = true;
-      selIn.appendChild(o1);
-      const o2 = new Option(`${String(h).padStart(2,'0')}:00`, h);
-      if (h === 21) o2.selected = true;
-      selFin.appendChild(o2);
-    }
-    renderPreviewGridBienestar();
+  // Sin casos → mostrar form directamente
+  if (!recs.length) {
+    _renderBienestarForm(el);
     return;
   }
 
-  // ── Estado activo: mostrar stats + dots + botón desactivar ────────────────
-  const resp = await supa('GET', 'seguimiento_respuestas', null,
-    `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc&limit=12`) || [];
+  // Cargar todas las respuestas de todos los casos en una sola query
+  const recIds    = recs.map(r => r.id);
+  const respuestas = await supa('GET', 'seguimiento_respuestas', null,
+    `?recordatorio_id=in.(${recIds.join(',')})&order=created_at.asc`) || [];
 
-  const fmtConf = `Cada ${recBienestar.frecuencia_horas}h · ${recBienestar.fecha_fin
-    ? 'hasta ' + new Date(recBienestar.fecha_fin).toLocaleDateString('es-EC')
-    : 'sin límite'}`;
+  const respByRec = {};
+  respuestas.forEach(r => {
+    if (!respByRec[r.recordatorio_id]) respByRec[r.recordatorio_id] = [];
+    respByRec[r.recordatorio_id].push(r);
+  });
 
-  let statsHtml = '';
-  if (resp.length) {
-    const total    = resp.length;
-    const buenos   = resp.filter(r => (r.nivel_bienestar || 0) <= 2).length;
-    const ultimo   = resp[0].nivel_bienestar;
-    const penult   = resp[1]?.nivel_bienestar;
-    const tendencia = !penult ? '→' : ultimo < penult ? '↗' : ultimo > penult ? '↘' : '→';
-    const colorTend = tendencia === '↗' ? '#16a34a' : tendencia === '↘' ? '#dc2626' : '#888';
-    statsHtml = `
-      <div style="display:flex;gap:16px;padding:8px 0 10px;font-size:12px;color:#555;border-bottom:1px solid #f5f5f5;margin-bottom:10px;flex-wrap:wrap">
-        <span><strong>${total}</strong> check-ins</span>
-        <span><strong>${Math.round(buenos/total*100)}%</strong> bien/excelente</span>
-        <span>Último: <strong style="color:${BIENESTAR_COLORES[ultimo]||'#888'}">${BIENESTAR_LABELS[ultimo]||'—'}</strong></span>
-        <span style="color:${colorTend};font-weight:700;font-size:15px">${tendencia}</span>
-      </div>`;
-  }
-
-  const dotsHtml = resp.length
-    ? `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:4px 0">
-        ${[...resp].reverse().map(r => {
-          const n   = r.nivel_bienestar || 0;
-          const dia = new Date(r.created_at).toLocaleDateString('es-EC',{day:'2-digit',month:'short'});
-          return `<div title="${BIENESTAR_LABELS[n]||'?'} · ${dia}" style="display:flex;flex-direction:column;align-items:center;gap:3px;cursor:default">
-            <div style="width:22px;height:22px;border-radius:50%;background:${BIENESTAR_COLORES[n]||'#d1d5db'};box-shadow:0 1px 3px rgba(0,0,0,.18)"></div>
-            <div style="font-size:9px;color:#9ca3af;line-height:1">${new Date(r.created_at).getDate()}</div>
-          </div>`;
-        }).join('')}
-      </div>`
-    : '<div class="empty-state" style="padding:8px 0">Sin check-ins de bienestar aún.</div>';
+  const hayActivo = recs.some(r => r.activo);
 
   el.innerHTML = `
+    <div id="bw-form-wrap" style="display:none;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #e5e7eb"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-      <div style="font-size:12px;color:#555;display:flex;align-items:center;gap:6px">
-        <span class="badge badge-blue">Activo</span>
-        <span>${fmtConf}</span>
-      </div>
-      <button id="btnActivarBienestar" class="btn btn-sm" onclick="desactivarBienestar('${recBienestar.id}')"
-        style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap;font-size:12px">
-        🔕 Desactivar
+      <span style="font-size:12px;font-weight:600;color:#555">${recs.length} caso${recs.length !== 1 ? 's' : ''} de seguimiento</span>
+      <button onclick="_toggleBienestarForm()"
+        style="font-size:11px;background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:6px;padding:4px 10px;cursor:pointer">
+        + Nuevo
       </button>
     </div>
-    ${statsHtml}
-    ${dotsHtml}`;
+    ${recs.map(r => {
+      const resps    = respByRec[r.id] || [];
+      const enviados = resps.length;
+      const respd    = resps.filter(x => x.nivel_bienestar != null).length;
+      const cfgLabel = `Cada ${r.frecuencia_horas}h · ${r.fecha_fin ? 'hasta ' + _bwDate(r.fecha_fin) : 'sin límite'}`;
+
+      const tlRows = resps.map(resp => {
+        const niv = resp.nivel_bienestar;
+        const respHtml = niv != null
+          ? `<span style="color:${BIENESTAR_COLORES[niv]||'#888'};font-weight:600">${BIENESTAR_LABELS[niv]||'?'}</span>`
+          : `<span style="color:#aaa">⏳ Sin respuesta</span>`;
+        return `<tr style="border-top:1px solid #f3f4f6">
+          <td style="padding:5px 6px;font-size:11px;color:#555;white-space:nowrap">${_bwTs(resp.created_at)}</td>
+          <td style="padding:5px 6px;font-size:11px"><span style="color:#16a34a">✅ Enviado</span></td>
+          <td style="padding:5px 6px;font-size:11px">${respHtml}</td>
+        </tr>`;
+      }).join('');
+
+      return `
+        <div style="border:1.5px solid ${r.activo ? '#bfdbfe' : '#e5e7eb'};border-radius:10px;margin-bottom:8px;overflow:hidden;background:${r.activo ? '#f0f6ff' : '#fafafa'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer"
+               onclick="_toggleBienestarDetail('${r.id}')">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+              <span class="${r.activo ? 'badge badge-blue' : ''}"
+                style="${!r.activo ? 'display:inline-block;background:#f3f4f6;color:#6b7280;border:1px solid #e5e7eb;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap' : ''}">
+                ${r.activo ? 'Activo' : 'Inactivo'}
+              </span>
+              <div style="min-width:0">
+                <div style="font-size:12px;font-weight:600;color:#333">${cfgLabel}</div>
+                <div style="font-size:11px;color:#888">${_bwTs(r.created_at)} · ${enviados} enviado${enviados !== 1 ? 's' : ''} · ${respd} respuesta${respd !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              ${r.activo ? `<button onclick="event.stopPropagation();desactivarBienestar('${r.id}')"
+                style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer">
+                🔕</button>` : ''}
+              <span id="bw-chevron-${r.id}" style="font-size:11px;color:#aaa">▼</span>
+            </div>
+          </div>
+          <div id="bw-detail-${r.id}" style="display:none;border-top:1px solid #e5e7eb;padding:8px 12px">
+            ${tlRows
+              ? `<table style="width:100%;border-collapse:collapse">
+                  <thead><tr>
+                    <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Enviado</th>
+                    <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Estado</th>
+                    <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Respuesta</th>
+                  </tr></thead>
+                  <tbody>${tlRows}</tbody>
+                </table>`
+              : '<div style="color:#aaa;font-size:12px;padding:4px 0">Sin mensajes enviados aún.</div>'}
+          </div>
+        </div>`;
+    }).join('')}
+  `;
+
+  if (!hayActivo) _toggleBienestarForm();
 }
 
 async function activarBienestar() {
   const ahora       = new Date();
-  const frecuencia  = parseInt(document.getElementById('bw-frecuencia')?.value) || 24;
+  const frecuencia  = parseFloat(document.getElementById('bw-frecuencia')?.value) || 24;
   const duracion    = parseInt(document.getElementById('bw-duracion')?.value) || null;
   const horarioIn   = parseInt(document.getElementById('bw-hora-inicio')?.value) || 8;
   const horarioFin  = parseInt(document.getElementById('bw-hora-fin')?.value) || 21;
   const diasActivos = Array.from(document.querySelectorAll('.bw-dia-btn.active')).map(b => parseInt(b.dataset.dia));
 
-  // Primer slot válido según días y horario
   let prox = new Date(ahora);
   prox.setMinutes(0, 0, 0);
   prox = new Date(prox.getTime() + 3600000);
@@ -1073,7 +1132,7 @@ async function activarBienestar() {
 
   const fechaFin = duracion
     ? new Date(ahora.getTime() + duracion * 86400000).toISOString()
-    : new Date(ahora.getTime() + 365 * 86400000).toISOString();
+    : null;
 
   await supa('POST', 'recordatorios', {
     paciente_id:      recetaPacienteId,

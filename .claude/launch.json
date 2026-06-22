@@ -9,8 +9,8 @@
     }
   ,{
       "name": "main-panel",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3001", "--directory", "/Users/francoortiz/Desktop/MEDILYFT/teledox/public"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3001", "/Users/francoortiz/Desktop/MEDILYFT/teledox/public"],
       "port": 3001
     }
   ]

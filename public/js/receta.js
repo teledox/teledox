@@ -953,7 +953,7 @@ async function renderBienestarConsulta() {
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div>
           <label class="form-label" style="font-size:11px">Seguimiento cada (horas)</label>
-          <input class="form-control" type="number" id="bw-frecuencia" value="24" min="1" oninput="renderPreviewGridBienestar()" style="font-size:13px">
+          <input class="form-control" type="number" id="bw-frecuencia" value="24" min="0.1" step="0.1" oninput="renderPreviewGridBienestar()" style="font-size:13px">
         </div>
         <div>
           <label class="form-label" style="font-size:11px">Durante (días) <span style="font-weight:400;color:#aaa">— vacío = sin límite</span></label>

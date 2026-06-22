@@ -3,24 +3,24 @@
 ## ⚠️ CRON — Plan Hobby (NO agregar crons aquí)
 
 El plan Hobby de Vercel **solo permite crons que corran 1 vez al día**.
-El cron de recordatorios necesita correr **cada 15 minutos** → incompatible.
+El cron de recordatorios necesita correr **cada 1 minuto** → incompatible.
 
 **NO agregar esto al vercel.json con plan Hobby:**
 ```json
-"crons": [{ "path": "/api/cron", "schedule": "*/15 * * * *" }]
+"crons": [{ "path": "/api/cron", "schedule": "* * * * *" }]
 ```
 
 ### Solución actual
-Usar un servicio externo gratuito que llame al endpoint manualmente:
-- **cron-job.org** (gratuito, soporta cada 15 min)
-- URL a configurar: `https://<dominio>.vercel.app/api/cron`
+Usar cron-job.org (gratuito, soporta cada 1 min):
+- **cron-job.org** → configurar frecuencia a **1 minuto**
+- URL: `https://<dominio>.vercel.app/api/cron`
 - Método: GET
-- Frecuencia: cada 15 minutos
+- Header: `Authorization: Bearer <CRON_SECRET>`
 
 ### Para el futuro
 Si se sube a **Plan Pro de Vercel**, agregar de vuelta al vercel.json:
 ```json
-"crons": [{ "path": "/api/cron", "schedule": "*/15 * * * *" }]
+"crons": [{ "path": "/api/cron", "schedule": "* * * * *" }]
 ```
 
 ## Funciones declaradas explícitamente

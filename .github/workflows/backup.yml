@@ -29,7 +29,7 @@ jobs:
         run: |
           FECHA=$(date +%Y-%m-%d)
           echo "FECHA=$FECHA" >> "$GITHUB_ENV"
-          pg_dump "$DATABASE_URL" --format=custom --file="db_${FECHA}.dump"
+          pg_dump --dbname="$DATABASE_URL" --format=custom --file="db_${FECHA}.dump"
 
       - name: Subir dump diario a Backblaze B2
         env:
@@ -37,7 +37,7 @@ jobs:
           RCLONE_CONFIG_B2REMOTE_ACCOUNT: ${{ secrets.B2_KEY_ID }}
           RCLONE_CONFIG_B2REMOTE_KEY: ${{ secrets.B2_APP_KEY }}
         run: |
-          rclone copy "db_${FECHA}.dump" "b2remote:${{ secrets.B2_BUCKET }}/daily/"
+          rclone copy "db_${{ env.FECHA }}.dump" "b2remote:${{ secrets.B2_BUCKET }}/daily/"
 
       - name: Copiar a respaldo mensual si es día 1
         env:
@@ -47,7 +47,7 @@ jobs:
         run: |
           if [ "$(date +%d)" = "01" ]; then
             MES=$(date +%Y-%m)
-            rclone copyto "db_${FECHA}.dump" "b2remote:${{ secrets.B2_BUCKET }}/monthly/db_${MES}.dump"
+            rclone copyto "db_${{ env.FECHA }}.dump" "b2remote:${{ secrets.B2_BUCKET }}/monthly/db_${MES}.dump"
           fi
 
       - name: Borrar dumps diarios con más de 30 días (rotación)

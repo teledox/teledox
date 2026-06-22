@@ -408,7 +408,7 @@ async function renderSeguimientoTimeline() {
   }).join('')}</div>`;
 }
 
-// ── Helpers para la tabla de medicamentos ──────────────────────────────────
+// ── Helpers — medicamentos ──────────────────────────────────────────────────
 function _medRespHtml(resp, tipo) {
   if (tipo === 'fin_tratamiento') {
     const MAP = { '1': ['🎉 Se siente mejor', '#16a34a'], '2': ['🔁 Mejora parcial', '#d97706'], '3': ['🔴 Sin mejoría', '#dc2626'] };
@@ -429,7 +429,61 @@ function _toggleMedDetail(recId) {
   if (ch) ch.textContent = open ? '▼' : '▲';
 }
 
-// ── Recordatorios de medicamentos — tabla con logs igual que bienestar ──
+function _toggleMedForm() {
+  const wrap = document.getElementById('med-form-wrap');
+  if (!wrap) return;
+  wrap.style.display = wrap.style.display !== 'none' ? 'none' : 'block';
+}
+
+function _renderMedFormContent(el, sugerencias) {
+  el.innerHTML = `
+    ${sugerencias.length ? `
+      <div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">De la receta</div>
+        ${sugerencias.map(m => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px dashed #d1d5db;border-radius:8px;margin-bottom:6px;background:#fafafa">
+            <div>
+              <div style="font-size:12px;font-weight:600;color:#374151">💊 ${m.nombre}${m.dosis ? ` · ${m.dosis}` : ''}</div>
+              <div style="font-size:11px;color:#888">Cada ${m.frecuencia_horas}h · ${m.dias} día${m.dias !== 1 ? 's' : ''}</div>
+            </div>
+            <button onclick="activarMedicamentoUno(${m._idx})"
+              style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer">
+              + Activar
+            </button>
+          </div>`).join('')}
+      </div>
+      <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">O agregar manualmente</div>
+    ` : ''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div>
+        <label class="form-label" style="font-size:11px">Medicamento</label>
+        <input class="form-control" type="text" id="med-nombre" placeholder="ej: Amoxicilina" style="font-size:13px">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:11px">Dosis <span style="font-weight:400;color:#aaa">— opcional</span></label>
+        <input class="form-control" type="text" id="med-dosis" placeholder="ej: 500mg" style="font-size:13px">
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div>
+        <label class="form-label" style="font-size:11px">Recordatorio cada (horas)</label>
+        <input class="form-control" type="number" id="med-frecuencia" value="8" min="1" step="1" style="font-size:13px">
+      </div>
+      <div>
+        <label class="form-label" style="font-size:11px">Duración (días) <span style="font-weight:400;color:#aaa">— vacío = sin límite</span></label>
+        <input class="form-control" type="number" id="med-duracion" placeholder="ej: 7" min="1" style="font-size:13px">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="activarMedicamentoManual()"
+      style="width:100%;background:#f97316;border-color:#f97316">
+      💊 Activar seguimiento
+    </button>
+    <button class="btn" onclick="activarMedicamentoManualTest()"
+      style="width:100%;margin-top:6px;background:transparent;border:1px dashed #6b7280;color:#6b7280;font-size:12px">
+      🧪 Prueba — enviar en 2 min
+    </button>`;
+}
+
 async function renderRecordatoriosConsulta() {
   const el = document.getElementById('segRecordatoriosConsulta');
   if (!el) return;
@@ -449,43 +503,36 @@ async function renderRecordatoriosConsulta() {
     respByRec[r.recordatorio_id].push(r);
   });
 
-  // Sugerencias: medicamentos de la receta sin recordatorio activo aún
   const nombresActivos = new Set(recs.filter(r => r.activo && r.tipo === 'medicamento').map(r => r.medicamento));
   const sugerencias = (medicamentosData || []).reduce((acc, m, i) => {
     if (m.seguimiento !== false && !nombresActivos.has(m.nombre)) acc.push({ ...m, _idx: i });
     return acc;
   }, []);
 
-  const sugHtml = sugerencias.length ? `
-    <div style="margin-bottom:12px">
-      <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">De la receta</div>
-      ${sugerencias.map(m => `
-        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px dashed #d1d5db;border-radius:8px;margin-bottom:6px;background:#fafafa">
-          <div>
-            <div style="font-size:12px;font-weight:600;color:#374151">💊 ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}</div>
-            <div style="font-size:11px;color:#888">Cada ${m.frecuencia_horas}h · ${m.dias} día${m.dias !== 1 ? 's' : ''}</div>
-          </div>
-          <button onclick="activarMedicamentoUno(${m._idx})"
-            style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer">
-            + Activar
-          </button>
-        </div>`).join('')}
-    </div>` : '';
-
   if (!recs.length) {
-    el.innerHTML = sugHtml || '<div class="empty-state" style="padding:8px 0">Sin seguimientos de medicamentos para esta consulta.</div>';
+    el.innerHTML = `<div id="med-form-wrap"></div>`;
+    _renderMedFormContent(document.getElementById('med-form-wrap'), sugerencias);
     return;
   }
 
+  const hayActivo = recs.some(r => r.activo);
+
   el.innerHTML = `
-    ${sugHtml}
+    <div id="med-form-wrap" style="display:none;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #e5e7eb"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <span style="font-size:12px;font-weight:600;color:#555">${recs.length} caso${recs.length !== 1 ? 's' : ''} de seguimiento</span>
+      <button onclick="_toggleMedForm()"
+        style="font-size:11px;background:#f97316;color:#fff;border:1px solid #f97316;border-radius:6px;padding:4px 10px;cursor:pointer">
+        + Nuevo
+      </button>
+    </div>
     ${recs.map(r => {
-      const resps     = respByRec[r.id] || [];
-      const enviados  = resps.length;
+      const resps      = respByRec[r.id] || [];
+      const enviados   = resps.length;
       const respondidos = resps.filter(x => r.tipo === 'fin_tratamiento' ? x.respuesta != null : x.tomo_medicamento !== null).length;
-      const tipoLabel = r.tipo === 'fin_tratamiento' ? '🏥 Cierre tratamiento' : `💊 ${r.medicamento}`;
-      const fmtFrec   = r.frecuencia_horas < 1 ? `${Math.round(r.frecuencia_horas * 60)}min` : `${r.frecuencia_horas}h`;
-      const cfgLabel  = `Cada ${fmtFrec} · hasta ${_bwDate(r.fecha_fin)}`;
+      const tipoLabel  = r.tipo === 'fin_tratamiento' ? '🏥 Cierre tratamiento' : `💊 ${r.medicamento}`;
+      const fmtFrec    = r.frecuencia_horas < 1 ? `${Math.round(r.frecuencia_horas * 60)}min` : `${r.frecuencia_horas}h`;
+      const cfgLabel   = `Cada ${fmtFrec} · hasta ${_bwDate(r.fecha_fin)}`;
 
       const tlRows = resps.map(resp => `<tr style="border-top:1px solid #f3f4f6">
         <td style="padding:5px 6px;font-size:11px;color:#555;white-space:nowrap">${_bwTs(resp.created_at)}</td>
@@ -532,6 +579,10 @@ async function renderRecordatoriosConsulta() {
           </div>
         </div>`;
     }).join('')}`;
+
+  const formWrap = document.getElementById('med-form-wrap');
+  if (formWrap) _renderMedFormContent(formWrap, sugerencias);
+  if (!hayActivo) _toggleMedForm();
 }
 
 async function desactivarRecordatorioConsulta(recId) {
@@ -566,21 +617,9 @@ async function activarMedicamentoUno(idx) {
   const m = (medicamentosData || [])[idx];
   if (!m) return;
   const ahora = new Date();
-  const soloDigitos = String(_pacData.telefono || '').replace(/\D/g, '');
-  const telefono = soloDigitos
-    ? `whatsapp:+${soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos}`
-    : '';
   await supa('POST', 'recordatorios', {
-    paciente_id:      recetaPacienteId,
-    consulta_id:      recetaConsultaId,
-    tipo:             'medicamento',
-    medicamento:      m.nombre,
-    dosis:            m.dosis || '',
-    frecuencia_horas: m.frecuencia_horas,
-    activo:           true,
-    fecha_proximo:    new Date(ahora.getTime() + m.frecuencia_horas * 3600000).toISOString(),
-    fecha_fin:        new Date(ahora.getTime() + (m.dias || 7) * 86400000).toISOString(),
-    telefono
+    ..._medPayload(m.frecuencia_horas, m.dias || 7, m.nombre, m.dosis),
+    fecha_proximo: new Date(ahora.getTime() + m.frecuencia_horas * 3600000).toISOString()
   });
   showToast(`💊 Seguimiento para ${m.nombre} activado`);
   renderRecordatoriosConsulta();
@@ -591,6 +630,54 @@ async function eliminarRecordatorioConsulta(recId) {
   await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
   await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
   showToast('🗑️ Seguimiento eliminado');
+  renderRecordatoriosConsulta();
+}
+
+function _medPayload(frecuenciaHoras, duracionDias, nombre, dosis) {
+  const ahora = new Date();
+  const soloDigitos = String(_pacData.telefono || '').replace(/\D/g, '');
+  const telefono = soloDigitos
+    ? `whatsapp:+${soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos}`
+    : '';
+  return {
+    paciente_id:      recetaPacienteId,
+    consulta_id:      recetaConsultaId,
+    tipo:             'medicamento',
+    medicamento:      nombre,
+    dosis:            dosis || '',
+    frecuencia_horas: frecuenciaHoras,
+    activo:           true,
+    fecha_fin:        duracionDias
+      ? new Date(ahora.getTime() + duracionDias * 86400000).toISOString()
+      : new Date('2099-12-31T23:59:59Z').toISOString(),
+    telefono
+  };
+}
+
+async function activarMedicamentoManual() {
+  const nombre  = document.getElementById('med-nombre')?.value.trim();
+  const dosis   = document.getElementById('med-dosis')?.value.trim();
+  const frec    = parseFloat(document.getElementById('med-frecuencia')?.value) || 8;
+  const dias    = parseInt(document.getElementById('med-duracion')?.value) || null;
+  if (!nombre) { showToast('⚠️ Ingresa el nombre del medicamento'); return; }
+  const ahora = new Date();
+  await supa('POST', 'recordatorios', {
+    ..._medPayload(frec, dias, nombre, dosis),
+    fecha_proximo: new Date(ahora.getTime() + frec * 3600000).toISOString()
+  });
+  showToast(`💊 Seguimiento para ${nombre} activado`);
+  renderRecordatoriosConsulta();
+}
+
+async function activarMedicamentoManualTest() {
+  const nombre  = document.getElementById('med-nombre')?.value.trim();
+  const dosis   = document.getElementById('med-dosis')?.value.trim();
+  if (!nombre) { showToast('⚠️ Ingresa el nombre del medicamento'); return; }
+  await supa('POST', 'recordatorios', {
+    ..._medPayload(2 / 60, null, nombre, dosis),
+    fecha_proximo: new Date(Date.now() + 2 * 60000).toISOString()
+  });
+  showToast(`🧪 Prueba para ${nombre} — mensaje en ~2 min`);
   renderRecordatoriosConsulta();
 }
 

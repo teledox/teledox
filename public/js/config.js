@@ -33,5 +33,11 @@ async function supa(method, table, body, query = '') {
     body: body ? JSON.stringify(body) : undefined
   });
   if (r.status === 204) return null;
-  return r.json();
+  const json = await r.json();
+  if (r.status >= 400) {
+    const msg = json?.message || json?.error || `HTTP ${r.status}`;
+    console.error(`supa ${method} ${table}${query}:`, json);
+    throw new Error(msg);
+  }
+  return json;
 }

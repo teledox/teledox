@@ -627,10 +627,14 @@ async function activarMedicamentoUno(idx) {
 
 async function eliminarRecordatorioConsulta(recId) {
   if (!confirm('¿Eliminar este seguimiento y su historial de mensajes?')) return;
-  await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
-  await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
-  showToast('🗑️ Seguimiento eliminado');
-  renderRecordatoriosConsulta();
+  try {
+    await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
+    await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+    showToast('🗑️ Seguimiento eliminado');
+    renderRecordatoriosConsulta();
+  } catch (e) {
+    showToast(`❌ Error al eliminar: ${e.message}`);
+  }
 }
 
 function _medPayload(frecuenciaHoras, duracionDias, nombre, dosis) {
@@ -1398,10 +1402,14 @@ async function desactivarBienestar(recId) {
 
 async function eliminarBienestar(recId) {
   if (!confirm('¿Eliminar este caso de seguimiento y su historial de mensajes?')) return;
-  await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
-  await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
-  showToast('🗑️ Caso eliminado');
-  renderBienestarConsulta();
+  try {
+    await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
+    await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+    showToast('🗑️ Caso eliminado');
+    renderBienestarConsulta();
+  } catch (e) {
+    showToast(`❌ Error al eliminar: ${e.message}`);
+  }
 }
 
 // ── Dot-grid visual de horas de recordatorio para un medicamento ─────────────

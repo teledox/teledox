@@ -336,7 +336,9 @@ module.exports = async function handler(req, res) {
     // Cualquier sesión con flujo nombrado activo o paso >= 200 tiene prioridad
     // sobre los interceptores de seguimiento — evita que "Sí/No", "1/2/3" sean
     // capturados por recordatorios pasados mientras hay una conversación activa.
-    const enCronica = !!sesion?.datos?._flujo || (sesion?.paso || 0) >= 200;
+    // 'consulta' se excluye: sus pasos solo aceptan cédula/texto, nunca ratings 1-5,
+    // por lo que el interceptor de bienestar puede disparar sin ambigüedad.
+    const enCronica = (sesion?.datos?._flujo && sesion.datos._flujo !== 'consulta') || (sesion?.paso || 0) >= 200;
 
     const pendiente = (!esInteractivo && !enCronica) ? await buscarRespuestaPendiente(telefono) : null;
     if (pendiente?.respuesta && esRespuestaSeguimiento(pendiente.respuesta, mensaje)) {
@@ -367,6 +369,11 @@ module.exports = async function handler(req, res) {
           const resp = await procesarRespuestaSeguimiento(pendienteBienestar, mensaje, telefono);
           if (resp) {
             await enviar(telefono, resp);
+            // Si había una consulta en curso, re-enviar el último mensaje del bot para
+            // que el paciente sepa dónde continuar sin tener que escribir hola de nuevo.
+            if (sesion?.paso > 0 && sesion?.datos?._ultimoMensajeBot) {
+              await enviar(telefono, `📍 *Continuamos donde estábamos:*\n\n${sesion.datos._ultimoMensajeBot}`);
+            }
             return res.status(200).send('OK');
           }
         }
@@ -481,6 +488,7 @@ module.exports = async function handler(req, res) {
           // _flujo, no sobreescribir — result.datos._flujo diferente a 'consulta' lo indica.
           const targetFlujo = result.datos?._flujo;
           if (!result.terminar && (!targetFlujo || targetFlujo === 'consulta')) {
+            result.datos._ultimoMensajeBot = result.respuesta;
             await guardar(telefono, result.paso, result.datos, 'consulta');
           }
           await despachar(telefono, result);
@@ -498,7 +506,10 @@ module.exports = async function handler(req, res) {
       await despachar(telefono, ccResult);
       return res.status(200).send('OK');
     }
-    if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'consulta');
+    if (!result.terminar) {
+      result.datos._ultimoMensajeBot = result.respuesta;
+      await guardar(telefono, result.paso, result.datos, 'consulta');
+    }
     await despachar(telefono, result);
     return res.status(200).send('OK');
 

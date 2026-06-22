@@ -88,7 +88,8 @@ module.exports = async function handler(req, res) {
           });
 
           const proximoEnvioBienestar = new Date(ahora.getTime() + r.frecuencia_horas * 3600000);
-          const puedeSeguirBienestar  = !r.fecha_fin || proximoEnvioBienestar <= new Date(/Z|[+-]\d\d:\d\d$/.test(r.fecha_fin) ? r.fecha_fin : r.fecha_fin + 'Z');
+          const _fdBienestar = r.fecha_fin ? new Date(/Z|[+-]\d\d:\d\d$/.test(r.fecha_fin) ? r.fecha_fin : r.fecha_fin + 'Z') : null;
+          const puedeSeguirBienestar  = !_fdBienestar || _fdBienestar.getFullYear() >= 2090 || proximoEnvioBienestar <= _fdBienestar;
           if (puedeSeguirBienestar) {
             await query('PATCH', 'recordatorios', {
               fecha_proximo: proximoEnvioBienestar.toISOString()

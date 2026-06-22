@@ -1060,7 +1060,9 @@ async function renderBienestarConsulta() {
       const resps    = respByRec[r.id] || [];
       const enviados = resps.length;
       const respd    = resps.filter(x => x.nivel_bienestar != null).length;
-      const cfgLabel = `Cada ${r.frecuencia_horas}h · ${r.fecha_fin ? 'hasta ' + _bwDate(r.fecha_fin) : 'sin límite'}`;
+      const _fd = r.fecha_fin ? new Date(/Z|[+-]\d\d:\d\d$/.test(r.fecha_fin) ? r.fecha_fin : r.fecha_fin + 'Z') : null;
+      const esSinLimite = !_fd || _fd.getFullYear() >= 2090;
+      const cfgLabel = `Cada ${r.frecuencia_horas}h · ${esSinLimite ? 'sin límite' : 'hasta ' + _bwDate(r.fecha_fin)}`;
 
       const tlRows = resps.map(resp => {
         const niv = resp.nivel_bienestar;
@@ -1132,7 +1134,7 @@ async function activarBienestar() {
 
   const fechaFin = duracion
     ? new Date(ahora.getTime() + duracion * 86400000).toISOString()
-    : null;
+    : new Date('2099-12-31T23:59:59Z').toISOString();
 
   await supa('POST', 'recordatorios', {
     paciente_id:      recetaPacienteId,

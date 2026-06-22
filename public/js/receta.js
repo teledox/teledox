@@ -210,8 +210,6 @@ async function openReceta(consultaId, pacienteId) {
   });
   const btnSeg = document.getElementById('btnActivarSeguimiento');
   if (btnSeg) { btnSeg.disabled = false; btnSeg.textContent = '🔔 Activar seguimiento de tratamiento'; btnSeg.style.background = '#f97316'; btnSeg.style.borderColor = '#f97316'; }
-  const btnCronica = document.getElementById('btnActivarCronica');
-  if (btnCronica) { btnCronica.disabled = false; btnCronica.textContent = '🏥 Activar seguimiento crónico'; btnCronica.style.background = '#2563eb'; btnCronica.style.borderColor = '#2563eb'; }
   ['recetaDiagnostico','cie10Search','recetaNotas','recetaIndicaciones']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('cie10Dropdown').style.display = 'none';
@@ -697,26 +695,54 @@ async function activarMedicamentoManualTest() {
   renderRecordatoriosConsulta();
 }
 
-// ── Enfermedades crónicas activas del paciente (para activar seguimiento) ──
+// ── Enfermedad crónica — cards por condición ────────────────────────────────
 async function renderCronicasConsulta() {
   const el = document.getElementById('consultaCronicasList');
   if (!el) return;
   const cronicas = await supa('GET', 'enfermedades_cronicas', null,
     `?paciente_id=eq.${recetaPacienteId}&activo=eq.true&order=created_at.desc`) || [];
-  const btn = document.getElementById('btnActivarCronica');
   if (!cronicas.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin enfermedades crónicas activas registradas.</div>';
+    el.innerHTML = `<div style="color:#888;font-size:13px">Sin enfermedades crónicas activas. Agrégalas en la ficha del paciente.</div>`;
     return;
   }
-  el.innerHTML = cronicas.map(c => `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px">
-      <div>
-        <strong>${NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad}</strong>
-        ${c.codigo_cie10 ? `<span style="color:#aaa"> · ${c.codigo_cie10}</span>` : ''}
-        <div style="font-size:11px;color:#888">Cada ${c.frecuencia_horas}h · Próx.: ${c.proximo_seguimiento ? new Date(c.proximo_seguimiento).toLocaleString('es-EC') : '—'}</div>
-      </div>
-      <span class="badge badge-green">Activo</span>
-    </div>`).join('');
+  const ahora = new Date();
+  el.innerHTML = cronicas.map(c => {
+    const prox = c.proximo_seguimiento ? new Date(c.proximo_seguimiento) : null;
+    const programado = prox && prox > ahora;
+    return `
+      <div style="border:1.5px solid ${programado ? '#bbf7d0' : '#e5e7eb'};border-radius:10px;margin-bottom:8px;background:${programado ? '#f0fff4' : '#fafafa'};padding:10px 12px;display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+          <span style="display:inline-block;background:${programado ? '#bbf7d0' : '#f3f4f6'};color:${programado ? '#166534' : '#6b7280'};border:1px solid ${programado ? '#86efac' : '#e5e7eb'};font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap">
+            ${programado ? 'Activo' : 'Sin programar'}
+          </span>
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:600;color:#333">🏥 ${NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad}${c.codigo_cie10 ? ` <span style="font-weight:400;color:#aaa">· ${c.codigo_cie10}</span>` : ''}</div>
+            <div style="font-size:11px;color:#888">Cada ${c.frecuencia_horas}h${prox ? ' · Próx.: ' + _bwTs(c.proximo_seguimiento) : ''}</div>
+          </div>
+        </div>
+        <div style="flex-shrink:0;margin-left:8px">
+          ${programado
+            ? `<button onclick="desactivarCronica('${c.id}')" style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer">🔕</button>`
+            : `<button onclick="activarCronica('${c.id}',${c.frecuencia_horas})" style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer">+ Activar</button>`}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function activarCronica(id, frecuenciaHoras) {
+  const ahora = new Date();
+  await supa('PATCH', 'enfermedades_cronicas', {
+    ultima_consulta:     ahora.toISOString(),
+    proximo_seguimiento: new Date(ahora.getTime() + (frecuenciaHoras || 24) * 3600000).toISOString()
+  }, `?id=eq.${id}`);
+  showToast('🏥 Seguimiento crónico activado');
+  renderCronicasConsulta();
+}
+
+async function desactivarCronica(id) {
+  await supa('PATCH', 'enfermedades_cronicas', { proximo_seguimiento: null }, `?id=eq.${id}`);
+  showToast('🔕 Seguimiento crónico pausado');
+  renderCronicasConsulta();
 }
 
 // ── Seguimiento de examen de laboratorio (recordatorios 48h/día3/día5/día7) ──
@@ -726,11 +752,6 @@ const LAB_ESTADO_LABEL = {
   sin_examen: { cls: 'badge-red', label: '🔴 Sin respuesta tras 4 intentos' }
 };
 
-function segLabRespuestaLabel(r) {
-  if (r.respuesta === 'si') return '✅ Respondió: Sí';
-  if (r.respuesta === 'no') return '❌ Respondió: No';
-  return '⏳ Sin respuesta';
-}
 
 const LAB_RECORDATORIOS = [
   { intento: 1, label: 'Recordatorio día 2 (48h)' },
@@ -739,90 +760,124 @@ const LAB_RECORDATORIOS = [
   { intento: 4, label: 'Recordatorio día 7 (168h)' }
 ];
 
-function renderTablaRecordatoriosLab(seguimiento, respuestas) {
-  const filas = LAB_RECORDATORIOS.map(({ intento, label }) => {
-    const resp = respuestas.find(r => r.intento === intento);
-    let estadoHtml;
-    if (resp) {
-      estadoHtml = resp.enviado === false
-        ? '<span style="color:#dc2626;font-weight:700">❌ Falló</span>'
-        : '<span style="color:#16a34a;font-weight:700">✅ Enviado</span>';
-    } else if (seguimiento.activo && (seguimiento.intento || 0) === intento - 1) {
-      estadoHtml = '<span style="color:#888">⏳ Pendiente</span>';
-    } else {
-      estadoHtml = '<span style="color:#ccc">—</span>';
-    }
-    return `
-      <tr>
-        <td style="padding:5px 0;font-size:12px">${label}</td>
-        <td style="padding:5px 0;text-align:right">${estadoHtml}</td>
-      </tr>`;
-  }).join('');
-
-  return `
-    <table style="width:100%;border-collapse:collapse;margin-top:10px">
-      <tbody>
-        ${filas}
-        <tr>
-          <td style="padding:5px 0;font-size:12px">Enviar nueva alerta</td>
-          <td style="padding:5px 0;text-align:right">
-            <button class="btn btn-sm btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()" style="background:#7c3aed;border-color:#7c3aed">🧪 Enviar ahora</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>`;
+function _toggleLabDetail(segId) {
+  const d = document.getElementById(`lab-detail-${segId}`);
+  const c = document.getElementById(`lab-chevron-${segId}`);
+  if (!d) return;
+  const open = d.style.display !== 'none';
+  d.style.display = open ? 'none' : 'block';
+  if (c) c.textContent = open ? '▼' : '▲';
 }
 
 async function renderSeguimientoLab() {
   const el = document.getElementById('segLaboratorioInfo');
   if (!el) return;
 
-  const seguimientos = await supa('GET', 'seguimiento_laboratorio', null,
+  const segs = await supa('GET', 'seguimiento_laboratorio', null,
     `?consulta_id=eq.${recetaConsultaId}&order=created_at.desc&limit=1`) || [];
-  const seguimiento = seguimientos[0];
 
-  if (!seguimiento) {
+  if (!segs.length) {
     el.innerHTML = `
-      <div class="empty-state" style="padding:8px 0">Sin seguimiento de examen de laboratorio para esta consulta.</div>
-      <div style="text-align:right;margin-top:8px">
-        <button class="btn btn-sm btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()" style="background:#7c3aed;border-color:#7c3aed">🧪 Enviar ahora</button>
-      </div>`;
+      <button class="btn btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()"
+        style="width:100%;background:#7c3aed;border-color:#7c3aed">
+        🧪 Enviar primer aviso
+      </button>`;
     return;
   }
 
-  const respuestas = await supa('GET', 'seguimiento_laboratorio_respuestas', null,
-    `?seguimiento_id=eq.${seguimiento.id}&order=created_at.asc`) || [];
+  const seg = segs[0];
+  const resps = await supa('GET', 'seguimiento_laboratorio_respuestas', null,
+    `?seguimiento_id=eq.${seg.id}&order=created_at.asc`) || [];
 
-  const estado = LAB_ESTADO_LABEL[seguimiento.estado] || { cls: 'badge-gray', label: seguimiento.estado };
-
-  let verExamen = '';
-  if (seguimiento.estado === 'confirmado') {
-    const docsExamen = await supa('GET', 'documentos', null,
+  let docBtn = '';
+  if (seg.estado === 'confirmado') {
+    const docs = await supa('GET', 'documentos', null,
       `?consulta_id=eq.${recetaConsultaId}&tipo=eq.examen&order=created_at.desc&limit=1`) || [];
-    if (docsExamen[0]?.storage_path) {
-      verExamen = `<button class="btn btn-sm" onclick="verDocumento('${docsExamen[0].storage_path}')">👁 VER</button>`;
+    if (docs[0]?.storage_path) {
+      docBtn = `<div style="margin-top:6px"><button class="btn btn-sm" onclick="verDocumento('${docs[0].storage_path}')">👁 Ver examen subido</button></div>`;
     }
   }
 
+  const estado = LAB_ESTADO_LABEL[seg.estado] || { label: seg.estado };
+  const enviados = resps.filter(r => r.enviado !== false).length;
+  const activo = seg.activo;
+
+  const tlRows = LAB_RECORDATORIOS.map(({ intento, label }) => {
+    const resp = resps.find(r => r.intento === intento);
+    let estadoHtml, respHtml;
+    if (resp) {
+      estadoHtml = resp.enviado === false
+        ? `<span style="color:#dc2626">❌ Falló</span>`
+        : `<span style="color:#16a34a">✅ Enviado</span>`;
+      respHtml = resp.respuesta === 'si'
+        ? `<span style="color:#16a34a;font-weight:600">✅ Sí, lo realizó</span>`
+        : resp.respuesta === 'no'
+          ? `<span style="color:#dc2626;font-weight:600">❌ No todavía</span>`
+          : `<span style="color:#aaa">⏳ Sin respuesta</span>`;
+    } else if (activo && (seg.intento || 0) === intento - 1) {
+      estadoHtml = `<span style="color:#888">⏳ Pendiente</span>`;
+      respHtml   = `<span style="color:#ccc">—</span>`;
+    } else {
+      estadoHtml = `<span style="color:#ccc">—</span>`;
+      respHtml   = `<span style="color:#ccc">—</span>`;
+    }
+    return `<tr style="border-top:1px solid #f3f4f6">
+      <td style="padding:5px 6px;font-size:11px;color:#555">${label}</td>
+      <td style="padding:5px 6px;font-size:11px">${estadoHtml}</td>
+      <td style="padding:5px 6px;font-size:11px">${respHtml}</td>
+    </tr>`;
+  }).join('');
+
   el.innerHTML = `
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f5f5f5;font-size:13px">
-      <div>
-        <strong>Intentos enviados: ${seguimiento.intento || 0}/4</strong>
-        ${seguimiento.activo && seguimiento.proximo_envio ? `<div style="font-size:11px;color:#888">Próx. recordatorio: ${new Date(seguimiento.proximo_envio).toLocaleString('es-EC')}</div>` : ''}
+    <div style="border:1.5px solid ${activo ? '#e9d5ff' : '#e5e7eb'};border-radius:10px;overflow:hidden;background:${activo ? '#faf5ff' : '#fafafa'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer"
+           onclick="_toggleLabDetail('${seg.id}')">
+        <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+          <span style="display:inline-block;background:${activo ? '#e9d5ff' : '#f3f4f6'};color:${activo ? '#6b21a8' : '#6b7280'};border:1px solid ${activo ? '#d8b4fe' : '#e5e7eb'};font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap">
+            ${estado.label}
+          </span>
+          <div style="min-width:0">
+            <div style="font-size:12px;font-weight:600;color:#333">🧪 Examen de laboratorio</div>
+            <div style="font-size:11px;color:#888">${enviados}/4 intentos enviados · ${_bwTs(seg.created_at)}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+          <button onclick="event.stopPropagation();eliminarSeguimientoLab('${seg.id}')"
+            style="background:transparent;color:#d1d5db;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer"
+            title="Eliminar">🗑️</button>
+          <span id="lab-chevron-${seg.id}" style="font-size:11px;color:#aaa">▼</span>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span class="badge ${estado.cls}">${estado.label}</span>
-        ${verExamen}
+      <div id="lab-detail-${seg.id}" style="display:none;border-top:1px solid #e5e7eb;padding:8px 12px">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr>
+            <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Intento</th>
+            <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Estado</th>
+            <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Respuesta</th>
+          </tr></thead>
+          <tbody>${tlRows}</tbody>
+        </table>
+        ${docBtn}
+        <div style="margin-top:10px">
+          <button id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()"
+            style="width:100%;background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:7px 0;font-size:12px;cursor:pointer;font-weight:600">
+            🧪 Enviar nuevo aviso
+          </button>
+        </div>
       </div>
-    </div>
-    ${respuestas.length ? `<div class="seg-timeline" style="margin-top:8px">${respuestas.map(r => `
-      <div class="seg-item">
-        <div class="seg-item-fecha">${new Date(r.created_at).toLocaleString('es-EC',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})}</div>
-        <div class="seg-item-pregunta">🧪 Intento ${r.intento}</div>
-        <div class="seg-item-respuesta">${segLabRespuestaLabel(r)}</div>
-      </div>`).join('')}</div>` : ''}
-    ${renderTablaRecordatoriosLab(seguimiento, respuestas)}
-  `;
+    </div>`;
+}
+
+async function eliminarSeguimientoLab(segId) {
+  if (!confirm('¿Eliminar este seguimiento de laboratorio?')) return;
+  try {
+    await supa('DELETE', 'seguimiento_laboratorio_respuestas', null, `?seguimiento_id=eq.${segId}`);
+    await supa('DELETE', 'seguimiento_laboratorio', null, `?id=eq.${segId}`);
+    showToast('🗑️ Seguimiento eliminado');
+    renderSeguimientoLab();
+  } catch (e) {
+    showToast(`❌ Error al eliminar: ${e.message}`);
+  }
 }
 
 // ── Botón: enviar/reenviar manualmente el recordatorio de seguimiento de laboratorio ──
@@ -1044,35 +1099,6 @@ async function activarSeguimiento() {
   }
 }
 
-// ── BOTÓN 3: Activar seguimiento de ENFERMEDAD CRÓNICA ───────────────────
-async function activarSeguimientoCronico() {
-  showToast('⏳ Activando seguimiento de enfermedad crónica...');
-  try {
-    const ahora = new Date();
-    const cronicas = await supa('GET', 'enfermedades_cronicas', null,
-      `?paciente_id=eq.${recetaPacienteId}&activo=eq.true`);
-
-    if (!cronicas?.length) {
-      showToast('⚠️ El paciente no tiene enfermedades crónicas registradas. Agrégalas en su ficha de paciente.');
-      return;
-    }
-
-    for (const c of cronicas) {
-      const proxima = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);
-      await supa('PATCH', 'enfermedades_cronicas', {
-        ultima_consulta: ahora.toISOString(),
-        proximo_seguimiento: proxima.toISOString()
-      }, `?id=eq.${c.id}`);
-    }
-
-    showToast(`✓ Seguimiento crónico activado para ${cronicas.length} enfermedad(es) — el bot contactará al paciente periódicamente`);
-    const btn = document.getElementById('btnActivarCronica');
-    if (btn) { btn.textContent = '✓ Seguimiento crónico activo'; btn.disabled = true; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
-  } catch (e) {
-    console.error('Error activando seguimiento crónico:', e);
-    showToast(`Error: ${e.message}`);
-  }
-}
 
 // ── Seguimiento diagnóstico (bienestar) ────────────────────────────────────
 const BIENESTAR_COLORES = ['', '#16a34a', '#84cc16', '#f59e0b', '#ea580c', '#dc2626'];

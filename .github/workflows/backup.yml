@@ -23,6 +23,17 @@ jobs:
       - name: Instalar rclone
         run: curl https://rclone.org/install.sh | sudo bash
 
+      - name: Verificar SUPABASE_DB_URL
+        env:
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "ERROR: SUPABASE_DB_URL está vacío o no está configurado"
+            exit 1
+          else
+            echo "OK: SUPABASE_DB_URL está configurado (longitud: ${#DATABASE_URL} chars)"
+          fi
+
       - name: Respaldar base de datos (pg_dump, formato comprimido)
         env:
           DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}

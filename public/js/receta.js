@@ -988,6 +988,10 @@ function _renderBienestarForm(el) {
     <button class="btn btn-primary" onclick="activarBienestar()"
       style="width:100%;margin-top:12px;background:#2563eb;border-color:#2563eb">
       💙 Activar seguimiento diagnóstico
+    </button>
+    <button class="btn" onclick="activarBienestarTest()"
+      style="width:100%;margin-top:6px;background:transparent;border:1px dashed #6b7280;color:#6b7280;font-size:12px">
+      🧪 Prueba — enviar en 2 min
     </button>`;
 
   const selIn  = document.getElementById('bw-hora-inicio');
@@ -1148,6 +1152,23 @@ async function activarBienestar() {
     telefono:         _pacData.telefono || ''
   });
   showToast('💙 Seguimiento diagnóstico activado');
+  renderBienestarConsulta();
+}
+
+async function activarBienestarTest() {
+  const prox = new Date(Date.now() + 2 * 60000);
+  await supa('POST', 'recordatorios', {
+    paciente_id:      recetaPacienteId,
+    consulta_id:      recetaConsultaId,
+    tipo:             'bienestar',
+    medicamento:      'Check-in de bienestar',
+    frecuencia_horas: 2 / 60,
+    activo:           true,
+    fecha_proximo:    prox.toISOString(),
+    fecha_fin:        new Date('2099-12-31T23:59:59Z').toISOString(),
+    telefono:         _pacData.telefono || ''
+  });
+  showToast('🧪 Prueba activada — mensaje en ~2 min');
   renderBienestarConsulta();
 }
 

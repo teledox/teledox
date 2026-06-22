@@ -40,7 +40,7 @@ jobs:
         run: |
           FECHA=$(date +%Y-%m-%d)
           echo "FECHA=$FECHA" >> "$GITHUB_ENV"
-          pg_dump --dbname="$DATABASE_URL" --format=custom --file="db_${FECHA}.dump"
+          /usr/lib/postgresql/17/bin/pg_dump --dbname="$DATABASE_URL" --format=custom --file="db_${FECHA}.dump"
 
       - name: Subir dump diario a Backblaze B2
         env:

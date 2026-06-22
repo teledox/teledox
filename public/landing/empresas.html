@@ -15,9 +15,6 @@
     }
     html{scroll-behavior:smooth;background:#fff}
     body{font-family:'Inter',sans-serif;color:var(--dark);background:transparent;overflow-x:hidden}
-    .page-spline-wrap{position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity 1.4s ease}
-    .page-spline-wrap.loaded{opacity:1}
-    .page-spline{width:100%;height:100%;display:block;border:0;pointer-events:none}
 
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 52px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.07)}
@@ -222,7 +219,6 @@
 
     @media(max-width:768px){
       nav{padding:12px 14px}
-      .page-spline-wrap{display:none}
       .logo-name{display:none}
       nav ul{display:flex;gap:8px}
       nav ul a:not(.page-link){display:none}
@@ -244,7 +240,6 @@
 </head>
 <body>
 
-<div class="page-spline-wrap"><spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer></div>
 
 <!-- ── NAV ── -->
 <nav>
@@ -498,7 +493,6 @@
 </footer>
 
 <script>
-  (function(){const s=document.querySelector('.page-spline');if(s){const w=s.parentElement;const show=()=>w.classList.add('loaded');s.addEventListener('load',show);setTimeout(show,3500);}})();
   const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1});
   document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
 </script>

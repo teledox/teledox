@@ -26,12 +26,6 @@
     html{scroll-behavior:smooth;background:#fff}
     body{font-family:'Inter',sans-serif;color:var(--dark);background:transparent;overflow-x:hidden}
     /* ── SPLINE DE FONDO (secciones blancas) ── */
-    .page-spline-wrap{
-      position:fixed;inset:0;z-index:-1;pointer-events:none;
-      opacity:0;transition:opacity 1.4s ease
-    }
-    .page-spline-wrap.loaded{opacity:1}
-    .page-spline{width:100%;height:100%;display:block;border:0;pointer-events:none}
 
     /* ── NAV ── */
     nav{
@@ -391,7 +385,7 @@
       nav ul a.page-link{padding:6px 12px;font-size:13px}
       .btn-nav{padding:9px 14px;font-size:13px}
       .hero{padding:110px 18px 70px;min-height:auto}
-      .hero-spline-wrap,.hero-scrim,.page-spline-wrap{display:none}
+      .hero-spline-wrap,.hero-scrim{display:none}
       .hero h1{letter-spacing:-1.2px}
       .hero h1 .hl::after{bottom:-9px;height:12px}
       .hero-actions{width:100%}
@@ -413,7 +407,6 @@
 <body>
 <!-- BUILD-MARKER: v12-wave-original-limpio -->
 
-<div class="page-spline-wrap"><spline-viewer class="page-spline" loading-anim-type="none" url="https://prod.spline.design/BboylI8th7BB1QMf/scene.splinecode"></spline-viewer></div>
 
 <!-- ── NAV ── -->
 <nav>
@@ -687,7 +680,7 @@
 
   // Reveal suave de la animación Spline (evento load + respaldo por tiempo)
   (function(){
-    document.querySelectorAll('.hero-spline,.page-spline').forEach(s=>{
+    document.querySelectorAll('.hero-spline').forEach(s=>{
       const wrap=s.parentElement;
       const show=()=>wrap.classList.add('loaded');
       s.addEventListener('load',show);

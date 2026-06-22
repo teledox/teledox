@@ -625,11 +625,23 @@ async function activarMedicamentoUno(idx) {
   renderRecordatoriosConsulta();
 }
 
+// Elimina un recordatorio respetando la cascada:
+// notificaciones → seguimiento_respuestas → recordatorios
+async function _eliminarRecordatorio(recId) {
+  const resps = await supa('GET', 'seguimiento_respuestas', null,
+    `?recordatorio_id=eq.${recId}&select=id`) || [];
+  if (resps.length) {
+    const ids = resps.map(r => r.id).join(',');
+    await supa('DELETE', 'notificaciones', null, `?seguimiento_respuesta_id=in.(${ids})`);
+    await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
+  }
+  await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+}
+
 async function eliminarRecordatorioConsulta(recId) {
   if (!confirm('¿Eliminar este seguimiento y su historial de mensajes?')) return;
   try {
-    await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
-    await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+    await _eliminarRecordatorio(recId);
     showToast('🗑️ Seguimiento eliminado');
     renderRecordatoriosConsulta();
   } catch (e) {
@@ -1403,8 +1415,7 @@ async function desactivarBienestar(recId) {
 async function eliminarBienestar(recId) {
   if (!confirm('¿Eliminar este caso de seguimiento y su historial de mensajes?')) return;
   try {
-    await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
-    await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+    await _eliminarRecordatorio(recId);
     showToast('🗑️ Caso eliminado');
     renderBienestarConsulta();
   } catch (e) {

@@ -4,7 +4,7 @@ const { crearSeguimientoLab, enviarRecordatorioLab } = require('../src/services/
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  const { consulta_id, paciente_id } = req.body || {};
+  const { consulta_id, paciente_id, nombre_examen } = req.body || {};
   if (!consulta_id || !paciente_id) return res.status(400).json({ error: 'Faltan consulta_id o paciente_id' });
 
   try {
@@ -12,11 +12,12 @@ module.exports = async function handler(req, res) {
     const paciente = pacientes?.[0];
     if (!paciente?.telefono) return res.status(400).json({ error: 'El paciente no tiene teléfono registrado' });
 
-    let seguimiento = await crearSeguimientoLab(consulta_id, paciente_id);
+    let seguimiento = await crearSeguimientoLab(consulta_id, paciente_id, null, nombre_examen);
     if (!seguimiento.activo) {
-      const reactivados = await query('PATCH', 'seguimiento_laboratorio',
-        { activo: true, estado: 'pendiente', intento: 0 }, `?id=eq.${seguimiento.id}`);
-      seguimiento = Array.isArray(reactivados) ? reactivados[0] : { ...seguimiento, activo: true, estado: 'pendiente', intento: 0 };
+      const patch = { activo: true, estado: 'pendiente', intento: 0 };
+      if (nombre_examen) patch.nombre_examen = nombre_examen;
+      const reactivados = await query('PATCH', 'seguimiento_laboratorio', patch, `?id=eq.${seguimiento.id}`);
+      seguimiento = Array.isArray(reactivados) ? reactivados[0] : { ...seguimiento, ...patch };
     }
 
     const { intento } = await enviarRecordatorioLab(seguimiento, paciente);

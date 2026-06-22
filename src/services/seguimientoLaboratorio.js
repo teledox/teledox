@@ -12,16 +12,19 @@ function formatearTelefono(telefonoPaciente) {
 
 // Crea el seguimiento de laboratorio para una consulta si no existe uno activo.
 // Se llama al enviar el "Pedido de laboratorio" al paciente.
-async function crearSeguimientoLab(consulta_id, paciente_id, proximoEnvio) {
+async function crearSeguimientoLab(consulta_id, paciente_id, proximoEnvio, nombre_examen) {
   const existentes = await query('GET', 'seguimiento_laboratorio', null,
     `?consulta_id=eq.${consulta_id}&activo=eq.true`);
   if (existentes?.length) return existentes[0];
 
-  const creados = await query('POST', 'seguimiento_laboratorio', {
+  const payload = {
     consulta_id,
     paciente_id,
     proximo_envio: (proximoEnvio || new Date(Date.now() + OFFSETS_LAB_H[0] * 3600000)).toISOString()
-  });
+  };
+  if (nombre_examen) payload.nombre_examen = nombre_examen;
+
+  const creados = await query('POST', 'seguimiento_laboratorio', payload);
   return Array.isArray(creados) ? creados[0] : creados;
 }
 
@@ -32,7 +35,8 @@ async function enviarRecordatorioLab(seguimiento, paciente) {
   if (!telefono) throw new Error('El paciente no tiene un teléfono válido registrado');
 
   const intentoActual = (seguimiento.intento || 0) + 1;
-  const mensaje = `🧪 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Le recordamos que el médico le solicitó un examen de laboratorio.\n\n¿Ya se realizó el examen?\n\nResponda *Sí* o *No*`;
+  const examen = seguimiento.nombre_examen ? `*${seguimiento.nombre_examen}*` : 'un examen de laboratorio';
+  const mensaje = `🧪 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Le recordamos que el médico le solicitó ${examen}.\n\n¿Ya se realizó el examen?\n\nResponda *Sí* o *No*`;
 
   const enviado = await enviar(telefono, mensaje);
 

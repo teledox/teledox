@@ -696,17 +696,78 @@ async function activarMedicamentoManualTest() {
 }
 
 // ── Enfermedad crónica — cards por condición ────────────────────────────────
+function _toggleCronicaForm() {
+  const w = document.getElementById('cronicaFormWrap');
+  if (!w) return;
+  const open = w.style.display !== 'none';
+  w.style.display = open ? 'none' : 'block';
+  if (!open) document.getElementById('cronica-nombre')?.focus();
+}
+
+async function agregarCronica() {
+  const nombre = document.getElementById('cronica-nombre')?.value.trim();
+  const frec   = parseInt(document.getElementById('cronica-frecuencia')?.value) || 168;
+  if (!nombre) { showToast('⚠️ Ingresa el nombre de la enfermedad'); return; }
+  try {
+    await supa('POST', 'enfermedades_cronicas', {
+      paciente_id:      recetaPacienteId,
+      enfermedad:       nombre,
+      frecuencia_horas: frec,
+      activo:           true
+    });
+    showToast('🏥 Enfermedad crónica agregada al perfil del paciente');
+    renderCronicasConsulta();
+  } catch (e) {
+    showToast(`❌ ${e.message}`);
+  }
+}
+
 async function renderCronicasConsulta() {
   const el = document.getElementById('consultaCronicasList');
   if (!el) return;
   const cronicas = await supa('GET', 'enfermedades_cronicas', null,
     `?paciente_id=eq.${recetaPacienteId}&activo=eq.true&order=created_at.desc`) || [];
+
+  const formHtml = `
+    <div id="cronicaFormWrap" style="display:none;background:#f8f9fa;border:1px solid #e5e7eb;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:600;color:#555;margin-bottom:8px">Nueva enfermedad crónica</div>
+      <input id="cronica-nombre" class="form-control" placeholder="Nombre de la enfermedad (ej: Diabetes tipo 2, Hipertensión…)"
+        style="font-size:12px;margin-bottom:6px"
+        onkeydown="if(event.key==='Enter')agregarCronica()" />
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <label style="font-size:11px;color:#555;white-space:nowrap">Frecuencia seguimiento:</label>
+        <input id="cronica-frecuencia" type="number" class="form-control" value="168" min="1" style="font-size:12px;width:80px" />
+        <span style="font-size:11px;color:#888">horas</span>
+        <div style="display:flex;gap:4px;margin-left:4px">
+          ${[['24h','24'],['48h','48'],['72h','72'],['1 sem','168']].map(([l,v]) =>
+            `<button onclick="document.getElementById('cronica-frecuencia').value='${v}'"
+              style="font-size:10px;padding:2px 6px;border:1px solid #d1d5db;border-radius:4px;background:#fff;cursor:pointer">${l}</button>`
+          ).join('')}
+        </div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button onclick="agregarCronica()"
+          style="flex:1;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:6px 0;font-size:12px;cursor:pointer;font-weight:600">
+          + Agregar
+        </button>
+        <button onclick="_toggleCronicaForm()"
+          style="background:#f3f4f6;color:#666;border:1px solid #e5e7eb;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer">
+          Cancelar
+        </button>
+      </div>
+    </div>`;
+
   if (!cronicas.length) {
-    el.innerHTML = `<div style="color:#888;font-size:13px">Sin enfermedades crónicas activas. Agrégalas en la ficha del paciente.</div>`;
+    el.innerHTML = `
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+        <button onclick="_toggleCronicaForm()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer">+ Nueva</button>
+      </div>
+      ${formHtml}
+      <div style="color:#888;font-size:13px">Sin enfermedades crónicas activas registradas.</div>`;
     return;
   }
   const ahora = new Date();
-  el.innerHTML = cronicas.map(c => {
+  const cards = cronicas.map(c => {
     const prox = c.proximo_seguimiento ? new Date(c.proximo_seguimiento) : null;
     const programado = prox && prox > ahora;
     return `
@@ -727,6 +788,13 @@ async function renderCronicasConsulta() {
         </div>
       </div>`;
   }).join('');
+
+  el.innerHTML = `
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <button onclick="_toggleCronicaForm()" style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer">+ Nueva</button>
+    </div>
+    ${formHtml}
+    ${cards}`;
 }
 
 async function activarCronica(id, frecuenciaHoras) {
@@ -777,7 +845,12 @@ async function renderSeguimientoLab() {
     `?consulta_id=eq.${recetaConsultaId}&order=created_at.desc&limit=1`) || [];
 
   if (!segs.length) {
+    const autoNombre = _leerExamenesLab();
     el.innerHTML = `
+      <div style="margin-bottom:8px">
+        <input id="lab-nombre-examen" class="form-control" value="${autoNombre.replace(/"/g,'&quot;')}"
+          placeholder="Nombre del examen (ej: Hemograma, Glucosa…)" style="font-size:12px" />
+      </div>
       <button class="btn btn-primary" id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()"
         style="width:100%;background:#7c3aed;border-color:#7c3aed">
         🧪 Enviar primer aviso
@@ -837,7 +910,7 @@ async function renderSeguimientoLab() {
             ${estado.label}
           </span>
           <div style="min-width:0">
-            <div style="font-size:12px;font-weight:600;color:#333">🧪 Examen de laboratorio</div>
+            <div style="font-size:12px;font-weight:600;color:#333">🧪 ${seg.nombre_examen || 'Examen de laboratorio'}</div>
             <div style="font-size:11px;color:#888">${enviados}/4 intentos enviados · ${_bwTs(seg.created_at)}</div>
           </div>
         </div>
@@ -859,6 +932,16 @@ async function renderSeguimientoLab() {
         </table>
         ${docBtn}
         <div style="margin-top:10px">
+          <div style="font-size:10px;color:#aaa;text-transform:uppercase;font-weight:600;margin-bottom:4px">Nombre del examen</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <input id="lab-nombre-examen" value="${(seg.nombre_examen || '').replace(/"/g,'&quot;')}"
+              placeholder="Ej: Hemograma, Glucosa, Perfil lipídico…"
+              style="flex:1;font-size:12px;border:1px solid #e5e7eb;border-radius:6px;padding:4px 8px" />
+            <button onclick="guardarNombreExamenLab('${seg.id}')"
+              style="background:#f3f4f6;color:#555;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer;white-space:nowrap">
+              Guardar
+            </button>
+          </div>
           <button id="btnEnviarSeguimientoLab" onclick="enviarSeguimientoLab()"
             style="width:100%;background:#7c3aed;color:#fff;border:none;border-radius:7px;padding:7px 0;font-size:12px;cursor:pointer;font-weight:600">
             🧪 Enviar nuevo aviso
@@ -880,10 +963,30 @@ async function eliminarSeguimientoLab(segId) {
   }
 }
 
+function _leerExamenesLab() {
+  const checks = [...document.querySelectorAll('.lab-check:checked')]
+    .map(cb => cb.parentElement?.textContent?.trim())
+    .filter(Boolean);
+  const otros = document.getElementById('lab-otros-examenes')?.value?.trim();
+  return [...checks, otros].filter(Boolean).join(', ');
+}
+
+async function guardarNombreExamenLab(segId) {
+  const nombre = document.getElementById('lab-nombre-examen')?.value?.trim() || '';
+  try {
+    await supa('PATCH', 'seguimiento_laboratorio', { nombre_examen: nombre }, `?id=eq.${segId}`);
+    showToast('✓ Nombre de examen actualizado');
+    renderSeguimientoLab();
+  } catch (e) {
+    showToast(`❌ ${e.message}`);
+  }
+}
+
 // ── Botón: enviar/reenviar manualmente el recordatorio de seguimiento de laboratorio ──
 async function enviarSeguimientoLab() {
   if (!_pacData?.telefono) { showToast('⚠️ El paciente no tiene número de teléfono registrado'); return; }
 
+  const nombreExamen = document.getElementById('lab-nombre-examen')?.value?.trim() || '';
   showToast('⏳ Enviando seguimiento de examen de laboratorio...');
   const btn = document.getElementById('btnEnviarSeguimientoLab');
   if (btn) btn.disabled = true;
@@ -891,7 +994,7 @@ async function enviarSeguimientoLab() {
     const res = await fetch('/api/enviar-seguimiento-lab', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ consulta_id: recetaConsultaId, paciente_id: recetaPacienteId })
+      body: JSON.stringify({ consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, nombre_examen: nombreExamen })
     });
     const data = await res.json();
     if (!res.ok) {

@@ -408,34 +408,130 @@ async function renderSeguimientoTimeline() {
   }).join('')}</div>`;
 }
 
-// ── Recordatorios (seguimientos activos/desactivados) de medicamentos de esta consulta ──
+// ── Helpers para la tabla de medicamentos ──────────────────────────────────
+function _medRespHtml(resp, tipo) {
+  if (tipo === 'fin_tratamiento') {
+    const MAP = { '1': ['🎉 Se siente mejor', '#16a34a'], '2': ['🔁 Mejora parcial', '#d97706'], '3': ['🔴 Sin mejoría', '#dc2626'] };
+    const m = MAP[resp?.respuesta];
+    return m ? `<span style="color:${m[1]};font-weight:600">${m[0]}</span>` : `<span style="color:#aaa">⏳ Sin respuesta</span>`;
+  }
+  if (resp?.tomo_medicamento === true)  return `<span style="color:#16a34a;font-weight:600">✅ Sí, tomó</span>`;
+  if (resp?.tomo_medicamento === false) return `<span style="color:#dc2626;font-weight:600">❌ No tomó</span>`;
+  return `<span style="color:#aaa">⏳ Sin respuesta</span>`;
+}
+
+function _toggleMedDetail(recId) {
+  const el = document.getElementById(`med-detail-${recId}`);
+  const ch = document.getElementById(`med-chevron-${recId}`);
+  if (!el) return;
+  const open = el.style.display !== 'none';
+  el.style.display = open ? 'none' : 'block';
+  if (ch) ch.textContent = open ? '▼' : '▲';
+}
+
+// ── Recordatorios de medicamentos — tabla con logs igual que bienestar ──
 async function renderRecordatoriosConsulta() {
   const el = document.getElementById('segRecordatoriosConsulta');
   if (!el) return;
-  const recordatorios = await supa('GET', 'recordatorios', null,
-    `?consulta_id=eq.${recetaConsultaId}&order=activo.desc,created_at.desc`) || [];
-  if (!recordatorios.length) {
-    el.innerHTML = '<div class="empty-state" style="padding:8px 0">Sin seguimientos de medicamentos para esta consulta.</div>';
+
+  const recs = await supa('GET', 'recordatorios', null,
+    `?consulta_id=eq.${recetaConsultaId}&tipo=in.(medicamento,fin_tratamiento)&order=created_at.desc`) || [];
+
+  const recIds = recs.map(r => r.id);
+  const respuestas = recIds.length
+    ? (await supa('GET', 'seguimiento_respuestas', null,
+        `?recordatorio_id=in.(${recIds.join(',')})&order=created_at.asc`) || [])
+    : [];
+
+  const respByRec = {};
+  respuestas.forEach(r => {
+    if (!respByRec[r.recordatorio_id]) respByRec[r.recordatorio_id] = [];
+    respByRec[r.recordatorio_id].push(r);
+  });
+
+  // Sugerencias: medicamentos de la receta sin recordatorio activo aún
+  const nombresActivos = new Set(recs.filter(r => r.activo && r.tipo === 'medicamento').map(r => r.medicamento));
+  const sugerencias = (medicamentosData || []).reduce((acc, m, i) => {
+    if (m.seguimiento !== false && !nombresActivos.has(m.nombre)) acc.push({ ...m, _idx: i });
+    return acc;
+  }, []);
+
+  const sugHtml = sugerencias.length ? `
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px">De la receta</div>
+      ${sugerencias.map(m => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border:1px dashed #d1d5db;border-radius:8px;margin-bottom:6px;background:#fafafa">
+          <div>
+            <div style="font-size:12px;font-weight:600;color:#374151">💊 ${m.nombre}${m.dosis ? ` ${m.dosis}` : ''}</div>
+            <div style="font-size:11px;color:#888">Cada ${m.frecuencia_horas}h · ${m.dias} día${m.dias !== 1 ? 's' : ''}</div>
+          </div>
+          <button onclick="activarMedicamentoUno(${m._idx})"
+            style="background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:11px;padding:4px 10px;cursor:pointer">
+            + Activar
+          </button>
+        </div>`).join('')}
+    </div>` : '';
+
+  if (!recs.length) {
+    el.innerHTML = sugHtml || '<div class="empty-state" style="padding:8px 0">Sin seguimientos de medicamentos para esta consulta.</div>';
     return;
   }
-  const activos = recordatorios.filter(r => r.activo);
-  const fmtCada = r => r.frecuencia_horas < 1 ? `cada ${Math.round(r.frecuencia_horas * 60)} min` : `cada ${r.frecuencia_horas}h`;
+
   el.innerHTML = `
-    ${activos.length ? `<div style="margin-bottom:10px"><button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="desactivarTodosRecordatoriosConsulta()">🔕 Desactivar todos (${activos.length})</button></div>` : ''}
-    ${recordatorios.map(r => `
-      <div class="detail-item" style="margin-bottom:8px;${r.activo ? '' : 'opacity:.55'}">
-        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-          <div>
-            <div class="detail-label">${r.tipo === 'fin_tratamiento' ? 'Cierre de tratamiento' : 'Medicamento'} ${r.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-gray">Desactivado</span>'}</div>
-            <div class="detail-value">${r.medicamento || '—'}</div>
-            <div style="font-size:12px;color:#888;margin-top:4px">${fmtCada(r)} · Hasta: ${new Date(r.fecha_fin).toLocaleDateString('es-EC')}</div>
-            ${r.tipo === 'medicamento' ? renderMedGrid(r.frecuencia_horas) : ''}
+    ${sugHtml}
+    ${recs.map(r => {
+      const resps     = respByRec[r.id] || [];
+      const enviados  = resps.length;
+      const respondidos = resps.filter(x => r.tipo === 'fin_tratamiento' ? x.respuesta != null : x.tomo_medicamento !== null).length;
+      const tipoLabel = r.tipo === 'fin_tratamiento' ? '🏥 Cierre tratamiento' : `💊 ${r.medicamento}`;
+      const fmtFrec   = r.frecuencia_horas < 1 ? `${Math.round(r.frecuencia_horas * 60)}min` : `${r.frecuencia_horas}h`;
+      const cfgLabel  = `Cada ${fmtFrec} · hasta ${_bwDate(r.fecha_fin)}`;
+
+      const tlRows = resps.map(resp => `<tr style="border-top:1px solid #f3f4f6">
+        <td style="padding:5px 6px;font-size:11px;color:#555;white-space:nowrap">${_bwTs(resp.created_at)}</td>
+        <td style="padding:5px 6px;font-size:11px"><span style="color:#16a34a">✅ Enviado</span></td>
+        <td style="padding:5px 6px;font-size:11px">${_medRespHtml(resp, r.tipo)}</td>
+      </tr>`).join('');
+
+      return `
+        <div style="border:1.5px solid ${r.activo ? '#bbf7d0' : '#e5e7eb'};border-radius:10px;margin-bottom:8px;overflow:hidden;background:${r.activo ? '#f0fff4' : '#fafafa'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;cursor:pointer"
+               onclick="_toggleMedDetail('${r.id}')">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;flex:1">
+              <span style="display:inline-block;background:${r.activo ? '#bbf7d0' : '#f3f4f6'};color:${r.activo ? '#166534' : '#6b7280'};border:1px solid ${r.activo ? '#86efac' : '#e5e7eb'};font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;white-space:nowrap">
+                ${r.activo ? 'Activo' : 'Inactivo'}
+              </span>
+              <div style="min-width:0">
+                <div style="font-size:12px;font-weight:600;color:#333">${tipoLabel}</div>
+                <div style="font-size:11px;color:#888">${cfgLabel} · ${enviados} enviado${enviados !== 1 ? 's' : ''} · ${respondidos} resp.</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              ${r.activo
+                ? `<button onclick="event.stopPropagation();desactivarRecordatorioConsulta('${r.id}')"
+                    style="background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer">🔕</button>`
+                : `<button onclick="event.stopPropagation();reactivarRecordatorioConsulta('${r.id}')"
+                    style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer">🔔</button>`}
+              <button onclick="event.stopPropagation();eliminarRecordatorioConsulta('${r.id}')"
+                style="background:transparent;color:#d1d5db;border:1px solid #e5e7eb;border-radius:6px;font-size:11px;padding:2px 8px;cursor:pointer"
+                title="Eliminar">🗑️</button>
+              <span id="med-chevron-${r.id}" style="font-size:11px;color:#aaa">▼</span>
+            </div>
           </div>
-          ${r.activo
-            ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorioConsulta('${r.id}')">🔕 Desactivar</button>`
-            : `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorioConsulta('${r.id}')">🔔 Reactivar</button>`}
-        </div>
-      </div>`).join('')}`;
+          <div id="med-detail-${r.id}" style="display:none;border-top:1px solid #e5e7eb;padding:8px 12px">
+            ${tlRows
+              ? `<table style="width:100%;border-collapse:collapse">
+                  <thead><tr>
+                    <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Enviado</th>
+                    <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Estado</th>
+                    <th style="text-align:left;padding:4px 6px;color:#aaa;font-weight:600;font-size:10px;text-transform:uppercase">Respuesta</th>
+                  </tr></thead>
+                  <tbody>${tlRows}</tbody>
+                </table>`
+              : '<div style="color:#aaa;font-size:12px;padding:4px 0">Sin mensajes enviados aún.</div>'}
+          </div>
+        </div>`;
+    }).join('')}`;
 }
 
 async function desactivarRecordatorioConsulta(recId) {
@@ -463,6 +559,38 @@ async function desactivarTodosRecordatoriosConsulta() {
   if (!confirm('¿Desactivar todos los seguimientos activos de esta consulta?')) return;
   await supa('PATCH', 'recordatorios', { activo: false }, `?consulta_id=eq.${recetaConsultaId}&activo=eq.true`);
   showToast('🔕 Seguimientos desactivados');
+  renderRecordatoriosConsulta();
+}
+
+async function activarMedicamentoUno(idx) {
+  const m = (medicamentosData || [])[idx];
+  if (!m) return;
+  const ahora = new Date();
+  const soloDigitos = String(_pacData.telefono || '').replace(/\D/g, '');
+  const telefono = soloDigitos
+    ? `whatsapp:+${soloDigitos.startsWith('0') ? '593' + soloDigitos.slice(1) : soloDigitos}`
+    : '';
+  await supa('POST', 'recordatorios', {
+    paciente_id:      recetaPacienteId,
+    consulta_id:      recetaConsultaId,
+    tipo:             'medicamento',
+    medicamento:      m.nombre,
+    dosis:            m.dosis || '',
+    frecuencia_horas: m.frecuencia_horas,
+    activo:           true,
+    fecha_proximo:    new Date(ahora.getTime() + m.frecuencia_horas * 3600000).toISOString(),
+    fecha_fin:        new Date(ahora.getTime() + (m.dias || 7) * 86400000).toISOString(),
+    telefono
+  });
+  showToast(`💊 Seguimiento para ${m.nombre} activado`);
+  renderRecordatoriosConsulta();
+}
+
+async function eliminarRecordatorioConsulta(recId) {
+  if (!confirm('¿Eliminar este seguimiento y su historial de mensajes?')) return;
+  await supa('DELETE', 'seguimiento_respuestas', null, `?recordatorio_id=eq.${recId}`);
+  await supa('DELETE', 'recordatorios', null, `?id=eq.${recId}`);
+  showToast('🗑️ Seguimiento eliminado');
   renderRecordatoriosConsulta();
 }
 

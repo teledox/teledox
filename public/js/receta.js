@@ -276,6 +276,7 @@ async function openReceta(consultaId, pacienteId) {
   if (typeof renderBienestarConsulta === 'function') renderBienestarConsulta();
   if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
   if (typeof renderRecordatoriosConsulta === 'function') renderRecordatoriosConsulta();
+  if (typeof renderCronicasPaciente === 'function') renderCronicasPaciente();
   if (typeof renderCronicasConsulta === 'function') renderCronicasConsulta();
   if (typeof renderSeguimientoLab === 'function') renderSeguimientoLab();
 
@@ -795,6 +796,91 @@ async function renderCronicasConsulta() {
     </div>
     ${formHtml}
     ${cards}`;
+}
+
+// ── Card 1: Enfermedades Crónicas (base de datos del paciente) ────────────────
+
+async function renderCronicasPaciente() {
+  const el = document.getElementById('pacienteCronicasList');
+  if (!el || !recetaPacienteId) return;
+  const cronicas = await supa('GET', 'enfermedades_cronicas', null,
+    `?paciente_id=eq.${recetaPacienteId}&activo=eq.true&order=created_at.asc`) || [];
+
+  const opciones = Object.entries(NOMBRES_ENFERMEDAD)
+    .map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+
+  const chips = cronicas.length
+    ? cronicas.map(c => {
+        const n = NOMBRES_ENFERMEDAD[c.enfermedad] || c.enfermedad;
+        return `<span style="display:inline-flex;align-items:center;gap:4px;background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;margin:2px 2px 2px 0">
+          ${n}
+          <button onclick="eliminarCronicaPaciente('${c.id}')" style="background:none;border:none;color:#93c5fd;cursor:pointer;font-size:13px;padding:0;line-height:1;margin-left:2px" title="Eliminar">×</button>
+        </span>`;
+      }).join('')
+    : '<span style="font-size:11px;color:#bbb;font-style:italic">Sin enfermedades crónicas registradas.</span>';
+
+  el.innerHTML = `
+    <div style="display:flex;flex-wrap:wrap;gap:0;min-height:28px;margin-bottom:10px">${chips}</div>
+    <div id="cronicaPacienteFormWrap" style="display:none;margin-bottom:8px">
+      <select id="cronicaPaciente-select" class="form-control" style="font-size:12px;margin-bottom:6px">
+        <option value="">Seleccionar enfermedad...</option>
+        ${opciones}
+      </select>
+      <input id="cronicaPaciente-libre" class="form-control" placeholder="O escribe el nombre..." style="font-size:12px;margin-bottom:6px"/>
+      <div style="display:flex;gap:6px">
+        <button onclick="agregarCronicaPaciente()" style="flex:1;background:#2563eb;color:#fff;border:none;border-radius:7px;padding:6px 0;font-size:12px;cursor:pointer;font-weight:600">+ Agregar</button>
+        <button onclick="document.getElementById('cronicaPacienteFormWrap').style.display='none'" style="background:#f3f4f6;color:#666;border:1px solid #e5e7eb;border-radius:7px;padding:6px 12px;font-size:12px;cursor:pointer">Cancelar</button>
+      </div>
+    </div>
+    <button onclick="document.getElementById('cronicaPacienteFormWrap').style.display='block';document.getElementById('cronicaPaciente-select').focus()"
+      style="background:#f0f6ff;color:#2563eb;border:1px solid #bfdbfe;border-radius:6px;font-size:11px;padding:5px 12px;cursor:pointer;width:100%;text-align:center">
+      + Agregar enfermedad crónica
+    </button>`;
+}
+
+async function agregarCronicaPaciente() {
+  const sel = document.getElementById('cronicaPaciente-select');
+  const libre = document.getElementById('cronicaPaciente-libre');
+  const enfermedad = (sel?.value || libre?.value.trim());
+  if (!enfermedad || !recetaPacienteId) { showToast('⚠️ Selecciona o escribe una enfermedad'); return; }
+  const existing = await supa('GET', 'enfermedades_cronicas', null,
+    `?paciente_id=eq.${recetaPacienteId}&enfermedad=eq.${encodeURIComponent(enfermedad)}&limit=1`) || [];
+  if (existing.length) {
+    if (!existing[0].activo) {
+      await supa('PATCH', 'enfermedades_cronicas', { activo: true }, `?id=eq.${existing[0].id}`);
+    } else {
+      showToast('Ya está registrada en el perfil del paciente'); return;
+    }
+  } else {
+    await supa('POST', 'enfermedades_cronicas', {
+      paciente_id: recetaPacienteId,
+      enfermedad,
+      activo: true,
+      frecuencia_horas: FRECUENCIAS_DEFAULT[enfermedad] || 24
+    });
+  }
+  if (sel) sel.value = '';
+  if (libre) libre.value = '';
+  document.getElementById('cronicaPacienteFormWrap').style.display = 'none';
+  showToast(`✓ ${NOMBRES_ENFERMEDAD[enfermedad] || enfermedad} registrada`);
+  await _refreshCronicas();
+}
+
+async function eliminarCronicaPaciente(id) {
+  await supa('PATCH', 'enfermedades_cronicas', { activo: false }, `?id=eq.${id}`);
+  showToast('🗑 Enfermedad removida del perfil');
+  await _refreshCronicas();
+}
+
+async function _refreshCronicas() {
+  await renderCronicasPaciente();
+  renderCronicasConsulta();
+  if (typeof renderCronicasHC === 'function') renderCronicasHC();
+  if (typeof _renderCronicasStrip === 'function') {
+    _renderCronicasStrip('rec-cronicas-lista');
+    _renderCronicasStrip('cert-cronicas-lista');
+    _renderCronicasStrip('lab-cronicas-lista');
+  }
 }
 
 async function activarCronica(id, frecuenciaHoras) {

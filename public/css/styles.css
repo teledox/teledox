@@ -217,7 +217,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 /* ===== HISTORIA CLÍNICA & INTERCONSULTA ===== */
 .plantilla-modal.modal-wide { width: 860px; }
 .hc-section { margin-bottom: 1.25rem; }
-.hc-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: white; background: #FF5A5F; padding: 4px 10px; border-radius: 4px; margin-bottom: 10px; display: inline-block; }
+.hc-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: white; background: #FF5A5F; padding: 4px 10px; border-radius: 4px; margin-bottom: 10px; display: block; }
 .hc-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; }
 .hc-grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px 12px; }
 .hc-grid4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 8px 12px; }

@@ -1,3 +1,15 @@
+// Normaliza fecha a YYYY-MM-DD para <input type="date">
+// Acepta DD/MM/AAAA (WhatsApp) o AAAA-MM-DD (web)
+function _toISODate(raw) {
+  if (!raw) return '';
+  const s = String(raw).trim();
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(s)) {
+    const [d, m, y] = s.split('/');
+    return `${y}-${m}-${d}`;
+  }
+  return s;
+}
+
 function togglePlantilla(tipo) {
   plantillaSeleccionada = (plantillaSeleccionada === tipo) ? null : tipo;
   document.querySelectorAll('.plantilla-card').forEach(c => c.classList.remove('selected'));
@@ -457,7 +469,7 @@ function abrirPlantillaHistoriaClinica(soloPreview) {
   set('hc-segundo-ap', (apellidos[1] || '').toUpperCase());
   set('hc-cedula', p.cedula || '');
   set('hc-edad', p.edad || '');
-  set('hc-fecha-nac', p.fecha_nacimiento || '');
+  set('hc-fecha-nac', _toISODate(p.fecha_nacimiento));
   set('hc-historial', p.cedula || '');
   set('hc-lugar-nac', p.lugar_residencia || '');
   set('hc-domicilio', p.lugar_residencia || '');
@@ -526,7 +538,7 @@ function abrirPlantillaInterconsulta(soloPreview) {
   set('inter-historial', p.cedula || '');
   set('inter-cedula', p.cedula || '');
   set('inter-edad', p.edad || '');
-  set('inter-fecha-nac', p.fecha_nacimiento || '');
+  set('inter-fecha-nac', _toISODate(p.fecha_nacimiento));
   set('inter-lugar-nac', p.lugar_residencia || '');
   set('inter-domicilio', p.lugar_residencia || '');
   set('inter-ocupacion', p.ocupacion || '');

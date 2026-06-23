@@ -17,6 +17,25 @@ function esNoMedi(texto) {
 async function procesarBiometricos(paso, mensaje, datos, telefono) {
   const txt = mensaje.trim();
 
+  if (paso === 419) {
+    // Altura — solo se pregunta una vez; queda guardada en tracking_casos
+    const h = parseInt(txt.replace(/[^\d]/g, ''));
+    if (isNaN(h) || h < 100 || h > 220) {
+      return {
+        respuesta: `⚠️ No entendí el valor. Escribe tu altura en centímetros (ej: *170*).\n\nSi no la sabes con exactitud, una aproximación está bien.`,
+        paso: 419, datos, terminar: false
+      };
+    }
+    datos.altura = h;
+    await query('PATCH', 'tracking_casos', { altura_cm: h }, `?id=eq.${datos.caso_id}`);
+    return {
+      respuesta: `✅ Altura registrada (${h} cm) — no te la volveré a preguntar.\n\n` +
+        `📊 *Registro biométrico*\n\n¿Pudiste medir tu *presión arterial* hoy?\n\n` +
+        `Escríbela así: *120/80* (sistólica/diastólica)\nSi no pudiste, responde *no medí*.`,
+      paso: 420, datos, terminar: false
+    };
+  }
+
   if (paso === 420) {
     if (esNoMedi(txt)) {
       datos.sistolica  = null;

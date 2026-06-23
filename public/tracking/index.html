@@ -230,15 +230,9 @@ textarea.form-input{resize:vertical;min-height:70px}
         <input class="form-input" id="casoTelefono" placeholder="ej: 593987654321">
       </div>
     </div>
-    <div class="form-row">
-      <div>
-        <label class="form-label">Nombre del paciente <span style="color:#aaa;font-weight:400">(opcional)</span></label>
-        <input class="form-input" id="casoNombre" placeholder="Juan Pérez">
-      </div>
-      <div>
-        <label class="form-label">Altura (cm) <span style="color:#aaa;font-weight:400">— para IMC</span></label>
-        <input class="form-input" type="number" id="casoAltura" placeholder="ej: 170" min="100" max="220">
-      </div>
+    <div class="form-row-single">
+      <label class="form-label">Nombre del paciente <span style="color:#aaa;font-weight:400">(opcional)</span></label>
+      <input class="form-input" id="casoNombre" placeholder="Juan Pérez — o dejar vacío si no se comparte">
     </div>
     <div class="form-row">
       <div>
@@ -535,7 +529,7 @@ function openNuevoCaso() {
   editandoCasoId = null;
   medicamentosTemp = [];
   document.getElementById('modalCasoTitle').textContent = 'Nuevo caso de seguimiento';
-  ['casoEmpresa','casoTelefono','casoNombre','casoAltura','casoDiagnostico','casoTratamiento','medNombre','medDosis','medDuracion'].forEach(id => {
+  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis','medDuracion'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = el.tagName === 'SELECT' ? '' : '';
   });
@@ -660,7 +654,6 @@ async function guardarCaso() {
     horario_inicio: parseInt(document.getElementById('horaInicio').value) || 8,
     horario_fin: parseInt(document.getElementById('horaFin').value) || 21,
     dias_activos: Array.from(document.querySelectorAll('.dia-btn.active')).map(b => parseInt(b.dataset.dia)),
-    altura_cm: parseInt(document.getElementById('casoAltura').value) || null,
     biometricos_activos: document.getElementById('casoBiometricosActivos')?.checked || false,
     estado: 'activo',
     proximo_seguimiento: new Date().toISOString()
@@ -835,7 +828,6 @@ async function editarCaso(id) {
   document.getElementById('casoNombre').value = c.paciente_nombre || '';
   document.getElementById('casoDiagnostico').value = c.diagnostico || '';
   document.getElementById('casoTratamiento').value = c.tratamiento || '';
-  document.getElementById('casoAltura').value = c.altura_cm || '';
   document.getElementById('casoBiometricosActivos').checked = c.biometricos_activos || false;
   document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
   document.getElementById('casoDuracion').value = c.duracion_dias || '';

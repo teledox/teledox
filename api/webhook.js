@@ -401,6 +401,8 @@ module.exports = async function handler(req, res) {
 
           // Después del check-in de bienestar, encadenar registro biométrico si está activo
           if (result.terminar && datos.tipo === 'bienestar' && datos.biometricos_activos) {
+            const alturaGuardada = datos.altura || null;
+            const pasoBio = alturaGuardada ? 420 : 419;
             const bioData = {
               _flujo:          'tracking_biometrico',
               caso_id:         datos.caso_id,
@@ -408,13 +410,13 @@ module.exports = async function handler(req, res) {
               paciente_nombre: datos.paciente_nombre,
               diagnostico:     datos.diagnostico,
               bienestar:       mensaje,
-              altura:          datos.altura || null,
+              altura:          alturaGuardada,
             };
-            await guardar(telefono, 420, bioData, 'tracking_biometrico');
-            await enviar(telefono,
-              `📊 *Registro biométrico*\n\n¿Pudiste medir tu *presión arterial* hoy?\n\n` +
-              `Escríbela así: *120/80* (sistólica/diastólica)\n` +
-              `Si no pudiste, responde *no medí*.`
+            await guardar(telefono, pasoBio, bioData, 'tracking_biometrico');
+            await enviar(telefono, pasoBio === 419
+              ? `📊 *Registro biométrico*\n\nAntes de empezar, necesito tu altura para calcular tu IMC.\n\n¿Cuánto mides? Escribe solo el número en cm (ej: *170*).\nSolo te lo pregunto esta vez. 📏`
+              : `📊 *Registro biométrico*\n\n¿Pudiste medir tu *presión arterial* hoy?\n\n` +
+                `Escríbela así: *120/80* (sistólica/diastólica)\nSi no pudiste, responde *no medí*.`
             );
           }
 

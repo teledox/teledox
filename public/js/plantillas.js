@@ -406,7 +406,9 @@ async function imprimirPlantilla(tipo) {
     const pdfBytes = await fn();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
     const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
+    const a = document.createElement('a');
+    a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     showToast('✓ PDF listo — usa Ctrl+P en la pestaña para imprimir');
   } catch (e) {

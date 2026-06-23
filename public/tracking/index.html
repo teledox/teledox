@@ -438,6 +438,8 @@ const sc = supabase.createClient(SUPA_URL, SUPA_KEY);
 let currentUser = null;
 let medicamentosTemp = [];
 let editandoCasoId = null;
+let pruebaInterval = null;
+let pruebaCasoId = null;
 
 // ── AUTH ──────────────────────────────────────────────────────────────────
 async function t(method, table, body, q = '') {
@@ -763,7 +765,9 @@ async function verDetalle(id) {
     <button class="btn btn-sm btn-secondary" onclick="editarCaso('${c.id}')">✏️ Editar</button>
     <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Estado</button>
     ${c.activado && c.estado === 'activo' ? `<button class="btn btn-sm btn-secondary" onclick="enviarCheckIn('${c.id}')">📤 Check-in ahora</button>` : ''}
-    ${c.activado && c.estado === 'activo' ? `<button class="btn btn-sm btn-secondary" onclick="prueba('${c.id}')" style="background:#f0fdf4;border-color:#16a34a;color:#15803d">🧪 Prueba ×2</button>` : ''}
+    ${c.activado && c.estado === 'activo' ? (pruebaCasoId === c.id
+      ? `<button class="btn btn-sm btn-secondary" onclick="detenerPrueba()" style="background:#fef2f2;border-color:#dc2626;color:#dc2626">🛑 Detener prueba</button>`
+      : `<button class="btn btn-sm btn-secondary" onclick="prueba('${c.id}')" style="background:#f0fdf4;border-color:#16a34a;color:#15803d">🧪 Prueba</button>`) : ''}
     ${puedeProponerConsulta ? `<button class="btn btn-sm btn-primary" onclick="proponerConsulta('${c.id}')">📋 Proponer consulta</button>` : ''}
   `;
   // Stats de historial
@@ -857,25 +861,52 @@ async function enviarCheckIn(id) {
   closeModal('modalDetalle');
 }
 
+async function _enviarPrueba(id, token) {
+  const r = await fetch(`/api/cron?caso_id=${encodeURIComponent(id)}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  const data = await r.json();
+  if (!data.ok) console.error('[prueba]', data.error);
+  return data.ok;
+}
+
 async function prueba(id) {
-  if (!confirm('🧪 Prueba — envíos cada 2h\n\nEnviará el check-in AHORA y cambiará la frecuencia del caso a 2h.\nSe seguirá repitiendo cada 2h hasta que cambies la frecuencia de vuelta en Editar.\n\n¿Continuar?')) return;
+  if (!confirm('🧪 Prueba\n\nEnviará el check-in cada 2 minutos.\nHaz clic en "🛑 Detener prueba" para parar.\n\n¿Continuar?')) return;
   const { data: { session } } = await sc.auth.getSession();
   const token = session?.access_token;
   if (!token) { alert('Sesión expirada — vuelve a iniciar sesión.'); return; }
-  try {
-    const r = await fetch(`/api/cron?caso_id=${encodeURIComponent(id)}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await r.json();
-    if (data.ok) {
-      alert(`✅ ${data.mensaje}`);
-      closeModal('modalDetalle');
-    } else {
-      alert(`❌ ${data.error}`);
-    }
-  } catch (e) {
-    alert('❌ Error de red: ' + e.message);
+
+  pruebaCasoId = id;
+  // Actualizar botón en el modal si sigue abierto
+  const btn = document.querySelector('#detalleAcciones button[onclick^="prueba"]');
+  if (btn) {
+    btn.textContent = '🛑 Detener prueba';
+    btn.setAttribute('onclick', 'detenerPrueba()');
+    btn.style.cssText = 'background:#fef2f2;border-color:#dc2626;color:#dc2626';
+  }
+
+  // Envío inmediato
+  await _enviarPrueba(id, token);
+
+  // Repetir cada 2 minutos
+  pruebaInterval = setInterval(async () => {
+    const { data: { session: s } } = await sc.auth.getSession();
+    const t2 = s?.access_token;
+    if (!t2) { detenerPrueba(); return; }
+    await _enviarPrueba(id, t2);
+  }, 2 * 60 * 1000);
+}
+
+function detenerPrueba() {
+  if (pruebaInterval) { clearInterval(pruebaInterval); pruebaInterval = null; }
+  pruebaCasoId = null;
+  // Revertir botón
+  const btn = document.querySelector('#detalleAcciones button[onclick^="detener"]');
+  if (btn) {
+    btn.textContent = '🧪 Prueba';
+    btn.setAttribute('onclick', `prueba('${btn.dataset.casoId || ''}')`);
+    btn.style.cssText = 'background:#f0fdf4;border-color:#16a34a;color:#15803d';
   }
 }
 

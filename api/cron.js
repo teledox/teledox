@@ -46,11 +46,6 @@ async function handleTestReminder(req, res) {
   if (c.estado !== 'activo') return res.status(400).json({ error: `El caso está ${c.estado}, no activo` });
   if (!c.telefono)     return res.status(400).json({ error: 'El caso no tiene teléfono registrado' });
 
-  const sesion = await obtener(c.telefono);
-  if (sesion && sesion.paso !== 0) {
-    return res.status(409).json({ error: 'El paciente tiene una conversación activa — termínala antes de probar' });
-  }
-
   const ahora = new Date();
   const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
   await enviarLista(
@@ -65,23 +60,20 @@ async function handleTestReminder(req, res) {
     ]}],
     'Seleccionar'
   );
+  // Siempre sobreescribir la sesión en modo prueba (aunque haya una activa)
   await guardar(c.telefono, 400, {
     tipo: 'bienestar', caso_id: c.id, empresa_id: c.empresa_id,
     paciente_nombre: c.paciente_nombre, diagnostico: c.diagnostico,
     biometricos_activos: c.biometricos_activos || false, altura: c.altura_cm || null
   }, 'tracking');
 
-  const proximo = new Date(ahora.getTime() + 2 * 3600000);
+  // Diferir proximo_seguimiento 2h para que el cron normal no interfiera durante la prueba
   await query('PATCH', 'tracking_casos', {
-    frecuencia_horas:    2,
-    proximo_seguimiento: proximo.toISOString(),
+    proximo_seguimiento: new Date(ahora.getTime() + 2 * 3600000).toISOString(),
     meds_recordatorios:  {}
   }, `?id=eq.${c.id}`);
 
-  return res.status(200).json({
-    ok: true,
-    mensaje: `Check-in enviado. Frecuencia cambiada a 2h — se repetirá cada 2h hasta que cambies la frecuencia de vuelta en Editar.`
-  });
+  return res.status(200).json({ ok: true });
 }
 
 module.exports = async function handler(req, res) {

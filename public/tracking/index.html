@@ -147,6 +147,7 @@ textarea.form-input{resize:vertical;min-height:70px}
       <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">📊 Dashboard</div>
       <div class="nav-item" onclick="showPage('casos')" id="nav-casos">📋 Casos <span id="alertBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;padding:0 6px;font-size:10px;font-weight:700;vertical-align:middle;line-height:16px">!</span></div>
       <div class="nav-item" onclick="showPage('empresas')" id="nav-empresas">🏥 Empresas</div>
+      <div class="nav-item" onclick="showPage('psicosocial')" id="nav-psicosocial">🧠 Psicosocial</div>
     </div>
     <div class="main">
 
@@ -205,6 +206,43 @@ textarea.form-input{resize:vertical;min-height:70px}
           <table>
             <thead><tr><th>Empresa</th><th>Contacto</th><th>Casos activos</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody id="empresasBody"><tr><td colspan="5" class="empty-state">Cargando...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PSICOSOCIAL -->
+      <div class="page" id="page-psicosocial">
+        <div class="section-header">
+          <div class="section-title">🧠 Riesgo Psicosocial MRL</div>
+          <select class="form-input btn-sm" id="psiFiltroPeriodo" onchange="loadPsicosocial()" style="width:200px">
+            <option value="90">Último trimestre (90 días)</option>
+            <option value="180">Últimos 6 meses</option>
+            <option value="365">Último año</option>
+          </select>
+        </div>
+        <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+          <div class="stat-card"><div class="stat-label">Evaluaciones</div><div class="stat-value" id="ps-total">—</div><div class="stat-sub">en el período</div></div>
+          <div class="stat-card"><div class="stat-label">Empresas evaluadas</div><div class="stat-value" id="ps-empresas">—</div></div>
+          <div class="stat-card"><div class="stat-label">Riesgo global prom.</div><div class="stat-value" id="ps-riesgo">—</div><div class="stat-sub">0 bajo · 100 alto</div></div>
+        </div>
+        <div style="font-size:12px;color:#aaa;margin-bottom:10px;display:flex;gap:16px;align-items:center">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#dcfce7;border:1px solid #16a34a"></span> 0–33 Bajo</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fef9c3;border:1px solid #a16207"></span> 34–66 Medio</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:#fee2e2;border:1px solid #b91c1c"></span> 67–100 Alto</span>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr>
+              <th>Empresa</th>
+              <th style="text-align:center">Carga</th>
+              <th style="text-align:center">Autonomía</th>
+              <th style="text-align:center">Apoyo</th>
+              <th style="text-align:center">Relaciones</th>
+              <th style="text-align:center">Doble pres.</th>
+              <th style="text-align:center">Global</th>
+              <th style="text-align:center">Participantes</th>
+            </tr></thead>
+            <tbody id="psiBody"><tr><td colspan="8" class="empty-state">Selecciona la página para cargar datos</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -277,7 +315,11 @@ textarea.form-input{resize:vertical;min-height:70px}
     </div>
     <div class="form-row-single" style="display:flex;align-items:center;gap:10px;padding:8px 0">
       <input type="checkbox" id="casoBiometricosActivos" style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
-      <label for="casoBiometricosActivos" style="font-size:13px;font-weight:600;color:#374151;cursor:pointer">📊 Activar registro biométrico (presión, glucosa, peso) en cada check-in</label>
+      <label for="casoBiometricosActivos" style="font-size:13px;font-weight:600;color:#374151;cursor:pointer">📊 Activar registro biométrico (presión, glucosa, colesterol, peso) en cada check-in</label>
+    </div>
+    <div class="form-row-single" style="display:flex;align-items:center;gap:10px;padding:4px 0">
+      <input type="checkbox" id="casoPsicosocial" style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
+      <label for="casoPsicosocial" style="font-size:13px;font-weight:600;color:#374151;cursor:pointer">🧠 Activar evaluación psicosocial MRL (trimestral, anónima)</label>
     </div>
     <div class="section-sep">
       <div class="section-sep-label">💊 Recordatorios de medicación</div>
@@ -447,6 +489,7 @@ function showPage(name) {
   document.getElementById('nav-' + name).classList.add('active');
   if (name === 'casos') { loadCasos(); document.getElementById('alertBadge').style.display = 'none'; }
   if (name === 'empresas') loadEmpresas();
+  if (name === 'psicosocial') loadPsicosocial();
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────────────
@@ -539,6 +582,7 @@ function openNuevoCaso() {
   document.getElementById('horaInicio').value = 8;
   document.getElementById('horaFin').value = 21;
   document.getElementById('casoBiometricosActivos').checked = false;
+  document.getElementById('casoPsicosocial').checked = false;
   renderMeds();
   renderPreviewGrid();
   document.getElementById('modalCaso').classList.add('open');
@@ -655,6 +699,7 @@ async function guardarCaso() {
     horario_fin: parseInt(document.getElementById('horaFin').value) || 21,
     dias_activos: Array.from(document.querySelectorAll('.dia-btn.active')).map(b => parseInt(b.dataset.dia)),
     biometricos_activos: document.getElementById('casoBiometricosActivos')?.checked || false,
+    psicosocial_activo: document.getElementById('casoPsicosocial')?.checked || false,
     estado: 'activo',
     proximo_seguimiento: new Date().toISOString()
   };
@@ -775,6 +820,7 @@ async function verDetalle(id) {
           <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Score</th>
           <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Presión</th>
           <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Glucosa</th>
+          <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Colesterol</th>
           <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Peso</th>
         </tr></thead>
         <tbody>${bio.map(b => `<tr>
@@ -782,6 +828,7 @@ async function verDetalle(id) {
           <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5"><strong style="color:${etColor[b.etiqueta]||'#333'}">${b.score_calculado??'—'}</strong></td>
           <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.presion_sistolica&&b.presion_diastolica?`${b.presion_sistolica}/${b.presion_diastolica}`:'—'}</td>
           <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.glucosa??'—'}</td>
+          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.colesterol??'—'}</td>
           <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.peso?`${b.peso} kg`:'—'}</td>
         </tr>`).join('')}</tbody>
       </table>`
@@ -829,6 +876,7 @@ async function editarCaso(id) {
   document.getElementById('casoDiagnostico').value = c.diagnostico || '';
   document.getElementById('casoTratamiento').value = c.tratamiento || '';
   document.getElementById('casoBiometricosActivos').checked = c.biometricos_activos || false;
+  document.getElementById('casoPsicosocial').checked = c.psicosocial_activo || false;
   document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
   document.getElementById('casoDuracion').value = c.duracion_dias || '';
   document.getElementById('horaInicio').value = c.horario_inicio ?? 8;
@@ -896,6 +944,68 @@ function initRealtime() {
       loadDashboard();
     })
     .subscribe();
+}
+
+// ── PSICOSOCIAL ───────────────────────────────────────────────────────────
+async function loadPsicosocial() {
+  const dias = parseInt(document.getElementById('psiFiltroPeriodo')?.value) || 90;
+  const desde = new Date(Date.now() - dias * 86400000);
+
+  const [registros, empresasArr] = await Promise.all([
+    t('GET', 'tracking_psicosocial', null, `?created_at=gte.${desde.toISOString()}&order=created_at.desc`),
+    t('GET', 'tracking_empresas', null, '?activo=eq.true&select=id,nombre')
+  ]);
+
+  const all = Array.isArray(registros) ? registros : [];
+  const empNombres = {};
+  if (Array.isArray(empresasArr)) empresasArr.forEach(e => { empNombres[e.id] = e.nombre; });
+
+  document.getElementById('ps-total').textContent = all.length;
+
+  const byEmp = {};
+  all.forEach(r => {
+    const eid = r.empresa_id;
+    if (!byEmp[eid]) byEmp[eid] = { nombre: empNombres[eid] || eid?.slice(0,8) || '—', rs: [] };
+    byEmp[eid].rs.push(r);
+  });
+
+  const empIds = Object.keys(byEmp);
+  document.getElementById('ps-empresas').textContent = empIds.length;
+
+  const allGlobal = all.map(r => r.score_global).filter(v => v != null);
+  const gAvg = allGlobal.length ? Math.round(allGlobal.reduce((s,v)=>s+v,0)/allGlobal.length) : null;
+  const psRiesgo = document.getElementById('ps-riesgo');
+  psRiesgo.textContent = gAvg != null ? gAvg : '—';
+  psRiesgo.style.color = gAvg == null ? '#111' : gAvg <= 33 ? '#15803d' : gAvg <= 66 ? '#a16207' : '#dc2626';
+
+  const avg = (rs, dim) => {
+    const vals = rs.map(r => r[dim]).filter(v => v != null);
+    return vals.length ? Math.round(vals.reduce((s,v)=>s+v,0)/vals.length) : null;
+  };
+  const sem = v => {
+    if (v == null) return '<span class="badge badge-gray">—</span>';
+    const cls = v <= 33 ? 'badge-green' : v <= 66 ? 'badge-yellow' : 'badge-red';
+    return `<span class="badge ${cls}">${v}</span>`;
+  };
+
+  const body = document.getElementById('psiBody');
+  if (!empIds.length) {
+    body.innerHTML = '<tr><td colspan="8" class="empty-state">Sin evaluaciones en el período seleccionado</td></tr>';
+    return;
+  }
+  body.innerHTML = empIds.map(eid => {
+    const { nombre, rs } = byEmp[eid];
+    return `<tr>
+      <td><strong>${nombre}</strong></td>
+      <td style="text-align:center">${sem(avg(rs,'dim_carga'))}</td>
+      <td style="text-align:center">${sem(avg(rs,'dim_autonomia'))}</td>
+      <td style="text-align:center">${sem(avg(rs,'dim_apoyo'))}</td>
+      <td style="text-align:center">${sem(avg(rs,'dim_relaciones'))}</td>
+      <td style="text-align:center">${sem(avg(rs,'dim_doble_pres'))}</td>
+      <td style="text-align:center">${sem(avg(rs,'score_global'))}</td>
+      <td style="text-align:center;color:#888">${rs.length}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── GRÁFICO DE SCORE ──────────────────────────────────────────────────────

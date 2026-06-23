@@ -5,6 +5,7 @@ const { obtener, guardar } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
 const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratorio');
 const { procesarTracking: _procesarTracking } = require('../src/flows/flujo-tracking');
+const { getMsgPregunta: getPsiPregunta } = require('../src/flows/flujo-psicosocial');
 
 // Ecuador es UTC-5 sin horario de verano.
 // Convierte una fecha UTC al día de semana y hora local ecuatoriana.
@@ -284,6 +285,39 @@ module.exports = async function handler(req, res) {
         procesados++;
       } catch (e) {
         console.error('Error procesando tracking caso:', c.id, e.message);
+        errores++;
+      }
+    }
+
+    // Evaluación psicosocial MRL — trimestral, anónima, por caso
+    const casosPsi = await query('GET', 'tracking_casos', null,
+      `?estado=eq.activo&activado=eq.true&psicosocial_activo=eq.true&or=(proximo_psicosocial.is.null,proximo_psicosocial.lte.${ahora.toISOString()})`
+    );
+
+    for (const c of casosPsi || []) {
+      try {
+        const telefono = c.telefono;
+        if (!telefono) continue;
+        const sesion = await obtener(telefono);
+        if (sesion && sesion.paso !== 0) continue;
+
+        const msg1 = getPsiPregunta(1);
+        await enviarLista(telefono, msg1.texto, msg1.secciones, msg1.botonTexto);
+        await guardar(telefono, 1, {
+          _flujo: 'psicosocial',
+          caso_id: c.id,
+          empresa_id: c.empresa_id,
+          r: []
+        }, 'psicosocial');
+
+        // Programar próxima evaluación en 90 días
+        await query('PATCH', 'tracking_casos', {
+          proximo_psicosocial: new Date(ahora.getTime() + 90 * 86400000).toISOString()
+        }, `?id=eq.${c.id}`);
+
+        procesados++;
+      } catch (e) {
+        console.error('Error enviando psicosocial caso:', c.id, e.message);
         errores++;
       }
     }

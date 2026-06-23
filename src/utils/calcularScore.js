@@ -2,7 +2,7 @@
 // Cualquier componente null se excluye y el máximo se escala proporcionalmente.
 // Retorna { score: number|null, etiqueta: 'controlado'|'en_riesgo'|'alerta'|null }
 
-function calcularScore({ bienestar, sistolica, diastolica, glucosa, peso, altura }) {
+function calcularScore({ bienestar, sistolica, diastolica, glucosa, colesterol, peso, altura }) {
   const componentes = [];
 
   // Presión arterial — 30 pts
@@ -27,9 +27,19 @@ function calcularScore({ bienestar, sistolica, diastolica, glucosa, peso, altura
     componentes.push({ obtenido: pts, maximo: 25 });
   }
 
+  // Colesterol total (mg/dL) — 20 pts
+  if (colesterol != null) {
+    const col = parseInt(colesterol);
+    let pts;
+    if (col >= 240)      pts = 0;   // Alto
+    else if (col >= 200) pts = 10;  // Límite
+    else                 pts = 20;  // Óptimo
+    componentes.push({ obtenido: pts, maximo: 20 });
+  }
+
   // IMC — 20 pts (requiere peso y altura)
   if (peso != null && altura != null) {
-    const imc = parseFloat(peso) / (parseFloat(altura) ** 2);
+    const imc = parseFloat(peso) / (parseFloat(altura) / 100) ** 2;
     let pts;
     if (imc < 18.5 || imc >= 30) pts = 5;   // Bajo/Obeso
     else if (imc >= 25)           pts = 12;  // Sobrepeso

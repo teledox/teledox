@@ -44,6 +44,7 @@ function getFlows() {
     procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
     procesarPreguntaConsulta:     require('../src/flows/flujo-pregunta-consulta').procesarPreguntaConsulta,
     procesarBiometricos:          require('../src/flows/flujo-biometricos').procesarBiometricos,
+    procesarPsicosocial:          require('../src/flows/flujo-psicosocial').procesarPsicosocial,
   };
 }
 
@@ -141,7 +142,7 @@ module.exports = async function handler(req, res) {
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
       procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
       procesarB2C, procesarSeguimientoPago, procesarMigracion, procesarPreguntaConsulta,
-      procesarBiometricos
+      procesarBiometricos, procesarPsicosocial
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -426,6 +427,13 @@ module.exports = async function handler(req, res) {
         case 'tracking_biometrico': {
           const result = await procesarBiometricos(paso, mensaje, datos, telefono);
           if (!result.terminar) await guardar(telefono, result.paso, result.datos ?? datos, 'tracking_biometrico');
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'psicosocial': {
+          const result = await procesarPsicosocial(paso, mensaje, datos, telefono);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos ?? datos, 'psicosocial');
           await despachar(telefono, result);
           return res.status(200).send('OK');
         }

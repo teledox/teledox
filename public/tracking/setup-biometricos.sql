@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS tracking_biometricos (
   presion_sistolica    INTEGER,
   presion_diastolica   INTEGER,
   glucosa              INTEGER,
+  colesterol           INTEGER,
   peso                 DECIMAL(5,2),
   score_calculado      INTEGER,
   etiqueta             TEXT CHECK (etiqueta IN ('controlado','en_riesgo','alerta')),

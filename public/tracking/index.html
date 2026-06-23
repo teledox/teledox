@@ -858,7 +858,7 @@ async function enviarCheckIn(id) {
 }
 
 async function prueba(id) {
-  if (!confirm('🧪 Prueba ×2\n\nEnviará el check-in de bienestar AHORA y programará un segundo envío automático en ~2h.\n\n¿Continuar?')) return;
+  if (!confirm('🧪 Prueba — envíos cada 2h\n\nEnviará el check-in AHORA y cambiará la frecuencia del caso a 2h.\nSe seguirá repitiendo cada 2h hasta que cambies la frecuencia de vuelta en Editar.\n\n¿Continuar?')) return;
   const { data: { session } } = await sc.auth.getSession();
   const token = session?.access_token;
   if (!token) { alert('Sesión expirada — vuelve a iniciar sesión.'); return; }

@@ -73,13 +73,14 @@ async function handleTestReminder(req, res) {
 
   const proximo = new Date(ahora.getTime() + 2 * 3600000);
   await query('PATCH', 'tracking_casos', {
+    frecuencia_horas:    2,
     proximo_seguimiento: proximo.toISOString(),
     meds_recordatorios:  {}
   }, `?id=eq.${c.id}`);
 
   return res.status(200).json({
     ok: true,
-    mensaje: `Check-in enviado. Próximo envío automático en ~2h (${proximo.toLocaleString('es-EC')}).`
+    mensaje: `Check-in enviado. Frecuencia cambiada a 2h — se repetirá cada 2h hasta que cambies la frecuencia de vuelta en Editar.`
   });
 }
 

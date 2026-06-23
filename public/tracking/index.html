@@ -863,10 +863,9 @@ async function prueba(id) {
   const token = session?.access_token;
   if (!token) { alert('Sesión expirada — vuelve a iniciar sesión.'); return; }
   try {
-    const r = await fetch('/api/test-reminder', {
+    const r = await fetch(`/api/cron?caso_id=${encodeURIComponent(id)}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ caso_id: id })
+      headers: { Authorization: `Bearer ${token}` }
     });
     const data = await r.json();
     if (data.ok) {

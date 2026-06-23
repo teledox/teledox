@@ -145,7 +145,7 @@ textarea.form-input{resize:vertical;min-height:70px}
   <div class="layout">
     <div class="sidebar">
       <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard">📊 Dashboard</div>
-      <div class="nav-item" onclick="showPage('casos')" id="nav-casos">📋 Casos</div>
+      <div class="nav-item" onclick="showPage('casos')" id="nav-casos">📋 Casos <span id="alertBadge" style="display:none;background:#dc2626;color:#fff;border-radius:999px;padding:0 6px;font-size:10px;font-weight:700;vertical-align:middle;line-height:16px">!</span></div>
       <div class="nav-item" onclick="showPage('empresas')" id="nav-empresas">🏥 Empresas</div>
     </div>
     <div class="main">
@@ -230,9 +230,15 @@ textarea.form-input{resize:vertical;min-height:70px}
         <input class="form-input" id="casoTelefono" placeholder="ej: 593987654321">
       </div>
     </div>
-    <div class="form-row-single">
-      <label class="form-label">Nombre del paciente <span style="color:#aaa;font-weight:400">(opcional)</span></label>
-      <input class="form-input" id="casoNombre" placeholder="Juan Pérez — o dejar vacío si no se comparte">
+    <div class="form-row">
+      <div>
+        <label class="form-label">Nombre del paciente <span style="color:#aaa;font-weight:400">(opcional)</span></label>
+        <input class="form-input" id="casoNombre" placeholder="Juan Pérez">
+      </div>
+      <div>
+        <label class="form-label">Altura (cm) <span style="color:#aaa;font-weight:400">— para IMC</span></label>
+        <input class="form-input" type="number" id="casoAltura" placeholder="ej: 170" min="100" max="220">
+      </div>
     </div>
     <div class="form-row">
       <div>
@@ -436,6 +442,7 @@ async function initApp() {
   document.getElementById('appWrap').classList.add('visible');
   document.getElementById('topbarUser').textContent = currentUser.nombre || currentUser.correo;
   await Promise.all([loadDashboard(), loadEmpresasFiltro()]);
+  initRealtime();
 }
 
 // ── PAGES ─────────────────────────────────────────────────────────────────
@@ -444,7 +451,7 @@ function showPage(name) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('nav-' + name).classList.add('active');
-  if (name === 'casos') loadCasos();
+  if (name === 'casos') { loadCasos(); document.getElementById('alertBadge').style.display = 'none'; }
   if (name === 'empresas') loadEmpresas();
 }
 
@@ -528,7 +535,7 @@ function openNuevoCaso() {
   editandoCasoId = null;
   medicamentosTemp = [];
   document.getElementById('modalCasoTitle').textContent = 'Nuevo caso de seguimiento';
-  ['casoEmpresa','casoTelefono','casoNombre','casoDiagnostico','casoTratamiento','medNombre','medDosis','medDuracion'].forEach(id => {
+  ['casoEmpresa','casoTelefono','casoNombre','casoAltura','casoDiagnostico','casoTratamiento','medNombre','medDosis','medDuracion'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = el.tagName === 'SELECT' ? '' : '';
   });
@@ -653,6 +660,7 @@ async function guardarCaso() {
     horario_inicio: parseInt(document.getElementById('horaInicio').value) || 8,
     horario_fin: parseInt(document.getElementById('horaFin').value) || 21,
     dias_activos: Array.from(document.querySelectorAll('.dia-btn.active')).map(b => parseInt(b.dataset.dia)),
+    altura_cm: parseInt(document.getElementById('casoAltura').value) || null,
     biometricos_activos: document.getElementById('casoBiometricosActivos')?.checked || false,
     estado: 'activo',
     proximo_seguimiento: new Date().toISOString()
@@ -766,7 +774,8 @@ async function verDetalle(id) {
         <div style="font-size:13px;color:#888;margin-top:4px">Score de salud · <strong style="color:${etColor[bioActual.etiqueta]||'#333'}">${(bioActual.etiqueta||'').replace('_',' ')}</strong></div>
         <div style="font-size:11px;color:#aaa;margin-top:2px">${new Date(bioActual.created_at).toLocaleString('es-EC',{dateStyle:'medium',timeStyle:'short'})}</div>
       </div>
-      <div style="font-weight:700;font-size:13px;margin:1rem 0 8px">Últimos registros</div>
+      ${renderScoreChart(bio)}
+      <div style="font-weight:700;font-size:13px;margin:0 0 8px">Últimos registros</div>
       <table style="width:100%;border-collapse:collapse;font-size:12px">
         <thead><tr>
           <th style="text-align:left;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Fecha</th>
@@ -826,6 +835,7 @@ async function editarCaso(id) {
   document.getElementById('casoNombre').value = c.paciente_nombre || '';
   document.getElementById('casoDiagnostico').value = c.diagnostico || '';
   document.getElementById('casoTratamiento').value = c.tratamiento || '';
+  document.getElementById('casoAltura').value = c.altura_cm || '';
   document.getElementById('casoBiometricosActivos').checked = c.biometricos_activos || false;
   document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
   document.getElementById('casoDuracion').value = c.duracion_dias || '';
@@ -878,6 +888,68 @@ async function guardarEmpresa() {
 async function toggleEmpresa(id, activo) {
   await t('PATCH', 'tracking_empresas', { activo: !activo }, `?id=eq.${id}`);
   loadEmpresas();
+}
+
+// ── REALTIME ──────────────────────────────────────────────────────────────
+function initRealtime() {
+  sc.channel('tracking-realtime')
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'tracking_casos' }, payload => {
+      if (payload.new?.estado === 'alerta') {
+        document.getElementById('alertBadge').style.display = 'inline-block';
+        showToast('🚨 Alerta nueva — revisar panel de casos');
+      }
+      loadDashboard();
+    })
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'tracking_biometricos' }, () => {
+      loadDashboard();
+    })
+    .subscribe();
+}
+
+// ── GRÁFICO DE SCORE ──────────────────────────────────────────────────────
+function renderScoreChart(bio) {
+  // bio llega de newest→oldest; revertimos para mostrar izq=antiguo, der=reciente
+  const data = [...bio].reverse().filter(b => b.score_calculado != null);
+  const n = data.length;
+  if (n < 2) return '';
+
+  const W = 500, H = 110, PL = 28, PR = 8, PT = 18, PB = 22;
+  const plotW = W - PL - PR, plotH = H - PT - PB;
+  const xOf = i => PL + (i / (n - 1)) * plotW;
+  const yOf = s => PT + (1 - s / 100) * plotH;
+  const etC = { controlado: '#16a34a', en_riesgo: '#ca8a04', alerta: '#dc2626' };
+
+  const zones = [
+    [PT,                   yOf(70), '#f0fdf4'],
+    [yOf(70),              yOf(40), '#fefce8'],
+    [yOf(40),              PT + plotH, '#fff1f2'],
+  ].map(([y1, y2, fill]) =>
+    `<rect x="${PL}" y="${y1}" width="${plotW}" height="${y2 - y1}" fill="${fill}"/>`
+  ).join('');
+
+  const pts = data.map((b, i) => `${xOf(i)},${yOf(b.score_calculado)}`).join(' ');
+
+  const marks = data.map((b, i) => {
+    const x = xOf(i), y = yOf(b.score_calculado);
+    const c = etC[b.etiqueta] || '#888';
+    const lbl = new Date(b.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
+    return `<circle cx="${x}" cy="${y}" r="3.5" fill="${c}" stroke="#fff" stroke-width="1.5"/>
+      <text x="${x}" y="${y - 6}" text-anchor="middle" font-size="8.5" font-weight="700" fill="${c}">${b.score_calculado}</text>
+      <text x="${x}" y="${H - 4}" text-anchor="middle" font-size="8" fill="#bbb">${lbl}</text>`;
+  }).join('');
+
+  const yLabels = [0, 40, 70, 100].map(v =>
+    `<text x="${PL - 3}" y="${yOf(v) + 3}" text-anchor="end" font-size="8" fill="#ccc">${v}</text>`
+  ).join('');
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"
+      style="width:100%;display:block;border-radius:8px;overflow:hidden;margin-bottom:1rem">
+    <rect x="${PL}" y="${PT}" width="${plotW}" height="${plotH}" rx="4" fill="#f9fafb"/>
+    ${zones}
+    <polyline points="${pts}" fill="none" stroke="#1e3a5f" stroke-width="1.5" stroke-linejoin="round"/>
+    ${marks}
+    ${yLabels}
+  </svg>`;
 }
 
 // ── HORARIO / PREVIEW ─────────────────────────────────────────────────────

@@ -1,8 +1,9 @@
 -- MediLyft Tracking — biométricos
 -- Ejecutar en Supabase: Dashboard → SQL Editor → New query → pegar y Run
 
--- 1. Columna para activar captura biométrica por caso
+-- 1. Columnas para activar captura biométrica y registrar altura del paciente
 ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS biometricos_activos BOOLEAN DEFAULT false;
+ALTER TABLE tracking_casos ADD COLUMN IF NOT EXISTS altura_cm INTEGER;
 
 -- 2. Tabla de registros biométricos
 CREATE TABLE IF NOT EXISTS tracking_biometricos (

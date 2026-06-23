@@ -408,6 +408,7 @@ module.exports = async function handler(req, res) {
               paciente_nombre: datos.paciente_nombre,
               diagnostico:     datos.diagnostico,
               bienestar:       mensaje,
+              altura:          datos.altura || null,
             };
             await guardar(telefono, 420, bioData, 'tracking_biometrico');
             await enviar(telefono,

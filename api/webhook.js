@@ -43,8 +43,10 @@ function getFlows() {
     procesarB2C:                  require('../src/flows/flujo-b2c').procesarB2C,
     procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
     procesarPreguntaConsulta:     require('../src/flows/flujo-pregunta-consulta').procesarPreguntaConsulta,
-    procesarBiometricos:          require('../src/flows/flujo-biometricos').procesarBiometricos,
-    procesarPsicosocial:          require('../src/flows/flujo-psicosocial').procesarPsicosocial,
+    procesarBiometricos:             require('../src/flows/flujo-biometricos').procesarBiometricos,
+    procesarPsicosocial:             require('../src/flows/flujo-psicosocial').procesarPsicosocial,
+    confirmarConsultaFueraHorario:   require('../src/flows/flujo-consulta').confirmarConsultaFueraHorario,
+    confirmarMigracionFueraHorario:  require('../src/flows/flujo-tracking-consulta').confirmarMigracionFueraHorario,
   };
 }
 
@@ -142,7 +144,8 @@ module.exports = async function handler(req, res) {
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
       procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
       procesarB2C, procesarSeguimientoPago, procesarMigracion, procesarPreguntaConsulta,
-      procesarBiometricos, procesarPsicosocial
+      procesarBiometricos, procesarPsicosocial,
+      confirmarConsultaFueraHorario, confirmarMigracionFueraHorario
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -494,9 +497,26 @@ module.exports = async function handler(req, res) {
 
         case 'tracking_migracion': {
           const result = await procesarMigracion(paso, mensaje, datos, telefono);
-          if (!result.terminar) await guardar(telefono, result.paso ?? paso, result.datos ?? datos, 'tracking_migracion');
-          else await eliminar(telefono);
+          const targetFlujoM = result.datos?._flujo;
+          if (!result.terminar && (!targetFlujoM || targetFlujoM === 'tracking_migracion')) {
+            await guardar(telefono, result.paso ?? paso, result.datos ?? datos, 'tracking_migracion');
+          } else if (result.terminar) {
+            await eliminar(telefono);
+          }
           await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
+        case 'fuera_horario': {
+          if (mensaje === 'fuera_horario_agendar') {
+            const result = datos._pendingOrigen === 'tracking'
+              ? await confirmarMigracionFueraHorario(datos, telefono)
+              : await confirmarConsultaFueraHorario(datos, telefono);
+            await despachar(telefono, result);
+          } else {
+            await eliminar(telefono);
+            await enviar(telefono, 'Entendido. Puedes escribirnos cuando quieras. 👋');
+          }
           return res.status(200).send('OK');
         }
 

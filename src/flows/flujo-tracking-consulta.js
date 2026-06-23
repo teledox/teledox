@@ -3,6 +3,9 @@ const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes
 const { crear: crearConsulta }                  = require('../services/consultas');
 const { alertar }        = require('../services/telegram');
 const { validarCedula, separarNombre } = require('../utils/validaciones');
+const { guardar, eliminar } = require('../services/sesiones');
+const { estaEnHorario, proximaApertura } = require('../utils/horarioOperacion');
+const { mensajeFueraHorario } = require('../utils/mensajesFueraHorario');
 
 // Mini-flujo de migración tracking → consulta MediLyft
 // Entrada: el paciente aceptó la propuesta del médico (propuesta_consulta_si)
@@ -72,11 +75,28 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
       };
     }
 
+    // Verificar horario de operación antes de crear la consulta
+    if (!estaEnHorario()) {
+      const prox = proximaApertura();
+      const fhDatos = {
+        ...datos,
+        paciente_id:    paciente.id,
+        _flujo:         'fuera_horario',
+        _pendingOrigen: 'tracking',
+        _activada_at:   prox.fecha.toISOString(),
+        _proximaTexto:  prox.texto
+      };
+      await guardar(telefono, 0, fhDatos, 'fuera_horario');
+      const { respuesta, botones } = mensajeFueraHorario(prox);
+      return { respuesta, botones, paso: 0, datos: fhDatos, terminar: false };
+    }
+
     await crearConsulta({
       paciente_id:         paciente.id,
       nivel_sintomas:      1,
       sintomas_descripcion: [diagnostico, tratamiento ? `Tratamiento: ${tratamiento}` : ''].filter(Boolean).join(' — ') || 'Seguimiento tracking',
       estado:              'pendiente',
+      activada_at:         new Date().toISOString()
     });
 
     await query('PATCH', 'tracking_casos', { estado: 'derivado' }, `?id=eq.${caso_id}`);
@@ -105,4 +125,34 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
   };
 }
 
-module.exports = { procesarMigracion };
+// Confirma una migración tracking→consulta agendada fuera de horario.
+// Llamada desde webhook.js cuando el paciente presiona "✅ Agendar mi cita".
+async function confirmarMigracionFueraHorario(datos, telefono) {
+  const { paciente_nombre, diagnostico, tratamiento, caso_id, paciente_id } = datos;
+
+  await crearConsulta({
+    paciente_id,
+    nivel_sintomas:      1,
+    sintomas_descripcion: [diagnostico, tratamiento ? `Tratamiento: ${tratamiento}` : ''].filter(Boolean).join(' — ') || 'Seguimiento tracking',
+    estado:              'pendiente_apertura',
+    activada_at:         datos._activada_at || null
+  });
+
+  await query('PATCH', 'tracking_casos', { estado: 'derivado' }, `?id=eq.${caso_id}`);
+
+  await alertar(
+    `📋 <b>Paciente tracking → consulta (fuera de horario)</b>\n` +
+    `Paciente: ${paciente_nombre || telefono}\n` +
+    `Diagnóstico: ${diagnostico || '—'}\n` +
+    `Activa: ${datos._proximaTexto}`
+  );
+
+  await eliminar(telefono);
+
+  return {
+    respuesta: `✅ ¡Tu cita fue agendada!\n\nUn asesor de *MediLyft* la atenderá ${datos._proximaTexto}.\n\nSi tienes una urgencia llama al *911*.`,
+    terminar: true
+  };
+}
+
+module.exports = { procesarMigracion, confirmarMigracionFueraHorario };

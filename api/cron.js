@@ -43,6 +43,11 @@ module.exports = async function handler(req, res) {
   let errores = 0;
 
   try {
+    // Activar consultas que llegaron a su horario de apertura diferida
+    await query('PATCH', 'consultas', { estado: 'pendiente' },
+      `?estado=eq.pendiente_apertura&activada_at=lte.${ahora.toISOString()}`
+    );
+
     // fecha_fin puede ser NULL (sin límite) — usar or() para incluir ambos casos
     const recordatorios = await query('GET', 'recordatorios', null,
       `?activo=eq.true&fecha_proximo=lte.${ahora.toISOString()}&or=(fecha_fin.is.null,fecha_fin.gte.${ahora.toISOString()})&select=*,pacientes(nombre,apellidos,telefono)`

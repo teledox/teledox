@@ -9,6 +9,8 @@ const { validarCedula, clasificarSintomas, esSi, tieneApellidos, inferirSexo, se
 const { procesarB2C, BOTONES_PAGO } = require('./flujo-b2c');
 const { mensajeBienvenida } = require('./flujo-inicio');
 const { query } = require('../services/supabase');
+const { estaEnHorario, proximaApertura } = require('../utils/horarioOperacion');
+const { mensajeFueraHorario } = require('../utils/mensajesFueraHorario');
 
 async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
@@ -310,6 +312,21 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       };
     }
 
+    // Verificar horario de operación antes de crear la consulta (solo B2B)
+    if (!estaEnHorario()) {
+      const prox = proximaApertura();
+      const fhDatos = {
+        ...datos,
+        _flujo:         'fuera_horario',
+        _pendingOrigen: 'consulta',
+        _activada_at:   prox.fecha.toISOString(),
+        _proximaTexto:  prox.texto
+      };
+      await guardar(telefono, 0, fhDatos, 'fuera_horario');
+      const { respuesta, botones } = mensajeFueraHorario(prox);
+      return { respuesta, botones, paso: 0, datos: fhDatos, terminar: false };
+    }
+
     await actualizar(datos.cedula, {
       nombre: datos.nombre,
       apellidos: datos.apellidos,
@@ -326,7 +343,8 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       paciente_id: datos.paciente_id,
       nivel_sintomas: 1,
       sintomas_descripcion: datos.sintomas,
-      estado: 'pendiente'
+      estado: 'pendiente',
+      activada_at: new Date().toISOString()
     });
 
     const prioridadTexto = datos.prioridad === 'pronto' ? 'lo más pronto posible' : 'cuando haya disponibilidad';
@@ -386,4 +404,58 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
   return { respuesta, paso: nuevoPaso, datos, terminar: false };
 }
 
-module.exports = { procesarPaso };
+// Confirma una consulta que fue agendada fuera de horario y está pendiente.
+// Llamada desde webhook.js cuando el paciente presiona "✅ Agendar mi cita".
+async function confirmarConsultaFueraHorario(datos, telefono) {
+  await actualizar(datos.cedula, {
+    nombre: datos.nombre, apellidos: datos.apellidos,
+    edad: datos.edad, fecha_nacimiento: datos.fecha_nacimiento,
+    sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
+    correo: datos.correo, telefono: datos.telefono,
+    lugar_residencia: datos.lugar_residencia,
+    updated_at: new Date().toISOString()
+  });
+
+  const consulta = await crearConsulta({
+    paciente_id: datos.paciente_id,
+    nivel_sintomas: 1,
+    sintomas_descripcion: datos.sintomas,
+    estado: 'pendiente_apertura',
+    activada_at: datos._activada_at || null
+  });
+
+  const prioridadTexto = datos.prioridad === 'pronto' ? 'lo más pronto posible' : 'cuando haya disponibilidad';
+  await crearNotificacion('nueva_consulta', '📅 Nueva teleconsulta',
+    `${datos.nombreCompleto} solicita teleconsulta — se activará ${datos._proximaTexto}`,
+    datos.paciente_id, consulta?.id, {
+      origen: datos.empresa_id ? 'b2b' : 'b2c',
+      categoria: 'leve',
+      etiqueta: datos.origen_afiliacion === 'empleado_codigo' ? 'EMPLEADO CON CÓDIGO'
+              : datos.origen_afiliacion === 'afiliado'        ? 'AFILIADO'
+              : null,
+    });
+
+  await alertar(
+    `📅 <b>TELECONSULTA FUERA DE HORARIO — agendada</b>\n` +
+    `Paciente: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\n` +
+    `Empresa: ${datos.empresa || 'Particular'}\nSíntomas: ${datos.sintomas}\n` +
+    `Prioridad: ${prioridadTexto}\nActiva: ${datos._proximaTexto}`
+  );
+
+  if (datos.empresa_id) {
+    try {
+      await registrarPlanillajeB2B(datos, consulta?.id);
+    } catch (e) {
+      await alertar(`⚠️ <b>Error planillaje B2B</b>\n${datos.nombreCompleto}\n${e.message}`);
+    }
+  }
+
+  await eliminar(telefono);
+
+  return {
+    respuesta: `🎉 *¡Cita agendada!*\n\n👤 ${datos.nombreCompleto} — ${datos.cedula}\n\nUn médico de *MediLyft* atenderá tu solicitud ${datos._proximaTexto}.`,
+    paso: 0, datos: {}, terminar: true
+  };
+}
+
+module.exports = { procesarPaso, confirmarConsultaFueraHorario };

@@ -1496,9 +1496,17 @@ async function renderBienestarConsulta() {
   const recs = await supa('GET', 'recordatorios', null,
     `?consulta_id=eq.${recetaConsultaId}&tipo=eq.bienestar&order=created_at.desc`) || [];
 
-  // Sin casos → mostrar form directamente
+  // Sin casos → empty state con botón Nuevo
   if (!recs.length) {
-    _renderBienestarForm(el);
+    el.innerHTML = `
+      <div id="bw-form-wrap" style="display:none;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid #e5e7eb"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:#aaa;font-style:italic">Sin seguimiento activo.</span>
+        <button onclick="_toggleBienestarForm()"
+          style="font-size:11px;background:#2563eb;color:#fff;border:1px solid #2563eb;border-radius:6px;padding:4px 10px;cursor:pointer">
+          + Nuevo
+        </button>
+      </div>`;
     return;
   }
 
@@ -1584,7 +1592,6 @@ async function renderBienestarConsulta() {
     }).join('')}
   `;
 
-  if (!hayActivo) _toggleBienestarForm();
 }
 
 async function activarBienestar() {

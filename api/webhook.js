@@ -43,6 +43,7 @@ function getFlows() {
     procesarB2C:                  require('../src/flows/flujo-b2c').procesarB2C,
     procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
     procesarPreguntaConsulta:     require('../src/flows/flujo-pregunta-consulta').procesarPreguntaConsulta,
+    procesarBiometricos:          require('../src/flows/flujo-biometricos').procesarBiometricos,
   };
 }
 
@@ -139,7 +140,8 @@ module.exports = async function handler(req, res) {
       buscarRespuestaLabPendiente, procesarRespuestaLab, procesarSubidaExamen, esRespuestaLab,
       procesarPaso, procesarReagendamiento, procesarCronica, procesarAntecedentes,
       procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
-      procesarB2C, procesarSeguimientoPago, procesarMigracion, procesarPreguntaConsulta
+      procesarB2C, procesarSeguimientoPago, procesarMigracion, procesarPreguntaConsulta,
+      procesarBiometricos
     } = getFlows();
 
     // Reinicio de sesión con "hola"
@@ -395,6 +397,32 @@ module.exports = async function handler(req, res) {
           const result = datos.tipo === 'med_reminder'
             ? await procesarRespuestaMed(mensaje, datos, telefono)
             : await procesarTracking(paso, mensaje, datos, telefono);
+          await despachar(telefono, result);
+
+          // Después del check-in de bienestar, encadenar registro biométrico si está activo
+          if (result.terminar && datos.tipo === 'bienestar' && datos.biometricos_activos) {
+            const bioData = {
+              _flujo:          'tracking_biometrico',
+              caso_id:         datos.caso_id,
+              empresa_id:      datos.empresa_id,
+              paciente_nombre: datos.paciente_nombre,
+              diagnostico:     datos.diagnostico,
+              bienestar:       mensaje,
+            };
+            await guardar(telefono, 420, bioData, 'tracking_biometrico');
+            await enviar(telefono,
+              `📊 *Registro biométrico*\n\n¿Pudiste medir tu *presión arterial* hoy?\n\n` +
+              `Escríbela así: *120/80* (sistólica/diastólica)\n` +
+              `Si no pudiste, responde *no medí*.`
+            );
+          }
+
+          return res.status(200).send('OK');
+        }
+
+        case 'tracking_biometrico': {
+          const result = await procesarBiometricos(paso, mensaje, datos, telefono);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos ?? datos, 'tracking_biometrico');
           await despachar(telefono, result);
           return res.status(200).send('OK');
         }

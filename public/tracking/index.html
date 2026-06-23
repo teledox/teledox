@@ -37,7 +37,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .page{display:none}
 .page.active{display:block}
 /* CARDS / STATS */
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:1.5rem}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:1.5rem}
 .stat-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem 1.2rem}
 .stat-label{font-size:11px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .stat-value{font-size:28px;font-weight:800;margin:4px 0 2px}
@@ -157,6 +157,7 @@ textarea.form-input{resize:vertical;min-height:70px}
           <div class="stat-card"><div class="stat-label">Alerta hoy</div><div class="stat-value" id="s-alertas" style="color:#dc2626">—</div></div>
           <div class="stat-card"><div class="stat-label">Altas este mes</div><div class="stat-value" id="s-altas" style="color:#16a34a">—</div></div>
           <div class="stat-card"><div class="stat-label">Empresas activas</div><div class="stat-value" id="s-empresas">—</div></div>
+          <div class="stat-card"><div class="stat-label">Score prom. hoy</div><div class="stat-value" id="s-score">—</div><div class="stat-sub">biométricos hoy</div></div>
         </div>
         <div class="card">
           <div style="padding:1rem 1.2rem;border-bottom:1px solid #e5e7eb;font-weight:700;font-size:14px">Casos en alerta</div>
@@ -274,6 +275,10 @@ textarea.form-input{resize:vertical;min-height:70px}
       <label class="form-label">Tratamiento / indicaciones</label>
       <textarea class="form-input" id="casoTratamiento" placeholder="Ej: Dieta baja en carbohidratos, ejercicio 30min/día, control glucosa en ayunas"></textarea>
     </div>
+    <div class="form-row-single" style="display:flex;align-items:center;gap:10px;padding:8px 0">
+      <input type="checkbox" id="casoBiometricosActivos" style="width:16px;height:16px;cursor:pointer;flex-shrink:0">
+      <label for="casoBiometricosActivos" style="font-size:13px;font-weight:600;color:#374151;cursor:pointer">📊 Activar registro biométrico (presión, glucosa, peso) en cada check-in</label>
+    </div>
     <div class="section-sep">
       <div class="section-sep-label">💊 Recordatorios de medicación</div>
       <div id="medGrid" class="med-grid"></div>
@@ -365,9 +370,18 @@ textarea.form-input{resize:vertical;min-height:70px}
     <div style="display:flex;gap:12px;margin-bottom:1rem;flex-wrap:wrap" id="detalleBadges"></div>
     <div style="background:#f9fafb;border-radius:8px;padding:10px 12px;font-size:12px;color:#555;margin-bottom:1rem" id="detalleTratamiento"></div>
     <div style="display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap" id="detalleAcciones"></div>
-    <div style="font-weight:700;font-size:13px;margin-bottom:6px">Historial de interacciones</div>
-    <div id="detalleStats"></div>
-    <div class="timeline" id="detalleTimeline"></div>
+    <div style="display:flex;gap:0;border-bottom:2px solid #e5e7eb;margin-bottom:1rem">
+      <button onclick="switchDetalleTab('historial')" id="tab-btn-historial" style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:600;color:#1e3a5f;border-bottom:2px solid #1e3a5f;cursor:pointer;margin-bottom:-2px">Historial</button>
+      <button onclick="switchDetalleTab('score')" id="tab-btn-score" style="padding:8px 16px;border:none;background:none;font-size:13px;font-weight:600;color:#888;cursor:pointer">📊 Biométricos</button>
+    </div>
+    <div id="tab-historial">
+      <div style="font-weight:700;font-size:13px;margin-bottom:6px">Historial de interacciones</div>
+      <div id="detalleStats"></div>
+      <div class="timeline" id="detalleTimeline"></div>
+    </div>
+    <div id="tab-score" style="display:none">
+      <div id="detalleScore"></div>
+    </div>
   </div>
 </div>
 
@@ -449,6 +463,10 @@ async function loadDashboard() {
   document.getElementById('s-alertas').textContent = alertas.length;
   document.getElementById('s-altas').textContent = altas;
   document.getElementById('s-empresas').textContent = (empresas || []).length;
+  const hoyInicio = new Date(); hoyInicio.setHours(0,0,0,0);
+  const biohoy = await t('GET', 'tracking_biometricos', null, `?created_at=gte.${hoyInicio.toISOString()}&select=score_calculado`) || [];
+  const scores = biohoy.map(b => b.score_calculado).filter(s => s != null);
+  document.getElementById('s-score').textContent = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : '—';
   document.getElementById('alertasBody').innerHTML = alertas.length
     ? alertas.map(c => `<tr>
         <td><strong>${c.paciente_nombre || c.telefono}</strong></td>
@@ -468,21 +486,30 @@ async function loadCasos() {
   if (empresa) q += `&empresa_id=eq.${empresa}`;
   if (estado) q += `&estado=eq.${estado}`;
   const casos = await t('GET', 'tracking_casos', null, q) || [];
+  const bioMap = {};
+  if (casos.length) {
+    const ids = casos.map(c => c.id).join(',');
+    const bios = await t('GET', 'tracking_biometricos', null, `?caso_id=in.(${ids})&order=created_at.desc&select=caso_id,score_calculado,etiqueta`) || [];
+    bios.forEach(b => { if (!bioMap[b.caso_id]) bioMap[b.caso_id] = b; });
+  }
   const estadoBadge = { activo: 'badge-green', alerta: 'badge-red', alta: 'badge-blue', derivado: 'badge-yellow', inactivo: 'badge-gray' };
   const estadoLabel = { activo: '✅ Activo', alerta: '🚨 Alerta', alta: '🏁 Alta', derivado: '➡️ Derivado', inactivo: '⏸ Inactivo' };
   document.getElementById('casosBody').innerHTML = casos.length
-    ? casos.map((c, i) => `<tr>
+    ? casos.map((c, i) => {
+      const bio = bioMap[c.id];
+      const scoreBadge = bio ? ` <span class="badge ${bio.etiqueta==='controlado'?'badge-green':bio.etiqueta==='alerta'?'badge-red':'badge-yellow'}" style="font-size:10px" title="Score de salud">📊${bio.score_calculado}</span>` : '';
+      return `<tr>
         <td style="color:#aaa;font-weight:700">${casos.length - i}</td>
         <td><strong>${c.paciente_nombre || c.telefono}</strong>${c.bienestar_alto ? ' <span title="Buen bienestar reciente" style="font-size:11px">⭐</span>' : ''}${c.paciente_nombre ? `<br><span style="font-size:11px;color:#aaa">${c.telefono}</span>` : ''}</td>
         <td>${c.tracking_empresas?.nombre || '—'}</td>
         <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.diagnostico||'').replace(/"/g,'')}">${c.diagnostico || '—'}</td>
-        <td><span class="badge ${estadoBadge[c.estado] || 'badge-gray'}">${estadoLabel[c.estado] || c.estado}</span></td>
+        <td><span class="badge ${estadoBadge[c.estado] || 'badge-gray'}">${estadoLabel[c.estado] || c.estado}</span>${scoreBadge}</td>
         <td style="font-size:12px;color:#888">${c.proximo_seguimiento ? new Date(c.proximo_seguimiento).toLocaleString('es-EC',{dateStyle:'short',timeStyle:'short'}) : '—'}</td>
         <td style="display:flex;gap:6px">
           <button class="btn btn-sm btn-secondary" onclick="verDetalle('${c.id}')">Ver</button>
           <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}')">Estado</button>
         </td>
-      </tr>`).join('')
+      </tr>`; }).join('')
     : '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#aaa">Sin casos</td></tr>';
 }
 
@@ -510,6 +537,7 @@ function openNuevoCaso() {
   document.querySelectorAll('.dia-btn').forEach(b => b.classList.toggle('active', b.dataset.dia !== '0'));
   document.getElementById('horaInicio').value = 8;
   document.getElementById('horaFin').value = 21;
+  document.getElementById('casoBiometricosActivos').checked = false;
   renderMeds();
   renderPreviewGrid();
   document.getElementById('modalCaso').classList.add('open');
@@ -625,6 +653,7 @@ async function guardarCaso() {
     horario_inicio: parseInt(document.getElementById('horaInicio').value) || 8,
     horario_fin: parseInt(document.getElementById('horaFin').value) || 21,
     dias_activos: Array.from(document.querySelectorAll('.dia-btn.active')).map(b => parseInt(b.dataset.dia)),
+    biometricos_activos: document.getElementById('casoBiometricosActivos')?.checked || false,
     estado: 'activo',
     proximo_seguimiento: new Date().toISOString()
   };
@@ -659,9 +688,10 @@ async function confirmarEstado() {
 
 // ── DETALLE CASO ──────────────────────────────────────────────────────────
 async function verDetalle(id) {
-  const [casoArr, registros] = await Promise.all([
+  const [casoArr, registros, biometricos] = await Promise.all([
     t('GET', 'tracking_casos', null, `?id=eq.${id}&select=*,tracking_empresas(nombre)`),
-    t('GET', 'tracking_registros', null, `?caso_id=eq.${id}&order=created_at.desc&limit=30`)
+    t('GET', 'tracking_registros', null, `?caso_id=eq.${id}&order=created_at.desc&limit=30`),
+    t('GET', 'tracking_biometricos', null, `?caso_id=eq.${id}&order=created_at.desc&limit=7`)
   ]);
   const c = casoArr?.[0]; if (!c) return;
   const estadoColor = { activo: '#16a34a', alerta: '#dc2626', alta: '#2563eb', derivado: '#ca8a04', inactivo: '#6b7280' };
@@ -725,7 +755,49 @@ async function verDetalle(id) {
         </div>`;
       }).join('')
     : '<div style="color:#aaa;font-size:13px;padding:1rem 0">Sin interacciones registradas aún.</div>';
+
+  // Tab biométricos
+  const bio = biometricos || [];
+  const bioActual = bio[0];
+  const etColor = { controlado: '#16a34a', en_riesgo: '#ca8a04', alerta: '#dc2626' };
+  document.getElementById('detalleScore').innerHTML = bioActual
+    ? `<div style="text-align:center;padding:1.2rem 0 0.8rem">
+        <div style="font-size:52px;font-weight:900;color:${etColor[bioActual.etiqueta]||'#333'};line-height:1">${bioActual.score_calculado}</div>
+        <div style="font-size:13px;color:#888;margin-top:4px">Score de salud · <strong style="color:${etColor[bioActual.etiqueta]||'#333'}">${(bioActual.etiqueta||'').replace('_',' ')}</strong></div>
+        <div style="font-size:11px;color:#aaa;margin-top:2px">${new Date(bioActual.created_at).toLocaleString('es-EC',{dateStyle:'medium',timeStyle:'short'})}</div>
+      </div>
+      <div style="font-weight:700;font-size:13px;margin:1rem 0 8px">Últimos registros</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead><tr>
+          <th style="text-align:left;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Fecha</th>
+          <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Score</th>
+          <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Presión</th>
+          <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Glucosa</th>
+          <th style="text-align:center;padding:6px 8px;background:#f9fafb;border-bottom:1px solid #e5e7eb">Peso</th>
+        </tr></thead>
+        <tbody>${bio.map(b => `<tr>
+          <td style="padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#666;white-space:nowrap">${new Date(b.created_at).toLocaleString('es-EC',{dateStyle:'short',timeStyle:'short'})}</td>
+          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5"><strong style="color:${etColor[b.etiqueta]||'#333'}">${b.score_calculado??'—'}</strong></td>
+          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.presion_sistolica&&b.presion_diastolica?`${b.presion_sistolica}/${b.presion_diastolica}`:'—'}</td>
+          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.glucosa??'—'}</td>
+          <td style="text-align:center;padding:6px 8px;border-bottom:1px solid #f5f5f5;color:#555">${b.peso?`${b.peso} kg`:'—'}</td>
+        </tr>`).join('')}</tbody>
+      </table>`
+    : '<div class="empty-state" style="padding:1.5rem 0;font-size:13px">Sin registros biométricos.<br><span style="font-size:11px;color:#bbb">Activar en el caso para comenzar.</span></div>';
+
+  switchDetalleTab('historial');
   document.getElementById('modalDetalle').classList.add('open');
+}
+
+function switchDetalleTab(tab) {
+  document.getElementById('tab-historial').style.display = tab === 'historial' ? '' : 'none';
+  document.getElementById('tab-score').style.display     = tab === 'score'     ? '' : 'none';
+  const btnH = document.getElementById('tab-btn-historial');
+  const btnS = document.getElementById('tab-btn-score');
+  btnH.style.color = tab === 'historial' ? '#1e3a5f' : '#888';
+  btnH.style.borderBottom = tab === 'historial' ? '2px solid #1e3a5f' : 'none';
+  btnS.style.color = tab === 'score' ? '#1e3a5f' : '#888';
+  btnS.style.borderBottom = tab === 'score' ? '2px solid #1e3a5f' : 'none';
 }
 
 async function enviarCheckIn(id) {
@@ -754,6 +826,7 @@ async function editarCaso(id) {
   document.getElementById('casoNombre').value = c.paciente_nombre || '';
   document.getElementById('casoDiagnostico').value = c.diagnostico || '';
   document.getElementById('casoTratamiento').value = c.tratamiento || '';
+  document.getElementById('casoBiometricosActivos').checked = c.biometricos_activos || false;
   document.getElementById('casoFrecuencia').value = c.frecuencia_horas || 24;
   document.getElementById('casoDuracion').value = c.duracion_dias || '';
   document.getElementById('horaInicio').value = c.horario_inicio ?? 8;

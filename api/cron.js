@@ -266,7 +266,8 @@ module.exports = async function handler(req, res) {
             caso_id: c.id,
             empresa_id: c.empresa_id,
             paciente_nombre: c.paciente_nombre,
-            diagnostico: c.diagnostico
+            diagnostico: c.diagnostico,
+            biometricos_activos: c.biometricos_activos || false
           }, 'tracking');
 
           const rawNext = new Date(ahora.getTime() + (c.frecuencia_horas || 24) * 3600000);

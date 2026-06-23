@@ -464,8 +464,8 @@ async function loadDashboard() {
   document.getElementById('s-altas').textContent = altas;
   document.getElementById('s-empresas').textContent = (empresas || []).length;
   const hoyInicio = new Date(); hoyInicio.setHours(0,0,0,0);
-  const biohoy = await t('GET', 'tracking_biometricos', null, `?created_at=gte.${hoyInicio.toISOString()}&select=score_calculado`) || [];
-  const scores = biohoy.map(b => b.score_calculado).filter(s => s != null);
+  const biohoy = await t('GET', 'tracking_biometricos', null, `?created_at=gte.${hoyInicio.toISOString()}&select=score_calculado`);
+  const scores = Array.isArray(biohoy) ? biohoy.map(b => b.score_calculado).filter(s => s != null) : [];
   document.getElementById('s-score').textContent = scores.length ? Math.round(scores.reduce((a,b)=>a+b,0)/scores.length) : '—';
   document.getElementById('alertasBody').innerHTML = alertas.length
     ? alertas.map(c => `<tr>
@@ -489,8 +489,8 @@ async function loadCasos() {
   const bioMap = {};
   if (casos.length) {
     const ids = casos.map(c => c.id).join(',');
-    const bios = await t('GET', 'tracking_biometricos', null, `?caso_id=in.(${ids})&order=created_at.desc&select=caso_id,score_calculado,etiqueta`) || [];
-    bios.forEach(b => { if (!bioMap[b.caso_id]) bioMap[b.caso_id] = b; });
+    const bios = await t('GET', 'tracking_biometricos', null, `?caso_id=in.(${ids})&order=created_at.desc&select=caso_id,score_calculado,etiqueta`);
+    if (Array.isArray(bios)) bios.forEach(b => { if (!bioMap[b.caso_id]) bioMap[b.caso_id] = b; });
   }
   const estadoBadge = { activo: 'badge-green', alerta: 'badge-red', alta: 'badge-blue', derivado: 'badge-yellow', inactivo: 'badge-gray' };
   const estadoLabel = { activo: '✅ Activo', alerta: '🚨 Alerta', alta: '🏁 Alta', derivado: '➡️ Derivado', inactivo: '⏸ Inactivo' };

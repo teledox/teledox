@@ -765,9 +765,9 @@ async function verDetalle(id) {
     <button class="btn btn-sm btn-secondary" onclick="editarCaso('${c.id}')">✏️ Editar</button>
     <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Estado</button>
     ${c.activado && c.estado === 'activo' ? `<button class="btn btn-sm btn-secondary" onclick="enviarCheckIn('${c.id}')">📤 Check-in ahora</button>` : ''}
-    ${c.activado && c.estado === 'activo' ? (pruebaCasoId === c.id
+    ${pruebaCasoId === c.id
       ? `<button class="btn btn-sm btn-secondary" onclick="detenerPrueba()" style="background:#fef2f2;border-color:#dc2626;color:#dc2626">🛑 Detener prueba</button>`
-      : `<button class="btn btn-sm btn-secondary" onclick="prueba('${c.id}')" style="background:#f0fdf4;border-color:#16a34a;color:#15803d">🧪 Prueba</button>`) : ''}
+      : `<button class="btn btn-sm btn-secondary" onclick="prueba('${c.id}')" style="background:#f0fdf4;border-color:#16a34a;color:#15803d">🧪 Prueba</button>`}
     ${puedeProponerConsulta ? `<button class="btn btn-sm btn-primary" onclick="proponerConsulta('${c.id}')">📋 Proponer consulta</button>` : ''}
   `;
   // Stats de historial

@@ -1106,7 +1106,7 @@ async function enviarDocumento(tipo) {
       const waRes = await fetch('/api/enviar-docs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paciente_id: recetaPacienteId, consulta_id: recetaConsultaId, telefono: telefonoPaciente })
+        body: JSON.stringify({ paciente_id: recetaPacienteId, consulta_id: recetaConsultaId, telefono: telefonoPaciente, tipo: tipoMap[tipo] })
       });
       const waData = await waRes.json();
       console.log(`[enviar-doc] ${tipo} → ${waData.numero || telefonoPaciente}`);

@@ -4,7 +4,7 @@ const { crearSeguimientoLab } = require('../src/services/seguimientoLaboratorio'
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  const { paciente_id, consulta_id } = req.body || {};
+  const { paciente_id, consulta_id, tipo } = req.body || {};
   if (!paciente_id) return res.status(400).json({ error: 'Falta paciente_id' });
 
   try {
@@ -24,7 +24,7 @@ module.exports = async function handler(req, res) {
 
     // 2. Obtener documentos marcados como enviados de esta consulta
     const docsRes = await fetch(
-      `${SUPABASE_URL}/rest/v1/documentos?paciente_id=eq.${paciente_id}&consulta_id=eq.${consulta_id}&enviado_paciente=eq.true`,
+      `${SUPABASE_URL}/rest/v1/documentos?paciente_id=eq.${paciente_id}&consulta_id=eq.${consulta_id}&enviado_paciente=eq.true${tipo ? `&tipo=eq.${tipo}` : ''}`,
       { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
     );
     const docs = await docsRes.json();

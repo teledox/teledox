@@ -230,8 +230,26 @@ async function openReceta(consultaId, pacienteId) {
     <div class="patient-avatar-lg">${init}</div>
     <div><div class="patient-name">${_pacData.nombre || ''} ${_pacData.apellidos || ''}</div>
     <div class="patient-meta">Cédula: ${_pacData.cedula || '—'} · ${_pacData.clientes_b2b?.nombre_empresa || '—'} · Tel: ${_pacData.telefono || '—'}</div></div>
-    <button class="btn btn-sm" id="btnCopiarInfo" onclick="copiarInfoConsulta()" style="margin-left:auto;white-space:nowrap">📋 Copiar info</button>
+    <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0">
+      <button class="btn btn-sm" onclick="showPacienteDetalle('${pacienteId}')" style="white-space:nowrap">👤 Ver perfil</button>
+      <button class="btn btn-sm" id="btnCopiarInfo" onclick="copiarInfoConsulta()" style="white-space:nowrap">📋 Copiar info</button>
+    </div>
   `;
+  // Banner de motivo de consulta
+  const _c = currentConsultaData;
+  const _nivelBadge = { 1: ['#dcfce7','#166534','🟢 Leve'], 2: ['#fef9c3','#854d0e','🟡 Medio'], 3: ['#fee2e2','#991b1b','🔴 Grave'] }[_c.nivel_sintomas] || ['#f3f4f6','#6b7280','— Sin clasificar'];
+  const _fechaStr = _c.created_at ? new Date(_c.created_at).toLocaleDateString('es-EC',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '';
+  const _banner = document.getElementById('consultaMotivoBanner');
+  if (_banner) {
+    _banner.style.display = 'flex';
+    _banner.innerHTML = `
+      <span style="flex-shrink:0;background:${_nivelBadge[0]};color:${_nivelBadge[1]};border-radius:20px;font-size:11px;font-weight:700;padding:4px 12px;white-space:nowrap;align-self:center">${_nivelBadge[2]}</span>
+      <div style="min-width:0">
+        <div style="font-size:12px;color:#111;line-height:1.5">${_c.sintomas_descripcion || '<em style="color:#aaa">Sin descripción de síntomas</em>'}</div>
+        ${_fechaStr ? `<div style="font-size:11px;color:#aaa;margin-top:2px">📅 ${_fechaStr}</div>` : ''}
+      </div>`;
+  }
+
   showPage('receta');
 
   // Pre-cargar receta si existe

@@ -763,6 +763,7 @@ async function verDetalle(id) {
     <button class="btn btn-sm btn-secondary" onclick="editarCaso('${c.id}')">✏️ Editar</button>
     <button class="btn btn-sm btn-secondary" onclick="cambiarEstado('${c.id}','${c.estado}');closeModal('modalDetalle')">🔄 Estado</button>
     ${c.activado && c.estado === 'activo' ? `<button class="btn btn-sm btn-secondary" onclick="enviarCheckIn('${c.id}')">📤 Check-in ahora</button>` : ''}
+    ${c.activado && c.estado === 'activo' ? `<button class="btn btn-sm btn-secondary" onclick="prueba('${c.id}')" style="background:#f0fdf4;border-color:#16a34a;color:#15803d">🧪 Prueba ×2</button>` : ''}
     ${puedeProponerConsulta ? `<button class="btn btn-sm btn-primary" onclick="proponerConsulta('${c.id}')">📋 Proponer consulta</button>` : ''}
   `;
   // Stats de historial
@@ -854,6 +855,29 @@ async function enviarCheckIn(id) {
   await t('PATCH', 'tracking_casos', { proximo_seguimiento: new Date().toISOString() }, `?id=eq.${id}`);
   alert('✅ Check-in programado para el próximo ciclo.');
   closeModal('modalDetalle');
+}
+
+async function prueba(id) {
+  if (!confirm('🧪 Prueba ×2\n\nEnviará el check-in de bienestar AHORA y programará un segundo envío automático en ~2h.\n\n¿Continuar?')) return;
+  const { data: { session } } = await sc.auth.getSession();
+  const token = session?.access_token;
+  if (!token) { alert('Sesión expirada — vuelve a iniciar sesión.'); return; }
+  try {
+    const r = await fetch('/api/test-reminder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ caso_id: id })
+    });
+    const data = await r.json();
+    if (data.ok) {
+      alert(`✅ ${data.mensaje}`);
+      closeModal('modalDetalle');
+    } else {
+      alert(`❌ ${data.error}`);
+    }
+  } catch (e) {
+    alert('❌ Error de red: ' + e.message);
+  }
 }
 
 async function proponerConsulta(id) {

@@ -165,7 +165,6 @@ module.exports = async function handler(req, res) {
           // Primera activación — marcar y arrancar bienestar directamente
           await qTracking('PATCH', 'tracking_casos', { activado: true }, `?id=eq.${casoT.id}`);
           const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
-          const msgTracking = `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`;
           await guardar(telefono, 400, {
             tipo: 'bienestar',
             caso_id: casoT.id,
@@ -173,7 +172,17 @@ module.exports = async function handler(req, res) {
             paciente_nombre: casoT.paciente_nombre,
             diagnostico: casoT.diagnostico
           }, 'tracking');
-          await enviar(telefono, msgTracking);
+          await enviarLista(telefono,
+            `🩺 *Seguimiento MediLyft*\n\n${saludoTracking} Registramos tu activación de seguimiento.\n\n📋 Diagnóstico: ${casoT.diagnostico || '—'}\n\n¿Cómo te sientes hoy?`,
+            [{ titulo: 'Bienestar de hoy', filas: [
+              { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
+              { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+              { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
+              { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
+              { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+            ]}],
+            'Seleccionar'
+          );
         } else {
           // Ya activado — ofrecer elección entre reporte diario y consulta médica
           const nombre = casoT.paciente_nombre || nombreWhatsApp;
@@ -261,8 +270,16 @@ module.exports = async function handler(req, res) {
           tipo: 'bienestar', caso_id: cTr.id, empresa_id: cTr.empresa_id,
           paciente_nombre: cTr.paciente_nombre, diagnostico: cTr.diagnostico
         }, 'tracking');
-        await enviar(telefono,
-          `🩺 *Seguimiento MediLyft*\n\n${s}\n\n📋 Diagnóstico: ${cTr.diagnostico || '—'}\n\n¿Cómo te sientes hoy?\n\n1️⃣ Muy mal\n2️⃣ Mal\n3️⃣ Regular\n4️⃣ Bien\n5️⃣ Muy bien`
+        await enviarLista(telefono,
+          `🩺 *Seguimiento MediLyft*\n\n${s}\n\n📋 Diagnóstico: ${cTr.diagnostico || '—'}\n\n¿Cómo te sientes hoy?`,
+          [{ titulo: 'Bienestar de hoy', filas: [
+            { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
+            { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+            { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
+            { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
+            { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+          ]}],
+          'Seleccionar'
         );
       } else {
         await enviar(telefono, `No encontramos un seguimiento activo. Para iniciar una consulta escribe *hola*.`);

@@ -2,8 +2,10 @@ const { query } = require('../services/supabase');
 const { crear: crearPaciente, buscarPorCedula } = require('../services/pacientes');
 const { crear: crearConsulta, crearNotificacion, nivelACategoria } = require('../services/consultas');
 const { registrarPlanillajeB2B } = require('../services/planillaje');
-const { guardar } = require('../services/sesiones');
+const { guardar, eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
+const { estaEnHorario, proximaApertura } = require('../utils/horarioOperacion');
+const { mensajeFueraHorario } = require('../utils/mensajesFueraHorario');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre, validarCedula } = require('../utils/validaciones');
 
 // Buscar empresa por codigo_acceso
@@ -189,6 +191,22 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
       pacienteId = nuevo?.id || null;
     }
 
+    // Verificar horario antes de crear la consulta
+    if (!estaEnHorario()) {
+      const prox = proximaApertura();
+      const fhDatos = {
+        ...datos,
+        cc_paciente_id: pacienteId,
+        _flujo:         'fuera_horario',
+        _pendingOrigen: 'callcenter',
+        _activada_at:   prox.fecha.toISOString(),
+        _proximaTexto:  prox.texto
+      };
+      await guardar(telefono, 0, fhDatos, 'fuera_horario');
+      const { respuesta, botones } = mensajeFueraHorario(prox);
+      return { respuesta, botones, paso: 0, datos: fhDatos, terminar: false };
+    }
+
     // Crear consulta
     const consulta = await crearConsulta({
       paciente_id:         pacienteId,
@@ -247,4 +265,49 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   return { respuesta: '⚠️ Estado no reconocido. Escriba *hola* para reiniciar.', paso: 0, datos, terminar: true };
 }
 
-module.exports = { procesarCallCenter, buscarEmpresaPorCodigo };
+async function confirmarCallCenterFueraHorario(datos, telefono) {
+  const empresa   = datos.cc_empresa    || 'su empresa';
+  const empresaId = datos.cc_empresa_id || null;
+  const pacienteId = datos.cc_paciente_id;
+
+  const consulta = await crearConsulta({
+    paciente_id:          pacienteId,
+    nivel_sintomas:       datos.cc_nivel || 1,
+    sintomas_descripcion: datos.cc_sintomas,
+    estado:               'pendiente_apertura',
+    activada_at:          datos._activada_at || null
+  });
+
+  await crearNotificacion(
+    datos.cc_nivel === 2 ? 'urgente' : 'nueva_consulta',
+    `📅 Consulta B2B — ${empresa}`,
+    `${datos.cc_nombre} (${datos.cc_cedula}) — call center, activa ${datos._proximaTexto}`,
+    pacienteId, consulta?.id,
+    { origen: 'b2b', categoria: nivelACategoria(datos.cc_nivel || 1), etiqueta: 'EMPLEADO CON CÓDIGO' }
+  );
+
+  await alertar(
+    `📅 <b>CALL CENTER FUERA DE HORARIO — agendada</b>\n` +
+    `Paciente: ${datos.cc_nombre}\nCédula: ${datos.cc_cedula}\nTeléfono: ${datos.cc_telefono}\n` +
+    `Síntomas: ${datos.cc_sintomas}\nActiva: ${datos._proximaTexto}\nAgente: ${telefono}`
+  );
+
+  try {
+    await registrarPlanillajeB2B({ ...datos, cc_paciente_id: pacienteId, cc_empresa_id: empresaId }, consulta?.id);
+  } catch (e) {
+    await alertar(`⚠️ <b>Error planillaje B2B</b>\n${datos.cc_nombre}\n${e.message}`);
+  }
+
+  await eliminar(telefono);
+
+  return {
+    respuesta: `✅ *¡Cita agendada!*\n\n👤 ${datos.cc_nombre} — ${datos.cc_cedula}\n\nUn médico de MediLyft atenderá la solicitud ${datos._proximaTexto}.\n\n¿Desea registrar otro paciente?`,
+    paso: 309, datos, terminar: false,
+    botones: [
+      { id: 'si', titulo: '✅ Otro paciente' },
+      { id: 'no', titulo: '🔚 Finalizar sesión' }
+    ]
+  };
+}
+
+module.exports = { procesarCallCenter, buscarEmpresaPorCodigo, confirmarCallCenterFueraHorario };

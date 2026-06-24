@@ -285,7 +285,11 @@ async function openReceta(consultaId, pacienteId) {
   const docsEnviados = await supa('GET', 'documentos', null, `?consulta_id=eq.${consultaId}&enviado_paciente=eq.true`);
   (docsEnviados || []).forEach(d => {
     const key = _tipoMapInv[d.tipo];
-    if (key) { const si = document.getElementById(`sent-${key}`); if (si) si.style.display = ''; }
+    if (!key) return;
+    const si = document.getElementById(`sent-${key}`);
+    if (si) si.style.display = '';
+    const btn = document.getElementById(`btn-enviar-${key}`);
+    if (btn) { btn.textContent = '🔄 Reenviar'; btn.disabled = false; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   });
 
   // Re-pintar los mini-previews de los documentos ya generados/guardados
@@ -1169,8 +1173,48 @@ function actualizarEstadoDocs() {
   });
 }
 
+// ── Helpers para reenvío con nota opcional ───────────────────────────────
+function _mostrarFormReenvio(tipo) {
+  const card = document.getElementById(`card-doc-${tipo}`);
+  if (!card) return;
+  const existing = card.querySelector('.reenvio-form');
+  if (existing) { existing.remove(); return; }
+  const form = document.createElement('div');
+  form.className = 'reenvio-form';
+  form.style.cssText = 'margin-top:10px;padding:10px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px';
+  form.innerHTML = `
+    <div style="font-size:11px;color:#166534;font-weight:600;margin-bottom:6px">Reenviar documento</div>
+    <textarea id="reenvio-nota-${tipo}" placeholder="Nota opcional para el paciente..."
+      style="width:100%;font-size:12px;border:1px solid #d1fae5;border-radius:6px;padding:6px;resize:none;height:56px;box-sizing:border-box;background:#fff"></textarea>
+    <div style="display:flex;gap:6px;margin-top:8px;justify-content:flex-end">
+      <button onclick="_cancelarReenvio('${tipo}')"
+        style="font-size:11px;padding:4px 10px;border:1px solid #e5e7eb;border-radius:6px;background:#fff;cursor:pointer">Cancelar</button>
+      <button onclick="_confirmarReenvio('${tipo}')"
+        style="font-size:11px;padding:4px 12px;border:none;border-radius:6px;background:#16a34a;color:#fff;cursor:pointer;font-weight:600">🔄 Confirmar reenvío</button>
+    </div>`;
+  card.appendChild(form);
+  form.querySelector('textarea')?.focus();
+}
+
+function _cancelarReenvio(tipo) {
+  document.querySelector(`#card-doc-${tipo} .reenvio-form`)?.remove();
+}
+
+async function _confirmarReenvio(tipo) {
+  const nota = document.getElementById(`reenvio-nota-${tipo}`)?.value.trim() || '';
+  _cancelarReenvio(tipo);
+  await _doEnviarDocumento(tipo, nota);
+}
+
 // ── Enviar un documento individual al paciente por WhatsApp ──────────────
 async function enviarDocumento(tipo) {
+  const si = document.getElementById(`sent-${tipo}`);
+  if (si && si.style.display !== 'none') { _mostrarFormReenvio(tipo); return; }
+
+  await _doEnviarDocumento(tipo, '');
+}
+
+async function _doEnviarDocumento(tipo, nota) {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico antes de enviar'); return; }
   const pdfBytes = pdfGenerados[tipo];
@@ -1214,7 +1258,7 @@ async function enviarDocumento(tipo) {
       const waRes = await fetch('/api/enviar-docs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paciente_id: recetaPacienteId, consulta_id: recetaConsultaId, telefono: telefonoPaciente, tipo: tipoMap[tipo] })
+        body: JSON.stringify({ paciente_id: recetaPacienteId, consulta_id: recetaConsultaId, telefono: telefonoPaciente, tipo: tipoMap[tipo], nota })
       });
       const waData = await waRes.json();
       console.log(`[enviar-doc] ${tipo} → ${waData.numero || telefonoPaciente}`);
@@ -1234,7 +1278,7 @@ async function enviarDocumento(tipo) {
 
     const si = document.getElementById(`sent-${tipo}`);
     if (si) si.style.display = '';
-    if (btn) { btn.textContent = '✓ Reenviar'; btn.disabled = false; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
+    if (btn) { btn.textContent = '🔄 Reenviar'; btn.disabled = false; btn.style.background = '#16a34a'; btn.style.borderColor = '#16a34a'; }
   } catch (e) {
     console.error('Error al enviar documento:', e);
     showToast(`Error: ${e.message}`);

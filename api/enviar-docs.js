@@ -4,7 +4,7 @@ const { crearSeguimientoLab } = require('../src/services/seguimientoLaboratorio'
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  const { paciente_id, consulta_id, tipo } = req.body || {};
+  const { paciente_id, consulta_id, tipo, nota } = req.body || {};
   if (!paciente_id) return res.status(400).json({ error: 'Falta paciente_id' });
 
   try {
@@ -88,6 +88,20 @@ module.exports = async function handler(req, res) {
       } else {
         enviados++;
       }
+    }
+
+    // Si viene una nota del médico, enviarla como mensaje de texto después del documento
+    if (nota && enviados > 0) {
+      await fetch(`https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messaging_product: 'whatsapp',
+          to: numero,
+          type: 'text',
+          text: { body: `📝 *Nota del médico:* ${nota}` }
+        })
+      });
     }
 
     // Si se envió el pedido de laboratorio, iniciar el seguimiento (48h, día 3, día 5, día 7)

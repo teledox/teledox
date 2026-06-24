@@ -47,10 +47,10 @@ function calcularScore({ bienestar, sistolica, diastolica, glucosa, colesterol, 
     componentes.push({ obtenido: pts, maximo: 20 });
   }
 
-  // Bienestar subjetivo — 25 pts (escala 1=Muy mal … 5=Muy bien)
+  // Bienestar subjetivo — 25 pts (escala 1=Muy bien … 5=Muy mal)
   if (bienestar != null) {
     const b = parseInt(bienestar);
-    const ptsMap = { 1: 0, 2: 5, 3: 10, 4: 18, 5: 25 };
+    const ptsMap = { 1: 25, 2: 18, 3: 10, 4: 5, 5: 0 };
     const pts = ptsMap[b];
     if (pts != null) componentes.push({ obtenido: pts, maximo: 25 });
   }

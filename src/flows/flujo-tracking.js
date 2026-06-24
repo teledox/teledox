@@ -3,13 +3,13 @@ const { eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
 const { esSi } = require('../utils/validaciones');
 
-const LIKERT = { '1': 'Muy mal', '2': 'Mal', '3': 'Regular', '4': 'Bien', '5': 'Muy bien' };
+const LIKERT = { '1': 'Muy bien', '2': 'Bien', '3': 'Regular', '4': 'Mal', '5': 'Muy mal' };
 
-// Bienestar Likert 1-5 → nivel de alerta 1-3
+// Bienestar Likert 1-5 → nivel de alerta 1-3 (1=Muy bien, 5=Muy mal)
 function evaluar(bienestar) {
   const b = parseInt(bienestar);
   if (isNaN(b)) return 1;
-  if (b <= 2) return 3;
+  if (b >= 4) return 3;
   if (b === 3) return 2;
   return 1;
 }
@@ -27,11 +27,11 @@ async function procesarTracking(paso, mensaje, datos, telefono) {
       respuesta: 'Por favor selecciona cómo te sientes hoy:',
       lista: {
         secciones: [{ titulo: 'Bienestar de hoy', filas: [
-          { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
-          { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+          { id: '1', titulo: 'Muy bien', descripcion: '😊 Me siento muy bien' },
+          { id: '2', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
           { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
-          { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
-          { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+          { id: '4', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+          { id: '5', titulo: 'Muy mal',  descripcion: '😢 Necesito atención' },
         ]}],
         botonTexto: 'Seleccionar'
       },

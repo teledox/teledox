@@ -55,11 +55,11 @@ async function handleTestReminder(req, res) {
     telTest,
     `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?`,
     [{ titulo: 'Bienestar de hoy', filas: [
-      { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
-      { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+      { id: '1', titulo: 'Muy bien', descripcion: '😊 Me siento muy bien' },
+      { id: '2', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
       { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
-      { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
-      { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+      { id: '4', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+      { id: '5', titulo: 'Muy mal',  descripcion: '😢 Necesito atención' },
     ]}],
     'Seleccionar'
   );
@@ -383,11 +383,11 @@ module.exports = async function handler(req, res) {
             telefono,
             `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?`,
             [{ titulo: 'Bienestar de hoy', filas: [
-              { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
-              { id: '2', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+              { id: '1', titulo: 'Muy bien', descripcion: '😊 Me siento muy bien' },
+              { id: '2', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
               { id: '3', titulo: 'Regular',  descripcion: '😐 Más o menos' },
-              { id: '4', titulo: 'Bien',     descripcion: '🙂 Me siento bien' },
-              { id: '5', titulo: 'Muy bien', descripcion: '😊 Excelente!' },
+              { id: '4', titulo: 'Mal',      descripcion: '😞 Me siento mal' },
+              { id: '5', titulo: 'Muy mal',  descripcion: '😢 Necesito atención' },
             ]}],
             'Seleccionar'
           );

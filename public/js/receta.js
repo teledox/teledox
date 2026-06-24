@@ -224,6 +224,7 @@ async function openReceta(consultaId, pacienteId) {
   _pacData = (pacRes || [])[0] || {};
   currentPacienteData = _pacData;
   currentConsultaData = (consultaRes || [])[0] || {};
+  if (typeof _renderInfoCard === 'function') _renderInfoCard();
 
   const init = ((_pacData.nombre || '?')[0] + (_pacData.apellidos || '?')[0]).toUpperCase();
   document.getElementById('recetaPacienteHeader').innerHTML = `

@@ -212,7 +212,7 @@ async function generarRecetaPDF() {
   if (medReg) page.drawText(medReg, { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   if (medEsp) page.drawText(medEsp, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Receta medica' });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Receta medica', posY: y - 40 });
   return await guardarPDFConFirma(doc, 'Receta medica');
 }
 
@@ -288,7 +288,7 @@ async function generarHistoriaClinicaPDF() {
   const h1 = mk(p1, s1);
 
   h1.sec('FICHA DE IDENTIFICACION');
-  h1.fila('Nombre Completo',  gV('hc-nombre'));
+  h1.fila('Nombre Completo',  [gV('hc-apellidos'), gV('hc-nombres')].filter(Boolean).join(' '));
   h1.fila('N° Historial',     gV('hc-historial'));
   h1.fila('N° Cedula',        gV('hc-cedula'));
   h1.fila('Edad',             gV('hc-edad'));
@@ -463,7 +463,7 @@ async function generarHistoriaClinicaPDF() {
   if (docReg) p3.drawText(docReg, { x:252, y:firmaY-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   if (docEsp) p3.drawText(docEsp, { x:252, y:firmaY-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
-  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: grisOsc, tipoDocumento: 'Historia clinica' });
+  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: grisOsc, tipoDocumento: 'Historia clinica', posY: firmaY - 40 });
   return await guardarPDFConFirma(doc, 'Historia clinica');
 }
 
@@ -570,7 +570,7 @@ async function generarInterconsultaPDF() {
   if (medReg) page.drawText(medReg, { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   if (medEsp) page.drawText(medEsp, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Interconsulta medica' });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Interconsulta medica', posY: y - 40 });
   return await guardarPDFConFirma(doc, 'Interconsulta medica');
 }
 
@@ -695,7 +695,7 @@ async function generarCertificadoPDF() {
   if (docReg) page.drawText(docReg, { x: 252, y: y - 25, size: 7.5, font: normal, color: grisOsc, maxWidth: 224 });
   if (docEsp) page.drawText(docEsp, { x: 252, y: y - 37, size: 7.5, font: normal, color: grisOsc, maxWidth: 224 });
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Certificado medico' });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Certificado medico', posY: y - 40 });
   return await guardarPDFConFirma(doc, 'Certificado medico');
 }
 
@@ -800,7 +800,7 @@ async function generarPedidoPDF() {
   }
   page.drawLine({ start:{x:LM, y:55}, end:{x:RM, y:55}, thickness:0.4, color:rgb(0.82,0.82,0.82) });
   page.drawText('Documento generado por MediLyft · VitalClub · Confidencial · LOPDP Ecuador', { x:LM, y:42, size:7, font:normal, color:grisOsc });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Pedido de laboratorio' });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Pedido de laboratorio', posY: y - 40 });
 
   return await guardarPDFConFirma(doc, 'Pedido de laboratorio');
 }

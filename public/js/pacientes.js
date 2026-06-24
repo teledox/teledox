@@ -227,7 +227,10 @@ function mostrarEditorPaciente(id) {
     ${campo('Nacimiento', 'fecha_nacimiento', 'date')}
     ${campo('Correo', 'correo', 'email')}
     ${campo('Teléfono (con código de país, ej: 593987654321)', 'telefono', 'tel')}
-    ${campo('Residencia', 'lugar_residencia')}
+    ${campo('Residencia (ciudad/barrio)', 'lugar_residencia')}
+    ${campo('Dirección domicilio (calle, número)', 'domicilio_completo')}
+    ${campo('Ocupación', 'ocupacion')}
+    ${campo('Lugar de trabajo', 'lugar_trabajo')}
     <div style="grid-column:1/-1;display:flex;gap:8px;margin-top:4px">
       <button class="btn btn-sm btn-primary" onclick="guardarDatosPaciente('${id}')">💾 Guardar cambios</button>
       <button class="btn btn-sm" onclick="showPacienteDetalle('${id}')">Cancelar</button>
@@ -247,7 +250,10 @@ async function guardarDatosPaciente(id) {
     fecha_nacimiento: val('fecha_nacimiento') || null,
     correo: val('correo') || null,
     telefono: val('telefono').replace(/[^\d+]/g, '') || null,
-    lugar_residencia: val('lugar_residencia') || null
+    lugar_residencia:  val('lugar_residencia')  || null,
+    ocupacion:         val('ocupacion')         || null,
+    lugar_trabajo:     val('lugar_trabajo')     || null,
+    domicilio_completo: val('domicilio_completo') || null,
   };
   showToast('⏳ Guardando datos del paciente...');
   try {

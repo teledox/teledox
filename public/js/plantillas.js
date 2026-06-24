@@ -10,6 +10,49 @@ function _toISODate(raw) {
   return s;
 }
 
+// ── Card "Datos por completar" compartida por todos los documentos ────────────
+const _INFO_DOC_CAMPOS = [
+  { key: 'ocupacion',          label: 'Ocupación',           placeholder: 'Ej: Docente, Ingeniero...' },
+  { key: 'lugar_trabajo',      label: 'Lugar de trabajo',    placeholder: 'Empresa o institución' },
+  { key: 'domicilio_completo', label: 'Dirección domicilio', placeholder: 'Calle, número, sector...' },
+];
+
+function _renderInfoCard() {
+  const card = document.getElementById('doc-info-card');
+  if (!card) return;
+  const p = currentPacienteData || {};
+  const faltantes = _INFO_DOC_CAMPOS.filter(c => !p[c.key]);
+  if (faltantes.length === 0) { card.style.display = 'none'; return; }
+  card.style.display = 'block';
+  card.innerHTML = `
+    <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:8px">⚠️ Información del paciente por completar</div>
+    ${faltantes.map(c => `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+        <label style="font-size:12px;color:#555;width:150px;flex-shrink:0">${c.label}</label>
+        <input id="doc-info-${c.key}" style="flex:1;border:1px solid #d1d5db;border-radius:6px;padding:4px 8px;font-size:12px" placeholder="${c.placeholder}" value="${p[c.key] || ''}" />
+      </div>
+    `).join('')}
+    <button onclick="_guardarInfoDoc()" style="margin-top:6px;background:#2563eb;color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;cursor:pointer;font-weight:600">💾 Guardar en perfil del paciente</button>`;
+}
+
+async function _guardarInfoDoc() {
+  if (!recetaPacienteId) { showToast('⚠️ No hay paciente activo'); return; }
+  const payload = {};
+  _INFO_DOC_CAMPOS.forEach(({ key }) => {
+    const el = document.getElementById(`doc-info-${key}`);
+    if (el) payload[key] = el.value.trim() || null;
+  });
+  showToast('⏳ Guardando...');
+  try {
+    await supa('PATCH', 'pacientes', payload, `?id=eq.${recetaPacienteId}`);
+    Object.assign(currentPacienteData, payload);
+    showToast('✓ Datos guardados en el perfil del paciente');
+    _renderInfoCard();
+  } catch(e) {
+    showToast('❌ Error al guardar: ' + e.message);
+  }
+}
+
 function togglePlantilla(tipo) {
   plantillaSeleccionada = (plantillaSeleccionada === tipo) ? null : tipo;
   document.querySelectorAll('.plantilla-card').forEach(c => c.classList.remove('selected'));
@@ -295,10 +338,10 @@ function abrirPlantillaCertificado(soloPreview) {
   document.getElementById('cert-direccion-establecimiento').value = '';
   document.getElementById('cert-lugar-fecha-emision').textContent = `Quito, ${fechaTexto}`;
   document.getElementById('cert-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
-  document.getElementById('cert-direccion').value = (p.lugar_residencia || '').toUpperCase();
+  document.getElementById('cert-direccion').value = (p.domicilio_completo || p.lugar_residencia || '').toUpperCase();
   document.getElementById('cert-telefono').textContent = p.telefono || '—';
   document.getElementById('cert-puesto-trabajo').value = p.ocupacion || '';
-  document.getElementById('cert-empresa').textContent = (p.clientes_b2b?.nombre_empresa || '—').toUpperCase();
+  document.getElementById('cert-empresa').textContent = (p.lugar_trabajo || p.clientes_b2b?.nombre_empresa || '—').toUpperCase();
   document.getElementById('cert-cedula').textContent = p.cedula || '—';
   document.getElementById('cert-hc').textContent = p.cedula || '—';
   const _certDiag = cie10Seleccionados.length
@@ -459,22 +502,20 @@ function actualizarHastaFecha() {
 
 function abrirPlantillaHistoriaClinica(soloPreview) {
   const p = currentPacienteData || {};
-  const apellidos = (p.apellidos || '').split(' ');
   const set = (id, val) => {
     const el = document.getElementById(id);
     if (!el) return;
     if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.value = val;
     else el.textContent = val;
   };
-  set('hc-nombre', `${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim());
-  set('hc-primer-ap', (apellidos[0] || '').toUpperCase());
-  set('hc-segundo-ap', (apellidos[1] || '').toUpperCase());
+  set('hc-nombres',   (p.nombre    || '').toUpperCase());
+  set('hc-apellidos', (p.apellidos || '').toUpperCase());
   set('hc-cedula', p.cedula || '');
   set('hc-edad', p.edad || '');
   set('hc-fecha-nac', _toISODate(p.fecha_nacimiento));
   set('hc-historial', p.cedula || '');
   set('hc-lugar-nac', p.lugar_residencia || '');
-  set('hc-domicilio', p.lugar_residencia || '');
+  set('hc-domicilio', p.domicilio_completo || p.lugar_residencia || '');
   set('hc-ocupacion', p.ocupacion || '');
   set('hc-telefono', p.telefono || '');
   set('hc-fecha-doc', new Date().toLocaleDateString('es-EC'));
@@ -542,7 +583,7 @@ function abrirPlantillaInterconsulta(soloPreview) {
   set('inter-edad', p.edad || '');
   set('inter-fecha-nac', _toISODate(p.fecha_nacimiento));
   set('inter-lugar-nac', p.lugar_residencia || '');
-  set('inter-domicilio', p.lugar_residencia || '');
+  set('inter-domicilio', p.domicilio_completo || p.lugar_residencia || '');
   set('inter-ocupacion', p.ocupacion || '');
   set('inter-telefono', p.telefono || '');
   const hoy = new Date().toLocaleDateString('es-EC');

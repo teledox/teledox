@@ -899,6 +899,7 @@ async function _refreshCronicas() {
     _renderCronicasStrip('rec-cronicas-lista');
     _renderCronicasStrip('cert-cronicas-lista');
     _renderCronicasStrip('lab-cronicas-lista');
+    _renderCronicasStrip('inter-cronicas-lista');
   }
 }
 

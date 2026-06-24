@@ -599,6 +599,7 @@ function abrirPlantillaInterconsulta(soloPreview) {
   }
   poblarDatosMedico('inter');
   restaurarDatosDoc('interconsulta');
+  _renderCronicasStrip('inter-cronicas-lista');
   if (!soloPreview) document.getElementById('modalInterconsulta').classList.add('open');
 }
 

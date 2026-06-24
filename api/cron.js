@@ -114,14 +114,15 @@ module.exports = async function handler(req, res) {
         if (!telefonoPaciente) continue;
         const soloDigRec = String(telefonoPaciente).replace(/\D/g, '');
         if (!soloDigRec || soloDigRec.length < 7) continue;
-        const telefono = `whatsapp:+${soloDigRec.startsWith('0') ? '593' + soloDigRec.slice(1) : soloDigRec}`;
+        // telefono → para enviar mensajes (WA Cloud API acepta dígitos puros)
+        // telefonoSesion → clave de sesión, debe coincidir con msg.from del webhook
+        const telefono       = `whatsapp:+${soloDigRec.startsWith('0') ? '593' + soloDigRec.slice(1) : soloDigRec}`;
+        const telefonoSesion = soloDigRec.startsWith('0') ? '593' + soloDigRec.slice(1) : soloDigRec;
 
         const paciente = r.pacientes || {};
-        let mensaje = '';
 
         if (r.tipo === 'medicamento') {
-          // No interrumpir sesión activa
-          const sesionMedRec = await obtener(telefono);
+          const sesionMedRec = await obtener(telefonoSesion);
           if (sesionMedRec && sesionMedRec.paso !== 0) { procesados++; continue; }
 
           const textoMed = `💊 *Recordatorio MediLyft*\n\nHola ${paciente.nombre || ''}! Es hora de tomar su medicamento:\n\n*${r.medicamento}*\n${r.dosis ? `Dosis: ${r.dosis}` : ''}\n\n¿Ya lo tomó?`;
@@ -139,7 +140,7 @@ module.exports = async function handler(req, res) {
             pregunta:        textoMed
           });
 
-          await guardar(telefono, 1, {
+          await guardar(telefonoSesion, 1, {
             recordatorio_id: r.id,
             paciente_id:     r.paciente_id,
             medicamento:     r.medicamento,
@@ -166,10 +167,52 @@ module.exports = async function handler(req, res) {
 
           procesados++;
           continue;
+
         } else if (r.tipo === 'fin_tratamiento') {
-          mensaje = `🏥 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Su tratamiento con *${r.medicamento}* ha finalizado.\n\n¿Cómo se siente ahora?\n\n1️⃣ Me siento mejor\n2️⃣ Mejoré pero aún tengo síntomas\n3️⃣ No mejoré o me siento peor\n\nResponda con el número de su opción.`;
+          const sesionFinRec = await obtener(telefonoSesion);
+          if (sesionFinRec && sesionFinRec.paso !== 0) { procesados++; continue; }
+
+          const textoFin = `🏥 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Su tratamiento con *${r.medicamento}* ha finalizado.\n\n¿Cómo se siente ahora?`;
+
+          await enviarBotones(telefono, textoFin, [
+            { id: 'seg_fin_si',      titulo: '😊 Me siento mejor'  },
+            { id: 'seg_fin_parcial', titulo: '😐 Sigo con síntomas' },
+            { id: 'seg_fin_no',      titulo: '😟 No mejoré'         }
+          ]);
+
+          const srFin = await query('POST', 'seguimiento_respuestas', {
+            recordatorio_id: r.id,
+            paciente_id:     r.paciente_id,
+            receta_id:       r.receta_id,
+            consulta_id:     r.consulta_id || null,
+            pregunta:        textoFin
+          });
+          const srFinId = Array.isArray(srFin) ? srFin[0]?.id : srFin?.id;
+
+          await guardar(telefonoSesion, 1, {
+            seguimiento_respuesta_id: srFinId,
+            recordatorio_id:  r.id,
+            paciente_id:      r.paciente_id,
+            consulta_id:      r.consulta_id || null,
+            medicamento:      r.medicamento,
+            paciente_nombre:  `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim()
+          }, 'seg_fin_trat');
+
+          const proximoEnvioFin = new Date(ahora.getTime() + r.frecuencia_horas * 3600000);
+          const fdFin = r.fecha_fin ? new Date(/Z|[+-]\d\d:\d\d$/.test(r.fecha_fin) ? r.fecha_fin : r.fecha_fin + 'Z') : null;
+          if (!fdFin || proximoEnvioFin <= fdFin) {
+            await query('PATCH', 'recordatorios', { fecha_proximo: proximoEnvioFin.toISOString() }, `?id=eq.${r.id}`);
+          } else {
+            await query('PATCH', 'recordatorios', { activo: false }, `?id=eq.${r.id}`);
+          }
+
+          procesados++;
+          continue;
+
         } else if (r.tipo === 'bienestar') {
-          // Check-in diario de bienestar para pacientes del panel principal (escala 1-5)
+          const sesionBienRec = await obtener(telefonoSesion);
+          if (sesionBienRec && sesionBienRec.paso !== 0) { procesados++; continue; }
+
           await enviarLista(
             telefono,
             `💙 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Tu médico quiere saber cómo estás hoy.`,
@@ -183,48 +226,32 @@ module.exports = async function handler(req, res) {
             'Seleccionar'
           );
 
-          await query('POST', 'seguimiento_respuestas', {
+          const srBien = await query('POST', 'seguimiento_respuestas', {
             recordatorio_id: r.id,
             paciente_id:     r.paciente_id,
             consulta_id:     r.consulta_id || null,
             tipo:            'bienestar',
             pregunta:        '¿Cómo te sientes hoy?'
           });
+          const srBienId = Array.isArray(srBien) ? srBien[0]?.id : srBien?.id;
+
+          await guardar(telefonoSesion, 1, {
+            seguimiento_respuesta_id: srBienId,
+            paciente_id:     r.paciente_id,
+            consulta_id:     r.consulta_id || null,
+            paciente_nombre: `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim()
+          }, 'seg_bienestar');
 
           const proximoEnvioBienestar = new Date(ahora.getTime() + r.frecuencia_horas * 3600000);
           const _fdBienestar = r.fecha_fin ? new Date(/Z|[+-]\d\d:\d\d$/.test(r.fecha_fin) ? r.fecha_fin : r.fecha_fin + 'Z') : null;
           const puedeSeguirBienestar  = !_fdBienestar || _fdBienestar.getFullYear() >= 2090 || proximoEnvioBienestar <= _fdBienestar;
           if (puedeSeguirBienestar) {
-            await query('PATCH', 'recordatorios', {
-              fecha_proximo: proximoEnvioBienestar.toISOString()
-            }, `?id=eq.${r.id}`);
+            await query('PATCH', 'recordatorios', { fecha_proximo: proximoEnvioBienestar.toISOString() }, `?id=eq.${r.id}`);
           } else {
             await query('PATCH', 'recordatorios', { activo: false }, `?id=eq.${r.id}`);
           }
           procesados++;
           continue;
-        }
-
-        if (!mensaje) continue;
-
-        await enviar(telefono, mensaje);
-
-        await query('POST', 'seguimiento_respuestas', {
-          recordatorio_id: r.id,
-          paciente_id: r.paciente_id,
-          receta_id: r.receta_id,
-          consulta_id: r.consulta_id || null,
-          pregunta: mensaje
-        });
-
-        const proximoEnvio = new Date(ahora.getTime() + r.frecuencia_horas * 3600000);
-
-        if (proximoEnvio <= new Date(r.fecha_fin)) {
-          await query('PATCH', 'recordatorios', {
-            fecha_proximo: proximoEnvio.toISOString()
-          }, `?id=eq.${r.id}`);
-        } else {
-          await query('PATCH', 'recordatorios', { activo: false }, `?id=eq.${r.id}`);
         }
 
         procesados++;

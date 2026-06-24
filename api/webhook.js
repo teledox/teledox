@@ -521,6 +521,101 @@ module.exports = async function handler(req, res) {
           return res.status(200).send('OK');
         }
 
+        case 'seg_fin_trat': {
+          const { seguimiento_respuesta_id: srFinId, medicamento: medFin, paciente_id: pacFinId, consulta_id: conFinId, paciente_nombre: nombreFin } = datos;
+          if (!['seg_fin_si', 'seg_fin_parcial', 'seg_fin_no'].includes(mensaje)) {
+            await enviarBotones(telefono, `¿Cómo se siente después del tratamiento con *${medFin}*?`, [
+              { id: 'seg_fin_si',      titulo: '😊 Me siento mejor'  },
+              { id: 'seg_fin_parcial', titulo: '😐 Sigo con síntomas' },
+              { id: 'seg_fin_no',      titulo: '😟 No mejoré'         }
+            ]);
+            return res.status(200).send('OK');
+          }
+          const { query: qFin } = require('../src/services/supabase');
+          const { crearNotificacion: notifFin } = require('../src/services/consultas');
+          if (mensaje === 'seg_fin_si') {
+            if (srFinId) await qFin('PATCH', 'seguimiento_respuestas', { respuesta: 'curado', se_siente_mejor: true }, `?id=eq.${srFinId}`);
+            await alertar(`✅ <b>Tratamiento exitoso</b>\nPaciente: ${nombreFin || telefono}\nMedicamento: ${medFin}`);
+            await eliminar(telefono);
+            await enviar(telefono, `🎉 ¡Nos alegra mucho que se sienta mejor!\n\nSu caso fue registrado como *exitoso*.\n\nEn MediLyft estamos disponibles 24/7. Si necesita atención escriba *hola*. 💙`);
+          } else if (mensaje === 'seg_fin_parcial') {
+            if (srFinId) await qFin('PATCH', 'seguimiento_respuestas', { respuesta: 'parcial' }, `?id=eq.${srFinId}`);
+            await notifFin('seguimiento', '🔁 Paciente con síntomas persistentes',
+              `${nombreFin || telefono} mejoró parcialmente pero aún presenta síntomas (medicamento: ${medFin || '—'}).`,
+              pacFinId, conFinId || null,
+              { origen: 'seguimiento', categoria: 'medio', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente', seguimiento_respuesta_id: srFinId });
+            await eliminar(telefono);
+            await enviar(telefono, `👨‍⚕️ Gracias por contarnos. Hemos registrado que aún presenta síntomas.\n\nUn médico revisará su caso y, si lo considera necesario, le contactaremos para agendar una *consulta de seguimiento*.\n\nSi desea atención ahora escríbanos *hola*. 💙`);
+          } else {
+            if (srFinId) await qFin('PATCH', 'seguimiento_respuestas', { respuesta: 'sin_mejora' }, `?id=eq.${srFinId}`);
+            await alertar(`🔴 <b>Sin mejoría — requiere atención</b>\nPaciente: ${nombreFin || telefono}\nMedicamento: ${medFin}\nTeléfono: ${telefono}`);
+            await notifFin('seguimiento', '🔴 Paciente sin mejoría',
+              `${nombreFin || telefono} indica que NO mejoró o empeoró (medicamento: ${medFin || '—'}).`,
+              pacFinId, conFinId || null,
+              { origen: 'seguimiento', categoria: 'grave', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente', seguimiento_respuesta_id: srFinId });
+            await eliminar(telefono);
+            await enviar(telefono, `😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad.\n\nLe contactaremos en breve. Si los síntomas son graves, *llame al 911* o escríbanos *hola*. 💙`);
+          }
+          return res.status(200).send('OK');
+        }
+
+        case 'seg_bienestar': {
+          const { seguimiento_respuesta_id: srBienId, paciente_id: pacBienId, consulta_id: conBienId, paciente_nombre: nombreBien } = datos;
+          const nivel = parseInt(mensaje);
+          if (isNaN(nivel) || nivel < 1 || nivel > 5) {
+            await enviarLista(telefono, '¿Cómo te sientes hoy?', [{ titulo: 'Bienestar de hoy', filas: [
+              { id: '1', titulo: '⭐⭐⭐⭐⭐ Excelente', descripcion: 'Me siento muy bien' },
+              { id: '2', titulo: '⭐⭐⭐⭐ Bien',        descripcion: 'Me siento bien' },
+              { id: '3', titulo: '⭐⭐⭐ Regular',       descripcion: 'Más o menos' },
+              { id: '4', titulo: '⭐⭐ Mal',            descripcion: 'Me siento mal' },
+              { id: '5', titulo: '⭐ Muy mal',          descripcion: 'Necesito atención urgente' }
+            ]}], 'Seleccionar');
+            return res.status(200).send('OK');
+          }
+          const { query: qBien } = require('../src/services/supabase');
+          const { crearNotificacion: notifBien } = require('../src/services/consultas');
+          if (srBienId) await qBien('PATCH', 'seguimiento_respuestas', { respuesta: String(nivel), nivel_bienestar: nivel }, `?id=eq.${srBienId}`);
+          if (nivel === 4) {
+            await notifBien('seguimiento', `💙 Bienestar bajo — ${nombreBien || telefono}`,
+              `${nombreBien || telefono} reportó bienestar nivel ${nivel}/5 (Mal). Revisar.`,
+              pacBienId, conBienId || null,
+              { origen: 'seguimiento', categoria: 'medio', etiqueta: 'BIENESTAR', estado_validacion: 'pendiente', seguimiento_respuesta_id: srBienId });
+          } else if (nivel === 5) {
+            await alertar(`🔴 <b>Bienestar muy bajo</b>\nPaciente: ${nombreBien || telefono}\nNivel: 5/5 (Muy mal)\nTeléfono: ${telefono}`);
+            await notifBien('seguimiento', `🔴 Bienestar crítico — ${nombreBien || telefono}`,
+              `${nombreBien || telefono} reportó bienestar nivel 5/5 (Muy mal). Requiere atención prioritaria.`,
+              pacBienId, conBienId || null,
+              { origen: 'seguimiento', categoria: 'grave', etiqueta: 'BIENESTAR', estado_validacion: 'pendiente', seguimiento_respuesta_id: srBienId });
+          }
+          await eliminar(telefono);
+          const respBien = ['','💙 ¡Qué bueno saberlo! Nos alegra que te sientas excelente.','💙 Bien, sigue cuidándote.','💙 Gracias por contarnos. Si algo cambia, escríbenos *hola*.','💙 Entendido. Tu médico estará informado. Si lo necesitas escríbenos *hola*.','💙 Lamentamos que te sientas así. Hemos notificado a tu médico con prioridad. Si es urgente llama al *911*.'];
+          await enviar(telefono, respBien[nivel]);
+          return res.status(200).send('OK');
+        }
+
+        case 'seg_lab': {
+          const { seg_lab_respuesta_id: srLabId, seguimiento_id: segLabId, paciente_id: pacLabId, consulta_id: conLabId } = datos;
+          if (mensaje !== 'seg_lab_si' && mensaje !== 'seg_lab_no') {
+            await enviarBotones(telefono, '¿Ya se realizó el examen de laboratorio?', [
+              { id: 'seg_lab_si', titulo: '✅ Sí, ya lo hice' },
+              { id: 'seg_lab_no', titulo: '❌ Aún no'         }
+            ]);
+            return res.status(200).send('OK');
+          }
+          const { query: qLab } = require('../src/services/supabase');
+          if (mensaje === 'seg_lab_si') {
+            if (srLabId) await qLab('PATCH', 'seguimiento_laboratorio_respuestas', { respuesta: 'si' }, `?id=eq.${srLabId}`);
+            if (segLabId) await qLab('PATCH', 'seguimiento_laboratorio', { activo: false, estado: 'confirmado' }, `?id=eq.${segLabId}`);
+            await guardar(telefono, 150, { _flujo: 'laboratorio', paciente_id: pacLabId, consulta_id: conLabId }, 'laboratorio');
+            await enviar(telefono, `📋 ¡Excelente! Por favor envíenos la *foto o el PDF* del resultado de su examen de laboratorio.`);
+          } else {
+            if (srLabId) await qLab('PATCH', 'seguimiento_laboratorio_respuestas', { respuesta: 'no' }, `?id=eq.${srLabId}`);
+            await eliminar(telefono);
+            await enviar(telefono, `Entendido, gracias. Le preguntaremos nuevamente más adelante.`);
+          }
+          return res.status(200).send('OK');
+        }
+
         case 'tracking_migracion': {
           const result = await procesarMigracion(paso, mensaje, datos, telefono);
           const targetFlujoM = result.datos?._flujo;

@@ -738,10 +738,21 @@ module.exports = async function handler(req, res) {
 
         case 'fuera_horario': {
           if (mensaje === 'fuera_horario_agendar') {
-            const result = datos._pendingOrigen === 'tracking'
-              ? await confirmarMigracionFueraHorario(datos, telefono)
-              : await confirmarConsultaFueraHorario(datos, telefono);
-            await despachar(telefono, result);
+            if (datos._pendingOrigen === 'b2c') {
+              const { BOTONES_PAGO: BP } = require('../src/flows/flujo-b2c');
+              const b2cDatos = { ...datos, _flujo: 'b2c' };
+              await guardar(telefono, 59, b2cDatos, 'b2c');
+              await despachar(telefono, {
+                respuesta: `✅ Perfecto, tu consulta será atendida ${datos._proximaTexto}.\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+                paso: 59, datos: b2cDatos, terminar: false,
+                botones: BP
+              });
+            } else {
+              const result = datos._pendingOrigen === 'tracking'
+                ? await confirmarMigracionFueraHorario(datos, telefono)
+                : await confirmarConsultaFueraHorario(datos, telefono);
+              await despachar(telefono, result);
+            }
           } else {
             await eliminar(telefono);
             await enviar(telefono, 'Entendido. Puedes escribirnos cuando quieras. 👋');

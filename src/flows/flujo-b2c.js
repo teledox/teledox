@@ -8,6 +8,8 @@ const { analizarComprobante } = require('../services/gemini');
 const { query } = require('../services/supabase');
 const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../utils/validaciones');
 const { mensajeBienvenida } = require('./flujo-inicio');
+const { estaEnHorario, proximaApertura } = require('../utils/horarioOperacion');
+const { mensajeFueraHorario } = require('../utils/mensajesFueraHorario');
 
 const MONTO_TELECONSULTA = 8.00;
 
@@ -218,6 +220,14 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
       };
     } else if (nivel === 2) {
       await alertar(`⚠️ <b>SÍNTOMAS MEDIOS - B2C</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
+    }
+
+    if (!estaEnHorario()) {
+      const prox = proximaApertura();
+      const fhDatos = { ...datos, _flujo: 'fuera_horario', _pendingOrigen: 'b2c' };
+      await guardar(telefono, 0, fhDatos, 'fuera_horario');
+      const { respuesta, botones } = mensajeFueraHorario(prox);
+      return { respuesta, botones, paso: 0, datos: fhDatos, terminar: false };
     }
 
     return {

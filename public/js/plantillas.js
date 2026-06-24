@@ -268,19 +268,7 @@ function _snapshotSheet(sheet) {
   return clone;
 }
 
-function renderPreviewDoc(tipo) {
-  try {
-    const slot = document.getElementById('preview-' + tipo);
-    const abrir = ABRIR_PLANTILLA[tipo]?.();
-    if (!slot || !abrir) return;
-    slot.innerHTML = `
-      <div class="doc-preview-card">
-        <div class="doc-preview-head"><span>✓ Generada · guardada</span><button class="btn btn-sm" onclick="${abrir.name}()">✏️ Editar</button></div>
-      </div>`;
-  } catch (e) {
-    console.error('Error al renderizar preview de', tipo, e);
-  }
-}
+function renderPreviewDoc(_tipo) { /* preview eliminado — botón Editar siempre visible en el card */ }
 
 // Re-pinta los previews de los documentos que ya tienen datos guardados (al abrir la consulta)
 function renderPreviewsGuardados() {

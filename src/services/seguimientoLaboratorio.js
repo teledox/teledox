@@ -1,22 +1,10 @@
 const { query } = require('./supabase');
 const { enviarBotones } = require('./whatsapp');
 const { guardar, obtener } = require('./sesiones');
+const { normalizePhone } = require('../utils/telefono');
 
 // Calendario de reintentos (offsets en horas desde created_at): 48h, día 3, día 5, día 7
 const OFFSETS_LAB_H = [48, 72, 120, 168];
-
-function formatearTelefono(telefonoPaciente) {
-  const soloDig = String(telefonoPaciente || '').replace(/\D/g, '');
-  if (!soloDig || soloDig.length < 7) return null;
-  return `whatsapp:+${soloDig.startsWith('0') ? '593' + soloDig.slice(1) : soloDig}`;
-}
-
-// Clave de sesión que coincide con msg.from del webhook (sin 'whatsapp:' ni '+')
-function telefonoSesion(telefonoPaciente) {
-  const soloDig = String(telefonoPaciente || '').replace(/\D/g, '');
-  if (!soloDig || soloDig.length < 7) return null;
-  return soloDig.startsWith('0') ? '593' + soloDig.slice(1) : soloDig;
-}
 
 // Crea el seguimiento de laboratorio para una consulta si no existe uno activo.
 // Se llama al enviar el "Pedido de laboratorio" al paciente.
@@ -39,14 +27,15 @@ async function crearSeguimientoLab(consulta_id, paciente_id, proximoEnvio, nombr
 // Envía el recordatorio "¿ya se realizó el examen?" para un seguimiento, registra el
 // intento en seguimiento_laboratorio_respuestas y programa (o cierra) el siguiente intento.
 async function enviarRecordatorioLab(seguimiento, paciente) {
-  const telefono = formatearTelefono(paciente?.telefono);
+  const telefono = normalizePhone(paciente?.telefono);
   if (!telefono) throw new Error('El paciente no tiene un teléfono válido registrado');
-  const telSesion = telefonoSesion(paciente?.telefono);
-  if (!telSesion) throw new Error('No se pudo derivar la clave de sesión del teléfono');
 
-  // No interrumpir sesión activa
-  const sesionActiva = await obtener(telSesion);
-  if (sesionActiva && sesionActiva.paso !== 0) return { omitido: true };
+  // No interrumpir sesión activa — reagendar +5min para no perder el intento
+  const sesionActiva = await obtener(telefono);
+  if (sesionActiva && sesionActiva.paso !== 0) {
+    await query('PATCH', 'seguimiento_laboratorio', { proximo_envio: new Date(Date.now() + 5 * 60000).toISOString() }, `?id=eq.${seguimiento.id}`);
+    return { omitido: true };
+  }
 
   const intentoActual = (seguimiento.intento || 0) + 1;
   const examen = seguimiento.nombre_examen ? `*${seguimiento.nombre_examen}*` : 'un examen de laboratorio';
@@ -67,7 +56,7 @@ async function enviarRecordatorioLab(seguimiento, paciente) {
   });
   const srLabId = Array.isArray(srLab) ? srLab[0]?.id : srLab?.id;
 
-  await guardar(telSesion, 1, {
+  await guardar(telefono, 1, {
     seg_lab_respuesta_id: srLabId,
     seguimiento_id:       seguimiento.id,
     paciente_id:          seguimiento.paciente_id,

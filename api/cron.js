@@ -7,6 +7,7 @@ const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
 const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratorio');
 const { procesarTracking: _procesarTracking } = require('../src/flows/flujo-tracking');
 const { getMsgPregunta: getPsiPregunta } = require('../src/flows/flujo-psicosocial');
+const { normalizePhone } = require('../src/utils/telefono');
 
 // Ecuador es UTC-5 sin horario de verano.
 // Convierte una fecha UTC al día de semana y hora local ecuatoriana.
@@ -45,11 +46,13 @@ async function handleTestReminder(req, res) {
   if (!c.activado)     return res.status(400).json({ error: 'El caso no está activado aún' });
   if (c.estado !== 'activo') return res.status(400).json({ error: `El caso está ${c.estado}, no activo` });
   if (!c.telefono)     return res.status(400).json({ error: 'El caso no tiene teléfono registrado' });
+  const telTest = normalizePhone(c.telefono);
+  if (!telTest) return res.status(400).json({ error: 'Teléfono inválido' });
 
   const ahora = new Date();
   const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
   await enviarLista(
-    c.telefono,
+    telTest,
     `🩺 *Seguimiento MediLyft*\n\n${saludo} Hora de tu reporte diario.\n\n📋 Diagnóstico: ${c.diagnostico || '—'}\n\n¿Cómo te sientes hoy?`,
     [{ titulo: 'Bienestar de hoy', filas: [
       { id: '1', titulo: 'Muy mal',  descripcion: '😢 Me siento muy mal' },
@@ -61,7 +64,7 @@ async function handleTestReminder(req, res) {
     'Seleccionar'
   );
   // Siempre sobreescribir la sesión en modo prueba (aunque haya una activa)
-  await guardar(c.telefono, 400, {
+  await guardar(telTest, 400, {
     tipo: 'bienestar', caso_id: c.id, empresa_id: c.empresa_id,
     paciente_nombre: c.paciente_nombre, diagnostico: c.diagnostico,
     biometricos_activos: c.biometricos_activos || false, altura: c.altura_cm || null
@@ -112,18 +115,19 @@ module.exports = async function handler(req, res) {
         // Garantiza que en consultas de call center el mensaje llegue al paciente, no al operador
         const telefonoPaciente = r.pacientes?.telefono;
         if (!telefonoPaciente) continue;
-        const soloDigRec = String(telefonoPaciente).replace(/\D/g, '');
-        if (!soloDigRec || soloDigRec.length < 7) continue;
-        // telefono → para enviar mensajes (WA Cloud API acepta dígitos puros)
-        // telefonoSesion → clave de sesión, debe coincidir con msg.from del webhook
-        const telefono       = `whatsapp:+${soloDigRec.startsWith('0') ? '593' + soloDigRec.slice(1) : soloDigRec}`;
-        const telefonoSesion = soloDigRec.startsWith('0') ? '593' + soloDigRec.slice(1) : soloDigRec;
+        // Clave canónica: dígitos puros con código de país — coincide con msg.from del webhook
+        const telefonoSesion = normalizePhone(telefonoPaciente);
+        if (!telefonoSesion) continue;
+        const telefono = telefonoSesion;
 
         const paciente = r.pacientes || {};
 
         if (r.tipo === 'medicamento') {
           const sesionMedRec = await obtener(telefonoSesion);
-          if (sesionMedRec && sesionMedRec.paso !== 0) { procesados++; continue; }
+          if (sesionMedRec && sesionMedRec.paso !== 0) {
+            await query('PATCH', 'recordatorios', { fecha_proximo: new Date(ahora.getTime() + 5 * 60000).toISOString() }, `?id=eq.${r.id}`);
+            procesados++; continue;
+          }
 
           const textoMed = `💊 *Recordatorio MediLyft*\n\nHola ${paciente.nombre || ''}! Es hora de tomar su medicamento:\n\n*${r.medicamento}*\n${r.dosis ? `Dosis: ${r.dosis}` : ''}\n\n¿Ya lo tomó?`;
 
@@ -170,7 +174,10 @@ module.exports = async function handler(req, res) {
 
         } else if (r.tipo === 'fin_tratamiento') {
           const sesionFinRec = await obtener(telefonoSesion);
-          if (sesionFinRec && sesionFinRec.paso !== 0) { procesados++; continue; }
+          if (sesionFinRec && sesionFinRec.paso !== 0) {
+            await query('PATCH', 'recordatorios', { fecha_proximo: new Date(ahora.getTime() + 5 * 60000).toISOString() }, `?id=eq.${r.id}`);
+            procesados++; continue;
+          }
 
           const textoFin = `🏥 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Su tratamiento con *${r.medicamento}* ha finalizado.\n\n¿Cómo se siente ahora?`;
 
@@ -211,7 +218,10 @@ module.exports = async function handler(req, res) {
 
         } else if (r.tipo === 'bienestar') {
           const sesionBienRec = await obtener(telefonoSesion);
-          if (sesionBienRec && sesionBienRec.paso !== 0) { procesados++; continue; }
+          if (sesionBienRec && sesionBienRec.paso !== 0) {
+            await query('PATCH', 'recordatorios', { fecha_proximo: new Date(ahora.getTime() + 5 * 60000).toISOString() }, `?id=eq.${r.id}`);
+            procesados++; continue;
+          }
 
           await enviarLista(
             telefono,
@@ -268,7 +278,7 @@ module.exports = async function handler(req, res) {
 
     for (const c of cronicas || []) {
       try {
-        const telefono = c.pacientes?.telefono;
+        const telefono = normalizePhone(c.pacientes?.telefono);
         if (!telefono) continue;
 
         const enfDef = ENFERMEDADES[c.enfermedad];
@@ -276,7 +286,10 @@ module.exports = async function handler(req, res) {
 
         // No interrumpir si el paciente ya está en una conversación activa
         const sesion = await obtener(telefono);
-        if (sesion && sesion.paso !== 0) continue;
+        if (sesion && sesion.paso !== 0) {
+          await query('PATCH', 'enfermedades_cronicas', { proximo_seguimiento: new Date(ahora.getTime() + 5 * 60000).toISOString() }, `?id=eq.${c.id}`);
+          continue;
+        }
 
         const paciente = c.pacientes || {};
         const primeraPregunta = enfDef.pasos[0];
@@ -327,7 +340,7 @@ module.exports = async function handler(req, res) {
 
     for (const c of trackingCasos || []) {
       try {
-        const telefono = c.telefono;
+        const telefono = normalizePhone(c.telefono);
         if (!telefono) continue;
 
         // Alta automática si se agotó la duración definida
@@ -342,7 +355,10 @@ module.exports = async function handler(req, res) {
         }
 
         const sesion = await obtener(telefono);
-        if (sesion && sesion.paso !== 0) continue;
+        if (sesion && sesion.paso !== 0) {
+          await query('PATCH', 'tracking_casos', { proximo_seguimiento: new Date(ahora.getTime() + 5 * 60000).toISOString() }, `?id=eq.${c.id}`);
+          continue;
+        }
 
         if (!c.activado) {
           // Primera vez — el paciente aún no activó el seguimiento.
@@ -410,10 +426,13 @@ module.exports = async function handler(req, res) {
 
     for (const c of casosPsi || []) {
       try {
-        const telefono = c.telefono;
+        const telefono = normalizePhone(c.telefono);
         if (!telefono) continue;
         const sesion = await obtener(telefono);
-        if (sesion && sesion.paso !== 0) continue;
+        if (sesion && sesion.paso !== 0) {
+          await query('PATCH', 'tracking_casos', { proximo_psicosocial: new Date(ahora.getTime() + 5 * 60000).toISOString() }, `?id=eq.${c.id}`);
+          continue;
+        }
 
         const msg1 = getPsiPregunta(1);
         await enviarLista(telefono, msg1.texto, msg1.secciones, msg1.botonTexto);
@@ -455,7 +474,7 @@ module.exports = async function handler(req, res) {
         });
         if (!medsAhora.length) continue;
 
-        const tel = c.telefono;
+        const tel = normalizePhone(c.telefono);
         if (!tel) continue;
 
         // Deduplicar: saltear si ya enviamos en las últimas 20h
@@ -511,7 +530,7 @@ module.exports = async function handler(req, res) {
 
     for (const c of propuestasCasos || []) {
       try {
-        const telefono = c.telefono;
+        const telefono = normalizePhone(c.telefono);
         if (!telefono) continue;
 
         const sesion = await obtener(telefono);

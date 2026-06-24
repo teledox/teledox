@@ -120,7 +120,52 @@ module.exports = async function handler(req, res) {
         let mensaje = '';
 
         if (r.tipo === 'medicamento') {
-          mensaje = `💊 *Recordatorio MediLyft*\n\nHola ${paciente.nombre || ''}! Es hora de tomar su medicamento:\n\n*${r.medicamento}*\n${r.dosis ? `Dosis: ${r.dosis}` : ''}\n\n¿Ya tomó su medicamento?\n\nResponda *Sí* o *No*`;
+          // No interrumpir sesión activa
+          const sesionMedRec = await obtener(telefono);
+          if (sesionMedRec && sesionMedRec.paso !== 0) { procesados++; continue; }
+
+          const textoMed = `💊 *Recordatorio MediLyft*\n\nHola ${paciente.nombre || ''}! Es hora de tomar su medicamento:\n\n*${r.medicamento}*\n${r.dosis ? `Dosis: ${r.dosis}` : ''}\n\n¿Ya lo tomó?`;
+
+          await enviarBotones(telefono, textoMed, [
+            { id: 'seg_med_si', titulo: '✅ Sí, ya lo tomé' },
+            { id: 'seg_med_no', titulo: '❌ No todavía'    }
+          ]);
+
+          await query('POST', 'seguimiento_respuestas', {
+            recordatorio_id: r.id,
+            paciente_id:     r.paciente_id,
+            receta_id:       r.receta_id,
+            consulta_id:     r.consulta_id || null,
+            pregunta:        textoMed
+          });
+
+          await guardar(telefono, 1, {
+            recordatorio_id: r.id,
+            paciente_id:     r.paciente_id,
+            medicamento:     r.medicamento,
+            dosis:           r.dosis || null,
+            paciente_nombre: `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim()
+          }, 'seg_med');
+
+          const proximoEnvioMed = new Date(ahora.getTime() + r.frecuencia_horas * 3600000);
+          const fdMed = r.fecha_fin ? new Date(/Z|[+-]\d\d:\d\d$/.test(r.fecha_fin) ? r.fecha_fin : r.fecha_fin + 'Z') : null;
+          if (!fdMed || proximoEnvioMed <= fdMed) {
+            await query('PATCH', 'recordatorios', { fecha_proximo: proximoEnvioMed.toISOString() }, `?id=eq.${r.id}`);
+          } else {
+            await query('PATCH', 'recordatorios', { activo: false }, `?id=eq.${r.id}`);
+            await query('POST', 'recordatorios', {
+              receta_id: r.receta_id, paciente_id: r.paciente_id,
+              consulta_id: r.consulta_id || null, telefono: r.telefono,
+              medicamento: r.medicamento, dosis: r.dosis,
+              frecuencia_horas: 999,
+              fecha_proximo: new Date(ahora.getTime() + 2 * 3600000).toISOString(),
+              fecha_fin:     new Date(ahora.getTime() + 3 * 3600000).toISOString(),
+              activo: true, tipo: 'fin_tratamiento'
+            });
+          }
+
+          procesados++;
+          continue;
         } else if (r.tipo === 'fin_tratamiento') {
           mensaje = `🏥 *Seguimiento MediLyft*\n\nHola ${paciente.nombre || ''}! Su tratamiento con *${r.medicamento}* ha finalizado.\n\n¿Cómo se siente ahora?\n\n1️⃣ Me siento mejor\n2️⃣ Mejoré pero aún tengo síntomas\n3️⃣ No mejoré o me siento peor\n\nResponda con el número de su opción.`;
         } else if (r.tipo === 'bienestar') {
@@ -180,22 +225,6 @@ module.exports = async function handler(req, res) {
           }, `?id=eq.${r.id}`);
         } else {
           await query('PATCH', 'recordatorios', { activo: false }, `?id=eq.${r.id}`);
-
-          if (r.tipo === 'medicamento') {
-            await query('POST', 'recordatorios', {
-              receta_id: r.receta_id,
-              paciente_id: r.paciente_id,
-              consulta_id: r.consulta_id || null,
-              telefono: r.telefono,
-              medicamento: r.medicamento,
-              dosis: r.dosis,
-              frecuencia_horas: 999,
-              fecha_proximo: new Date(ahora.getTime() + 2 * 3600000).toISOString(),
-              fecha_fin: new Date(ahora.getTime() + 3 * 3600000).toISOString(),
-              activo: true,
-              tipo: 'fin_tratamiento'
-            });
-          }
         }
 
         procesados++;

@@ -495,6 +495,32 @@ module.exports = async function handler(req, res) {
           return res.status(200).send('OK');
         }
 
+        case 'seg_med': {
+          const { recordatorio_id, medicamento, paciente_nombre } = datos;
+          if (mensaje !== 'seg_med_si' && mensaje !== 'seg_med_no') {
+            await enviarBotones(telefono, `¿Ya tomó su medicamento (*${medicamento}*)?`, [
+              { id: 'seg_med_si', titulo: '✅ Sí, ya lo tomé' },
+              { id: 'seg_med_no', titulo: '❌ No todavía'    }
+            ]);
+            return res.status(200).send('OK');
+          }
+          const tomo = mensaje === 'seg_med_si';
+          const { query: qSegMed } = require('../src/services/supabase');
+          await qSegMed('PATCH', 'seguimiento_respuestas', {
+            respuesta: tomo ? 'Sí' : 'No',
+            tomo_medicamento: tomo
+          }, `?recordatorio_id=eq.${recordatorio_id}&respuesta=is.null`);
+          if (!tomo) {
+            await alertar(`⚠️ <b>Incumplimiento de tratamiento</b>\nPaciente: ${paciente_nombre || telefono}\nMedicamento: ${medicamento}\nTeléfono: ${telefono}`);
+          }
+          await eliminar(telefono);
+          await enviar(telefono, tomo
+            ? `✅ ¡Perfecto! Registro guardado.\n\nSiga tomando su medicamento según las indicaciones del médico. 💊\n\nSi presenta algún efecto adverso escríbanos *hola*.`
+            : `⚠️ Recuerde que es importante seguir el tratamiento completo.\n\nIntente tomar *${medicamento}* lo antes posible.\n\nSi no puede tomarlo escríbanos *hola*.`
+          );
+          return res.status(200).send('OK');
+        }
+
         case 'tracking_migracion': {
           const result = await procesarMigracion(paso, mensaje, datos, telefono);
           const targetFlujoM = result.datos?._flujo;

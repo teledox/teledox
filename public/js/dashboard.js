@@ -186,8 +186,8 @@ async function loadAlertasServicio() {
         <div class="alerta-card-foot">
           ${catBadge(n.categoria)}
           <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-success" onclick="decidirSeguimiento('${n.id}','aprobada',this)">✅ Aprobar</button>
-            <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="decidirSeguimiento('${n.id}','rechazada',this)">❌ Rechazar</button>
+            <button class="btn btn-sm btn-success" onclick="decidirSeguimiento('${n.id}','aprobada',this)">📤 Proponer consulta</button>
+            <button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="decidirSeguimiento('${n.id}','rechazada',this)">❌ Descartar</button>
           </div>
         </div>
       </div>`;

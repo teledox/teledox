@@ -198,7 +198,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
       await alertar(`🚨 <b>EMERGENCIA - PACIENTE B2C</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await eliminar(telefono);
       return {
-        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*\n\n📞 tel:911`,
+        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*`,
         paso: 0, datos, terminar: true
       };
     } else if (nivel === 2) {

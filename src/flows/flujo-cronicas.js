@@ -326,7 +326,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
 
   let respuesta;
   if (resultado.nivel === 3) {
-    respuesta = `${resultado.msg}\n\n📞 *Llame al 911 AHORA*\ntel:911`;
+    respuesta = `${resultado.msg}\n\n📞 *Llame al 911 AHORA*`;
     await alertar(`🚨 <b>ALERTA GRAVE CRÓNICO — ${enfDef.nombre}</b>\nPaciente: ${nombreWhatsApp}\nTeléfono: ${telefono}\nValores: ${JSON.stringify(datos.valores)}`);
     const consultaGrave = await crearConsulta({
       paciente_id: datos.paciente_id,

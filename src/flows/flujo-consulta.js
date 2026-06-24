@@ -145,7 +145,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       await alertar(`🚨 <b>ALERTA GRAVE - EMERGENCIA</b>\nPaciente: ${datos.nombre_paciente || nombreWhatsApp}\nCédula: ${datos.cedula}\nEmpresa: ${datos.empresa || 'Particular (B2C)'}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await eliminar(telefono);
       return {
-        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*\n\n📞 tel:911`,
+        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*`,
         paso: 0, datos, terminar: true
       };
     } else if (nivel === 2) {

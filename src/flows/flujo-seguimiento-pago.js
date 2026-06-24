@@ -70,7 +70,7 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
       await alertar(`🚨 <b>EMERGENCIA - SEGUIMIENTO</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
       await eliminar(telefono);
       return {
-        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*\n\n📞 tel:911`,
+        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*`,
         paso: 0, datos, terminar: true
       };
     }

@@ -1158,12 +1158,14 @@ function actualizarEstadoDocs() {
   ['receta', 'certificado', 'pedido', 'historia', 'interconsulta'].forEach(tipo => {
     const status = document.getElementById(`status-${tipo}`);
     const btn = document.getElementById(`btn-enviar-${tipo}`);
+    const card = document.getElementById(`card-doc-${tipo}`);
     const generado = pdfGenerados[tipo] !== null;
     if (status) {
       status.textContent = generado ? '✓ Generada' : 'No generada';
       status.className = `doc-check-status ${generado ? 'generado' : 'pendiente'}`;
     }
     if (btn && btn.style.background !== 'rgb(22, 163, 74)') btn.disabled = !generado;
+    if (card) card.classList.toggle('card-doc-generada', generado);
   });
 }
 

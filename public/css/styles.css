@@ -153,6 +153,7 @@ textarea.form-control { resize: vertical; min-height: 80px; }
 .doc-title { font-size: 13px; font-weight: 700; text-align: right; color: #1a1a1a; text-transform: uppercase; letter-spacing: 0.05em; }
 .doc-section { margin-bottom: 12px; }
 .doc-section-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: #2563eb; background: #f0f6ff; padding: 4px 10px; border-radius: 4px; margin-bottom: 8px; display: block; border-left: 3px solid #2563eb; }
+.card-doc-generada { border-color: #86efac !important; background: #f0fdf4 !important; }
 .doc-row { display: flex; align-items: baseline; gap: 6px; margin-bottom: 5px; }
 .doc-lbl { font-size: 10px; color: #555; white-space: nowrap; min-width: 160px; }
 .doc-val { font-size: 10px; font-weight: 600; color: #1a1a1a; border-bottom: 1px solid #ccc; flex: 1; padding-bottom: 1px; min-height: 14px; }

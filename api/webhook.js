@@ -479,6 +479,97 @@ module.exports = async function handler(req, res) {
           return res.status(200).send('OK');
         }
 
+        case 'emergencia': {
+          const BOTONES_EM = [
+            { id: 'emergencia_911',      titulo: '📞 Llamar al 911'   },
+            { id: 'emergencia_consulta', titulo: '🏥 Consulta urgente' },
+          ];
+
+          if (mensaje === 'emergencia_911') {
+            await eliminar(telefono);
+            await enviar(telefono,
+              `📞 Marca el número *911* desde tu teléfono ahora mismo.\n\nTu equipo médico ya fue notificado. 🆘`
+            );
+            return res.status(200).send('OK');
+          }
+
+          if (mensaje === 'emergencia_consulta' || paso === 1) {
+            const { query: qEm } = require('../src/services/supabase');
+            const { buscarPorCedula: buscarEm } = require('../src/services/pacientes');
+            const { BOTONES_PAGO: BOTONES_PAGOEm } = require('../src/flows/flujo-b2c');
+
+            let pacienteId = datos.paciente_id || null;
+
+            if (paso === 1) {
+              // El paciente acaba de ingresar su cédula
+              const cedula = mensaje.trim().replace(/\D/g, '');
+              datos.cedula = cedula;
+              const pac = await buscarEm(cedula);
+              if (pac) {
+                pacienteId = pac.id;
+                datos.nombreCompleto   = datos.nombreCompleto   || `${pac.nombre || ''} ${pac.apellidos || ''}`.trim();
+                datos.correo           = datos.correo           || pac.correo          || '';
+                datos.edad             = datos.edad             || pac.edad            || '';
+                datos.telefonoContacto = datos.telefonoContacto || pac.telefono        || telefono;
+                datos.lugar_residencia = datos.lugar_residencia || pac.lugar_residencia || '';
+              }
+            }
+
+            if (!pacienteId && datos.caso_id) {
+              const caso = await qEm('GET', 'tracking_casos', null,
+                `?id=eq.${datos.caso_id}&select=paciente_id&limit=1`);
+              pacienteId = caso?.[0]?.paciente_id || null;
+            }
+
+            if (!pacienteId && datos.cedula) {
+              const pac = await buscarEm(datos.cedula);
+              if (pac) {
+                pacienteId = pac.id;
+                datos.nombreCompleto   = datos.nombreCompleto   || `${pac.nombre || ''} ${pac.apellidos || ''}`.trim();
+                datos.correo           = datos.correo           || pac.correo          || '';
+                datos.edad             = datos.edad             || pac.edad            || '';
+                datos.telefonoContacto = datos.telefonoContacto || pac.telefono        || telefono;
+                datos.lugar_residencia = datos.lugar_residencia || pac.lugar_residencia || '';
+              }
+            }
+
+            if (!pacienteId) {
+              await guardar(telefono, 1, datos, 'emergencia');
+              await enviar(telefono,
+                `Para registrar su consulta de emergencia, necesitamos su *número de cédula:*`
+              );
+              return res.status(200).send('OK');
+            }
+
+            const datosB2C = {
+              ...datos,
+              _flujo:          'b2c',
+              paciente_id:     pacienteId,
+              sintomas:        `EMERGENCIA — ${datos.contexto || 'Consulta urgente'}`,
+              nivel:           3,
+              modalidad:       'b2c',
+              correo:          datos.correo          || '',
+              nombreCompleto:  datos.nombreCompleto  || nombreWhatsApp,
+              edad:            datos.edad            || '',
+              telefonoContacto: datos.telefonoContacto || telefono,
+              lugar_residencia: datos.lugar_residencia || '',
+            };
+            await guardar(telefono, 59, datosB2C, 'b2c');
+            await enviarBotones(telefono,
+              `🏥 *Consulta de emergencia urgente*\n\n📋 ${datos.contexto || 'Emergencia médica'}\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
+              BOTONES_PAGOEm
+            );
+            return res.status(200).send('OK');
+          }
+
+          // Fallback: re-enviar botones
+          await enviarBotones(telefono,
+            `🚨 *Emergencia médica*\n\n¿Cómo desea proceder?`,
+            BOTONES_EM
+          );
+          return res.status(200).send('OK');
+        }
+
         case 'laboratorio': {
           const result = await procesarSubidaExamen(paso, mensaje, datos, telefono, msg);
           if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'laboratorio');

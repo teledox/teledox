@@ -349,6 +349,21 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
     respuesta = `${resultado.msg}\n\nGracias por su reporte diario. Su seguimiento ha sido registrado. 📋\n\nSi tiene algún síntoma nuevo escriba *hola*.`;
   }
 
+  if (resultado.nivel === 3) {
+    await guardar(telefono, 0, {
+      _flujo: 'emergencia',
+      paciente_id: datos.paciente_id,
+      contexto: `${enfDef.nombre} — ${resultado.msg}`
+    }, 'emergencia');
+    return {
+      respuesta,
+      botones: [
+        { id: 'emergencia_911',      titulo: '📞 Llamar al 911'   },
+        { id: 'emergencia_consulta', titulo: '🏥 Consulta urgente' },
+      ],
+      terminar: false
+    };
+  }
   await eliminar(telefono);
   return { respuesta, terminar: true };
 }

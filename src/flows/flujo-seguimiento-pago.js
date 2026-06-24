@@ -68,10 +68,24 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
 
     if (nivel === 3) {
       await alertar(`🚨 <b>EMERGENCIA - SEGUIMIENTO</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${mensaje}`);
-      await eliminar(telefono);
+      await guardar(telefono, 0, {
+        _flujo: 'emergencia',
+        paciente_id: datos.paciente_id || null,
+        cedula: datos.cedula,
+        nombreCompleto: datos.nombreCompleto,
+        correo: datos.correo,
+        telefonoContacto: datos.telefonoContacto,
+        lugar_residencia: datos.lugar_residencia,
+        contexto: `Síntomas de seguimiento: ${mensaje}`
+      }, 'emergencia');
       return {
-        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\n*Llame al 911 AHORA MISMO.*`,
-        paso: 0, datos, terminar: true
+        respuesta: `🚨 *EMERGENCIA MÉDICA* 🚨\n\nSus síntomas indican una situación de *riesgo vital*.\n\nPuede:\n• Acudir al hospital más cercano\n• Llamar al *911*\n• Iniciar una consulta urgente ahora`,
+        paso: 0, datos: { ...datos, _flujo: 'emergencia' },
+        botones: [
+          { id: 'emergencia_911',      titulo: '📞 Llamar al 911'   },
+          { id: 'emergencia_consulta', titulo: '🏥 Consulta urgente' },
+        ],
+        terminar: false
       };
     }
 

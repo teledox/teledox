@@ -51,12 +51,12 @@ async function guardarYCerrar(datos, telefono) {
 async function procesarBiometricos(paso, mensaje, datos, telefono) {
   const txt = mensaje.trim();
 
-  if (paso === 419) {
+  if (paso === 'bio_altura') {
     const h = parseInt(txt.replace(/[^\d]/g, ''));
     if (isNaN(h) || h < 100 || h > 220) {
       return {
         respuesta: `⚠️ No entendí el valor. Escribe tu altura en centímetros (ej: *170*).\n\nSi no la sabes con exactitud, una aproximación está bien.`,
-        paso: 419, datos, terminar: false
+        paso: 'bio_altura', datos, terminar: false
       };
     }
     datos.altura = h;
@@ -65,11 +65,11 @@ async function procesarBiometricos(paso, mensaje, datos, telefono) {
       respuesta: `✅ Altura registrada (${h} cm) — no te la volveré a preguntar.\n\n` +
         `📊 *Registro biométrico*\n\n¿Pudiste medir tu *presión arterial* hoy?\n\n` +
         `Escríbela así: *120/80* (sistólica/diastólica)\nSi no pudiste, responde *no medí*.`,
-      paso: 420, datos, terminar: false
+      paso: 'bio_presion', datos, terminar: false
     };
   }
 
-  if (paso === 420) {
+  if (paso === 'bio_presion') {
     if (esNA(txt)) {
       datos.sistolica = null; datos.diastolica = null;
     } else {
@@ -77,18 +77,18 @@ async function procesarBiometricos(paso, mensaje, datos, telefono) {
       if (!p) {
         return {
           respuesta: `⚠️ No entendí el formato. Escríbelo así: *120/80* (sistólica/diastólica).\n\nSi no pudiste medirla, responde *no medí*.`,
-          paso: 420, datos, terminar: false
+          paso: 'bio_presion', datos, terminar: false
         };
       }
       datos.sistolica = p.sistolica; datos.diastolica = p.diastolica;
     }
     return {
       respuesta: `💉 *Glucosa*\n\n¿Mediste tu glucosa hoy?\n\nEscribe el valor en mg/dL (ej: *98*).\nSi no la mediste, responde *no medí*.`,
-      paso: 421, datos, terminar: false
+      paso: 'bio_glucosa', datos, terminar: false
     };
   }
 
-  if (paso === 421) {
+  if (paso === 'bio_glucosa') {
     if (esNA(txt)) {
       datos.glucosa = null;
     } else {
@@ -96,18 +96,18 @@ async function procesarBiometricos(paso, mensaje, datos, telefono) {
       if (isNaN(g) || g < 40 || g > 600) {
         return {
           respuesta: `⚠️ No entendí el valor. Escribe solo el número en mg/dL (ej: *98*).\n\nSi no la mediste, responde *no medí*.`,
-          paso: 421, datos, terminar: false
+          paso: 'bio_glucosa', datos, terminar: false
         };
       }
       datos.glucosa = g;
     }
     return {
       respuesta: `⚖️ *Peso*\n\n¿Cuánto pesaste hoy?\n\nEscribe el valor en kg (ej: *72.5*).\nSi no te pesaste, responde *no medí*.`,
-      paso: 422, datos, terminar: false
+      paso: 'bio_peso', datos, terminar: false
     };
   }
 
-  if (paso === 422) {
+  if (paso === 'bio_peso') {
     if (esNA(txt)) {
       datos.peso = null;
     } else {
@@ -115,18 +115,18 @@ async function procesarBiometricos(paso, mensaje, datos, telefono) {
       if (isNaN(p) || p < 20 || p > 350) {
         return {
           respuesta: `⚠️ No entendí el valor. Escribe solo el número en kg (ej: *72.5*).\n\nSi no te pesaste, responde *no medí*.`,
-          paso: 422, datos, terminar: false
+          paso: 'bio_peso', datos, terminar: false
         };
       }
       datos.peso = p;
     }
     return {
       respuesta: `🩸 *Colesterol*\n\n¿Tienes un resultado reciente de colesterol total?\n\nEscribe el valor en mg/dL (ej: *185*).\nSi no lo tienes, responde *no sé*.`,
-      paso: 423, datos, terminar: false
+      paso: 'bio_colesterol', datos, terminar: false
     };
   }
 
-  if (paso === 423) {
+  if (paso === 'bio_colesterol') {
     if (esNA(txt)) {
       datos.colesterol = null;
     } else {
@@ -134,7 +134,7 @@ async function procesarBiometricos(paso, mensaje, datos, telefono) {
       if (isNaN(c) || c < 100 || c > 500) {
         return {
           respuesta: `⚠️ No entendí el valor. Escribe el colesterol total en mg/dL (ej: *185*).\n\nSi no lo tienes, responde *no sé*.`,
-          paso: 423, datos, terminar: false
+          paso: 'bio_colesterol', datos, terminar: false
         };
       }
       datos.colesterol = c;

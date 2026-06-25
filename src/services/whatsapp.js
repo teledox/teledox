@@ -1,4 +1,5 @@
 const { WA_TOKEN, WA_PHONE_ID } = require('../config');
+const { registrarEvento } = require('./eventos');
 
 const API_URL = `https://graph.facebook.com/v25.0/${WA_PHONE_ID}/messages`;
 
@@ -7,7 +8,12 @@ const HEADERS = {
   'Content-Type': 'application/json',
 };
 
+// Envía un payload a la API de WhatsApp con reintentos. Devuelve la respuesta
+// JSON (incluye messages[0].id = wamid) en éxito, o false si todos los intentos
+// fallan. Cada envío queda registrado en bot_eventos (ok/fail) para observabilidad.
 async function _post(payload, retries = 2) {
+  const tipoMsg = payload.type || 'desconocido';
+  let ultimoError = null;
   for (let attempt = 0; attempt <= retries; attempt++) {
     try {
       const res = await fetch(API_URL, {
@@ -17,16 +23,28 @@ async function _post(payload, retries = 2) {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
+        ultimoError = err?.error?.message || `HTTP ${res.status}`;
         console.error(`WhatsApp API error (intento ${attempt + 1}/${retries + 1}):`, JSON.stringify(err));
         if (attempt < retries) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
         continue;
       }
-      return true;
+      const json = await res.json().catch(() => ({}));
+      await registrarEvento({
+        tipo: 'saliente', direccion: 'out', telefono: payload.to,
+        wamid: json?.messages?.[0]?.id || null, estado: 'ok',
+        detalle: { tipo: tipoMsg },
+      });
+      return json || true;
     } catch (e) {
+      ultimoError = e.message;
       console.error(`WhatsApp fetch error (intento ${attempt + 1}/${retries + 1}):`, e.message);
       if (attempt < retries) await new Promise(r => setTimeout(r, 1000 * (attempt + 1)));
     }
   }
+  await registrarEvento({
+    tipo: 'saliente', direccion: 'out', telefono: payload.to,
+    estado: 'fail', error: ultimoError, detalle: { tipo: tipoMsg },
+  });
   return false;
 }
 
@@ -64,7 +82,7 @@ async function enviarBotones(telefono, texto, botones, cabecera = null) {
     interactive.header = { type: 'text', text: String(cabecera).substring(0, 60) };
   }
 
-  await _post({
+  return _post({
     messaging_product: 'whatsapp',
     to: numero,
     type: 'interactive',
@@ -97,7 +115,7 @@ async function enviarLista(telefono, texto, secciones, botonTexto = 'Ver opcione
     interactive.header = { type: 'text', text: String(cabecera).substring(0, 60) };
   }
 
-  await _post({
+  return _post({
     messaging_product: 'whatsapp',
     to: numero,
     type: 'interactive',

@@ -693,4 +693,601 @@ module.exports = [
     ],
   },
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO 3 — B2C VARIANTES ADICIONALES
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 21. B2C — seguro aliado (BUPA) → modalidad b2b_externo
+  //     Verifica que al ingresar un seguro de la lista SEGUROS_ALIADOS el bot
+  //     avanza directamente a pedir nombre (sin cobrar pago directo).
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'b2c-seguro-aliado',
+    name:  '21. B2C — seguro aliado (BUPA)',
+    phone: '593990000121',
+    before: async (phone) => {
+      await guardar(phone, 'nombre_seguro', { _flujo: 'b2c', cedula: '1799999996', modalidad: null }, 'b2c');
+    },
+    steps: [
+      // 'nombre_seguro': seguro en SEGUROS_ALIADOS → pide nombre, NO "no aliado"
+      { text: 'BUPA',
+        expect: ['alianzas', 'nombre'],
+        expectNot: ['no forma parte', 'pago directo'] },
+
+      // 'nombre' → 'edad'
+      { text: 'Test Seguro Aliado',
+        expect: ['edad'] },
+
+      // 'edad' → 'sexo'
+      { text: '35',
+        expect: ['sexo'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 22. B2C — síntomas nivel 2 → continúa a pago (sin emergencia)
+  //     Verifica que síntomas medios no bloquean el flujo.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'b2c-sintomas-nivel2',
+    name:  '22. B2C — síntomas nivel 2 continúa a pago',
+    phone: '593990000122',
+    before: async (phone) => {
+      await guardar(phone, 'sintomas', {
+        _flujo: 'b2c', cedula: '1799999995',
+        nombreCompleto: 'Test Nivel2', correo: 'n2@test.com',
+        edad: '40', sexo: 'M',
+        telefonoContacto: '0900000005', lugar_residencia: 'Quito',
+        modalidad: 'b2c',
+      }, 'b2c');
+    },
+    steps: [
+      // Síntomas nivel 2 (fiebre alta) → alerta Telegram pero continúa a 'pago'
+      { text: 'Tengo fiebre alta de 39 grados, dolor de cabeza intenso y mareos',
+        expect: ['pago', 'transferencia'],
+        expectNot: ['emergencia', '911'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 23. B2C — texto libre en 'pago' → repite el prompt de botones
+  //     El bot no debe avanzar al recibir texto libre en vez de seleccionar botón.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'b2c-pago-texto-libre',
+    name:  '23. B2C — texto libre en pago repite prompt',
+    phone: '593990000123',
+    before: async (phone) => {
+      await guardar(phone, 'pago', {
+        _flujo: 'b2c', cedula: '1799999994',
+        nombreCompleto: 'Test Pago', correo: 'pago@test.com',
+        sintomas: 'cefalea', nivel: 1,
+      }, 'b2c');
+    },
+    steps: [
+      // Texto libre → no avanza, repite botones de pago
+      { text: 'quiero pagar',
+        expect: ['transferencia'],
+        expectNot: ['banco internacional', 'pagoplux'] },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO 4 — CALL CENTER VARIANTES ADICIONALES
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 24. Call Center — 'cc_revisar' corregir → vuelve a cc_cedula
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'callcenter-corregir',
+    name:  '24. Call Center — corregir en resumen vuelve a cc_cedula',
+    phone: '593990000124',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [empresa] = await query('GET', 'clientes_b2b', null, '?codigo_acceso=eq.QATEST01&limit=1') || [];
+      if (!empresa) throw new Error('QATEST01 faltante');
+      await guardar(phone, 'cc_revisar', {
+        _flujo: 'callcenter',
+        cc_empresa: 'TEST QA', cc_empresa_id: empresa.id,
+        cc_cedula: '1700000005', cc_nombre: 'Test Corregir',
+        cc_edad: '30', cc_nacimiento: '01/01/1994', cc_sexo: 'M',
+        cc_telefono: '0911111111', cc_correo: '', cc_residencia: 'Quito',
+        cc_sintomas: 'Tos leve', cc_nivel: 1,
+      }, 'callcenter');
+    },
+    steps: [
+      // 'corregir' → limpia datos → vuelve a cc_cedula
+      { btn: 'corregir',
+        expect: ['cédula'],
+        expectNot: ['registrada', 'otro paciente'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 25. Call Center — 'cc_siguiente' sí → pide cédula del siguiente paciente
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'callcenter-siguiente-si',
+    name:  '25. Call Center — siguiente paciente sí',
+    phone: '593990000125',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [empresa] = await query('GET', 'clientes_b2b', null, '?codigo_acceso=eq.QATEST01&limit=1') || [];
+      if (!empresa) throw new Error('QATEST01 faltante');
+      await guardar(phone, 'cc_siguiente', {
+        _flujo: 'callcenter',
+        cc_empresa: 'TEST QA', cc_empresa_id: empresa.id,
+      }, 'callcenter');
+    },
+    steps: [
+      // 'sí' → limpia datos → pide cédula del siguiente paciente
+      { btn: 'si',
+        expect: ['cédula'],
+        expectNot: ['finalizada', 'hasta pronto'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 26. Call Center — cédula inválida en cc_cedula → repide, luego acepta válida
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'callcenter-cedula-invalida',
+    name:  '26. Call Center — cédula inválida repide',
+    phone: '593990000126',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [empresa] = await query('GET', 'clientes_b2b', null, '?codigo_acceso=eq.QATEST01&limit=1') || [];
+      if (!empresa) throw new Error('QATEST01 faltante');
+      await guardar(phone, 'cc_cedula', {
+        _flujo: 'callcenter',
+        cc_empresa: 'TEST QA', cc_empresa_id: empresa.id,
+      }, 'callcenter');
+    },
+    steps: [
+      // Cédula corta (3 dígitos) → error, NO avanza
+      { text: '123',
+        expect: ['cédula'],
+        expectNot: ['nombre'] },
+
+      // Cédula válida que no existe en DB → paciente nuevo → pide nombre
+      // 1700000019 verificada como cédula ecuatoriana válida (dígito verificador=9)
+      { text: '1700000019',
+        expect: ['nombre'] },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO 7 — REAGENDAR
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 27. Reagendar — paciente acepta → arranca síntomas de consulta
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'reagendar-si',
+    name:  '27. Reagendar — sí quiere consulta',
+    phone: '593990000127',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [pac] = await query('GET', 'pacientes', null, '?cedula=eq.1701234567&limit=1') || [];
+      if (!pac) throw new Error('Paciente 1701234567 faltante');
+      await guardar(phone, 0, { _flujo: 'reagendar', paciente_id: pac.id }, 'reagendar');
+    },
+    steps: [
+      // 'sí' → reconstruye datos del paciente → arranca paso 'sintomas'
+      { btn: 'si',
+        expect: ['síntomas'],
+        expectNot: ['escriba hola', 'hasta pronto'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 28. Reagendar — paciente rechaza → despedida y fin
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'reagendar-no',
+    name:  '28. Reagendar — no quiere consulta',
+    phone: '593990000128',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [pac] = await query('GET', 'pacientes', null, '?cedula=eq.1701234567&limit=1') || [];
+      if (!pac) throw new Error('Paciente 1701234567 faltante');
+      await guardar(phone, 0, { _flujo: 'reagendar', paciente_id: pac.id }, 'reagendar');
+    },
+    steps: [
+      // 'no' → elimina sesión, despedida
+      { btn: 'no',
+        expect: ['hola'],
+        expectNot: ['síntomas', 'cédula'] },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO 8 — SEGUIMIENTO APROBADO VARIANTES
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 29. Seguimiento — sp_sintomas nivel 3 → emergencia + botón 911
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'seguimiento-emergencia',
+    name:  '29. Seguimiento — síntomas nivel 3 → emergencia',
+    phone: '593990000129',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [pac] = await query('GET', 'pacientes', null, '?cedula=eq.1701234567&limit=1') || [];
+      await guardar(phone, 'sp_sintomas', {
+        _flujo: 'seguimiento_pago',
+        paciente_id: pac?.id,
+        cedula: '1701234567',
+        nombreCompleto: 'Test Seguimiento',
+        correo: 'test@medilyft.com',
+        telefonoContacto: '0900000001',
+        lugar_residencia: 'Quito Norte',
+      }, 'seguimiento_pago');
+    },
+    steps: [
+      // Síntomas nivel 3 → emergencia, NO va a pago
+      // "dificultad para respirar" es keyword exacto en el array `graves` de clasificarSintomas
+      { text: 'Siento dificultad para respirar y dolor de pecho muy intenso desde hace una hora',
+        expect: ['emergencia', '911'],
+        expectNot: ['pago', '$8'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 30. Seguimiento — datos incompletos → pide correo antes del pago
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'seguimiento-datos-incompletos',
+    name:  '30. Seguimiento — sin correo pide sp_correo',
+    phone: '593990000130',
+    before: async (phone) => {
+      await guardar(phone, 'sp_confirmar', {
+        _flujo: 'seguimiento_pago',
+        paciente_id: null,
+        cedula: '1799999993',
+        nombreCompleto: 'Test Sin Correo',
+        correo: '',            // faltante
+        telefonoContacto: '0900000006',
+        lugar_residencia: 'Quito',
+      }, 'seguimiento_pago');
+    },
+    steps: [
+      // Confirma que quiere agendar → sp_sintomas
+      { btn: 'si',
+        expect: ['siente', 'síntomas'] },
+
+      // Síntomas nivel 1 + sin correo → pide correo (sp_correo)
+      { text: 'Persiste una molestia leve en la garganta',
+        expect: ['correo'],
+        expectNot: ['pago', '$8', 'emergencia'] },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO TRACKING — RECORDATORIO DE MEDICACIÓN (med_reminder)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 31. Tracking — medicación: sí tomó
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-med-si',
+    name:  '31. Tracking — medicación sí tomó',
+    phone: '593990000131',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante — revisar globalSetup');
+      await guardar(phone, 'tracking', {
+        _flujo:            'tracking',
+        tipo:              'med_reminder',
+        caso_id:           caso.id,
+        paciente_nombre:   'Test Tracking',
+        medicamentos_ahora: [{ nombre: 'Losartán 50mg' }],
+      }, 'tracking');
+    },
+    steps: [
+      // '1' (Sí, ya tomé) → registra tomo=true → mensaje de confirmación
+      { btn: '1',
+        expect: ['perfecto', 'medicamentos'],
+        expectNot: ['recuerde', 'médico'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 32. Tracking — medicación: no tomó
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-med-no',
+    name:  '32. Tracking — medicación no tomó',
+    phone: '593990000132',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'tracking', {
+        _flujo:            'tracking',
+        tipo:              'med_reminder',
+        caso_id:           caso.id,
+        medicamentos_ahora: [{ nombre: 'Losartán 50mg' }],
+      }, 'tracking');
+    },
+    steps: [
+      // '2' (No todavía) → registra tomo=false → recordatorio
+      { btn: '2',
+        expect: ['recuerde', 'médico'],
+        expectNot: ['perfecto'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 33. Tracking — medicación: respuesta inválida → repide → acepta
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-med-invalido',
+    name:  '33. Tracking — medicación inválida repide',
+    phone: '593990000133',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'tracking', {
+        _flujo:            'tracking',
+        tipo:              'med_reminder',
+        caso_id:           caso.id,
+        medicamentos_ahora: [{ nombre: 'Losartán 50mg' }],
+      }, 'tracking');
+    },
+    steps: [
+      // Texto libre → no reconocido → repide con botones
+      { text: 'quizás más tarde',
+        expect: ['tomó', 'medicación'],
+        expectNot: ['perfecto', 'recuerde'] },
+
+      // Ahora sí responde con botón válido
+      { btn: '1',
+        expect: ['perfecto'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 34. Tracking — bienestar con biométricos activos → encadena registro bio
+  //     Verifica que tras el check-in de bienestar el bot envíe también el
+  //     mensaje de registro biométrico (flujo encadenado en webhook.js).
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-bienestar-bio',
+    name:  '34. Tracking — bienestar encadena biométrico',
+    phone: '593990000134',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'tracking', {
+        _flujo:             'tracking',
+        tipo:               'bienestar',
+        caso_id:            caso.id,
+        paciente_nombre:    'Test Biometrico',
+        diagnostico:        'Test QA',
+        biometricos_activos: true,
+        // Sin altura guardada → el primer mensaje bio pedirá la altura
+      }, 'tracking');
+    },
+    steps: [
+      // Bienestar '2' (Bien, nivel 1) → respuesta bienestar + mensaje biométrico encadenado
+      { list: '2',
+        expect: ['reporte diario', 'registro biométrico', 'altura'],
+        expectNot: ['alerta', '911'] },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO TRACKING MIGRACIÓN → CONSULTA (paso 410 / 411)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 35. Migración tracking — paso 410: sí tiene cédula → pide cédula
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-migracion-si',
+    name:  '35. Tracking migración — sí tiene cédula',
+    phone: '593990000135',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'tm_inicio', {
+        _flujo:          'tracking_migracion',
+        caso_id:         caso.id,
+        paciente_nombre: 'Test Tracking Migracion',
+        diagnostico:     'Hipertensión',
+        tratamiento:     'Losartán 50mg',
+      }, 'tracking_migracion');
+    },
+    steps: [
+      // 'propuesta_cedula_si' → pide cédula (paso 411)
+      { btn: 'propuesta_cedula_si',
+        expect: ['cédula', '10'],
+        expectNot: ['consulta', 'hola'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 36. Migración tracking — paso 410: no tiene cédula → instrucciones B2C
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-migracion-no',
+    name:  '36. Tracking migración — no tiene cédula → B2C',
+    phone: '593990000136',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'tm_inicio', {
+        _flujo:          'tracking_migracion',
+        caso_id:         caso.id,
+        paciente_nombre: 'Test Sin Cedula',
+        diagnostico:     'Hipertensión',
+      }, 'tracking_migracion');
+    },
+    steps: [
+      // 'propuesta_cedula_no' → instrucciones para B2C normal, fin
+      { btn: 'propuesta_cedula_no',
+        expect: ['hola', 'consulta'],
+        expectNot: ['cédula', '10 dígitos'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 37. Migración tracking — paso 410: respuesta inesperada → repide botones
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-migracion-invalido',
+    name:  '37. Tracking migración — respuesta inválida repide',
+    phone: '593990000137',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'tm_inicio', {
+        _flujo:          'tracking_migracion',
+        caso_id:         caso.id,
+        paciente_nombre: 'Test Invalido',
+        diagnostico:     'Hipertensión',
+      }, 'tracking_migracion');
+    },
+    steps: [
+      // Texto libre → respuesta inesperada → repide con botones (paso sigue en 410)
+      { text: 'tal vez tengo cédula',
+        expect: ['cédula ecuatoriana'],
+        expectNot: ['ingresa', '10 dígitos'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 38. Migración tracking — paso 411: cédula inválida → repide → válida → registra
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-migracion-cedula',
+    name:  '38. Tracking migración — cédula inválida luego válida',
+    phone: '593990000138',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      // Resetear el caso por si E38 de un run anterior lo dejó en 'derivado'
+      await query('PATCH', 'tracking_casos', { estado: 'activo' }, `?id=eq.${caso.id}`).catch(() => {});
+      await guardar(phone, 'tm_cedula', {
+        _flujo:          'tracking_migracion',
+        caso_id:         caso.id,
+        paciente_nombre: 'Test QA Automation',
+        diagnostico:     'Hipertensión',
+        tratamiento:     'Losartán 50mg',
+      }, 'tracking_migracion');
+    },
+    steps: [
+      // Cédula demasiado corta → error
+      { text: '123',
+        expect: ['cédula'],
+        expectNot: ['registrada', 'asesor'] },
+
+      // Cédula válida existente (1701234567 del globalSetup) → consulta registrada
+      { text: '1701234567',
+        expect: ['registrada', 'asesor'],
+        expectNot: ['error', 'inténtalo'] },
+    ],
+  },
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // FLUJO TRACKING — REGISTRO BIOMÉTRICO (bio_altura → … → bio_colesterol)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 39. Biométrico — cadena completa altura → presión → glucosa → peso → colesterol
+  //     Cubre el bug de estados (el webhook guardaba 'bio_altura' pero el flujo
+  //     chequeaba 419 numérico → "algo salió mal"). Ahora alineados.
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-biometrico-cadena',
+    name:  '39. Biométrico — cadena completa',
+    phone: '593990000139',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'bio_altura', {
+        _flujo:          'tracking_biometrico',
+        caso_id:         caso.id,
+        paciente_nombre: 'Test Biometrico',
+        bienestar:       '2',
+      }, 'tracking_biometrico');
+    },
+    steps: [
+      // 'bio_altura' → guarda altura → pregunta presión
+      { text: '170',
+        expect: ['presión'],
+        expectNot: ['algo salió mal'] },
+
+      // 'bio_presion' → guarda presión → pregunta glucosa
+      { text: '120/80',
+        expect: ['glucosa'],
+        expectNot: ['algo salió mal'] },
+
+      // 'bio_glucosa' → pregunta peso
+      { text: '98',
+        expect: ['peso'],
+        expectNot: ['algo salió mal'] },
+
+      // 'bio_peso' → pregunta colesterol
+      { text: '72.5',
+        expect: ['colesterol'],
+        expectNot: ['algo salió mal'] },
+
+      // 'bio_colesterol' → calcula score y cierra
+      { text: '185',
+        expect: ['score'],
+        expectNot: ['algo salió mal'] },
+    ],
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // 40. Biométrico — "no medí" en presión salta el valor sin romper
+  // ──────────────────────────────────────────────────────────────────────────
+  {
+    id:    'tracking-biometrico-namedi',
+    name:  '40. Biométrico — "no medí" salta presión',
+    phone: '593990000140',
+    before: async (phone) => {
+      const { query } = require('../../src/services/supabase');
+      const [caso] = await query('GET', 'tracking_casos', null,
+        '?telefono=eq.593990000200&limit=1') || [];
+      if (!caso) throw new Error('tracking_caso 593990000200 faltante');
+      await guardar(phone, 'bio_presion', {
+        _flujo:    'tracking_biometrico',
+        caso_id:   caso.id,
+        altura:    170,
+        bienestar: '2',
+      }, 'tracking_biometrico');
+    },
+    steps: [
+      // 'no medí' → presión null → avanza a glucosa
+      { text: 'no medí',
+        expect: ['glucosa'],
+        expectNot: ['no entendí', 'algo salió mal'] },
+    ],
+  },
+
 ];

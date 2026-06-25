@@ -13,17 +13,17 @@ const { mensajeFueraHorario } = require('../utils/mensajesFueraHorario');
 //
 // datos esperados: { caso_id, empresa_id, paciente_nombre, diagnostico, tratamiento }
 //
-// paso 410 — esperando respuesta al botón ¿tienes cédula?
-// paso 411 — esperando el número de cédula
+// paso 'tm_inicio' — esperando respuesta al botón ¿tienes cédula?
+// paso 'tm_cedula' — esperando el número de cédula
 
 async function procesarMigracion(paso, mensaje, datos, telefono) {
   const { caso_id, paciente_nombre, diagnostico, tratamiento } = datos;
 
-  if (paso === 410) {
+  if (paso === 'tm_inicio') {
     if (mensaje === 'propuesta_cedula_si') {
       return {
         respuesta: 'Ingresa tu número de *cédula* (10 dígitos):',
-        paso: 411, datos, terminar: false
+        paso: 'tm_cedula', datos, terminar: false
       };
     }
 
@@ -42,16 +42,16 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
         { id: 'propuesta_cedula_si', titulo: '✅ Sí, la tengo' },
         { id: 'propuesta_cedula_no', titulo: '➡️ No / Soy extranjero' }
       ],
-      paso: 410, datos, terminar: false
+      paso: 'tm_inicio', datos, terminar: false
     };
   }
 
-  if (paso === 411) {
+  if (paso === 'tm_cedula') {
     const { valida, error, cedula: cedulaLimpia } = validarCedula(mensaje);
     if (!valida) {
       return {
         respuesta: `❌ ${error}\n\nIngresa tu *cédula* (10 dígitos):`,
-        paso: 411, datos, terminar: false
+        paso: 'tm_cedula', datos, terminar: false
       };
     }
 
@@ -71,7 +71,7 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
     if (!paciente?.id) {
       return {
         respuesta: 'Hubo un problema al registrar tus datos. Por favor intenta de nuevo en unos minutos.',
-        paso: 411, datos, terminar: false
+        paso: 'tm_cedula', datos, terminar: false
       };
     }
 
@@ -121,7 +121,7 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
       { id: 'propuesta_cedula_si', titulo: '✅ Sí, la tengo' },
       { id: 'propuesta_cedula_no', titulo: '➡️ No / Soy extranjero' }
     ],
-    paso: 410, datos, terminar: false
+    paso: 'tm_inicio', datos, terminar: false
   };
 }
 

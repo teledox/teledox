@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MediLyft — Monitor de flujos</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f6fa;color:#111;font-size:14px}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#f5f6fa}
+.login-box{background:#fff;border-radius:16px;padding:2.5rem;width:360px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+.login-logo{font-size:22px;font-weight:800;color:#1e3a5f;margin-bottom:4px}
+.login-sub{font-size:13px;color:#888;margin-bottom:1.5rem}
+.form-group{margin-bottom:1rem}
+.form-label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:4px}
+.form-input{width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:14px;outline:none;transition:border .15s}
+.form-input:focus{border-color:#2563eb}
+.btn-login{width:100%;padding:11px;background:#1e3a5f;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;margin-top:.5rem}
+.btn-login:hover{background:#15294a}
+.login-error{color:#dc2626;font-size:12px;margin-top:.5rem;display:none}
+.app-wrap{display:none;min-height:100vh;flex-direction:column}
+.app-wrap.visible{display:flex}
+.topbar{background:#1e3a5f;color:#fff;padding:0 1.5rem;height:52px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.topbar-logo{font-size:16px;font-weight:800;letter-spacing:.02em}
+.topbar-tag{font-size:11px;background:rgba(255,255,255,.15);padding:2px 8px;border-radius:999px;margin-left:8px}
+.topbar-right{display:flex;align-items:center;gap:12px;font-size:13px}
+.topbar-user{opacity:.8}
+.btn-logout{background:rgba(255,255,255,.15);border:none;color:#fff;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px}
+.tabs{background:#fff;border-bottom:1px solid #e5e7eb;padding:0 1.5rem;display:flex;gap:4px;flex-shrink:0}
+.tab{background:none;border:none;border-bottom:2px solid transparent;padding:12px 14px;font-size:13px;font-weight:600;color:#888;cursor:pointer}
+.tab:hover{color:#555}
+.tab.active{color:#1d4ed8;border-bottom-color:#1d4ed8}
+.main{flex:1;overflow-y:auto;padding:1.5rem;max-width:1100px;margin:0 auto;width:100%}
+.page{display:none}
+.page.active{display:block}
+/* explorador */
+.flow-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:1.4rem}
+.flow-pill{border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;font-size:12.5px;font-weight:600;color:#555}
+.flow-pill:hover{background:#f5f6fa}
+.flow-pill.active{background:#1e3a5f;color:#fff;border-color:#1e3a5f}
+.flow-meta{background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:1.2rem;font-size:13px}
+.flow-meta .d{color:#555;margin-bottom:6px}
+.flow-meta .t{font-size:11.5px;color:#888}
+.node{background:#fff;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;overflow:hidden}
+.node-head{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer}
+.node-head:hover{background:#fafafa}
+.node-idx{width:22px;height:22px;border-radius:50%;background:#eff6ff;color:#1d4ed8;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.node-title{font-size:13px;font-weight:700;flex:1}
+.node-id{font-family:ui-monospace,Menlo,monospace;font-size:11px;color:#aaa}
+.node-body{display:none;padding:0 14px 12px 46px;border-top:1px solid #f5f6fa}
+.node.open .node-body{display:block}
+.node-msg{background:#f0f9ff;border-left:3px solid #38bdf8;border-radius:0 6px 6px 0;padding:8px 11px;font-size:13px;color:#0c4a6e;margin:10px 0}
+.rama{display:flex;align-items:baseline;gap:8px;font-size:12.5px;padding:3px 0}
+.rama .cond{background:#f3f4f6;border-radius:6px;padding:1px 7px;color:#374151;font-weight:600;white-space:nowrap}
+.rama .arr{color:#cbd5e1}
+.rama .dst{font-family:ui-monospace,Menlo,monospace;color:#1d4ed8;cursor:pointer}
+.rama .dst.fin{color:#15803d;cursor:default}
+.rama .dst.ext{color:#b45309;cursor:default}
+.rama .nota{color:#9ca3af}
+.banner{background:#fef3c7;border:1px solid #fcd34d;color:#92400e;border-radius:10px;padding:12px 16px;margin-bottom:1.2rem;font-size:13px;display:none}
+.banner.show{display:block}
+.toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:8px}
+.toolbar h1{font-size:18px;font-weight:800}
+.toolbar-right{display:flex;align-items:center;gap:10px;font-size:12px;color:#888}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 13px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #e5e7eb;background:#fff;color:#333}
+.btn:hover{background:#f5f6fa}
+.stats-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:.9rem 1rem}
+.stat-label{font-size:10.5px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.stat-value{font-size:26px;font-weight:800;margin:4px 0 0}
+.stat-value.red{color:#dc2626}
+.stat-value.green{color:#15803d}
+.stat-value.amber{color:#b45309}
+.section-title{font-size:15px;font-weight:700;margin:0 0 .8rem;display:flex;align-items:center;gap:8px}
+.section-title .count{font-size:12px;font-weight:600;color:#888}
+.card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:1.6rem}
+table{width:100%;border-collapse:collapse}
+th{background:#f9fafb;padding:9px 14px;text-align:left;font-size:10.5px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid #e5e7eb}
+td{padding:10px 14px;border-bottom:1px solid #f5f6fa;font-size:13px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#fafafa}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600}
+.badge-green{background:#dcfce7;color:#15803d}
+.badge-red{background:#fee2e2;color:#b91c1c}
+.badge-gray{background:#f3f4f6;color:#6b7280}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-amber{background:#fef9c3;color:#a16207}
+.empty{text-align:center;padding:2.2rem;color:#aaa;font-size:13px}
+/* diagrama de flujos */
+.flow-lane{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:.9rem 1.1rem;margin-bottom:10px}
+.flow-name{font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.flow-name .total{font-size:11px;font-weight:600;color:#888}
+.chips{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.chip{position:relative;border:1px solid #e5e7eb;background:#f9fafb;border-radius:8px;padding:6px 10px;font-size:12px;color:#374151}
+.chip .n{position:absolute;top:-8px;right:-8px;min-width:18px;height:18px;line-height:18px;text-align:center;border-radius:9px;background:#2563eb;color:#fff;font-size:10.5px;font-weight:700;padding:0 4px}
+.chip.arrow{border:none;background:none;color:#cbd5e1;padding:0 2px}
+.muted{color:#9ca3af}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e3a5f;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.show{opacity:1}
+@media(max-width:760px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="login-logo">MediLyft</div>
+    <div class="login-sub">Monitor de flujos del bot</div>
+    <div class="form-group">
+      <label class="form-label">Correo</label>
+      <input class="form-input" id="loginEmail" type="email" autocomplete="username">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="loginPass" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn-login" id="loginBtn" onclick="doLogin()">Ingresar</button>
+    <div class="login-error" id="loginError">Credenciales inválidas o sin acceso.</div>
+  </div>
+</div>
+
+<div class="app-wrap" id="appWrap">
+  <div class="topbar">
+    <div><span class="topbar-logo">MediLyft</span><span class="topbar-tag">monitor de flujos</span></div>
+    <div class="topbar-right">
+      <span class="topbar-user" id="topbarUser"></span>
+      <button class="btn-logout" onclick="doLogout()">Salir</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-tecnica" onclick="showTab('tecnica')">Salud técnica</button>
+    <button class="tab" id="tab-vivo" onclick="showTab('vivo')">Flujos en vivo</button>
+    <button class="tab" id="tab-explorador" onclick="showTab('explorador')">Explorador</button>
+  </div>
+
+  <div class="main">
+    <div class="banner" id="banner"></div>
+
+    <div class="page active" id="page-tecnica">
+      <div class="toolbar">
+        <h1>Salud técnica — últimas 24 h</h1>
+        <div class="toolbar-right">
+          <span id="lastUpdate">—</span>
+          <button class="btn" onclick="cargar()">↻ Actualizar</button>
+        </div>
+      </div>
+
+      <div class="stats-grid" id="stats"></div>
+
+      <div class="section-title">Mensajes que no llegaron <span class="count" id="failCount"></span></div>
+      <div class="card"><div id="failTable"></div></div>
+
+      <div class="section-title">Errores de procesamiento <span class="count" id="errCount"></span></div>
+      <div class="card"><div id="errTable"></div></div>
+
+      <div class="section-title">Sesiones atascadas <span class="count">(activas sin actividad &gt; 30 min)</span></div>
+      <div class="card"><div id="stuckTable"></div></div>
+    </div>
+
+    <div class="page" id="page-vivo">
+      <div class="toolbar">
+        <h1>Flujos en vivo</h1>
+        <div class="toolbar-right"><span>pacientes por estado, según sesiones_bot</span><button class="btn" onclick="cargar()">↻ Actualizar</button></div>
+      </div>
+      <div id="flows"></div>
+    </div>
+
+    <div class="page" id="page-explorador">
+      <div class="toolbar"><h1>Explorador de flujos</h1><div class="toolbar-right"><span>esquema de inicio a fin · clic para ver mensajes y ramas</span></div></div>
+      <div class="flow-pills" id="flowPills"></div>
+      <div id="flowDetail"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/flows/flow-graph.js"></script>
+<script>
+const SUPA_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
+const SUPA_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
+const sc = supabase.createClient(SUPA_URL, SUPA_KEY);
+let currentUser = null;
+let refreshTimer = null;
+
+// Orden conocido de estados por flujo (para layout del diagrama). Si un estado
+// no está listado, se ordena al final por cantidad. Refleja src/flows/*.
+const ORDEN = {
+  b2c: ['modalidad','nombre_seguro','nombre','edad','sexo','correo','telefono','residencia','sintomas','pago','comprobante'],
+  callcenter: ['cc_inicio','cc_cedula','cc_confirmar','cc_nombre','cc_edad','cc_nacimiento','cc_sexo','cc_telefono','cc_correo','cc_residencia','cc_sintomas','cc_revisar','cc_siguiente'],
+  consulta: ['cedula','autorizacion','sintomas','nombre','apellidos','edad','nacimiento','correo','telefono','residencia','horario','confirmar','finalizar'],
+  seguimiento_pago: ['sp_confirmar','sp_sintomas','sp_correo','sp_telefono','sp_residencia','sp_pago','sp_comprobante'],
+  tracking_biometrico: ['bio_altura','bio_presion'],
+  tracking_migracion: ['tm_inicio','410','411'],
+};
+
+async function db(method, table, q = '') {
+  const { data: { session } } = await sc.auth.getSession();
+  const token = session?.access_token || SUPA_KEY;
+  const r = await fetch(`${SUPA_URL}/rest/v1/${table}${q}`, {
+    method, headers: { apikey: SUPA_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+  });
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value.trim();
+  const btn = document.getElementById('loginBtn');
+  if (!email || !pass) return;
+  btn.disabled = true; btn.textContent = 'Ingresando...';
+  document.getElementById('loginError').style.display = 'none';
+  const { error } = await sc.auth.signInWithPassword({ email, password: pass });
+  if (error) { btn.disabled = false; btn.textContent = 'Ingresar'; document.getElementById('loginError').style.display = 'block'; return; }
+  const users = await db('GET', 'usuarios', `?correo=eq.${encodeURIComponent(email)}&activo=eq.true`);
+  btn.disabled = false; btn.textContent = 'Ingresar';
+  if (!Array.isArray(users) || !users.length) { document.getElementById('loginError').textContent = 'Sin acceso al panel.'; document.getElementById('loginError').style.display = 'block'; await sc.auth.signOut(); return; }
+  currentUser = users[0];
+  initApp();
+}
+async function doLogout() { await sc.auth.signOut(); location.reload(); }
+
+function initApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('appWrap').classList.add('visible');
+  document.getElementById('topbarUser').textContent = currentUser.nombre || currentUser.correo;
+  renderExplorador();
+  cargar();
+  refreshTimer = setInterval(cargar, 30000);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ── Explorador de flujos (lee FLOW_GRAPH del manifiesto) ───────────────────
+let flujoSel = null;
+function renderExplorador() {
+  const ids = Object.keys(FLOW_GRAPH);
+  flujoSel = flujoSel || ids[0];
+  document.getElementById('flowPills').innerHTML = ids.map(id =>
+    `<button class="flow-pill ${id===flujoSel?'active':''}" onclick="selFlujo('${id}')">${esc(FLOW_GRAPH[id].nombre)}</button>`
+  ).join('');
+  renderDetalle();
+}
+function selFlujo(id) { flujoSel = id; renderExplorador(); }
+
+function renderDetalle() {
+  const f = FLOW_GRAPH[flujoSel];
+  if (!f) { document.getElementById('flowDetail').innerHTML = ''; return; }
+  const valBadge = f.validar
+    ? '<span class="badge badge-green">validado vs código</span>'
+    : '<span class="badge badge-gray">solo documentado</span>';
+  const meta = `<div class="flow-meta">
+    <div class="d">${esc(f.descripcion)}</div>
+    <div class="t">⚡ Inicia: ${esc(f.trigger)} &nbsp;·&nbsp; 📄 ${esc(f.archivo)} &nbsp; ${valBadge}</div>
+    ${f.nota ? `<div class="t" style="margin-top:5px">ℹ️ ${esc(f.nota)}</div>` : ''}
+  </div>`;
+  const nodos = f.nodos.map((n, i) => {
+    const ramas = (n.ramas || []).map(r => {
+      let cls = 'dst', click = '';
+      if (r.destino === '_fin') cls = 'dst fin';
+      else if (r.destino.startsWith('_')) cls = 'dst ext';
+      else if (FLOW_GRAPH[flujoSel].nodos.some(x => x.id === r.destino)) click = `onclick="abrirNodo('${r.destino}')"`;
+      else cls = 'dst ext';
+      const label = r.destino === '_fin' ? 'fin' : r.destino.replace(/^_/, '');
+      return `<div class="rama"><span class="cond">${esc(r.cond)}</span><span class="arr">→</span><span class="${cls}" ${click}>${esc(label)}</span>${r.nota?`<span class="nota">· ${esc(r.nota)}</span>`:''}</div>`;
+    }).join('');
+    return `<div class="node" id="node-${esc(n.id)}">
+      <div class="node-head" onclick="this.parentElement.classList.toggle('open')">
+        <div class="node-idx">${i+1}</div>
+        <div class="node-title">${esc(n.titulo)} <span class="badge badge-blue" style="font-weight:600">${esc(n.tipo)}</span></div>
+        <div class="node-id">${esc(n.id)}</div>
+      </div>
+      <div class="node-body">
+        <div class="node-msg">${esc(n.mensaje)}</div>
+        ${ramas || '<div class="nota" style="font-size:12px">sin ramas</div>'}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('flowDetail').innerHTML = meta + nodos;
+}
+function abrirNodo(id) {
+  const el = document.getElementById('node-' + id);
+  if (el) { el.classList.add('open'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+}
+
+function hace(iso) {
+  if (!iso) return '—';
+  const s = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'min';
+  if (s < 86400) return Math.floor(s/3600) + 'h';
+  return Math.floor(s/86400) + 'd';
+}
+function esc(s) { return String(s ?? '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])); }
+function tel(t) { return t ? '…' + String(t).slice(-4) : '—'; }
+
+async function cargar() {
+  const desde = new Date(Date.now() - 24*3600*1000).toISOString();
+  const [ev, ses] = await Promise.all([
+    db('GET', 'bot_eventos', `?created_at=gte.${desde}&select=tipo,direccion,telefono,paso,estado,error,detalle,created_at&order=created_at.desc&limit=3000`),
+    db('GET', 'sesiones_bot', `?select=telefono,paso,datos,updated_at&limit=2000`),
+  ]);
+
+  const banner = document.getElementById('banner');
+  if (!Array.isArray(ev)) {
+    banner.className = 'banner show';
+    banner.innerHTML = '⚠️ La tabla <b>bot_eventos</b> no existe todavía. Ejecuta <span class="mono">db/observabilidad.sql</span> en Supabase para activar el monitoreo.';
+    renderStats({}); document.getElementById('failTable').innerHTML = '<div class="empty">Sin datos</div>';
+    document.getElementById('errTable').innerHTML = '<div class="empty">Sin datos</div>';
+  } else {
+    banner.className = 'banner';
+    procesarEventos(ev);
+  }
+  procesarSesiones(Array.isArray(ses) ? ses : []);
+  document.getElementById('lastUpdate').textContent = 'actualizado ' + new Date().toLocaleTimeString('es-EC');
+}
+
+function procesarEventos(ev) {
+  const entrantes  = ev.filter(e => e.tipo === 'entrante').length;
+  const salOk      = ev.filter(e => e.tipo === 'saliente' && e.estado === 'ok').length;
+  const salFail    = ev.filter(e => e.tipo === 'saliente' && e.estado === 'fail').length;
+  const stFailed   = ev.filter(e => e.tipo === 'estado' && e.estado === 'failed').length;
+  const duplicados = ev.filter(e => e.tipo === 'duplicado').length;
+  const errores    = ev.filter(e => e.tipo === 'error').length;
+  const totalEnvio = salOk + salFail;
+  const pct = totalEnvio ? Math.round(salOk / totalEnvio * 100) : 100;
+
+  renderStats({ entrantes, salOk, fallidos: salFail + stFailed, pct, duplicados, errores });
+
+  const fallos = ev.filter(e => (e.tipo === 'saliente' && e.estado === 'fail') || (e.tipo === 'estado' && e.estado === 'failed'));
+  document.getElementById('failCount').textContent = fallos.length ? `(${fallos.length})` : '';
+  document.getElementById('failTable').innerHTML = fallos.length ? `
+    <table><thead><tr><th>Hora</th><th>Teléfono</th><th>Tipo</th><th>Motivo</th></tr></thead><tbody>
+    ${fallos.slice(0,50).map(f => `<tr>
+      <td class="muted">${hace(f.created_at)}</td>
+      <td class="mono">${tel(f.telefono)}</td>
+      <td>${f.tipo === 'estado' ? '<span class="badge badge-red">no entregado</span>' : '<span class="badge badge-amber">envío falló</span>'}</td>
+      <td>${esc(f.error || '—')}</td></tr>`).join('')}
+    </tbody></table>` : '<div class="empty">Sin fallos de entrega en 24 h ✅</div>';
+
+  const errs = ev.filter(e => e.tipo === 'error');
+  document.getElementById('errCount').textContent = errs.length ? `(${errs.length})` : '';
+  document.getElementById('errTable').innerHTML = errs.length ? `
+    <table><thead><tr><th>Hora</th><th>Teléfono</th><th>Paso</th><th>Error</th></tr></thead><tbody>
+    ${errs.slice(0,50).map(e => `<tr>
+      <td class="muted">${hace(e.created_at)}</td>
+      <td class="mono">${tel(e.telefono)}</td>
+      <td class="mono">${esc(e.paso || '—')}</td>
+      <td>${esc(e.error || '—')}</td></tr>`).join('')}
+    </tbody></table>` : '<div class="empty">Sin errores de procesamiento en 24 h ✅</div>';
+}
+
+function renderStats(s) {
+  const cards = [
+    ['Entrantes', s.entrantes ?? '—', ''],
+    ['Enviados OK', s.salOk ?? '—', 'green'],
+    ['Fallidos', s.fallidos ?? '—', (s.fallidos > 0 ? 'red' : '')],
+    ['% entrega', s.pct != null ? s.pct + '%' : '—', (s.pct != null && s.pct < 95 ? 'amber' : 'green')],
+    ['Duplicados', s.duplicados ?? '—', (s.duplicados > 0 ? 'amber' : '')],
+    ['Errores', s.errores ?? '—', (s.errores > 0 ? 'red' : '')],
+  ];
+  document.getElementById('stats').innerHTML = cards.map(([l,v,c]) =>
+    `<div class="stat-card"><div class="stat-label">${l}</div><div class="stat-value ${c}">${v}</div></div>`).join('');
+}
+
+function procesarSesiones(ses) {
+  const activas = ses.filter(s => s.paso && s.paso !== 0 && s.paso !== '0');
+
+  // sesiones atascadas: activas sin actividad > 30 min
+  const limite = Date.now() - 30*60*1000;
+  const stuck = activas.filter(s => new Date(s.updated_at) < limite)
+    .sort((a,b) => new Date(a.updated_at) - new Date(b.updated_at));
+  document.getElementById('stuckTable').innerHTML = stuck.length ? `
+    <table><thead><tr><th>Teléfono</th><th>Flujo</th><th>Estado</th><th>Inactiva</th></tr></thead><tbody>
+    ${stuck.slice(0,50).map(s => `<tr>
+      <td class="mono">${tel(s.telefono)}</td>
+      <td>${esc(s.datos?._flujo || '—')}</td>
+      <td class="mono">${esc(s.paso)}</td>
+      <td class="muted">${hace(s.updated_at)}</td></tr>`).join('')}
+    </tbody></table>` : '<div class="empty">Ninguna sesión atascada ✅</div>';
+
+  // diagrama en vivo: agrupar por (_flujo, paso)
+  const porFlujo = {};
+  for (const s of activas) {
+    const f = s.datos?._flujo || 'sin_flujo';
+    const p = String(s.paso);
+    (porFlujo[f] ??= {});
+    porFlujo[f][p] = (porFlujo[f][p] || 0) + 1;
+  }
+  const flujos = Object.keys(porFlujo).sort();
+  document.getElementById('flows').innerHTML = flujos.length ? flujos.map(f => {
+    const estados = porFlujo[f];
+    const orden = ORDEN[f] || [];
+    const keys = Object.keys(estados).sort((a,b) => {
+      const ia = orden.indexOf(a), ib = orden.indexOf(b);
+      if (ia !== -1 && ib !== -1) return ia - ib;
+      if (ia !== -1) return -1; if (ib !== -1) return 1;
+      return estados[b] - estados[a];
+    });
+    const total = Object.values(estados).reduce((a,b) => a+b, 0);
+    const chips = keys.map((k,i) =>
+      `${i ? '<span class="chip arrow">→</span>' : ''}<span class="chip">${esc(k)}<span class="n">${estados[k]}</span></span>`
+    ).join('');
+    return `<div class="flow-lane"><div class="flow-name">${esc(f)} <span class="total">· ${total} activa(s)</span></div><div class="chips">${chips}</div></div>`;
+  }).join('') : '<div class="empty">No hay sesiones activas en este momento</div>';
+}
+</script>
+</body>
+</html>

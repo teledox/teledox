@@ -7,6 +7,7 @@ function detectarCrisis(texto) {
 }
 const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
 const { alertar } = require('../src/services/telegram');
+const { registrarEvento, marcarProcesado } = require('../src/services/eventos');
 const { esSi } = require('../src/utils/validaciones');
 
 // ¿El mensaje es una respuesta plausible al recordatorio de seguimiento pendiente?
@@ -102,11 +103,41 @@ module.exports = async function handler(req, res) {
     const entry   = body.entry?.[0];
     const changes = entry?.changes?.[0];
     const value   = changes?.value;
+
+    // ── Callbacks de estado de WhatsApp (sent/delivered/read/failed) ────
+    // Meta los envía en value.statuses, no en value.messages. Es la forma
+    // canónica de saber que un mensaje NO llegó (status=failed con motivo).
+    if (value?.statuses?.length) {
+      for (const st of value.statuses) {
+        await registrarEvento({
+          tipo: 'estado', direccion: 'out',
+          telefono: st.recipient_id, wamid: st.id, estado: st.status,
+          error: st.errors?.[0]?.title || st.errors?.[0]?.message || null,
+          detalle: st.errors ? { errors: st.errors } : null,
+        });
+      }
+      return res.status(200).send('OK');
+    }
+
     if (!value?.messages?.length) return res.status(200).send('OK');
 
     const msg            = value.messages[0];
     const nombreWhatsApp = value.contacts?.[0]?.profile?.name || 'estimado/a';
     telefono = msg.from;
+
+    // ── Dedup: WhatsApp reintenta la entrega del webhook. Si este wamid ya
+    // fue procesado, ignorar para no responder/avanzar el flujo dos veces. ──
+    if (msg.id) {
+      const esNuevo = await marcarProcesado(msg.id);
+      if (!esNuevo) {
+        await registrarEvento({ tipo: 'duplicado', direccion: 'in', telefono, wamid: msg.id });
+        return res.status(200).send('OK');
+      }
+      await registrarEvento({
+        tipo: 'entrante', direccion: 'in', telefono, wamid: msg.id,
+        detalle: { type: msg.type, text: msg.text?.body?.slice(0, 200) || null },
+      });
+    }
 
     // ── Extraer texto (texto plano o respuesta de botón/lista) ──────────
     let mensaje = '';
@@ -821,6 +852,11 @@ module.exports = async function handler(req, res) {
 
   } catch (err) {
     console.error('Error en webhook:', err.message);
+
+    await registrarEvento({
+      tipo: 'error', telefono, paso, error: err.message,
+      detalle: { stack: err.stack?.split('\n').slice(0, 3).join(' | ') || null },
+    });
 
     try {
       await alertar(`🔴 <b>Error en webhook</b>\nTeléfono: ${telefono || 'desconocido'}\nPaso: ${paso ?? 'desconocido'}\nError: ${err.message}`);

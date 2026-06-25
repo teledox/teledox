@@ -51,19 +51,15 @@ module.exports = [
         expect: ['teleconsulta', 'usar mis datos'],
         expectNot: ['$8', 'pago', 'transferencia'] },
 
-      // 'confirmar_datos' → usar datos ya registrados → 'prioridad' (horario)
+      // 'confirmar_datos' → usar datos ya registrados → 'prioridad'
       { btn: 'usar',
-        expect: ['horario'] },
+        expect: ['cuándo', 'atención'] },
 
-      // 'prioridad' → 'finalizar' (confirmar)
+      // 'prioridad' → registra consulta → 'finalizar' (¿otra consulta?)
       { text: 'mañana en la tarde',
-        expect: ['confirmar', 'nombre'] },
-
-      // 'finalizar' confirmar → ¿otra consulta o finalizar?
-      { btn: 'confirmar',
         expect: ['registrada', 'otra_consulta'] },
 
-      // finalizar → transiciona a antecedentes paso 13
+      // 'finalizar' → antecedentes paso 13
       { btn: 'finalizar',
         expect: ['alergias'] },
 
@@ -330,8 +326,8 @@ module.exports = [
       }, 'tracking');
     },
     steps: [
-      // Respuesta '4' (Bien) → nivel 1 → "Gracias por su reporte (*Bien*)"
-      { text: '4', expect: ['gracias', 'reporte', 'bien'] },
+      // Respuesta '2' (Bien) → nivel 1 → "Gracias por su reporte (*Bien*)"
+      { text: '2', expect: ['gracias', 'reporte', 'bien'] },
     ],
   },
 
@@ -357,13 +353,13 @@ module.exports = [
       }, 'tracking');
     },
     steps: [
-      // Respuesta inválida → pide 1 al 5, NO termina sesión
+      // Respuesta inválida → re-pide selección, NO termina sesión
       { text: 'bien gracias',
-        expect: ['1 al 5'],
+        expect: ['selecciona', 'sientes'],
         expectNot: ['gracias por su reporte'] },
 
-      // Respuesta válida '5' → nivel 1 → "Gracias (*Muy bien*)"
-      { text: '5', expect: ['gracias', 'muy bien'] },
+      // Respuesta válida '1' (Muy bien) → nivel 1 → "Gracias (*Muy bien*)"
+      { text: '1', expect: ['gracias', 'muy bien'] },
     ],
   },
 
@@ -588,7 +584,7 @@ module.exports = [
       }, 'tracking');
     },
     steps: [
-      { text: '1',
+      { text: '5',
         expect: ['muy mal', '911'],
         expectNot: ['todo se ve bien', 'equipo de seguimiento'] },
     ],

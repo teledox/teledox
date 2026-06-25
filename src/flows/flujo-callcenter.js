@@ -100,7 +100,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
 
   } else if (paso === 'cc_sexo') {
     const m = mensaje.trim().toLowerCase();
-    datos.cc_sexo = (m === 'femenino' || m === 'f') ? 'femenino' : 'masculino';
+    datos.cc_sexo = (m === 'femenino' || m === 'f') ? 'F' : 'M';
     return {
       respuesta: `📱 Ingrese el *número de teléfono* del paciente:`,
       paso: 'cc_telefono', datos, terminar: false

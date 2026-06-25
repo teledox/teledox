@@ -155,7 +155,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
 
   } else if (paso === 'sexo') {
     const m = mensaje.trim().toLowerCase();
-    datos.sexo = (m === 'femenino' || m === 'f') ? 'femenino' : 'masculino';
+    datos.sexo = (m === 'femenino' || m === 'f') ? 'F' : 'M';
     respuesta = `*Correo electrónico:*`;
     nuevoPaso = 'correo';
 

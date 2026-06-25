@@ -407,6 +407,9 @@ module.exports = async function handler(req, res) {
     if (!sesion) sesion = { paso: 0, datos: {} };
     let datos;
     ({ paso, datos } = sesion);
+    // Flujos no migrados (antecedentes=13, laboratorio=150, etc.) almacenan
+    // pasos numéricos que la columna TEXT devuelve como strings — revertir aquí.
+    if (typeof paso === 'string' && /^\d+$/.test(paso)) paso = parseInt(paso, 10);
     datos = datos || {};
 
     // ── Ruteo por flujo nombrado (Fase 2) ──────────────────────────────────

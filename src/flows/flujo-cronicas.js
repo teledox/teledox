@@ -287,7 +287,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
       const hint = opciones > 0
         ? `Por favor seleccione una opción:`
         : `Por favor ingrese solo el número, ej: 120`;
-      await guardar(telefono, 200, datos, 'cronicas');
+      await guardar(telefono, 'cronico', datos, 'cronicas');
       const parsedErr = preguntaABotones(preguntaActual.pregunta);
       if (parsedErr) {
         return { respuesta: `❌ No entendí su respuesta.\n\n${hint}\n\n${parsedErr.texto}`, botones: parsedErr.botones, terminar: false };
@@ -302,7 +302,7 @@ async function procesarCronica(paso, mensaje, datos, telefono, nombreWhatsApp) {
   if (pasoCronico < enfDef.pasos.length) {
     const siguientePaso = enfDef.pasos[pasoCronico];
     datos.paso_cronico = pasoCronico + 1;
-    await guardar(telefono, 200, datos, 'cronicas');
+    await guardar(telefono, 'cronico', datos, 'cronicas');
     const parsed = preguntaABotones(siguientePaso.pregunta);
     if (parsed) {
       return { respuesta: parsed.texto, botones: parsed.botones, terminar: false };

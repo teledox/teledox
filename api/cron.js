@@ -64,7 +64,7 @@ async function handleTestReminder(req, res) {
     'Seleccionar'
   );
   // Siempre sobreescribir la sesión en modo prueba (aunque haya una activa)
-  await guardar(telTest, 400, {
+  await guardar(telTest, 'tracking', {
     tipo: 'bienestar', caso_id: c.id, empresa_id: c.empresa_id,
     paciente_nombre: c.paciente_nombre, diagnostico: c.diagnostico,
     biometricos_activos: c.biometricos_activos || false, altura: c.altura_cm || null
@@ -297,7 +297,7 @@ module.exports = async function handler(req, res) {
 
         await enviar(telefono, mensaje);
 
-        await guardar(telefono, 200, {
+        await guardar(telefono, 'cronico', {
           enfermedad_key: c.enfermedad,
           enfermedad_id: c.id,
           paciente_id: c.paciente_id,
@@ -392,7 +392,7 @@ module.exports = async function handler(req, res) {
             'Seleccionar'
           );
 
-          await guardar(telefono, 400, {
+          await guardar(telefono, 'tracking', {
             tipo: 'bienestar',
             caso_id: c.id,
             empresa_id: c.empresa_id,
@@ -503,7 +503,7 @@ module.exports = async function handler(req, res) {
           ]
         );
 
-        await guardar(tel, 400, {
+        await guardar(tel, 'tracking', {
           tipo: 'med_reminder',
           caso_id: c.id,
           empresa_id: c.empresa_id,

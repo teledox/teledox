@@ -4,9 +4,9 @@ const { alertar } = require('../services/telegram');
 const { clasificarSintomas, esSi } = require('../utils/validaciones');
 const { BOTONES_PAGO, MSG_REINTENTAR_BOTON, registrarFacturacionB2C, esConfirmacionComprobante } = require('./flujo-b2c');
 
-// Pasos 90-97 — flujo de "consulta de seguimiento" aprobada por el médico desde
-// el panel (api/seguimiento-decision.js). El paciente ya fue identificado y
-// `datos` viene precargado con sus datos (ver seguimiento-decision.js).
+// Flujo 'seguimiento_pago' — iniciado por api/seguimiento-decision.js cuando el médico
+// aprueba una consulta de seguimiento. El paciente ya fue identificado y `datos` viene
+// precargado con sus datos.
 
 function faltaDato(datos) {
   if (!datos.correo) return 'correo';
@@ -41,7 +41,7 @@ async function irAPago(datos, telefono) {
 
   return {
     respuesta: `Para su consulta de seguimiento, el costo es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
-    paso: 95, datos, terminar: false, botones: BOTONES_PAGO
+    paso: 'sp_pago', datos, terminar: false, botones: BOTONES_PAGO
   };
 }
 
@@ -49,10 +49,10 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
   let respuesta = '';
   let nuevoPaso = paso;
 
-  if (paso === 90) {
+  if (paso === 'sp_confirmar') {
     if (esSi(mensaje)) {
       respuesta = `Para continuar, cuéntenos: ¿cómo se siente actualmente? ¿Persisten los síntomas o han cambiado?`;
-      nuevoPaso = 91;
+      nuevoPaso = 'sp_sintomas';
     } else {
       await eliminar(telefono);
       return {
@@ -61,7 +61,7 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
       };
     }
 
-  } else if (paso === 91) {
+  } else if (paso === 'sp_sintomas') {
     const nivel = clasificarSintomas(mensaje);
     datos.sintomas_seguimiento = mensaje;
     datos.nivel = nivel;
@@ -90,48 +90,47 @@ async function procesarSeguimientoPago(paso, mensaje, datos, telefono, nombreWha
     }
 
     const falta = faltaDato(datos);
-    if (falta === 'correo')          return { respuesta: `*Correo electrónico:*`, paso: 92, datos, terminar: false };
-    if (falta === 'telefonoContacto') return { respuesta: `Indíquenos un *número de teléfono* de contacto:`, paso: 93, datos, terminar: false };
-    if (falta === 'lugar_residencia') return { respuesta: `Indíquenos su *lugar de residencia* (ciudad y barrio):`, paso: 94, datos, terminar: false };
+    if (falta === 'correo')           return { respuesta: `*Correo electrónico:*`, paso: 'sp_correo', datos, terminar: false };
+    if (falta === 'telefonoContacto') return { respuesta: `Indíquenos un *número de teléfono* de contacto:`, paso: 'sp_telefono', datos, terminar: false };
+    if (falta === 'lugar_residencia') return { respuesta: `Indíquenos su *lugar de residencia* (ciudad y barrio):`, paso: 'sp_residencia', datos, terminar: false };
     return await irAPago(datos, telefono);
 
-  } else if (paso === 92) {
+  } else if (paso === 'sp_correo') {
     datos.correo = mensaje.trim();
     const falta = faltaDato(datos);
-    if (falta === 'telefonoContacto') return { respuesta: `Indíquenos un *número de teléfono* de contacto:`, paso: 93, datos, terminar: false };
-    if (falta === 'lugar_residencia') return { respuesta: `Indíquenos su *lugar de residencia* (ciudad y barrio):`, paso: 94, datos, terminar: false };
+    if (falta === 'telefonoContacto') return { respuesta: `Indíquenos un *número de teléfono* de contacto:`, paso: 'sp_telefono', datos, terminar: false };
+    if (falta === 'lugar_residencia') return { respuesta: `Indíquenos su *lugar de residencia* (ciudad y barrio):`, paso: 'sp_residencia', datos, terminar: false };
     return await irAPago(datos, telefono);
 
-  } else if (paso === 93) {
+  } else if (paso === 'sp_telefono') {
     datos.telefonoContacto = mensaje.trim();
     const falta = faltaDato(datos);
-    if (falta === 'lugar_residencia') return { respuesta: `Indíquenos su *lugar de residencia* (ciudad y barrio):`, paso: 94, datos, terminar: false };
+    if (falta === 'lugar_residencia') return { respuesta: `Indíquenos su *lugar de residencia* (ciudad y barrio):`, paso: 'sp_residencia', datos, terminar: false };
     return await irAPago(datos, telefono);
 
-  } else if (paso === 94) {
+  } else if (paso === 'sp_residencia') {
     datos.lugar_residencia = mensaje.trim();
     return await irAPago(datos, telefono);
 
-  } else if (paso === 95) {
+  } else if (paso === 'sp_pago') {
     const m = mensaje.trim().toLowerCase();
     if (m === '1' || m === 'transferencia') {
       datos.forma_pago = 'transferencia';
       respuesta = `🏦 *Datos para transferencia:*\n\n🏦 Banco Internacional\n📋 Cuenta Corriente: *640618402*\n🏢 RUC: *1793197189001*\n💰 Monto: *$8.00*\n📝 Concepto: Teleconsulta de seguimiento MediLyft\n\nRealice la transferencia y envíenos la *foto del comprobante* para confirmar.`;
-      nuevoPaso = 96;
+      nuevoPaso = 'sp_comprobante';
     } else if (m === '2' || m === 'tarjeta') {
       datos.forma_pago = 'tarjeta';
       respuesta = `💳 *Pago con tarjeta:*\n\nHaga clic en el siguiente enlace para pago seguro de *$8.00*:\n\nhttps://app.pagoplux.com/paybox/MTc4OA%3D%3D/MA%3D%3D/OA%3D%3D/UEFHTyBWSURFTyBDT05TVUxUQQ%3D%3D\n\nUna vez realizado el pago, envíenos la *captura del comprobante* para confirmar.`;
-      nuevoPaso = 96;
+      nuevoPaso = 'sp_comprobante';
     } else {
-      return { respuesta: MSG_REINTENTAR_BOTON, paso: 95, datos, terminar: false, botones: BOTONES_PAGO };
+      return { respuesta: MSG_REINTENTAR_BOTON, paso: 'sp_pago', datos, terminar: false, botones: BOTONES_PAGO };
     }
 
-  } else if (paso === 96) {
-    // Recibe imagen/documento del comprobante, o una confirmación explícita
+  } else if (paso === 'sp_comprobante') {
     if (!esConfirmacionComprobante(mensaje)) {
       return {
         respuesta: `Por favor envíenos la *foto o captura del comprobante* de su pago para confirmar. Si ya realizó el pago, también puede escribir *"listo"*.`,
-        paso: 96, datos, terminar: false
+        paso: 'sp_comprobante', datos, terminar: false
       };
     }
 

@@ -85,7 +85,7 @@ module.exports = async function handler(req, res) {
           cliente_b2b_id: p.cliente_b2b_id || null,
           consulta_origen_id: notif.consulta_id || null,
         };
-        await guardar(telefono, 90, datosSesion, 'seguimiento_pago');
+        await guardar(telefono, 'sp_confirmar', datosSesion, 'seguimiento_pago');
 
         const medicoNombre = `${medico.nombre || ''} ${medico.apellidos || ''}`.trim();
         await enviarBotones(

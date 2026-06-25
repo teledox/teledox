@@ -166,7 +166,7 @@ module.exports = async function handler(req, res) {
           // Primera activación — marcar y arrancar bienestar directamente
           await qTracking('PATCH', 'tracking_casos', { activado: true }, `?id=eq.${casoT.id}`);
           const saludoTracking = (casoT.paciente_nombre || nombreWhatsApp) ? `Hola ${casoT.paciente_nombre || nombreWhatsApp}!` : '¡Hola!';
-          await guardar(telefono, 400, {
+          await guardar(telefono, 'tracking', {
             tipo: 'bienestar',
             caso_id: casoT.id,
             empresa_id: casoT.empresa_id,
@@ -209,7 +209,7 @@ module.exports = async function handler(req, res) {
         if (consultaPQ?.[0]) {
           const c = consultaPQ[0];
           const fechaStr = new Date(c.created_at).toLocaleDateString('es-EC', { day: '2-digit', month: 'short' });
-          await guardar(telefono, 500, {
+          await guardar(telefono, 'pq_inicio', {
             _flujo: 'pregunta_consulta',
             consulta_id: c.id,
             paciente_id: pacPQ[0].id
@@ -267,7 +267,7 @@ module.exports = async function handler(req, res) {
       const cTr = casosTr?.[0];
       if (cTr) {
         const s = cTr.paciente_nombre ? `Hola ${cTr.paciente_nombre}!` : '¡Hola!';
-        await guardar(telefono, 400, {
+        await guardar(telefono, 'tracking', {
           tipo: 'bienestar', caso_id: cTr.id, empresa_id: cTr.empresa_id,
           paciente_nombre: cTr.paciente_nombre, diagnostico: cTr.diagnostico
         }, 'tracking');
@@ -307,7 +307,7 @@ module.exports = async function handler(req, res) {
         await enviar(telefono, `No encontramos un caso de seguimiento activo. Escribe *hola* para comenzar.`);
         return res.status(200).send('OK');
       }
-      await guardar(telefono, 410, {
+      await guardar(telefono, 'tm_inicio', {
         caso_id: cPr.id, empresa_id: cPr.empresa_id,
         paciente_nombre: cPr.paciente_nombre,
         diagnostico: cPr.diagnostico, tratamiento: cPr.tratamiento
@@ -362,7 +362,7 @@ module.exports = async function handler(req, res) {
     // capturados por recordatorios pasados mientras hay una conversación activa.
     // 'consulta' se excluye: sus pasos solo aceptan cédula/texto, nunca ratings 1-5,
     // por lo que el interceptor de bienestar puede disparar sin ambigüedad.
-    const enCronica = (sesion?.datos?._flujo && sesion.datos._flujo !== 'consulta') || (sesion?.paso || 0) >= 200;
+    const enCronica = (sesion?.datos?._flujo && sesion.datos._flujo !== 'consulta') || (typeof sesion?.paso === 'number' && sesion.paso >= 200);
 
     const pendiente = (!esInteractivo && !enCronica) ? await buscarRespuestaPendiente(telefono) : null;
     if (pendiente?.respuesta && esRespuestaSeguimiento(pendiente.respuesta, mensaje)) {
@@ -424,7 +424,7 @@ module.exports = async function handler(req, res) {
           // Después del check-in de bienestar, encadenar registro biométrico si está activo
           if (result.terminar && datos.tipo === 'bienestar' && datos.biometricos_activos) {
             const alturaGuardada = datos.altura || null;
-            const pasoBio = alturaGuardada ? 420 : 419;
+            const pasoBio = alturaGuardada ? 'bio_presion' : 'bio_altura';
             const bioData = {
               _flujo:          'tracking_biometrico',
               caso_id:         datos.caso_id,
@@ -435,7 +435,7 @@ module.exports = async function handler(req, res) {
               altura:          alturaGuardada,
             };
             await guardar(telefono, pasoBio, bioData, 'tracking_biometrico');
-            await enviar(telefono, pasoBio === 419
+            await enviar(telefono, pasoBio === 'bio_altura'
               ? `📊 *Registro biométrico*\n\nAntes de empezar, necesito tu altura para calcular tu IMC.\n\n¿Cuánto mides? Escribe solo el número en cm (ej: *170*).\nSolo te lo pregunto esta vez. 📏`
               : `📊 *Registro biométrico*\n\n¿Pudiste medir tu *presión arterial* hoy?\n\n` +
                 `Escríbela así: *120/80* (sistólica/diastólica)\nSi no pudiste, responde *no medí*.`
@@ -494,14 +494,14 @@ module.exports = async function handler(req, res) {
             return res.status(200).send('OK');
           }
 
-          if (mensaje === 'emergencia_consulta' || paso === 1) {
+          if (mensaje === 'emergencia_consulta' || paso === 'em_cedula') {
             const { query: qEm } = require('../src/services/supabase');
             const { buscarPorCedula: buscarEm } = require('../src/services/pacientes');
             const { BOTONES_PAGO: BOTONES_PAGOEm } = require('../src/flows/flujo-b2c');
 
             let pacienteId = datos.paciente_id || null;
 
-            if (paso === 1) {
+            if (paso === 'em_cedula') {
               // El paciente acaba de ingresar su cédula
               const cedula = mensaje.trim().replace(/\D/g, '');
               datos.cedula = cedula;
@@ -535,7 +535,7 @@ module.exports = async function handler(req, res) {
             }
 
             if (!pacienteId) {
-              await guardar(telefono, 1, datos, 'emergencia');
+              await guardar(telefono, 'em_cedula', datos, 'emergencia');
               await enviar(telefono,
                 `Para registrar su consulta de emergencia, necesitamos su *número de cédula:*`
               );
@@ -555,7 +555,7 @@ module.exports = async function handler(req, res) {
               telefonoContacto: datos.telefonoContacto || telefono,
               lugar_residencia: datos.lugar_residencia || '',
             };
-            await guardar(telefono, 59, datosB2C, 'b2c');
+            await guardar(telefono, 'pago', datosB2C, 'b2c');
             await enviarBotones(telefono,
               `🏥 *Consulta de emergencia urgente*\n\n📋 ${datos.contexto || 'Emergencia médica'}\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
               BOTONES_PAGOEm
@@ -743,10 +743,10 @@ module.exports = async function handler(req, res) {
             if (datos._pendingOrigen === 'b2c') {
               const { BOTONES_PAGO: BP } = require('../src/flows/flujo-b2c');
               const b2cDatos = { ...datos, _flujo: 'b2c' };
-              await guardar(telefono, 59, b2cDatos, 'b2c');
+              await guardar(telefono, 'pago', b2cDatos, 'b2c');
               result = {
                 respuesta: `✅ Perfecto, tu consulta será atendida ${datos._proximaTexto}.\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
-                paso: 59, datos: b2cDatos, terminar: false,
+                paso: 'pago', datos: b2cDatos, terminar: false,
                 botones: BP
               };
             } else if (datos._pendingOrigen === 'callcenter') {
@@ -768,7 +768,7 @@ module.exports = async function handler(req, res) {
           const result = await procesarPreguntaConsulta(paso, mensaje, datos, telefono);
           if (result._iniciarConsulta) {
             await eliminar(telefono);
-            const newResult = await procesarPaso(0, '', {}, telefono, nombreWhatsApp);
+            const newResult = await procesarPaso('cedula', '', {}, telefono, nombreWhatsApp);
             await guardar(telefono, newResult.paso, newResult.datos, 'consulta');
             await despachar(telefono, newResult);
             return res.status(200).send('OK');
@@ -782,7 +782,7 @@ module.exports = async function handler(req, res) {
         case 'consulta': {
           let result = await procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg);
           if (result._redirect) {
-            const ccResult = await procesarCallCenter(300, '', result._redirect.datos, telefono);
+            const ccResult = await procesarCallCenter('cc_inicio', '', result._redirect.datos, telefono);
             await guardar(telefono, ccResult.paso, ccResult.datos, 'callcenter');
             await despachar(telefono, ccResult);
             return res.status(200).send('OK');

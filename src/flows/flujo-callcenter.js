@@ -90,6 +90,18 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
   } else if (paso === 'cc_nacimiento') {
     datos.cc_nacimiento = mensaje.trim();
     return {
+      respuesta: `⚧ *Sexo biológico* del paciente:`,
+      paso: 'cc_sexo', datos, terminar: false,
+      botones: [
+        { id: 'masculino', titulo: '👨 Masculino' },
+        { id: 'femenino',  titulo: '👩 Femenino'  },
+      ]
+    };
+
+  } else if (paso === 'cc_sexo') {
+    const m = mensaje.trim().toLowerCase();
+    datos.cc_sexo = (m === 'femenino' || m === 'f') ? 'femenino' : 'masculino';
+    return {
       respuesta: `📱 Ingrese el *número de teléfono* del paciente:`,
       paso: 'cc_telefono', datos, terminar: false
     };
@@ -140,7 +152,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
     }
 
     return {
-      respuesta: `📋 *Resumen de la consulta:*\n\n👤 *Paciente:* ${datos.cc_nombre}\n🪪 *Cédula:* ${datos.cc_cedula}\n🎂 *Edad:* ${datos.cc_edad || '—'}\n📅 *Nacimiento:* ${datos.cc_nacimiento || '—'}\n📱 *Tel:* ${datos.cc_telefono || '—'}\n📧 *Correo:* ${datos.cc_correo || '—'}\n📍 *Residencia:* ${datos.cc_residencia || '—'}\n🩺 *Síntomas:* ${datos.cc_sintomas}\n🏢 *Empresa:* ${empresa}\n\n¿Confirma el registro?`,
+      respuesta: `📋 *Resumen de la consulta:*\n\n👤 *Paciente:* ${datos.cc_nombre}\n🪪 *Cédula:* ${datos.cc_cedula}\n🎂 *Edad:* ${datos.cc_edad || '—'}\n📅 *Nacimiento:* ${datos.cc_nacimiento || '—'}\n⚧ *Sexo:* ${datos.cc_sexo || '—'}\n📱 *Tel:* ${datos.cc_telefono || '—'}\n📧 *Correo:* ${datos.cc_correo || '—'}\n📍 *Residencia:* ${datos.cc_residencia || '—'}\n🩺 *Síntomas:* ${datos.cc_sintomas}\n🏢 *Empresa:* ${empresa}\n\n¿Confirma el registro?`,
       paso: 'cc_revisar', datos, terminar: false,
       botones: [
         { id: 'confirmar', titulo: '✅ Confirmar' },
@@ -150,7 +162,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
 
   } else if (paso === 'cc_revisar') {
     if (mensaje === 'corregir' || mensaje === '✏️ Corregir') {
-      datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
+      datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_sexo = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
       datos.cc_paciente_id = null;
       return {
         respuesta: `📋 Ingrese la *cédula* del paciente nuevamente:`,
@@ -168,7 +180,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
         apellidos,
         edad:             datos.cc_edad || null,
         fecha_nacimiento: datos.cc_nacimiento || null,
-        sexo:             inferirSexo(datos.cc_nombre),
+        sexo:             datos.cc_sexo || inferirSexo(datos.cc_nombre),
         correo:           datos.cc_correo || '',
         telefono:         datos.cc_telefono || '',
         lugar_residencia: datos.cc_residencia || '',
@@ -227,7 +239,7 @@ async function procesarCallCenter(paso, mensaje, datos, telefono) {
 
   } else if (paso === 'cc_siguiente') {
     if (esSi(mensaje)) {
-      datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
+      datos.cc_cedula = datos.cc_nombre = datos.cc_edad = datos.cc_nacimiento = datos.cc_sexo = datos.cc_telefono = datos.cc_correo = datos.cc_residencia = datos.cc_sintomas = '';
       datos.cc_paciente_id = null;
       datos.cc_nivel = 1;
       await guardar(telefono, 'cc_cedula', datos, 'callcenter');

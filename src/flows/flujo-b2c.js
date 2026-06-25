@@ -144,6 +144,18 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
 
   } else if (paso === 'edad') {
     datos.edad = mensaje;
+    return {
+      respuesta: `*Sexo biológico:*`,
+      paso: 'sexo', datos, terminar: false,
+      botones: [
+        { id: 'masculino', titulo: '👨 Masculino' },
+        { id: 'femenino',  titulo: '👩 Femenino'  },
+      ]
+    };
+
+  } else if (paso === 'sexo') {
+    const m = mensaje.trim().toLowerCase();
+    datos.sexo = (m === 'femenino' || m === 'f') ? 'femenino' : 'masculino';
     respuesta = `*Correo electrónico:*`;
     nuevoPaso = 'correo';
 
@@ -352,7 +364,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
             nombre,
             apellidos,
             edad: datos.edad || null,
-            sexo: inferirSexo(datos.nombreCompleto || nombre),
+            sexo: datos.sexo || inferirSexo(datos.nombreCompleto || nombre),
             correo: datos.correo || '',
             telefono: datos.telefonoContacto || telefono,
             lugar_residencia: datos.lugar_residencia || '',

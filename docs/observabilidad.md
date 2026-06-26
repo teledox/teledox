@@ -41,10 +41,12 @@ Se alimenta del manifiesto (ver abajo).
 
 ### Manifiesto de flujos — [public/flows/flow-graph.js](../public/flows/flow-graph.js)
 Fuente de verdad declarativa de cada flujo (nodos, mensajes, ramas, trigger).
-Lo lee el navegador (`<script>`) y Node (`require`). Alcance actual:
-seguimiento + tracking (`seguimiento_pago`, `tracking_biometrico`,
-`tracking_migracion`, `tracking`, `seg_med`, `seg_fin_trat`, `seg_bienestar`,
-`seg_lab`).
+Lo lee el navegador (`<script>`) y Node (`require`). Cubre los 18 flujos,
+agrupados por `panel`: **normal** (consulta, b2c, callcenter, antecedentes,
+cronicas, seguimiento_pago, seg_med, seg_fin_trat, seg_bienestar, seg_lab,
+laboratorio, reagendar, pregunta_consulta, emergencia) y **tracking** (tracking,
+tracking_biometrico, psicosocial, tracking_migracion). El explorador en `/flows`
+muestra Panel normal primero, luego Panel tracking.
 
 **Sincronía garantizada por test**:
 [scripts/test-bot/validate-flow-graph.js](../scripts/test-bot/validate-flow-graph.js)

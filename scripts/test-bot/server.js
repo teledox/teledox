@@ -14,6 +14,18 @@ require.cache[whatsappPath] = {
   exports: mock,
 };
 
+// Forzar "dentro de horario" para que los escenarios sean deterministas a
+// cualquier hora del día (sin esto, correr de noche rutea los flujos a
+// "fuera de horario" y rompe las aserciones de pago/consulta registrada).
+const horarioPath = require.resolve('../../src/utils/horarioOperacion');
+const horarioReal = require('../../src/utils/horarioOperacion');
+require.cache[horarioPath] = {
+  id: horarioPath,
+  filename: horarioPath,
+  loaded: true,
+  exports: { ...horarioReal, estaEnHorario: () => true },
+};
+
 const handler = require('../../api/webhook');
 
 function attachExpressLike(res) {

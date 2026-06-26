@@ -1,10 +1,10 @@
 const { query } = require('../services/supabase');
 
-// paso 500: se mostró el menú "¿pregunta o nueva consulta?" — esperando elección
-// paso 501: paciente eligió "tengo una pregunta" — esperando el texto de la pregunta
+// paso 'pq_inicio': se mostró el menú "¿pregunta o nueva consulta?" — esperando elección
+// paso 'pq_texto':  paciente eligió "tengo una pregunta" — esperando el texto de la pregunta
 
 async function procesarPreguntaConsulta(paso, mensaje, datos, telefono) {
-  if (paso === 500) {
+  if (paso === 'pq_inicio') {
     const m = mensaje.trim().toLowerCase();
 
     if (mensaje === 'pq_nueva' || m.includes('nueva consulta')) {
@@ -14,13 +14,13 @@ async function procesarPreguntaConsulta(paso, mensaje, datos, telefono) {
     if (mensaje === 'pq_pregunta' || m.includes('pregunta')) {
       return {
         respuesta: 'Por favor, escríbanos su pregunta para el médico:',
-        paso: 501, datos, terminar: false
+        paso: 'pq_texto', datos, terminar: false
       };
     }
 
     return {
       respuesta: 'Por favor seleccione una de las dos opciones.',
-      paso: 500, datos, terminar: false,
+      paso: 'pq_inicio', datos, terminar: false,
       botones: [
         { id: 'pq_pregunta', titulo: '❓ Tengo una pregunta' },
         { id: 'pq_nueva',    titulo: '🏥 Nueva consulta'    }
@@ -28,7 +28,7 @@ async function procesarPreguntaConsulta(paso, mensaje, datos, telefono) {
     };
   }
 
-  if (paso === 501) {
+  if (paso === 'pq_texto') {
     await query('POST', 'mensajes_consulta', {
       consulta_id: datos.consulta_id,
       paciente_id: datos.paciente_id,

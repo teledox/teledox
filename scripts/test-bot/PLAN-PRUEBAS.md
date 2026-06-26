@@ -225,8 +225,20 @@
 
 6. **✅ CORREGIDO — `tracking_migracion` roto.** Mismo patrón: el webhook guardaba
    `'tm_inicio'` pero el flujo chequeaba `410`. Migrado a `tm_inicio`/`tm_cedula`.
-   Ambos bugs venían de la migración a estados nombrados y los habría cazado el
-   validador del manifiesto (ahora en el suite).
+
+7. **✅ CORREGIDO — `reagendar` roto.** Guardaba `paso: 3` bajo el flujo `consulta`,
+   pero consulta usa estados nombrados → `3` no está en `ESTADOS_VALIDOS` y reseteaba
+   a pedir cédula. Migrado a `paso: 'sintomas'`.
+
+8. **✅ CORREGIDO — `pregunta_consulta` roto.** El webhook guardaba `'pq_inicio'` pero
+   el flujo chequeaba `500`/`501`. Migrado a `pq_inicio`/`pq_texto`.
+
+   Los cuatro bugs (5–8) venían de la migración a estados nombrados y los habría
+   cazado el validador del manifiesto (ahora en el suite).
+
+9. **Tests deterministas por horario.** El server de pruebas fuerza
+   `estaEnHorario → true` ([server.js](server.js)); sin esto, correr de noche
+   ruteaba consulta/b2c/callcenter a "fuera de horario" y rompía ~30 aserciones.
 
 ---
 

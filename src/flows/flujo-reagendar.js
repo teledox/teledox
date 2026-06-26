@@ -24,8 +24,8 @@ async function procesarReagendamiento(datos, mensaje, telefono) {
       origen_afiliacion: p.clientes_b2b ? 'afiliado' : null,
       sintomas: 'Seguimiento de tratamiento — consulta de control'
     };
-    await guardar(telefono, 3, nuevosDatos, 'consulta');
-    return { respuesta: `Perfecto. Por favor indíquenos sus síntomas actuales:`, paso: 3, datos: nuevosDatos };
+    await guardar(telefono, 'sintomas', nuevosDatos, 'consulta');
+    return { respuesta: `Perfecto. Por favor indíquenos sus síntomas actuales:`, paso: 'sintomas', datos: nuevosDatos };
   } else {
     await eliminar(telefono);
     return { respuesta: `Entendido. Si necesita atención escriba *hola*.\n\nEstamos disponibles 24/7. 💙`, paso: 0, terminar: true };

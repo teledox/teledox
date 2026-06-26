@@ -12,7 +12,7 @@ const fs   = require('fs');
 const path = require('path');
 const GRAPH = require('../../public/flows/flow-graph.js');
 
-const SINTETICOS = new Set(['_fin', '_emergencia', '_laboratorio']);
+const SINTETICOS = new Set(['_fin', '_emergencia', '_laboratorio', '_antecedentes', '_fuera_horario']);
 const RAIZ = path.resolve(__dirname, '../..');
 
 function estadosEnCodigo(archivo) {
@@ -56,7 +56,10 @@ function validar() {
       continue;
     }
     for (const c of codigo) {
-      if (!nodos.has(c)) problemas.push(`[${id}] estado "${c}" está en el código pero NO en el manifiesto`);
+      // Permitir estados que son nodo de OTRO flujo (saltos entre flujos, ej. consulta → 'pago')
+      if (!nodos.has(c) && !todosLosNodos.has(c)) {
+        problemas.push(`[${id}] estado "${c}" está en el código pero NO en el manifiesto`);
+      }
     }
     for (const n of nodos) {
       if (!codigo.has(n)) problemas.push(`[${id}] nodo "${n}" está en el manifiesto pero NO en el código (${flujo.archivo})`);

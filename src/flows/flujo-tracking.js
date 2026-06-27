@@ -1,9 +1,71 @@
 const { query } = require('../services/supabase');
 const { eliminar } = require('../services/sesiones');
 const { alertar } = require('../services/telegram');
+const { crearNotificacion } = require('../services/consultas');
 const { esSi } = require('../utils/validaciones');
 
 const LIKERT = { '1': 'Muy bien', '2': 'Bien', '3': 'Regular', '4': 'Mal', '5': 'Muy mal' };
+
+const MAPA_CIERRE = {
+  'trk_cierre_bien':    'exitoso',
+  'trk_cierre_regular': 'parcial',
+  'trk_cierre_mal':     'sin_mejoria',
+  '1': 'exitoso',
+  '2': 'parcial',
+  '3': 'sin_mejoria'
+};
+
+// ── Cierre de tracking (duracion_dias cumplida, paciente responde) ────────
+async function procesarCierreTracking(mensaje, datos, telefono) {
+  const resultado = MAPA_CIERRE[mensaje.trim()];
+
+  if (!resultado) {
+    return {
+      respuesta: 'Por favor seleccione una opción:',
+      botones: [
+        { id: 'trk_cierre_bien',    titulo: '😊 Me siento bien'  },
+        { id: 'trk_cierre_regular', titulo: '😐 Regular'         },
+        { id: 'trk_cierre_mal',     titulo: '😟 Sin mejoría'     }
+      ],
+      terminar: false
+    };
+  }
+
+  await query('PATCH', 'tracking_casos', { estado: 'alta' }, `?id=eq.${datos.caso_id}`);
+
+  try {
+    await query('POST', 'cierres_casos', {
+      tipo:              'tracking',
+      resultado,
+      paciente_id:       datos.paciente_id  || null,
+      empresa_id:        datos.empresa_id   || null,
+      tracking_caso_id:  datos.caso_id,
+      duracion_dias:     datos.duracion_dias || null,
+      respuesta_paciente: mensaje
+    });
+  } catch (e) {
+    console.error('Error registrando cierre tracking:', e.message);
+  }
+
+  if (resultado === 'sin_mejoria' && datos.paciente_id) {
+    await crearNotificacion(
+      'seguimiento', '🔴 Cierre de tracking sin mejoría',
+      `Paciente completó seguimiento (${datos.duracion_dias || '—'} días) pero reporta sin mejoría. Diagnóstico: ${datos.diagnostico || '—'}.`,
+      datos.paciente_id, null,
+      { origen: 'seguimiento', categoria: 'grave', etiqueta: 'CIERRE', estado_validacion: 'pendiente' }
+    );
+  }
+
+  await eliminar(telefono);
+
+  const mensajes = {
+    exitoso:     '🎉 ¡Qué bueno que se siente bien! Su seguimiento ha sido registrado como *exitoso*.\n\nGracias por confiar en MediLyft. Si necesita atención futura, escríbanos *hola*. 💙',
+    parcial:     '👨‍⚕️ Gracias por contarnos. Hemos registrado su estado. Su equipo médico estará al tanto.\n\nSi necesita atención, escríbanos *hola*. 💙',
+    sin_mejoria: '😟 Lamentamos que no haya mejorado. Hemos alertado a su equipo médico para revisar su caso con prioridad.\n\nSi los síntomas son graves, *llame al 911* o escríbanos *hola*. 💙'
+  };
+
+  return { respuesta: mensajes[resultado], terminar: true };
+}
 
 // Bienestar Likert 1-5 → nivel de alerta 1-3 (1=Muy bien, 5=Muy mal)
 function evaluar(bienestar) {
@@ -16,6 +78,8 @@ function evaluar(bienestar) {
 
 // ── Chequeo de bienestar (paso 400, tipo:'bienestar') ─────────────────────
 async function procesarTracking(paso, mensaje, datos, telefono) {
+  if (datos.tipo === 'cierre_tracking') return procesarCierreTracking(mensaje, datos, telefono);
+
   const { caso_id, paciente_nombre, diagnostico } = datos;
 
   const bienestarRaw = mensaje.trim();

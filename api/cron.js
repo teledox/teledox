@@ -343,12 +343,35 @@ module.exports = async function handler(req, res) {
         const telefono = normalizePhone(c.telefono);
         if (!telefono) continue;
 
-        // Alta automática si se agotó la duración definida
-        if (c.duracion_dias) {
-          const inicio = new Date(c.created_at + (c.created_at.endsWith('Z') ? '' : 'Z'));
+        // Cierre con pregunta al paciente cuando se agota duracion_dias
+        if (c.duracion_dias && c.activado) {
+          const inicio = new Date(c.activado_at
+            ? (c.activado_at.endsWith('Z') ? c.activado_at : c.activado_at + 'Z')
+            : (c.created_at.endsWith('Z') ? c.created_at : c.created_at + 'Z'));
           const diasTranscurridos = (ahora - inicio) / 86400000;
           if (diasTranscurridos >= c.duracion_dias) {
-            await query('PATCH', 'tracking_casos', { estado: 'alta' }, `?id=eq.${c.id}`);
+            const saludo = c.paciente_nombre ? `Hola ${c.paciente_nombre}!` : '¡Hola!';
+            await enviarBotones(
+              telefono,
+              `🏥 *Seguimiento MediLyft*\n\n${saludo} Su programa de seguimiento de *${c.diagnostico || '—'}* ha llegado a su fin.\n\n¿Cómo se siente al completarlo?`,
+              [
+                { id: 'trk_cierre_bien',    titulo: '😊 Me siento bien'  },
+                { id: 'trk_cierre_regular', titulo: '😐 Regular'         },
+                { id: 'trk_cierre_mal',     titulo: '😟 Sin mejoría'     }
+              ]
+            );
+            await guardar(telefono, 'tracking', {
+              tipo:          'cierre_tracking',
+              caso_id:       c.id,
+              empresa_id:    c.empresa_id   || null,
+              paciente_id:   c.paciente_id  || null,
+              diagnostico:   c.diagnostico  || null,
+              duracion_dias: Math.round(diasTranscurridos)
+            }, 'tracking');
+            // Posponer 7 días para no re-disparar si el paciente no responde
+            await query('PATCH', 'tracking_casos', {
+              proximo_seguimiento: new Date(ahora.getTime() + 7 * 86400000).toISOString()
+            }, `?id=eq.${c.id}`);
             procesados++;
             continue;
           }

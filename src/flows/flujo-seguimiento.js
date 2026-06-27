@@ -3,6 +3,22 @@ const { alertar } = require('../services/telegram');
 const { crearNotificacion } = require('../services/consultas');
 const { esSi } = require('../utils/validaciones');
 
+async function registrarCierrePrescripcion(resultado, paciente, recordatorio, respuestaPaciente) {
+  try {
+    await query('POST', 'cierres_casos', {
+      tipo:               'prescripcion',
+      resultado,
+      paciente_id:        paciente.id,
+      empresa_id:         paciente.cliente_b2b_id || null,
+      consulta_id:        recordatorio?.consulta_id || null,
+      medicamento:        recordatorio?.medicamento || null,
+      respuesta_paciente: respuestaPaciente
+    });
+  } catch (e) {
+    console.error('Error registrando cierre prescripcion:', e.message);
+  }
+}
+
 async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
   const r = pendiente.respuesta;
   const paciente = pendiente.paciente;
@@ -29,6 +45,7 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
     if (mensaje === '1') {
       await query('PATCH', 'seguimiento_respuestas', { se_siente_mejor: true, respuesta: 'curado' }, `?id=eq.${r.id}`);
       await alertar(`✅ <b>Tratamiento exitoso</b>\nPaciente: ${paciente.nombre} ${paciente.apellidos || ''}\nMedicamento: ${recordatorio.medicamento}`);
+      await registrarCierrePrescripcion('exitoso', paciente, recordatorio, mensaje);
       return `🎉 ¡Nos alegra mucho que se sienta mejor!\n\nSu caso fue registrado como *exitoso*.\n\nEn MediLyft estamos disponibles 24/7. Si necesita atención escriba *hola*. 💙`;
 
     } else if (mensaje === '2') {
@@ -38,6 +55,7 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
         paciente.id, recordatorio?.consulta_id || null,
         { origen: 'seguimiento', categoria: 'medio', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente', seguimiento_respuesta_id: r.id }
       );
+      await registrarCierrePrescripcion('parcial', paciente, recordatorio, mensaje);
       return `👨‍⚕️ Gracias por contarnos. Hemos registrado que aún presenta síntomas.\n\nUn médico revisará su caso y, si lo considera necesario, le contactaremos para agendar una *consulta de seguimiento*.\n\nSi en cualquier momento desea atención, escríbanos *hola*. 💙`;
 
     } else if (mensaje === '3') {
@@ -48,6 +66,7 @@ async function procesarRespuestaSeguimiento(pendiente, mensaje, telefono) {
         paciente.id, recordatorio?.consulta_id || null,
         { origen: 'seguimiento', categoria: 'grave', etiqueta: 'SEGUIMIENTO', estado_validacion: 'pendiente', seguimiento_respuesta_id: r.id }
       );
+      await registrarCierrePrescripcion('sin_mejoria', paciente, recordatorio, mensaje);
       return `😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad.\n\nLe contactaremos en breve. Si los síntomas son graves, *llame al 911* o escríbanos *hola*. 💙`;
 
     } else {

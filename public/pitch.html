@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teledox by MediLyft — Presentación Aseguradora</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --red:      #F05252;
+  --red-dark: #C0392B;
+  --red-deep: #8B0000;
+  --green:    #22c55e;
+  --gold:     #f59e0b;
+  --bg:       #0d0808;
+  --surface:  rgba(255,255,255,0.04);
+  --surface-r: rgba(240,82,82,0.06);
+  --border:   rgba(255,255,255,0.07);
+  --border-r: rgba(240,82,82,0.18);
+  --text-muted: rgba(255,255,255,0.42);
+}
+
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: #fff;
+}
+
+#shell { width:100vw; height:100vh; position:relative; overflow:hidden; }
+
+/* ── Top bar ── */
+#topbar {
+  position:fixed; top:0; left:0; right:0; height:56px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 28px; z-index:200;
+  background: linear-gradient(to bottom, rgba(13,8,8,0.95), transparent);
+  backdrop-filter: blur(6px);
+}
+.logo-wrap {
+  display:flex; align-items:center; gap:10px;
+}
+.logo-svg { width:28px; height:28px; flex-shrink:0; }
+.logo-text {
+  display:flex; flex-direction:column; line-height:1;
+}
+.logo-brand { font-size:13px; font-weight:800; letter-spacing:2px; color:#fff; }
+.logo-product { font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; margin-top:2px; }
+.slide-counter { font-size:11px; color:var(--text-muted); letter-spacing:2px; }
+
+/* ── Progress ── */
+#progress-bar {
+  position:fixed; top:0; left:0; height:2px;
+  background: linear-gradient(90deg, var(--red-dark), var(--red));
+  transition: width 0.6s cubic-bezier(.4,0,.2,1);
+  z-index:300;
+}
+
+/* ── Dots ── */
+#dots {
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  display:flex; gap:8px; z-index:200;
+}
+.dot {
+  width:6px; height:6px; border-radius:50%;
+  background:var(--border);
+  cursor:pointer;
+  transition:background 0.3s, transform 0.3s, width 0.3s;
+}
+.dot.active { background:var(--red); width:20px; border-radius:4px; }
+
+/* ── Arrows ── */
+#arrows { position:fixed; bottom:16px; right:24px; display:flex; gap:8px; z-index:200; }
+.arrow {
+  width:36px; height:36px; border-radius:50%;
+  border:1px solid var(--border);
+  background:var(--surface);
+  color:#fff; font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background 0.2s, border-color 0.2s;
+}
+.arrow:hover { background:rgba(240,82,82,0.12); border-color:var(--border-r); }
+
+/* ── Section label ── */
+.section-label {
+  position:fixed; bottom:24px; left:28px;
+  font-size:10px; letter-spacing:3px;
+  color:var(--text-muted); text-transform:uppercase; z-index:200;
+}
+
+/* ── Slides base ── */
+.slide {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:72px 48px 64px;
+  opacity:0; pointer-events:none;
+  transition:opacity 0.5s ease;
+}
+.slide.active { opacity:1; pointer-events:all; }
+
+/* ── Shared accent class ── */
+.c { color:var(--red); }
+
+/* ============================================================
+   SLIDE 0 — HERO
+============================================================ */
+#s0 {
+  background:
+    radial-gradient(ellipse 80% 55% at 30% 50%, rgba(240,82,82,0.10) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 50% at 80% 30%, rgba(192,57,43,0.07) 0%, transparent 60%),
+    var(--bg);
+  text-align:center;
+}
+
+/* Tagline de empresa arriba */
+.hero-co {
+  display:flex; align-items:center; gap:8px;
+  justify-content:center; margin-bottom:28px; opacity:0;
+}
+.hero-co.vis { animation:fadeUp 0.6s forwards; }
+.hero-co-line { width:28px; height:1px; background:var(--red); opacity:0.5; }
+.hero-co-txt { font-size:11px; letter-spacing:4px; color:var(--red); text-transform:uppercase; }
+
+.hero-h1 {
+  font-size:clamp(34px,5.5vw,70px);
+  font-weight:900; line-height:1.05;
+  margin-bottom:20px; opacity:0;
+}
+.hero-h1.vis { animation:fadeUp 0.6s forwards; }
+
+.hero-p {
+  font-size:clamp(14px,1.5vw,17px);
+  color:var(--text-muted);
+  max-width:520px; line-height:1.8;
+  margin-bottom:38px; opacity:0;
+}
+.hero-p.vis { animation:fadeUp 0.6s forwards; }
+
+.hero-btn {
+  display:inline-flex; align-items:center; gap:10px;
+  padding:14px 38px; border-radius:40px;
+  background: linear-gradient(135deg, var(--red), var(--red-dark));
+  font-size:14px; font-weight:700; letter-spacing:0.5px;
+  color:#fff; border:none; cursor:pointer;
+  opacity:0; transition:filter 0.2s, transform 0.2s;
+  box-shadow: 0 4px 24px rgba(240,82,82,0.35);
+}
+.hero-btn.vis { animation:fadeUp 0.6s forwards; }
+.hero-btn:hover { filter:brightness(1.1); transform:scale(1.03); }
+
+.hero-pills {
+  display:flex; flex-wrap:wrap; gap:10px;
+  justify-content:center; margin-top:38px; opacity:0;
+}
+.hero-pills.vis { animation:fadeUp 0.6s forwards; }
+.pill {
+  padding:7px 16px; border-radius:30px;
+  border:1px solid var(--border-r);
+  background:var(--surface-r);
+  font-size:12px; color:var(--text-muted);
+}
+
+/* ============================================================
+   SLIDE 1 — CHAT
+============================================================ */
+#s1 {
+  background:
+    radial-gradient(ellipse 65% 55% at 12% 60%, rgba(240,82,82,0.07) 0%, transparent 55%),
+    var(--bg);
+  flex-direction:row; gap:60px; align-items:center;
+}
+.chat-wrap { width:300px; flex-shrink:0; }
+.chat-hd {
+  background:rgba(240,82,82,0.08);
+  border:1px solid rgba(240,82,82,0.2);
+  border-radius:14px 14px 0 0;
+  padding:12px 16px;
+  display:flex; align-items:center; gap:10px;
+}
+.chat-av {
+  width:30px; height:30px; border-radius:50%;
+  background:linear-gradient(135deg, var(--red), var(--red-dark));
+  display:flex; align-items:center; justify-content:center;
+  font-size:14px;
+}
+.chat-nm { font-size:13px; font-weight:600; }
+.chat-st { font-size:10px; color:var(--red); }
+.chat-bd {
+  background:rgba(255,255,255,0.02);
+  border:1px solid var(--border); border-top:none;
+  border-radius:0 0 14px 14px;
+  padding:14px; min-height:320px;
+  display:flex; flex-direction:column; gap:8px;
+}
+.bbl {
+  max-width:85%; padding:9px 13px;
+  border-radius:14px; font-size:13px; line-height:1.5; opacity:0;
+}
+.bbl.u {
+  align-self:flex-end;
+  background:linear-gradient(135deg, rgba(240,82,82,0.14), rgba(192,57,43,0.14));
+  border:1px solid rgba(240,82,82,0.25);
+}
+.bbl.b {
+  align-self:flex-start;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+}
+.bbl.vis { animation:bubbleIn 0.4s forwards; }
+.typing {
+  align-self:flex-start; padding:9px 14px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid var(--border);
+  border-radius:14px; display:none;
+}
+.typing span {
+  display:inline-block; width:6px; height:6px;
+  border-radius:50%; background:var(--text-muted);
+  margin:0 2px; animation:typingDot 1.2s infinite;
+}
+.typing span:nth-child(2) { animation-delay:0.2s; }
+.typing span:nth-child(3) { animation-delay:0.4s; }
+
+.chat-right { flex:1; }
+.chat-right h2 {
+  font-size:clamp(22px,2.8vw,36px);
+  font-weight:800; line-height:1.2; margin-bottom:14px;
+}
+.chat-right > p {
+  color:var(--text-muted); font-size:14px;
+  line-height:1.75; margin-bottom:28px;
+}
+.feat-list { display:flex; flex-direction:column; gap:10px; }
+.feat {
+  display:flex; align-items:center; gap:14px;
+  padding:13px 16px; border-radius:12px;
+  background:var(--surface); border:1px solid var(--border);
+  opacity:0; transition:border-color 0.3s;
+}
+.feat:hover { border-color:var(--border-r); }
+.feat.vis { animation:fadeRight 0.5s forwards; }
+.feat-ico { font-size:22px; flex-shrink:0; }
+.feat-txt strong { display:block; font-size:15px; color:var(--red); margin-bottom:2px; }
+.feat-txt span { font-size:12px; color:var(--text-muted); }
+
+/* ============================================================
+   SLIDE 2 — SISTEMA
+============================================================ */
+#s2 {
+  background:
+    radial-gradient(ellipse 65% 55% at 78% 28%, rgba(240,82,82,0.09) 0%, transparent 55%),
+    var(--bg);
+}
+.sys-hd { text-align:center; margin-bottom:34px; }
+.sys-hd h2 { font-size:clamp(22px,3vw,40px); font-weight:800; }
+.sys-hd p { color:var(--text-muted); font-size:14px; margin-top:8px; }
+
+/* ── Triage neural network ── */
+.triage-wrap {
+  display:flex; align-items:center; gap:0;
+  width:100%; max-width:940px;
+}
+/* LEFT — caso entrante */
+.triage-input {
+  width:210px; flex-shrink:0; opacity:0;
+}
+.triage-input.vis { animation:fadeRight 0.5s forwards; }
+.ti-label {
+  font-size:9px; letter-spacing:2px; color:var(--text-muted);
+  text-transform:uppercase; margin-bottom:10px;
+}
+.ti-case {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:14px; margin-bottom:8px;
+}
+.ti-case-name { font-size:12px; font-weight:700; margin-bottom:6px; }
+.severity-tag {
+  display:inline-flex; align-items:center; gap:5px;
+  padding:3px 10px; border-radius:20px;
+  font-size:10px; font-weight:700; margin-bottom:8px;
+}
+.sev-leve    { background:rgba(34,197,94,0.15); color:#4ade80; border:1px solid rgba(34,197,94,0.25); }
+.sev-mod     { background:rgba(245,158,11,0.15); color:#fbbf24; border:1px solid rgba(245,158,11,0.25); }
+.sev-grave   { background:rgba(240,82,82,0.18); color:#f87171; border:1px solid rgba(240,82,82,0.3); }
+.ti-vars { display:flex; flex-direction:column; gap:4px; }
+.ti-var {
+  display:flex; justify-content:space-between;
+  font-size:10px; color:var(--text-muted); padding:2px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+}
+.ti-var span:last-child { color:#fff; font-weight:600; }
+
+/* CENTER — red neuronal */
+.triage-net {
+  flex:1; position:relative; height:260px; opacity:0;
+}
+.triage-net.vis { animation:fadeIn 0.5s forwards; }
+.triage-net svg { width:100%; height:100%; overflow:visible; }
+
+/* RIGHT — médico asignado */
+.triage-output {
+  width:190px; flex-shrink:0; opacity:0;
+}
+.triage-output.vis { animation:fadeLeft 0.5s forwards; }
+.to-label {
+  font-size:9px; letter-spacing:2px; color:var(--text-muted);
+  text-transform:uppercase; margin-bottom:10px;
+}
+.doc-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:14px; padding:14px; margin-bottom:8px;
+  opacity:0.4; transition:opacity 0.3s, border-color 0.3s;
+}
+.doc-card.match {
+  opacity:1; border-color:var(--border-r);
+  background:var(--surface-r);
+  box-shadow:0 0 16px rgba(240,82,82,0.12);
+}
+.doc-avatar {
+  width:36px; height:36px; border-radius:50%;
+  background:linear-gradient(135deg, rgba(240,82,82,0.3), rgba(192,57,43,0.3));
+  border:1px solid var(--border-r);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; margin-bottom:8px;
+}
+.doc-name { font-size:12px; font-weight:700; margin-bottom:2px; }
+.doc-spec { font-size:10px; color:var(--red); }
+.doc-avail { font-size:10px; color:var(--green); margin-top:4px; }
+.match-tag {
+  display:inline-flex; align-items:center; gap:4px;
+  margin-top:6px; padding:2px 8px; border-radius:20px;
+  background:rgba(240,82,82,0.15); color:var(--red);
+  font-size:9px; font-weight:700; letter-spacing:0.5px;
+}
+
+/* triage result bar */
+.triage-result {
+  width:100%; max-width:940px;
+  display:flex; align-items:center; gap:12px;
+  margin-top:18px; padding:10px 16px;
+  background:var(--surface-r); border:1px solid var(--border-r);
+  border-radius:10px; opacity:0;
+}
+.triage-result.vis { animation:fadeUp 0.5s forwards; }
+.tr-dot { width:8px; height:8px; border-radius:50%; background:var(--red); flex-shrink:0; }
+.tr-txt { font-size:12px; color:rgba(255,255,255,0.7); flex:1; }
+.tr-txt strong { color:#fff; }
+.tr-time { font-size:11px; color:var(--red); font-weight:700; }
+
+/* ============================================================
+   SLIDE 3 — TRACKING (timeline)
+============================================================ */
+#s3 {
+  background:
+    radial-gradient(ellipse 65% 50% at 50% 15%, rgba(34,197,94,0.07) 0%, transparent 55%),
+    var(--bg);
+  flex-direction:row; gap:40px; align-items:flex-start;
+  padding-top:80px;
+}
+.track-left { flex:1; min-width:0; }
+.track-left h2 {
+  font-size:clamp(18px,2.2vw,28px); font-weight:800;
+  line-height:1.2; margin-bottom:6px;
+}
+.track-left h2 .g { color:var(--green); }
+.track-left > p {
+  color:var(--text-muted); font-size:13px;
+  line-height:1.6; margin-bottom:16px;
+}
+
+/* Timeline table */
+.tl-table { width:100%; border-collapse:collapse; }
+.tl-table th {
+  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--text-muted); padding:0 6px 8px; text-align:left;
+  border-bottom:1px solid var(--border);
+}
+.tl-table th:first-child { width:52px; padding-left:0; }
+.tl-row { opacity:0; }
+.tl-row.vis { animation:fadeUp 0.4s forwards; }
+.tl-row.past td { opacity:0.38; }
+.tl-row td {
+  padding:8px 6px; font-size:11px; line-height:1.4;
+  border-bottom:1px solid rgba(255,255,255,0.04);
+  vertical-align:top;
+}
+.tl-row td:first-child { padding-left:0; white-space:nowrap; }
+.tl-day { font-size:10px; font-weight:700; color:var(--text-muted); }
+.tl-dot-col { position:relative; padding-right:14px !important; }
+.tl-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--border); display:inline-block;
+  position:relative; z-index:1;
+}
+.tl-dot.active { background:var(--green); box-shadow:0 0 6px rgba(34,197,94,0.5); }
+.tl-dot.alert  { background:var(--red);   box-shadow:0 0 6px rgba(240,82,82,0.5); }
+.tl-dot.done   { background:rgba(34,197,94,0.4); }
+.tl-pill {
+  display:inline-block; padding:1px 7px;
+  border-radius:10px; font-size:9px; font-weight:700;
+  letter-spacing:0.5px; white-space:nowrap;
+}
+.tl-pill.ok  { background:rgba(34,197,94,0.12); color:#4ade80; }
+.tl-pill.warn { background:rgba(245,158,11,0.12); color:#fbbf24; }
+.tl-pill.bad  { background:rgba(240,82,82,0.15); color:#f87171; }
+.tl-pill.info { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.5); }
+.tl-empty { color:rgba(255,255,255,0.15); font-size:10px; }
+.tl-now-row td {
+  background:rgba(34,197,94,0.04);
+  border-top:1px solid rgba(34,197,94,0.15) !important;
+  border-bottom:1px solid rgba(34,197,94,0.15) !important;
+}
+
+/* right panel */
+.track-right { width:230px; flex-shrink:0; }
+.pcard {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:16px; margin-bottom:12px;
+}
+.pcard-name { font-size:15px; font-weight:700; margin-bottom:2px; }
+.pcard-tag { font-size:11px; color:var(--green); }
+.pcard-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:10px; }
+.pstat {
+  text-align:center; padding:7px; border-radius:10px;
+  background:rgba(34,197,94,0.06);
+}
+.pstat-v { font-size:16px; font-weight:900; color:var(--green); line-height:1; }
+.pstat-l { font-size:9px; color:var(--text-muted); margin-top:3px; }
+.prog-bar { margin-top:12px; }
+.prog-bar .pl { display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:5px; }
+.bar-track { height:4px; border-radius:10px; background:var(--border); overflow:hidden; }
+.bar-fill {
+  height:100%; border-radius:10px;
+  background:linear-gradient(90deg, var(--green), #86efac);
+  width:0%; transition:width 1.4s cubic-bezier(.4,0,.2,1) 0.4s;
+}
+.pcard-alert {
+  margin-top:10px; padding:8px 10px; border-radius:10px;
+  background:rgba(240,82,82,0.08); border:1px solid rgba(240,82,82,0.18);
+  font-size:10px; color:#f87171; line-height:1.4;
+}
+.pcard-alert strong { display:block; margin-bottom:2px; }
+
+/* ============================================================
+   SLIDE 4 — ALTA EXITOSA (validación médica)
+============================================================ */
+#s4 {
+  background:
+    radial-gradient(ellipse 70% 55% at 50% 50%, rgba(34,197,94,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 20% 80%, rgba(240,82,82,0.05) 0%, transparent 50%),
+    var(--bg);
+  flex-direction:row; gap:48px; align-items:center;
+  padding-top:72px;
+}
+/* left: score + checklist */
+.alta-left { width:320px; flex-shrink:0; opacity:0; }
+.alta-left.vis { animation:fadeRight 0.5s forwards; }
+.alta-score-wrap { text-align:center; margin-bottom:20px; }
+.alta-score-ring {
+  position:relative; width:120px; height:120px;
+  margin:0 auto 12px;
+}
+.alta-score-ring svg { width:120px; height:120px; transform:rotate(-90deg); }
+.alta-score-ring circle { fill:none; stroke-width:10; stroke-linecap:round; }
+.arc-bg   { stroke:rgba(255,255,255,0.07); }
+.arc-fill { stroke:var(--green); stroke-dasharray:314; stroke-dashoffset:314; transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1) 0.4s; }
+.alta-score-num {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.alta-score-val { font-size:28px; font-weight:900; color:var(--green); line-height:1; }
+.alta-score-sub { font-size:9px; color:var(--text-muted); letter-spacing:1px; margin-top:2px; }
+.alta-score-label { font-size:13px; font-weight:700; }
+.alta-score-desc { font-size:11px; color:var(--text-muted); margin-top:3px; }
+
+.alta-checklist { display:flex; flex-direction:column; gap:7px; }
+.alta-check {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px; border-radius:10px;
+  background:var(--surface); border:1px solid var(--border);
+  opacity:0;
+}
+.alta-check.vis { animation:fadeRight 0.4s forwards; }
+.alta-check.pass { border-color:rgba(34,197,94,0.2); background:rgba(34,197,94,0.04); }
+.alta-check.fail { border-color:rgba(240,82,82,0.2); background:rgba(240,82,82,0.04); }
+.ac-icon { font-size:14px; flex-shrink:0; }
+.ac-label { font-size:12px; flex:1; }
+.ac-val { font-size:11px; font-weight:700; }
+.ac-val.pass { color:var(--green); }
+.ac-val.fail { color:var(--red); }
+.ac-val.warn { color:var(--gold); }
+
+/* right: recovery graph */
+.alta-right { flex:1; min-width:0; opacity:0; }
+.alta-right.vis { animation:fadeLeft 0.5s forwards; }
+.alta-chart-hd { margin-bottom:14px; }
+.alta-chart-hd h3 { font-size:14px; font-weight:700; margin-bottom:3px; }
+.alta-chart-hd p { font-size:11px; color:var(--text-muted); }
+
+.alta-graph { position:relative; height:160px; margin-bottom:16px; }
+.alta-graph svg { width:100%; height:160px; overflow:visible; }
+
+.alta-summary {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:10px;
+}
+.as-stat {
+  padding:10px; border-radius:12px;
+  background:var(--surface); border:1px solid var(--border);
+  text-align:center; opacity:0;
+}
+.as-stat.vis { animation:fadeUp 0.4s forwards; }
+.as-val { font-size:20px; font-weight:900; color:var(--green); line-height:1; }
+.as-lbl { font-size:9px; color:var(--text-muted); margin-top:3px; letter-spacing:0.5px; }
+
+/* ============================================================
+   SLIDE 5 — MÉTRICAS
+============================================================ */
+#s5 {
+  background:
+    radial-gradient(ellipse 65% 50% at 25% 72%, rgba(245,158,11,0.07) 0%, transparent 55%),
+    var(--bg);
+}
+.met-hd { text-align:center; margin-bottom:30px; }
+.met-hd h2 { font-size:clamp(22px,3vw,38px); font-weight:800; }
+.met-hd h2 .g { color:var(--gold); }
+.met-hd p { color:var(--text-muted); font-size:14px; margin-top:8px; }
+
+.met-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:18px; width:100%; max-width:860px;
+}
+.mcard {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:16px; padding:22px 18px; opacity:0;
+  transition:border-color 0.3s, transform 0.3s;
+}
+.mcard:hover { border-color:rgba(245,158,11,0.3); transform:translateY(-4px); }
+.mcard.vis { animation:fadeUp 0.5s forwards; }
+.mcard-lbl { font-size:13px; font-weight:600; margin-bottom:6px; }
+.mcard-val { font-size:46px; font-weight:900; color:var(--gold); line-height:1; }
+.mcard-val sup { font-size:22px; }
+.mcard-desc { font-size:11px; color:var(--text-muted); line-height:1.5; margin-top:6px; }
+.mini-bars { display:flex; align-items:flex-end; gap:4px; height:40px; margin-top:14px; }
+.mb {
+  flex:1; border-radius:3px 3px 0 0;
+  background:rgba(245,158,11,0.18);
+  transform-origin:bottom; transform:scaleY(0);
+  transition:transform 0.5s ease;
+}
+.mb.grow { transform:scaleY(1); }
+.mb.hi { background:var(--gold); }
+
+/* ============================================================
+   SLIDE 6 — ROUTING
+============================================================ */
+#s6 {
+  background:
+    radial-gradient(ellipse 65% 55% at 62% 40%, rgba(240,82,82,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 40% 45% at 15% 70%, rgba(192,57,43,0.06) 0%, transparent 50%),
+    var(--bg);
+  text-align:center;
+}
+.route-hd { margin-bottom:34px; }
+.route-hd h2 { font-size:clamp(22px,3vw,40px); font-weight:800; }
+.route-hd p { color:var(--text-muted); font-size:14px; margin-top:8px; }
+
+.route-dia {
+  display:flex; align-items:center; justify-content:center;
+  gap:0; width:100%; max-width:820px;
+}
+.rnode {
+  display:flex; flex-direction:column;
+  align-items:center; gap:10px; opacity:0;
+}
+.rnode.vis { animation:fadeUp 0.5s forwards; }
+.rcircle {
+  width:80px; height:80px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px;
+  background:var(--surface); border:2px solid var(--border);
+}
+.rcircle.hub {
+  width:110px; height:110px; font-size:38px;
+  background:linear-gradient(135deg, rgba(240,82,82,0.14), rgba(192,57,43,0.12));
+  border-color:rgba(240,82,82,0.5);
+  animation:pulseGlow 2.5s infinite;
+}
+.rlabel { font-size:12px; font-weight:600; max-width:88px; line-height:1.3; }
+.rsub { font-size:10px; color:var(--text-muted); max-width:88px; line-height:1.3; }
+
+.rarrow { flex:1; height:2px; position:relative; opacity:0; }
+.rarrow.vis { animation:fadeIn 0.4s forwards; }
+.rarrow::before {
+  content:''; position:absolute;
+  top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg, rgba(240,82,82,0.45), rgba(192,57,43,0.45));
+}
+.rarrow::after {
+  content:''; position:absolute; top:-4px; right:0;
+  border-top:5px solid transparent;
+  border-bottom:5px solid transparent;
+  border-left:8px solid rgba(192,57,43,0.7);
+}
+
+.route-chips {
+  display:flex; gap:12px; flex-wrap:wrap;
+  justify-content:center; margin-top:30px;
+}
+.rchip {
+  padding:9px 18px; border-radius:30px;
+  border:1px solid var(--border-r);
+  background:var(--surface-r);
+  font-size:13px; opacity:0;
+}
+.rchip.vis { animation:fadeUp 0.4s forwards; }
+.rchip strong { color:var(--red); }
+
+/* ============================================================
+   SLIDE 7 — CIERRE
+============================================================ */
+#s7 {
+  background:
+    radial-gradient(ellipse 80% 65% at 50% 55%, rgba(240,82,82,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 15% 25%, rgba(192,57,43,0.06) 0%, transparent 50%),
+    var(--bg);
+  text-align:center;
+}
+.close-eyebrow {
+  font-size:11px; letter-spacing:5px; color:var(--red);
+  text-transform:uppercase; margin-bottom:16px; opacity:0;
+}
+.close-eyebrow.vis { animation:fadeUp 0.6s forwards; }
+.close-h {
+  font-size:clamp(28px,4.5vw,60px);
+  font-weight:900; line-height:1.05;
+  margin-bottom:18px; opacity:0;
+}
+.close-h.vis { animation:fadeUp 0.6s forwards; }
+.close-p {
+  color:var(--text-muted); font-size:16px;
+  max-width:480px; line-height:1.75;
+  margin:0 auto 38px; opacity:0;
+}
+.close-p.vis { animation:fadeUp 0.6s forwards; }
+.close-nums {
+  display:flex; gap:48px; justify-content:center;
+  flex-wrap:wrap; margin-bottom:38px; opacity:0;
+}
+.close-nums.vis { animation:fadeUp 0.6s forwards; }
+.cnum { text-align:center; }
+.cnum-v {
+  font-size:44px; font-weight:900;
+  background:linear-gradient(135deg, var(--red), var(--red-dark));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; line-height:1;
+}
+.cnum-l { font-size:12px; color:var(--text-muted); margin-top:6px; }
+.close-btn {
+  display:inline-flex; align-items:center; gap:10px;
+  padding:15px 44px; border-radius:40px;
+  background:linear-gradient(135deg, var(--red), var(--red-dark));
+  font-size:15px; font-weight:700; letter-spacing:0.5px;
+  color:#fff; border:none; cursor:pointer;
+  opacity:0; transition:filter 0.2s, transform 0.2s;
+  box-shadow:0 4px 28px rgba(240,82,82,0.35);
+}
+.close-btn.vis { animation:fadeUp 0.6s forwards; }
+.close-btn:hover { filter:brightness(1.1); transform:scale(1.03); }
+
+/* ── Logo MediLyft en cierre ── */
+.close-logo {
+  display:flex; align-items:center; gap:10px;
+  justify-content:center; margin-top:28px; opacity:0;
+}
+.close-logo.vis { animation:fadeUp 0.6s forwards; }
+.close-logo-svg { width:22px; height:22px; }
+.close-logo-txt { font-size:12px; letter-spacing:3px; color:var(--text-muted); font-weight:600; }
+
+/* ============================================================
+   KEYFRAMES
+============================================================ */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(20px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes fadeRight {
+  from { opacity:0; transform:translateX(-16px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes fadeLeft {
+  from { opacity:0; transform:translateX(16px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+@keyframes fadeIn {
+  from { opacity:0; }
+  to   { opacity:1; }
+}
+@keyframes bubbleIn {
+  from { opacity:0; transform:scale(0.84) translateY(8px); }
+  to   { opacity:1; transform:scale(1) translateY(0); }
+}
+@keyframes typingDot {
+  0%,60%,100% { transform:translateY(0); opacity:0.4; }
+  30% { transform:translateY(-4px); opacity:1; }
+}
+@keyframes pulseGlow {
+  0%,100% { box-shadow:0 0 0 0 rgba(240,82,82,0.35); }
+  50% { box-shadow:0 0 0 14px rgba(240,82,82,0); }
+}
+@keyframes starPop {
+  from { transform:scale(0); opacity:0; }
+  to   { transform:scale(1); opacity:1; }
+}
+</style>
+</head>
+<body>
+<div id="shell">
+  <div id="progress-bar"></div>
+
+  <div id="topbar">
+    <div class="logo-wrap">
+      <svg class="logo-svg" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+        <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+        <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+          stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <div class="logo-text">
+        <span class="logo-brand">MEDILYFT</span>
+        <span class="logo-product">Teledox</span>
+      </div>
+    </div>
+    <div class="slide-counter" id="counter">01 / 08</div>
+  </div>
+
+  <div class="section-label" id="sec-label">Introducción</div>
+
+  <!-- ===== S0: HERO ===== -->
+  <section class="slide active" id="s0">
+    <div class="hero-co" id="h0-a">
+      <div class="hero-co-line"></div>
+      <span class="hero-co-txt">Solución para aseguradoras</span>
+      <div class="hero-co-line"></div>
+    </div>
+    <h1 class="hero-h1" id="h0-b">
+      La salud de tus<br><span class="c">asegurados</span>,<br>redefinida.
+    </h1>
+    <p class="hero-p" id="h0-c">
+      Teledox by MediLyft es la plataforma integral de telemedicina que reduce costos,
+      mejora outcomes clínicos y fideliza a tus afiliados — desde el primer mensaje hasta el alta.
+    </p>
+    <button class="hero-btn" id="h0-d" onclick="goTo(1)">
+      Ver la experiencia completa &rarr;
+    </button>
+    <div class="hero-pills" id="h0-e">
+      <div class="pill">🔒 Datos seguros</div>
+      <div class="pill">⚡ Respuesta inmediata</div>
+      <div class="pill">🩺 Médicos certificados</div>
+      <div class="pill">📋 Cumplimiento normativo</div>
+      <div class="pill">🌐 Omnicanal</div>
+    </div>
+  </section>
+
+  <!-- ===== S1: CHAT ===== -->
+  <section class="slide" id="s1">
+    <div class="chat-wrap">
+      <div class="chat-hd">
+        <div class="chat-av">
+          <svg viewBox="0 0 1024 1024" width="16" height="16" fill="none">
+            <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#fff" stroke-width="70" fill="none"/>
+            <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#fff"/>
+            <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+              stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div>
+          <div class="chat-nm">MediLyft Asistente</div>
+          <div class="chat-st">● En línea ahora</div>
+        </div>
+      </div>
+      <div class="chat-bd" id="chat-bd">
+        <div class="bbl u" id="c1">Hola, no me siento bien 😔</div>
+        <div class="typing" id="typing"><span></span><span></span><span></span></div>
+        <div class="bbl b" id="c2">¡Buenos días! Con mucho gusto te ayudo.<br>¿Cuál es tu molestia principal hoy?</div>
+        <div class="bbl u" id="c3">Fiebre y dolor de cabeza desde ayer.</div>
+        <div class="bbl b" id="c4">Entendido 👨‍⚕️ Tengo disponibilidad <strong>ahora mismo</strong> con el Dr. Mora.<br><br>¿Confirmo tu cita?</div>
+        <div class="bbl u" id="c5">Sí, por favor!</div>
+        <div class="bbl b" id="c6">✅ <strong>Agendado en 90 segundos.</strong><br>Recibirás el link de videollamada por WhatsApp. 🎉</div>
+      </div>
+    </div>
+    <div class="chat-right">
+      <h2>El paciente llega.<br><span class="c">El sistema actúa.</span></h2>
+      <p>Desde el primer "hola", la plataforma guía al afiliado hasta su atención sin fricciones, sin esperas, sin confusión.</p>
+      <div class="feat-list">
+        <div class="feat" id="f1">
+          <div class="feat-ico">⚡</div>
+          <div class="feat-txt">
+            <strong>Agenda en 2 minutos</strong>
+            <span>Desde cualquier canal, a cualquier hora</span>
+          </div>
+        </div>
+        <div class="feat" id="f2">
+          <div class="feat-ico">🩺</div>
+          <div class="feat-txt">
+            <strong>Consultas instantáneas</strong>
+            <span>Médico disponible en minutos, no días</span>
+          </div>
+        </div>
+        <div class="feat" id="f3">
+          <div class="feat-ico">💳</div>
+          <div class="feat-txt">
+            <strong>Métodos de pago variados</strong>
+            <span>Seguro, tarjeta, transferencia, QR</span>
+          </div>
+        </div>
+        <div class="feat" id="f4">
+          <div class="feat-ico">🌐</div>
+          <div class="feat-txt">
+            <strong>Omnicanal real</strong>
+            <span>WhatsApp, App, Web — el paciente elige</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== S2: TRIAGE NEURAL ===== -->
+  <section class="slide" id="s2">
+    <div class="sys-hd">
+      <h2>Triaje inteligente: <span class="c">el médico correcto</span>, siempre.</h2>
+      <p>Cada consulta es analizada en tiempo real y asignada al especialista más adecuado.</p>
+    </div>
+
+    <div class="triage-wrap">
+      <!-- LEFT: caso entrante -->
+      <div class="triage-input" id="ti-wrap">
+        <div class="ti-label">Consulta entrante</div>
+        <div class="ti-case">
+          <div class="ti-case-name">Carlos M., 52 años</div>
+          <div class="severity-tag sev-grave">● Urgente</div>
+          <div class="ti-vars">
+            <div class="ti-var"><span>Diagnóstico</span><span>Dolor torácico</span></div>
+            <div class="ti-var"><span>Presión</span><span>158/96</span></div>
+            <div class="ti-var"><span>FC</span><span>108 bpm</span></div>
+            <div class="ti-var"><span>Antecedentes</span><span>HTA, DM2</span></div>
+            <div class="ti-var"><span>Última consulta</span><span>14 días</span></div>
+          </div>
+        </div>
+        <div class="ti-case" style="margin-top:8px; opacity:0.45;">
+          <div class="ti-case-name">Ana R., 29 años</div>
+          <div class="severity-tag sev-leve">● Leve</div>
+          <div class="ti-vars">
+            <div class="ti-var"><span>Diagnóstico</span><span>Rinitis</span></div>
+            <div class="ti-var"><span>Temp</span><span>37.1 °C</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CENTER: neural net SVG -->
+      <div class="triage-net" id="ti-net">
+        <svg viewBox="0 0 220 260" xmlns="http://www.w3.org/2000/svg">
+          <!-- connection lines layer 1→2 -->
+          <g stroke="rgba(240,82,82,0.15)" stroke-width="1" fill="none">
+            <line x1="40" y1="50"  x2="110" y2="60"/>
+            <line x1="40" y1="50"  x2="110" y2="110"/>
+            <line x1="40" y1="50"  x2="110" y2="160"/>
+            <line x1="40" y1="130" x2="110" y2="60"/>
+            <line x1="40" y1="130" x2="110" y2="110"/>
+            <line x1="40" y1="130" x2="110" y2="160"/>
+            <line x1="40" y1="210" x2="110" y2="110"/>
+            <line x1="40" y1="210" x2="110" y2="160"/>
+            <line x1="40" y1="210" x2="110" y2="210"/>
+          </g>
+          <!-- active lines (highlighted) -->
+          <g stroke="rgba(240,82,82,0.55)" stroke-width="1.5" fill="none" id="active-lines">
+            <line x1="40" y1="50"  x2="110" y2="110"/>
+            <line x1="40" y1="130" x2="110" y2="110"/>
+            <line x1="110" y1="110" x2="180" y2="85"/>
+          </g>
+          <!-- connection lines layer 2→3 -->
+          <g stroke="rgba(240,82,82,0.12)" stroke-width="1" fill="none">
+            <line x1="110" y1="60"  x2="180" y2="85"/>
+            <line x1="110" y1="60"  x2="180" y2="175"/>
+            <line x1="110" y1="110" x2="180" y2="85"/>
+            <line x1="110" y1="110" x2="180" y2="175"/>
+            <line x1="110" y1="160" x2="180" y2="85"/>
+            <line x1="110" y1="160" x2="180" y2="175"/>
+            <line x1="110" y1="210" x2="180" y2="175"/>
+          </g>
+          <!-- Layer 1: input nodes -->
+          <circle cx="40" cy="50"  r="12" fill="rgba(240,82,82,0.2)"  stroke="rgba(240,82,82,0.5)" stroke-width="1.5"/>
+          <circle cx="40" cy="130" r="12" fill="rgba(240,82,82,0.35)" stroke="rgba(240,82,82,0.7)" stroke-width="1.5"/>
+          <circle cx="40" cy="210" r="8"  fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <text x="40" y="54"  text-anchor="middle" font-size="9" fill="#f87171">⚠</text>
+          <text x="40" y="134" text-anchor="middle" font-size="8" fill="#f87171">HTA</text>
+          <!-- Layer 2: hidden nodes -->
+          <circle cx="110" cy="60"  r="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <circle cx="110" cy="110" r="14" fill="rgba(240,82,82,0.25)" stroke="rgba(240,82,82,0.6)" stroke-width="2"/>
+          <circle cx="110" cy="160" r="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.12)" stroke-width="1"/>
+          <circle cx="110" cy="210" r="8"  fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+          <!-- center label -->
+          <text x="110" y="114" text-anchor="middle" font-size="10" fill="#F05252" font-weight="bold">IA</text>
+          <!-- Layer 3: output nodes -->
+          <circle cx="180" cy="85"  r="15" fill="rgba(240,82,82,0.3)"  stroke="#F05252" stroke-width="2"/>
+          <circle cx="180" cy="175" r="11" fill="rgba(255,255,255,0.04)" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+          <!-- output labels -->
+          <text x="180" y="89"  text-anchor="middle" font-size="8" fill="#fff">🫀</text>
+          <text x="180" y="179" text-anchor="middle" font-size="8" fill="#aaa">🩺</text>
+          <!-- MATCH indicator -->
+          <circle cx="180" cy="85" r="19" fill="none" stroke="rgba(240,82,82,0.3)" stroke-width="1" stroke-dasharray="4 3">
+            <animateTransform attributeName="transform" type="rotate" from="0 180 85" to="360 180 85" dur="6s" repeatCount="indefinite"/>
+          </circle>
+        </svg>
+      </div>
+
+      <!-- RIGHT: doctor asignado -->
+      <div class="triage-output" id="ti-out">
+        <div class="to-label">Asignación</div>
+        <div class="doc-card match" id="doc-match">
+          <div class="doc-avatar">🫀</div>
+          <div class="doc-name">Dr. Herrera</div>
+          <div class="doc-spec">Cardiología</div>
+          <div class="doc-avail">● Disponible ahora</div>
+          <div class="match-tag">✓ MATCH ÓPTIMO</div>
+        </div>
+        <div class="doc-card" id="doc-2">
+          <div class="doc-avatar">🩺</div>
+          <div class="doc-name">Dr. Mora</div>
+          <div class="doc-spec">Medicina General</div>
+          <div class="doc-avail" style="color:var(--text-muted)">● En consulta</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="triage-result" id="ti-result">
+      <div class="tr-dot"></div>
+      <div class="tr-txt">
+        Caso <strong>Carlos M.</strong> derivado a Cardiología —
+        documentos previos, ECG y antecedentes enviados al Dr. Herrera.
+      </div>
+      <div class="tr-time">⚡ 8 seg</div>
+    </div>
+  </section>
+
+  <!-- ===== S3: TRACKING timeline ===== -->
+  <section class="slide" id="s3">
+    <div class="track-left">
+      <h2>La consulta termina.<br>El <span class="g">seguimiento</span> comienza.</h2>
+      <p>70% de pacientes no completan el tratamiento. Teledox lo cambia con seguimiento proactivo.</p>
+
+      <table class="tl-table">
+        <thead>
+          <tr>
+            <th></th>
+            <th></th>
+            <th>Medicamentos</th>
+            <th>Síntomas</th>
+            <th>Control</th>
+            <th>Exámenes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="tl-row past" id="tl1">
+            <td><div class="tl-day">Día 1</div></td>
+            <td class="tl-dot-col"><div class="tl-dot done"></div></td>
+            <td><span class="tl-pill ok">Amoxicilina ✓</span></td>
+            <td><span class="tl-pill warn">Fiebre 38.2°</span></td>
+            <td><span class="tl-empty">—</span></td>
+            <td><span class="tl-empty">—</span></td>
+          </tr>
+          <tr class="tl-row past" id="tl2">
+            <td><div class="tl-day">Día 3</div></td>
+            <td class="tl-dot-col"><div class="tl-dot done"></div></td>
+            <td><span class="tl-pill ok">Amoxicilina ✓</span></td>
+            <td><span class="tl-pill ok">Mejor 4/5</span></td>
+            <td><span class="tl-pill info">Recordatorio</span></td>
+            <td><span class="tl-empty">—</span></td>
+          </tr>
+          <tr class="tl-row past" id="tl3">
+            <td><div class="tl-day">Día 5</div></td>
+            <td class="tl-dot-col"><div class="tl-dot done"></div></td>
+            <td><span class="tl-pill ok">Amoxicilina ✓</span></td>
+            <td><span class="tl-pill ok">Mejor 5/5</span></td>
+            <td><span class="tl-pill info">Check OK</span></td>
+            <td><span class="tl-pill info">Hemograma</span></td>
+          </tr>
+          <tr class="tl-row tl-now-row" id="tl4">
+            <td><div class="tl-day" style="color:var(--green)">Hoy · D6</div></td>
+            <td class="tl-dot-col"><div class="tl-dot active"></div></td>
+            <td><span class="tl-pill ok">Amoxicilina ✓</span></td>
+            <td><span class="tl-pill ok">Sin fiebre</span></td>
+            <td><span class="tl-pill info">Agendado J10</span></td>
+            <td><span class="tl-pill ok">Normal ✓</span></td>
+          </tr>
+          <tr class="tl-row" id="tl5" style="opacity:0.3;">
+            <td><div class="tl-day">Día 8</div></td>
+            <td class="tl-dot-col"><div class="tl-dot"></div></td>
+            <td><span class="tl-pill info">Pendiente</span></td>
+            <td><span class="tl-pill info">Check auto</span></td>
+            <td><span class="tl-empty">—</span></td>
+            <td><span class="tl-empty">—</span></td>
+          </tr>
+          <tr class="tl-row" id="tl6" style="opacity:0.3;">
+            <td><div class="tl-day">Día 10</div></td>
+            <td class="tl-dot-col"><div class="tl-dot"></div></td>
+            <td><span class="tl-pill info">Fin tratam.</span></td>
+            <td><span class="tl-pill info">Evaluación</span></td>
+            <td><span class="tl-pill info">Consulta</span></td>
+            <td><span class="tl-pill info">Control</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="track-right">
+      <div class="pcard">
+        <div class="pcard-name">María González</div>
+        <div class="pcard-tag">● Tratamiento activo · Día 6/10</div>
+        <div class="pcard-grid">
+          <div class="pstat"><div class="pstat-v">94%</div><div class="pstat-l">Adherencia</div></div>
+          <div class="pstat"><div class="pstat-v">3</div><div class="pstat-l">Consultas</div></div>
+          <div class="pstat"><div class="pstat-v">↓78%</div><div class="pstat-l">Síntomas</div></div>
+          <div class="pstat"><div class="pstat-v">✅</div><div class="pstat-l">Al día</div></div>
+        </div>
+        <div class="prog-bar">
+          <div class="pl"><span>Progreso</span><span>60%</span></div>
+          <div class="bar-track"><div class="bar-fill" id="bar-fill1"></div></div>
+        </div>
+      </div>
+      <div class="pcard-alert">
+        <strong>⚡ Próxima acción automática</strong>
+        Día 8: check de síntomas vía WhatsApp + recordatorio de medicación matutina.
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== S4: ALTA — validación médica ===== -->
+  <section class="slide" id="s4">
+    <!-- LEFT: score + checklist -->
+    <div class="alta-left" id="alta-left">
+      <div class="alta-score-wrap">
+        <div class="alta-score-ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="arc-bg"   cx="60" cy="60" r="50"/>
+            <circle class="arc-fill" id="arc-fill" cx="60" cy="60" r="50"/>
+          </svg>
+          <div class="alta-score-num">
+            <div class="alta-score-val">92</div>
+            <div class="alta-score-sub">SCORE</div>
+          </div>
+        </div>
+        <div class="alta-score-label">Listo para el Alta</div>
+        <div class="alta-score-desc">Umbral mínimo: 75 puntos</div>
+      </div>
+
+      <div class="alta-checklist">
+        <div class="alta-check pass" id="ac1">
+          <div class="ac-icon">✅</div>
+          <div class="ac-label">Adherencia al tratamiento</div>
+          <div class="ac-val pass">94%</div>
+        </div>
+        <div class="alta-check pass" id="ac2">
+          <div class="ac-icon">✅</div>
+          <div class="ac-label">Resolución de síntomas</div>
+          <div class="ac-val pass">Completa</div>
+        </div>
+        <div class="alta-check pass" id="ac3">
+          <div class="ac-icon">✅</div>
+          <div class="ac-label">Exámenes de control</div>
+          <div class="ac-val pass">Normales</div>
+        </div>
+        <div class="alta-check pass" id="ac4">
+          <div class="ac-icon">✅</div>
+          <div class="ac-label">Firma del médico tratante</div>
+          <div class="ac-val pass">Dr. Mora</div>
+        </div>
+        <div class="alta-check fail" id="ac5">
+          <div class="ac-icon">⚠️</div>
+          <div class="ac-label">Control preventivo agendado</div>
+          <div class="ac-val warn">Pendiente</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: gráfico de recuperación -->
+    <div class="alta-right" id="alta-right">
+      <div class="alta-chart-hd">
+        <h3>Evolución clínica · María González</h3>
+        <p>Días de tratamiento vs. nivel de síntomas y adherencia</p>
+      </div>
+
+      <div class="alta-graph">
+        <svg viewBox="0 0 380 150" xmlns="http://www.w3.org/2000/svg">
+          <!-- grid -->
+          <line x1="40" y1="10" x2="40" y2="130" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+          <line x1="40" y1="130" x2="370" y2="130" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+          <line x1="40" y1="70" x2="370" y2="70" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4 4"/>
+          <line x1="40" y1="40" x2="370" y2="40" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4 4"/>
+          <!-- day labels -->
+          <text x="40"  y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D1</text>
+          <text x="95"  y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D2</text>
+          <text x="150" y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D3</text>
+          <text x="205" y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D5</text>
+          <text x="260" y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D6</text>
+          <text x="315" y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D8</text>
+          <text x="370" y="144" text-anchor="middle" font-size="9" fill="rgba(255,255,255,0.3)">D10</text>
+          <!-- Síntomas line (red, going down = good) -->
+          <polyline points="40,22 95,38 150,58 205,85 260,108 315,118 370,122"
+            fill="none" stroke="rgba(240,82,82,0.6)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="40"  cy="22"  r="3" fill="#F05252"/>
+          <circle cx="205" cy="85"  r="3" fill="#F05252"/>
+          <circle cx="260" cy="108" r="3" fill="#F05252"/>
+          <!-- Adherencia line (green, staying high) -->
+          <polyline points="40,38 95,30 150,28 205,26 260,24 315,25 370,24"
+            fill="none" stroke="rgba(34,197,94,0.7)" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="40"  cy="38" r="3" fill="#22c55e"/>
+          <circle cx="260" cy="24" r="3" fill="#22c55e"/>
+          <!-- today marker -->
+          <line x1="260" y1="10" x2="260" y2="130" stroke="rgba(34,197,94,0.3)" stroke-width="1" stroke-dasharray="3 3"/>
+          <text x="260" y="20" text-anchor="middle" font-size="8" fill="#4ade80">HOY</text>
+          <!-- legend -->
+          <rect x="42" y="12" width="8" height="2" rx="1" fill="#F05252"/>
+          <text x="54" y="15" font-size="8" fill="rgba(255,255,255,0.5)">Síntomas</text>
+          <rect x="110" y="12" width="8" height="2" rx="1" fill="#22c55e"/>
+          <text x="122" y="15" font-size="8" fill="rgba(255,255,255,0.5)">Adherencia</text>
+        </svg>
+      </div>
+
+      <div class="alta-summary">
+        <div class="as-stat" id="as1">
+          <div class="as-val">10</div>
+          <div class="as-lbl">DÍAS DE TRATAMIENTO</div>
+        </div>
+        <div class="as-stat" id="as2">
+          <div class="as-val">94%</div>
+          <div class="as-lbl">ADHERENCIA TOTAL</div>
+        </div>
+        <div class="as-stat" id="as3">
+          <div class="as-val">↓92%</div>
+          <div class="as-lbl">REDUCCIÓN SÍNTOMAS</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== S5: MÉTRICAS ===== -->
+  <section class="slide" id="s5">
+    <div class="met-hd">
+      <h2>Resultados que <span class="g">impactan</span> el negocio.</h2>
+      <p>Cada interacción genera inteligencia clínica accionable para la aseguradora.</p>
+    </div>
+    <div class="met-grid">
+      <div class="mcard" id="mc1">
+        <div class="mcard-lbl">Reducción en urgencias</div>
+        <div class="mcard-val">38<sup>%</sup></div>
+        <div class="mcard-desc">Afiliados con seguimiento activo evitan urgencias innecesarias.</div>
+        <div class="mini-bars" id="mb1">
+          <div class="mb" style="height:65%"></div>
+          <div class="mb" style="height:55%"></div>
+          <div class="mb" style="height:50%"></div>
+          <div class="mb" style="height:42%"></div>
+          <div class="mb" style="height:35%"></div>
+          <div class="mb hi" style="height:26%"></div>
+        </div>
+      </div>
+      <div class="mcard" id="mc2">
+        <div class="mcard-lbl">Ahorro por afiliado / año</div>
+        <div class="mcard-val">$420</div>
+        <div class="mcard-desc">Reducción en hospitalizaciones, repeticiones y derivaciones.</div>
+        <div class="mini-bars" id="mb2">
+          <div class="mb" style="height:30%"></div>
+          <div class="mb" style="height:48%"></div>
+          <div class="mb" style="height:62%"></div>
+          <div class="mb" style="height:78%"></div>
+          <div class="mb" style="height:90%"></div>
+          <div class="mb hi" style="height:100%"></div>
+        </div>
+      </div>
+      <div class="mcard" id="mc3">
+        <div class="mcard-lbl">Satisfacción del paciente</div>
+        <div class="mcard-val">4.9<sup>/5</sup></div>
+        <div class="mcard-desc">NPS promedio en aseguradoras que operan con Teledox.</div>
+        <div class="mini-bars" id="mb3">
+          <div class="mb" style="height:76%"></div>
+          <div class="mb" style="height:82%"></div>
+          <div class="mb" style="height:87%"></div>
+          <div class="mb" style="height:91%"></div>
+          <div class="mb" style="height:95%"></div>
+          <div class="mb hi" style="height:98%"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== S6: ROUTING ===== -->
+  <section class="slide" id="s6">
+    <div class="route-hd">
+      <h2>El sistema sabe <span class="c">a dónde dirigirte.</span></h2>
+      <p>Con el historial completo del paciente, Teledox deriva al especialista correcto en segundos — o reagenda automáticamente.</p>
+    </div>
+    <div class="route-dia">
+      <div class="rnode" id="rn1">
+        <div class="rcircle">📋</div>
+        <div class="rlabel">Historial del Paciente</div>
+        <div class="rsub">Diagnósticos, lab, medicamentos</div>
+      </div>
+      <div class="rarrow" id="ra1"></div>
+      <div class="rnode" id="rn2">
+        <div class="rcircle hub">
+          <svg viewBox="0 0 1024 1024" width="44" height="44" fill="none">
+            <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+            <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+            <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+              stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="rlabel">Motor Teledox</div>
+        <div class="rsub">Analiza y decide en tiempo real</div>
+      </div>
+      <div class="rarrow" id="ra2"></div>
+      <div class="rnode" id="rn3">
+        <div class="rcircle">🏥</div>
+        <div class="rlabel">Especialista Óptimo</div>
+        <div class="rsub">Cardio, derma, psicología…</div>
+      </div>
+    </div>
+    <div class="route-chips">
+      <div class="rchip" id="rc1">⏱ <strong>Tiempo al especialista</strong> reducido 60%</div>
+      <div class="rchip" id="rc2">❌ <strong>Cero derivaciones</strong> innecesarias</div>
+      <div class="rchip" id="rc3">🔄 <strong>Reagendamiento</strong> automático</div>
+      <div class="rchip" id="rc4">📊 <strong>Panel en vivo</strong> para la aseguradora</div>
+    </div>
+  </section>
+
+  <!-- ===== S7: CIERRE ===== -->
+  <section class="slide" id="s7">
+    <div class="close-eyebrow" id="cl-a">¿Listos para transformar su portafolio de salud?</div>
+    <h2 class="close-h" id="cl-b">
+      MediLyft + <span class="c">Su Aseguradora</span><br>= Afiliados más sanos.
+    </h2>
+    <p class="close-p" id="cl-c">
+      Una sola integración. Resultados medibles desde el primer mes.
+      Soporte completo de onboarding y acompañamiento continuo.
+    </p>
+    <div class="close-nums" id="cl-d">
+      <div class="cnum">
+        <div class="cnum-v">2 min</div>
+        <div class="cnum-l">Tiempo promedio de agenda</div>
+      </div>
+      <div class="cnum">
+        <div class="cnum-v">38%</div>
+        <div class="cnum-l">Reducción en urgencias</div>
+      </div>
+      <div class="cnum">
+        <div class="cnum-v">94%</div>
+        <div class="cnum-l">Adherencia al tratamiento</div>
+      </div>
+      <div class="cnum">
+        <div class="cnum-v">4.9★</div>
+        <div class="cnum-l">Satisfacción del paciente</div>
+      </div>
+    </div>
+    <button class="close-btn" id="cl-e">Agendar demostración →</button>
+    <div class="close-logo" id="cl-f">
+      <svg class="close-logo-svg" viewBox="0 0 1024 1024" fill="none">
+        <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+        <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+        <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+          stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      <span class="close-logo-txt">MEDILYFT · TELEDOX</span>
+    </div>
+  </section>
+
+</div>
+
+<div id="dots"></div>
+<div id="arrows">
+  <button class="arrow" onclick="prevSlide()">&#8592;</button>
+  <button class="arrow" onclick="nextSlide()">&#8594;</button>
+</div>
+
+<script>
+const SLIDES = 8;
+let cur = 0, busy = false;
+
+const slides     = document.querySelectorAll('.slide');
+const dotsWrap   = document.getElementById('dots');
+const progressEl = document.getElementById('progress-bar');
+const counterEl  = document.getElementById('counter');
+const secEl      = document.getElementById('sec-label');
+
+const LABELS = [
+  'Introducción','Experiencia del Paciente','El Sistema por Dentro',
+  'Seguimiento Activo','Alta Exitosa','Resultados & ROI',
+  'Routing Inteligente','Propuesta de Valor'
+];
+
+for(let i=0;i<SLIDES;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.addEventListener('click',()=>goTo(i));
+  dotsWrap.appendChild(d);
+}
+
+function goTo(n){
+  if(busy||n===cur||n<0||n>=SLIDES)return;
+  busy=true;
+  slides[cur].classList.remove('active');
+  cur=n;
+  slides[cur].classList.add('active');
+  syncUI();
+  setTimeout(()=>{ busy=false; animateSlide(cur); },120);
+}
+function nextSlide(){ goTo(cur+1); }
+function prevSlide(){ goTo(cur-1); }
+
+function syncUI(){
+  dotsWrap.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));
+  progressEl.style.width=((cur+1)/SLIDES*100)+'%';
+  counterEl.textContent=pad(cur+1)+' / '+pad(SLIDES);
+  secEl.textContent=LABELS[cur];
+}
+function pad(n){ return String(n).padStart(2,'0'); }
+
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight',' '].includes(e.key)){e.preventDefault();nextSlide();}
+  if(e.key==='ArrowLeft'){e.preventDefault();prevSlide();}
+});
+
+function animateSlide(n){
+  [anim0,anim1,anim2,anim3,anim4,anim5,anim6,anim7][n]?.();
+}
+
+function show(id,delay){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.opacity='';  // clear inline; CSS class controls initial opacity
+  el.classList.remove('vis');
+  setTimeout(()=>el.classList.add('vis'),delay);
+}
+
+function anim0(){
+  ['h0-a','h0-b','h0-c','h0-d','h0-e'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.opacity=0; el.classList.remove('vis');
+    el.style.animationDelay=(i*150+80)+'ms';
+    setTimeout(()=>el.classList.add('vis'),50);
+  });
+}
+
+function anim1(){
+  ['f1','f2','f3','f4'].forEach((id,i)=>show(id,280+i*170));
+  const bubbles=['c1','c2','c3','c4','c5','c6'];
+  const typingEl=document.getElementById('typing');
+  bubbles.forEach(id=>{ const el=document.getElementById(id); if(el){el.style.opacity=0;el.classList.remove('vis');} });
+  const seq=[
+    {id:'c1',delay:500,typing:false},
+    {id:'c2',delay:1100,typing:true},
+    {id:'c3',delay:2000,typing:false},
+    {id:'c4',delay:2700,typing:true},
+    {id:'c5',delay:3500,typing:false},
+    {id:'c6',delay:4000,typing:true},
+  ];
+  seq.forEach((item,idx)=>{
+    if(item.typing&&idx>0){
+      setTimeout(()=>{ if(typingEl)typingEl.style.display='flex'; },seq[idx-1].delay+300);
+      setTimeout(()=>{ if(typingEl)typingEl.style.display='none'; },item.delay-50);
+    }
+    setTimeout(()=>{ const el=document.getElementById(item.id); if(el)el.classList.add('vis'); },item.delay);
+  });
+}
+
+function anim2(){
+  show('ti-wrap', 100);
+  show('ti-net',  400);
+  show('ti-out',  700);
+  // highlight match card after net appears
+  setTimeout(()=>{
+    const d=document.getElementById('doc-match');
+    if(d){ d.style.transition='all 0.5s'; }
+  }, 1200);
+  show('ti-result', 1400);
+}
+
+function anim3(){
+  ['tl1','tl2','tl3','tl4','tl5','tl6'].forEach((id,i)=>show(id,200+i*180));
+  setTimeout(()=>{ const bf=document.getElementById('bar-fill1'); if(bf)bf.style.width='60%'; },400);
+}
+
+function anim4(){
+  // left panel
+  const al=document.getElementById('alta-left');
+  if(al){ al.style.opacity=0; al.classList.remove('vis'); al.style.animationDelay='80ms'; setTimeout(()=>al.classList.add('vis'),50); }
+  // arc fill: circumference = 2*PI*50 ≈ 314; score 92/100
+  setTimeout(()=>{
+    const arc=document.getElementById('arc-fill');
+    if(arc) arc.style.strokeDashoffset = 314 - (314 * 0.92);
+  }, 600);
+  // checklist items
+  ['ac1','ac2','ac3','ac4','ac5'].forEach((id,i)=>show(id,400+i*180));
+  // right panel
+  const ar=document.getElementById('alta-right');
+  if(ar){ ar.style.opacity=0; ar.classList.remove('vis'); ar.style.animationDelay='300ms'; setTimeout(()=>ar.classList.add('vis'),50); }
+  // summary stats
+  ['as1','as2','as3'].forEach((id,i)=>show(id,800+i*180));
+}
+
+function anim5(){
+  ['mc1','mc2','mc3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.opacity=0; el.classList.remove('vis');
+    setTimeout(()=>{
+      el.classList.add('vis');
+      el.querySelectorAll('.mb').forEach(b=>{ void b.offsetWidth; setTimeout(()=>b.classList.add('grow'),250); });
+    },200+i*220);
+  });
+}
+
+function anim6(){
+  [{id:'rn1',d:100},{id:'ra1',d:420},{id:'rn2',d:600},
+   {id:'ra2',d:920},{id:'rn3',d:1100},
+   {id:'rc1',d:1400},{id:'rc2',d:1580},{id:'rc3',d:1760},{id:'rc4',d:1940}
+  ].forEach(({id,d})=>show(id,d));
+}
+
+function anim7(){
+  ['cl-a','cl-b','cl-c','cl-d','cl-e','cl-f'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.opacity=0; el.classList.remove('vis');
+    el.style.animationDelay=(i*180+80)+'ms';
+    setTimeout(()=>el.classList.add('vis'),50);
+  });
+}
+
+syncUI();
+setTimeout(()=>anim0(),250);
+</script>
+</body>
+</html>

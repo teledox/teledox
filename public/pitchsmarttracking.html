@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MEDILYFT · Smart Tracking</title>
+<style>
+/* ─── VARIABLES ─────────────────────────────────────────── */
+:root{
+  --red:#F05252; --red-dark:#C0392B; --red-light:#fde8e8;
+  --green:#16a34a; --green-light:#dcfce7;
+  --gold:#d97706; --gold-light:#fef3c7;
+  --bg:#f7f3f3;
+  --surface:#ffffff;
+  --surface2:#faf7f7;
+  --border:rgba(0,0,0,0.08);
+  --border-r:rgba(240,82,82,0.2);
+  --text:#111111;
+  --text-sub:#374151;
+  --text-muted:#6b7280;
+  --shadow:0 2px 12px rgba(0,0,0,0.07);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.1);
+  /* phone stays dark */
+  --wa-bg:#0b1014; --wa-in:#1f2c34; --wa-out:#005c4b;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);
+  color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;overflow:hidden}
+
+/* ─── TOPBAR ─────────────────────────────────────────────── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:54px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;z-index:100;
+  background:rgba(247,243,243,0.92);backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-svg{width:34px;height:34px}
+.logo-brand{font-size:14px;font-weight:800;letter-spacing:.06em;color:var(--text)}
+.logo-product{font-size:10px;letter-spacing:.14em;color:var(--red);text-transform:uppercase;font-weight:600}
+.logo-text{display:flex;flex-direction:column;line-height:1.25}
+.slide-counter{font-size:12px;color:var(--text-muted);letter-spacing:.06em;font-weight:500}
+.slide-title-tag{
+  font-size:10px;letter-spacing:.14em;color:var(--text-muted);
+  text-transform:uppercase;padding:5px 14px;
+  border:1px solid var(--border);border-radius:20px;
+  background:var(--surface);font-weight:500;
+}
+
+/* ─── PROGRESS ───────────────────────────────────────────── */
+.progress-bar{position:fixed;top:54px;left:0;right:0;height:3px;
+  background:rgba(0,0,0,0.06);z-index:100;}
+.progress-fill{height:100%;background:var(--red);transition:width .4s ease}
+
+/* ─── DOTS ────────────────────────────────────────────────── */
+.dots{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);
+  display:flex;gap:8px;z-index:100;}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,0.15);
+  cursor:pointer;transition:all .3s}
+.dot.active{background:var(--red);width:24px;border-radius:4px}
+
+/* ─── NAV ─────────────────────────────────────────────────── */
+.nav-btn{
+  position:fixed;bottom:20px;z-index:100;
+  width:42px;height:42px;border-radius:50%;
+  border:1px solid var(--border);background:var(--surface);
+  color:var(--text-sub);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;box-shadow:var(--shadow);
+}
+.nav-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.nav-prev{right:74px} .nav-next{right:24px}
+
+/* ─── STAGE ──────────────────────────────────────────────── */
+.stage{position:fixed;inset:54px 0 0 0;display:flex;overflow:hidden}
+.slide{
+  position:absolute;inset:0;display:flex;
+  opacity:0;pointer-events:none;
+  /* transitions applied only when classes are toggled */
+}
+.slide.active{opacity:1;pointer-events:all;}
+.slide.animating{transition:opacity .5s ease, transform .5s cubic-bezier(.4,0,.2,1);}
+
+/* ─── INTRO SLIDE (full-width hero) ─────────────────────── */
+.slide-hero{
+  flex-direction:column;align-items:center;justify-content:center;
+  background:var(--bg);padding:40px;
+  text-align:center;
+}
+.hero-eyebrow{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--red);font-weight:700;margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;justify-content:center;
+}
+.hero-eyebrow::before,.hero-eyebrow::after{
+  content:'';width:40px;height:1px;background:var(--red);opacity:.4;
+}
+.hero-h1{font-size:58px;font-weight:800;line-height:1.12;margin-bottom:22px;
+  letter-spacing:-.02em;color:var(--text)}
+.hero-h1 .c{color:var(--red)}
+.hero-sub{font-size:18px;color:var(--text-muted);max-width:620px;
+  line-height:1.6;margin:0 auto 36px}
+.hero-pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.hero-pill{
+  padding:8px 18px;border-radius:24px;font-size:12px;font-weight:600;
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text-sub);box-shadow:var(--shadow);
+}
+.hero-pill.red{background:var(--red-light);border-color:rgba(240,82,82,0.25);color:var(--red-dark)}
+.hero-cta{
+  font-size:12px;color:var(--text-muted);letter-spacing:.1em;
+  display:flex;align-items:center;gap:8px;
+}
+.hero-logo-big{
+  width:72px;height:72px;margin:0 auto 28px;
+}
+
+/* ─── SPLIT LAYOUT ───────────────────────────────────────── */
+.wa-col{
+  width:42%;min-width:400px;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px 20px 72px 28px;
+  border-right:1px solid var(--border);
+  background:var(--surface2);
+}
+.panel-col{
+  flex:1;padding:32px 44px 72px 40px;
+  overflow:hidden;display:flex;flex-direction:column;gap:18px;
+}
+
+/* ─── PHONE ───────────────────────────────────────────────── */
+.phone{
+  width:340px;background:#111b21;border-radius:32px;overflow:hidden;
+  box-shadow:0 0 0 1.5px rgba(0,0,0,0.15),var(--shadow-lg);
+  display:flex;flex-direction:column;max-height:calc(100vh - 120px);
+}
+.phone-status{height:28px;background:#1f2c34;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;font-size:10px;color:rgba(255,255,255,0.35);flex-shrink:0}
+.wa-header{background:#1f2c34;padding:10px 14px;
+  display:flex;align-items:center;gap:12px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,0.04)}
+.wa-avatar{width:42px;height:42px;border-radius:50%;
+  background:linear-gradient(135deg,#C0392B,#F05252);
+  display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.wa-contact-name{font-size:14px;font-weight:700;color:#fff}
+.wa-contact-sub{font-size:10px;color:#25d366}
+.wa-contact{display:flex;flex-direction:column;line-height:1.3}
+.wa-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 10px;
+  background:var(--wa-bg);display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+.wa-body::-webkit-scrollbar{display:none}
+.wa-input-bar{background:#1f2c34;padding:10px 14px;
+  display:flex;align-items:center;gap:10px;flex-shrink:0}
+.wa-input-field{flex:1;background:rgba(255,255,255,0.06);border-radius:22px;
+  padding:8px 16px;font-size:12px;color:rgba(255,255,255,0.35)}
+.wa-send{width:36px;height:36px;border-radius:50%;background:#00a884;
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+
+/* ─── BUBBLES ─────────────────────────────────────────────── */
+.msg{max-width:84%;display:flex;flex-direction:column;
+  opacity:0;transform:translateY(8px);
+  transition:opacity .4s ease, transform .4s ease}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg.out{align-self:flex-end}
+.msg.in{align-self:flex-start}
+.bubble{padding:10px 14px;border-radius:12px;font-size:13px;
+  line-height:1.55;color:#fff;position:relative}
+.msg.out .bubble{background:var(--wa-out);border-bottom-right-radius:3px}
+.msg.in .bubble{background:var(--wa-in);border-bottom-left-radius:3px}
+.bubble-time{font-size:9px;color:rgba(255,255,255,0.3);
+  text-align:right;margin-top:3px;padding:0 3px}
+.msg.in .bubble-time{text-align:left}
+
+.score-img-bubble{background:var(--wa-in);border-radius:14px;padding:12px;width:200px}
+.score-circle-mini{width:100px;height:100px;margin:0 auto 10px;
+  display:flex;align-items:center;justify-content:center;position:relative}
+.score-circle-mini svg{width:100px;height:100px}
+.score-mini-val{position:absolute;font-size:26px;font-weight:800;color:#22c55e}
+.score-img-text{font-size:11.5px;color:rgba(255,255,255,0.85);
+  text-align:center;line-height:1.5}
+
+.typing-indicator{display:flex;align-items:center;gap:5px;
+  padding:11px 14px;background:var(--wa-in);border-radius:12px;
+  border-bottom-left-radius:3px;align-self:flex-start}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);
+  animation:typingBounce 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}
+.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+
+/* ─── PANEL TYPOGRAPHY ───────────────────────────────────── */
+.panel-hd h2{font-size:30px;font-weight:800;line-height:1.2;
+  margin-bottom:10px;color:var(--text)}
+.panel-hd p{font-size:15px;color:var(--text-muted);line-height:1.65}
+.c{color:var(--red)} .g{color:var(--green)} .gold{color:var(--gold)}
+
+.section-label{font-size:11px;letter-spacing:.16em;color:var(--text-muted);
+  text-transform:uppercase;margin-bottom:10px;font-weight:700;
+  display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* ─── CARDS ───────────────────────────────────────────────── */
+.card{background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.card.accent{background:var(--red-light);border-color:rgba(240,82,82,0.2)}
+.card.green{background:var(--green-light);border-color:rgba(22,163,74,0.2)}
+
+/* ─── STAT BOX ────────────────────────────────────────────── */
+.stat-row{display:flex;gap:12px}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:18px 16px;box-shadow:var(--shadow);text-align:center}
+.stat-val{font-size:30px;font-weight:800;line-height:1.1;margin-bottom:5px}
+.stat-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;
+  letter-spacing:.08em;font-weight:600}
+
+/* ─── TRIAGE ─────────────────────────────────────────────── */
+.tp-row{display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.tp-row:last-child{border:none}
+.tp-label{color:var(--text-muted)}
+.tp-val{font-weight:600;color:var(--text)}
+
+.sev-tag{display:inline-flex;align-items:center;gap:5px;
+  padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+.sev-grave{background:rgba(240,82,82,0.12);color:#dc2626;
+  border:1px solid rgba(240,82,82,0.25)}
+.sev-mod{background:rgba(217,119,6,0.12);color:#b45309;
+  border:1px solid rgba(217,119,6,0.25)}
+.sev-leve{background:rgba(22,163,74,0.1);color:#15803d;
+  border:1px solid rgba(22,163,74,0.2)}
+
+.derivation-box{display:flex;align-items:center;gap:16px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:16px 20px;box-shadow:var(--shadow)}
+.deriv-icon{font-size:32px}
+.deriv-info h4{font-size:15px;font-weight:700;margin-bottom:3px;color:var(--text)}
+.deriv-info p{font-size:12px;color:var(--text-muted)}
+.deriv-badge{margin-left:auto;background:var(--green-light);
+  border:1px solid rgba(22,163,74,0.25);color:var(--green);
+  padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap}
+
+/* ─── PROFILE ─────────────────────────────────────────────── */
+.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.prof-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.prof-card.highlight{background:var(--red-light);border-color:rgba(240,82,82,0.2)}
+.prof-card-label{font-size:10px;letter-spacing:.08em;color:var(--text-muted);
+  text-transform:uppercase;margin-bottom:6px;font-weight:600}
+.prof-card-val{font-size:20px;font-weight:800;margin-bottom:3px;color:var(--text)}
+.prof-card-val.red{color:var(--red-dark)}
+.prof-card-sub{font-size:11px;color:var(--text-muted)}
+
+.extract-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.ef-tag{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;
+  background:var(--red-light);border:1px solid rgba(240,82,82,0.2);color:var(--red-dark)}
+.ef-tag.out{background:var(--green-light);border-color:rgba(22,163,74,0.2);color:var(--green)}
+.ef-arrow{color:var(--text-muted);font-size:14px;font-weight:700}
+
+.risk-list{display:flex;flex-direction:column;gap:8px}
+.rf-item{display:flex;align-items:center;gap:12px;
+  padding:10px 14px;border-radius:10px;
+  background:var(--surface);border:1px solid var(--border);
+  font-size:13px;box-shadow:var(--shadow)}
+.rf-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.rf-dot.high{background:#dc2626} .rf-dot.med{background:#d97706}
+.rf-dot.low{background:#16a34a}
+.rf-label{flex:1;font-weight:500;color:var(--text)}
+.rf-val{font-size:11px;color:var(--text-muted)}
+
+/* ─── SCORE ───────────────────────────────────────────────── */
+.score-panel{display:flex;gap:24px;align-items:flex-start}
+.score-left{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:150px}
+.score-ring-wrap{position:relative;width:140px;height:140px}
+.score-ring-wrap svg{width:140px;height:140px}
+.score-ring-val{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center}
+.srv-num{font-size:36px;font-weight:800;color:var(--green);line-height:1}
+.srv-lbl{font-size:10px;color:var(--text-muted);letter-spacing:.1em;margin-top:2px}
+.score-status{font-size:15px;font-weight:700;color:var(--green)}
+.score-desc{font-size:11px;color:var(--text-muted);text-align:center}
+.score-right{flex:1;display:flex;flex-direction:column;gap:12px}
+.score-bar-row{display:flex;flex-direction:column;gap:5px}
+.sbr-label{display:flex;justify-content:space-between;font-size:13px;font-weight:500}
+.sbr-label span:last-child{color:var(--text-muted);font-weight:400}
+.sbr-track{height:8px;background:rgba(0,0,0,0.07);border-radius:4px;overflow:hidden}
+.sbr-fill{height:100%;border-radius:4px;transition:width 1.3s ease}
+.sbr-green{background:linear-gradient(90deg,#15803d,#22c55e)}
+.sbr-amber{background:linear-gradient(90deg,#b45309,#f59e0b)}
+.sbr-red{background:linear-gradient(90deg,var(--red-dark),var(--red))}
+
+.cloud-badge{display:flex;align-items:center;gap:10px;
+  padding:12px 18px;border-radius:12px;
+  background:var(--green-light);border:1px solid rgba(22,163,74,0.2);
+  font-size:13px;color:var(--green);font-weight:500}
+
+/* ─── REMINDER TABLE ─────────────────────────────────────── */
+.remind-table{width:100%;border-collapse:collapse;font-size:12.5px}
+.remind-table th{font-size:10px;letter-spacing:.1em;color:var(--text-muted);
+  text-transform:uppercase;padding:8px 12px;
+  border-bottom:2px solid var(--border);text-align:left;font-weight:600}
+.remind-table td{padding:9px 12px;border-bottom:1px solid var(--border);
+  color:var(--text)}
+.remind-table tr:last-child td{border:none}
+.remind-table tr.now td{background:rgba(240,82,82,0.04)}
+.remind-table tr:hover td{background:rgba(0,0,0,0.02)}
+.rtag{display:inline-flex;padding:3px 10px;border-radius:12px;
+  font-size:10.5px;font-weight:600}
+.rtag.ok{background:var(--green-light);color:var(--green);border:1px solid rgba(22,163,74,0.2)}
+.rtag.pend{background:var(--gold-light);color:var(--gold);border:1px solid rgba(217,119,6,0.2)}
+.rtag.miss{background:var(--red-light);color:var(--red-dark);border:1px solid rgba(240,82,82,0.2)}
+
+.no-harassment{background:var(--green-light);border:1px solid rgba(22,163,74,0.2);
+  border-radius:12px;padding:14px 18px;
+  font-size:13px;color:var(--text-sub);line-height:1.6}
+.no-harassment strong{color:var(--green)}
+
+/* ─── PSYCHOSOCIAL ────────────────────────────────────────── */
+.psico-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.psico-card{background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.psico-card h4{font-size:13px;font-weight:700;margin-bottom:5px;color:var(--text)}
+.psico-card p{font-size:12px;color:var(--text-muted);line-height:1.5}
+.doc-stamp{background:var(--red-light);border:1px solid rgba(240,82,82,0.2);
+  border-radius:12px;padding:14px 18px;
+  display:flex;align-items:center;gap:14px;font-size:13px}
+
+/* ─── CENTRAL ─────────────────────────────────────────────── */
+.central-nodes{display:flex;gap:10px;justify-content:space-between}
+.cnode{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:14px 10px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--border);
+  box-shadow:var(--shadow);text-align:center}
+.cnode-ico{font-size:26px}
+.cnode-lbl{font-size:12px;font-weight:700;color:var(--text)}
+.cnode-sub{font-size:10px;color:var(--text-muted)}
+.flow-arrow-row{display:flex;align-items:center;justify-content:center;
+  gap:4px;font-size:18px;color:var(--text-muted);letter-spacing:8px}
+.central-profile{
+  background:linear-gradient(135deg,var(--red-light),rgba(240,82,82,0.04));
+  border:1px solid rgba(240,82,82,0.25);border-radius:16px;
+  padding:20px 24px;text-align:center;}
+.central-profile h3{font-size:18px;font-weight:800;margin-bottom:6px;color:var(--text)}
+.central-profile p{font-size:13px;color:var(--text-muted);margin-bottom:12px}
+
+/* ─── BENEFITS ────────────────────────────────────────────── */
+.doctor-banner{background:linear-gradient(135deg,rgba(240,82,82,0.08),var(--red-light));
+  border:1px solid rgba(240,82,82,0.2);border-radius:16px;
+  padding:20px 24px;display:flex;align-items:center;gap:18px}
+.db-icon{font-size:40px}
+.db-text h3{font-size:17px;font-weight:800;margin-bottom:5px;color:var(--text)}
+.db-text p{font-size:13px;color:var(--text-muted);line-height:1.5}
+.benefit-list{display:flex;flex-direction:column;gap:10px}
+.benefit-item{display:flex;align-items:flex-start;gap:14px;
+  padding:14px 18px;border-radius:12px;
+  background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow)}
+.bi-ico{font-size:22px;flex-shrink:0;margin-top:1px}
+.bi-text h4{font-size:13px;font-weight:700;margin-bottom:3px;color:var(--text)}
+.bi-text p{font-size:12px;color:var(--text-muted);line-height:1.4}
+
+/* ─── ARC CSS ─────────────────────────────────────────────── */
+.arc-bg{fill:none;stroke:rgba(0,0,0,0.08);stroke-width:11;
+  transform:rotate(-90deg);transform-origin:center}
+.arc-fill-g{fill:none;stroke:#16a34a;stroke-width:11;stroke-linecap:round;
+  transform:rotate(-90deg);transform-origin:center;
+  stroke-dasharray:314;stroke-dashoffset:314;
+  transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)}
+
+/* ─── ANIMATIONS ─────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeRight{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes fadeLeft{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+
+.vis-up{opacity:0}.vis-up.vis{animation:fadeUp .5s forwards}
+.vis-right{opacity:0}.vis-right.vis{animation:fadeRight .5s forwards}
+.vis-left{opacity:0}.vis-left.vis{animation:fadeLeft .5s forwards}
+.vis-scale{opacity:0}.vis-scale.vis{animation:scaleIn .4s forwards}
+.vis-fade{opacity:0}.vis-fade.vis{animation:fadeIn .5s forwards}
+
+/* ─── FULL-WIDTH SLIDES (s6, s7) ──────────────────────────── */
+.slide-full{ display:flex; align-items:stretch; }
+
+/* ── SLIDE 6: ORBITAL ────────────────────────────── */
+.orbit-layout{
+  display:flex; width:100%; height:100%; align-items:center;
+  padding:0 80px; gap:72px;
+}
+.orbit-hd{
+  flex:0 0 380px;
+}
+.orbit-eyebrow{
+  font-size:11px; font-weight:700; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--red); margin-bottom:10px;
+}
+.orbit-hd h2{font-size:38px;font-weight:800;line-height:1.15;margin-bottom:14px}
+.orbit-hd p{font-size:15px;color:var(--text-sub);line-height:1.6;margin-bottom:24px}
+.orbit-tags{display:flex;flex-wrap:wrap;gap:8px}
+.otag{
+  padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;
+  background:var(--red-light);color:var(--red-dark);
+  opacity:0;
+}
+.otag.vis{animation:fadeUp .4s forwards}
+
+/* Orbital diagram */
+.orbit-diagram{
+  flex:1; position:relative;
+  display:flex; align-items:center; justify-content:center;
+  min-height:460px;
+  opacity:0;
+}
+.orbit-diagram.vis{ animation:fadeIn .6s forwards }
+
+/* rings */
+.orbit-ring{
+  position:absolute; border-radius:50%;
+  border:1.5px dashed rgba(240,82,82,0.2);
+}
+.ring-1{width:200px;height:200px}
+.ring-2{width:340px;height:340px}
+
+/* center bubble */
+.orbit-center{
+  position:absolute; z-index:4;
+  width:110px; height:110px; border-radius:50%;
+  background:#fff; box-shadow:0 4px 24px rgba(240,82,82,.18), 0 0 0 3px rgba(240,82,82,.12);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; gap:2px;
+}
+.oc-logo{margin-bottom:2px}
+.oc-name{font-size:10px;font-weight:800;color:var(--text);letter-spacing:.04em}
+.oc-sub{font-size:9px;color:var(--text-muted)}
+.oc-score{font-size:13px;font-weight:800;color:var(--red)}
+
+/* each orbit-node spins around centre */
+@keyframes orbit1{from{transform:rotate(0deg) translateX(100px) rotate(0deg)} to{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+@keyframes orbit2{from{transform:rotate(72deg) translateX(170px) rotate(-72deg)} to{transform:rotate(432deg) translateX(170px) rotate(-432deg)}}
+@keyframes orbit3{from{transform:rotate(144deg) translateX(170px) rotate(-144deg)} to{transform:rotate(504deg) translateX(170px) rotate(-504deg)}}
+@keyframes orbit4{from{transform:rotate(216deg) translateX(170px) rotate(-216deg)} to{transform:rotate(576deg) translateX(170px) rotate(-576deg)}}
+@keyframes orbit5{from{transform:rotate(288deg) translateX(170px) rotate(-288deg)} to{transform:rotate(648deg) translateX(170px) rotate(-648deg)}}
+
+.orbit-node{
+  position:absolute; z-index:3;
+  animation-timing-function:linear; animation-iteration-count:infinite;
+}
+.on-1{animation:orbit1 18s infinite linear}
+.on-2{animation:orbit2 22s infinite linear}
+.on-3{animation:orbit3 20s infinite linear}
+.on-4{animation:orbit4 24s infinite linear}
+.on-5{animation:orbit5 19s infinite linear}
+
+.onode-planet{
+  width:64px; height:64px; border-radius:50%;
+  background:#fff; box-shadow:var(--shadow-lg);
+  border:2px solid rgba(240,82,82,.15);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; transform:translate(-50%,-50%);
+}
+.op-ico{font-size:20px}
+.op-lbl{font-size:9px;font-weight:700;color:var(--text-sub);letter-spacing:.03em}
+
+/* ─── SHARED PHONE (persistente, fuera del stage) ── */
+.shared-phone{
+  position:fixed; top:54px; bottom:0; left:0; width:42%;
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg); z-index:5;
+  opacity:0; pointer-events:none;
+  transition:opacity .45s ease;
+}
+.shared-phone.visible{ opacity:1; pointer-events:all; }
+
+/* stage se desplaza cuando el phone es visible */
+.stage{ transition:left .5s cubic-bezier(.4,0,.2,1); }
+.stage.with-phone{ left:42%; }
+
+/* ── SLIDE 7: BENEFICIOS ─────────────────────────── */
+.bfull-layout{
+  display:flex; flex-direction:column; width:100%;
+  padding:44px 80px 36px; gap:32px;
+}
+.bfull-hd h2{font-size:38px;font-weight:800;line-height:1.2}
+.bfull-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:20px; flex:1;
+}
+.bfull-item{
+  background:#fff; border-radius:16px; padding:28px 30px 26px;
+  box-shadow:var(--shadow);
+  border-left:4px solid var(--red-light);
+  display:flex; flex-direction:column; gap:8px;
+  opacity:0;
+}
+.bfull-item.vis{animation:fadeUp .5s forwards}
+.bfi-num{
+  font-size:42px; font-weight:900; line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.bfi-num.c{color:var(--red)}
+.bfi-num.g{color:var(--green)}
+.bfi-ico{font-size:28px; margin-top:4px}
+.bfull-item h3{font-size:17px;font-weight:700;color:var(--text);margin-top:2px}
+.bfull-item p{font-size:13.5px;color:var(--text-sub);line-height:1.6;margin:0}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-wrap">
+    <svg class="logo-svg" viewBox="0 0 1024 1024" fill="none">
+      <rect x="290" y="235" width="440" height="440" rx="112" ry="112"
+        stroke="#F05252" stroke-width="58" fill="none"/>
+      <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+      <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466
+        Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550
+        C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+        stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-brand">MEDILYFT</span>
+      <span class="logo-product">Smart Tracking</span>
+    </div>
+  </div>
+  <div id="slide-title-tag" class="slide-title-tag">Introducción</div>
+  <div class="slide-counter" id="counter">01 / 08</div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="prog" style="width:12.5%"></div></div>
+
+<!-- ═══════════════════════════════════════════════════
+     SHARED PHONE — persiste en slides 1-5
+════════════════════════════════════════════════════ -->
+<div class="shared-phone" id="shared-phone">
+  <div class="phone">
+    <div class="phone-status"><span>9:41</span><span>●●●</span></div>
+    <div class="wa-header">
+      <div class="wa-avatar">🩺</div>
+      <div class="wa-contact">
+        <div class="wa-contact-name">MEDILYFT</div>
+        <div class="wa-contact-sub">● en línea</div>
+      </div>
+    </div>
+    <div class="wa-body" id="shared-chat">
+      <!-- SLIDE 1: Triaje -->
+      <div class="msg in show" data-slide="1">
+        <div class="bubble">¡Hola Esteban! 👋 Soy tu asistente MEDILYFT. ¿Cómo te sientes hoy?</div>
+        <div class="bubble-time">09:31</div>
+      </div>
+      <div class="msg out" id="c1m2" data-slide="1" style="display:none">
+        <div class="bubble">Tengo un dolor en el pecho desde esta mañana y me cuesta respirar</div>
+        <div class="bubble-time">09:32</div>
+      </div>
+      <div class="typing-indicator" id="c1t1" data-slide="1">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="c1m3" data-slide="1" style="display:none">
+        <div class="bubble">Entendido. ¿Hace cuánto tienes el dolor? ¿Es opresivo o punzante?</div>
+        <div class="bubble-time">09:32</div>
+      </div>
+      <div class="msg out" id="c1m4" data-slide="1" style="display:none">
+        <div class="bubble">Desde hace 2 horas. Es como una presión fuerte. También me sudan las manos.</div>
+        <div class="bubble-time">09:33</div>
+      </div>
+      <div class="typing-indicator" id="c1t2" data-slide="1" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="c1m5" data-slide="1" style="display:none">
+        <div class="bubble">⚡ <strong>Caso priorizado.</strong> Basado en tus síntomas, te derivo con Cardiología de forma urgente.</div>
+        <div class="bubble-time">09:33</div>
+      </div>
+      <!-- SLIDE 2: Perfil -->
+      <div class="msg in" id="c2m1" data-slide="2" style="display:none">
+        <div class="bubble">Mientras esperas, ¿tienes alguna condición crónica diagnosticada?</div>
+        <div class="bubble-time">09:34</div>
+      </div>
+      <div class="msg out" id="c2m2" data-slide="2" style="display:none">
+        <div class="bubble">Sí, hipertensión arterial. Tomo Losartán.</div>
+        <div class="bubble-time">09:34</div>
+      </div>
+      <div class="typing-indicator" id="c2t1" data-slide="2" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="c2m3" data-slide="2" style="display:none">
+        <div class="bubble">¿Cuántos años tienes?</div>
+        <div class="bubble-time">09:35</div>
+      </div>
+      <div class="msg out" id="c2m4" data-slide="2" style="display:none">
+        <div class="bubble">47 años.</div>
+        <div class="bubble-time">09:35</div>
+      </div>
+      <div class="msg in" id="c2m5" data-slide="2" style="display:none">
+        <div class="bubble">✅ <strong>Perfil actualizado.</strong> Incluimos monitoreo de presión y función renal en tu seguimiento.</div>
+        <div class="bubble-time">09:35</div>
+      </div>
+      <!-- SLIDE 3: Score -->
+      <div class="msg in" id="c3m1" data-slide="3" style="display:none">
+        <div class="bubble">Esteban, ya terminó tu primer mes de seguimiento. Aquí está tu resumen 📊</div>
+        <div class="bubble-time">hoy, 08:00</div>
+      </div>
+      <div class="msg in" id="c3m2" data-slide="3" style="display:none">
+        <div class="score-img-bubble">
+          <div class="score-circle-mini">
+            <svg viewBox="0 0 88 88">
+              <circle cx="44" cy="44" r="36" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="7" transform="rotate(-90 44 44)"/>
+              <circle id="wa-arc" cx="44" cy="44" r="36" fill="none" stroke="#22c55e" stroke-width="7" stroke-linecap="round" stroke-dasharray="226" stroke-dashoffset="226" transform="rotate(-90 44 44)" style="transition:stroke-dashoffset 1.5s ease"/>
+            </svg>
+            <div class="score-mini-val">78</div>
+          </div>
+          <div class="score-img-text">
+            <strong>¡Tu score este mes!</strong><br>
+            Lo estás haciendo bien 💪<br>
+            <span style="color:#4ade80">+12 pts vs mes anterior</span>
+          </div>
+        </div>
+        <div class="bubble-time">08:00</div>
+      </div>
+      <div class="msg out" id="c3m3" data-slide="3" style="display:none">
+        <div class="bubble">¡Gracias! ¿Qué debo mejorar?</div>
+        <div class="bubble-time">08:03</div>
+      </div>
+      <div class="msg in" id="c3m4" data-slide="3" style="display:none">
+        <div class="bubble">Tu médico revisará el informe completo esta semana. ¡Sigue así! 🌟</div>
+        <div class="bubble-time">08:03</div>
+      </div>
+      <!-- SLIDE 4: Recordatorios -->
+      <div class="msg in" id="c4m1" data-slide="4" style="display:none">
+        <div class="bubble">Buenos días Esteban 🌤️ ¿Ya tomaste tu <strong>Losartán</strong> de esta mañana?</div>
+        <div class="bubble-time">07:30</div>
+      </div>
+      <div class="msg out" id="c4m2" data-slide="4" style="display:none">
+        <div class="bubble">Sí ✓</div>
+        <div class="bubble-time">07:31</div>
+      </div>
+      <div class="msg in" id="c4m3" data-slide="4" style="display:none">
+        <div class="bubble">¡Perfecto! ✅ Registrado. Recuerda tomar agua durante el día.</div>
+        <div class="bubble-time">07:31</div>
+      </div>
+      <!-- SLIDE 5: Psicosocial -->
+      <div class="msg in" id="c5m1" data-slide="5" style="display:none">
+        <div class="bubble">Esteban, tu médico quiere saber cómo estás más allá de tu salud física. ¿Tienes 2 minutos?</div>
+        <div class="bubble-time">11:00</div>
+      </div>
+      <div class="msg out" id="c5m2" data-slide="5" style="display:none">
+        <div class="bubble">Sí, claro.</div>
+        <div class="bubble-time">11:01</div>
+      </div>
+      <div class="msg in" id="c5m3" data-slide="5" style="display:none">
+        <div class="bubble">Del 1 al 5, ¿cómo describirías tu nivel de estrés esta semana?</div>
+        <div class="bubble-time">11:01</div>
+      </div>
+      <div class="msg out" id="c5m4" data-slide="5" style="display:none">
+        <div class="bubble">4. Ha sido una semana difícil por el trabajo.</div>
+        <div class="bubble-time">11:02</div>
+      </div>
+      <div class="msg in" id="c5m5" data-slide="5" style="display:none">
+        <div class="bubble">Entendido. Tu médico lo tomará en cuenta en tu próxima consulta. 🧠</div>
+        <div class="bubble-time">11:02</div>
+      </div>
+    </div>
+    <div class="wa-input-bar">
+      <div class="wa-input-field">Escribe un mensaje...</div>
+      <div class="wa-send">▶</div>
+    </div>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 0 — HERO
+══════════════════════════════════════════════════════ -->
+<div class="slide slide-hero active" id="s0">
+  <div style="max-width:760px;width:100%;margin:auto;display:flex;flex-direction:column;align-items:center">
+    <svg class="hero-logo-big" viewBox="0 0 1024 1024" fill="none">
+      <rect x="290" y="235" width="440" height="440" rx="112" ry="112"
+        stroke="#F05252" stroke-width="58" fill="none"/>
+      <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+      <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466
+        Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550
+        C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+        stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+
+    <div class="hero-eyebrow vis-fade" id="h0ey">Smart Tracking</div>
+
+    <h1 class="hero-h1 vis-up" id="h0h1">
+      El paciente siempre<br>acompañado.<br>
+      <span class="c">El médico siempre informado.</span>
+    </h1>
+
+    <p class="hero-sub vis-up" id="h0sub">
+      MEDILYFT convierte cada consulta en el inicio de un seguimiento continuo y personalizado —
+      con tecnología que analiza, organiza y entrega información precisa
+      para que el médico tome las mejores decisiones.
+    </p>
+
+    <div class="hero-pills vis-fade" id="h0pills">
+      <div class="hero-pill red">Triaje inteligente</div>
+      <div class="hero-pill red">Perfil automático</div>
+      <div class="hero-pill red">Score de salud</div>
+      <div class="hero-pill red">Recordatorios</div>
+      <div class="hero-pill red">Bienestar psicosocial</div>
+    </div>
+
+    <div class="hero-cta vis-fade" id="h0cta">
+      Presiona → para comenzar
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 1 — TRIAJE
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="s1">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p1hd">
+      <h2>Triaje <span class="c">inteligente</span>:<br>el especialista correcto, siempre.</h2>
+      <p>Con los síntomas del chat y el perfil del paciente, el sistema evalúa la urgencia y deriva al especialista adecuado en segundos. El médico recibe el caso completo listo para atender.</p>
+    </div>
+
+    <div class="section-label vis-fade" id="p1lbl">Análisis del caso en tiempo real</div>
+
+    <div class="card vis-up" id="p1case" style="animation-delay:.15s">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--text)">Esteban M., 47 años</div>
+        <div class="sev-tag sev-grave">⚠ Urgente</div>
+      </div>
+      <div class="tp-row"><span class="tp-label">Síntoma principal</span><span class="tp-val">Dolor torácico opresivo</span></div>
+      <div class="tp-row"><span class="tp-label">Duración</span><span class="tp-val">2 horas</span></div>
+      <div class="tp-row"><span class="tp-label">Síntomas asociados</span><span class="tp-val">Diaforesis</span></div>
+      <div class="tp-row"><span class="tp-label">Antecedentes</span><span class="tp-val">HTA, DM2</span></div>
+    </div>
+
+    <div class="derivation-box vis-up" id="p1deriv" style="animation-delay:.3s">
+      <div class="deriv-icon">🫀</div>
+      <div class="deriv-info">
+        <h4>Cardiología</h4>
+        <p>Historial, ECG previo y medicación enviados automáticamente</p>
+      </div>
+      <div class="deriv-badge">✓ Derivado</div>
+    </div>
+
+    <div class="stat-row vis-fade" id="p1stats" style="animation-delay:.45s">
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--green)">8 seg</div>
+        <div class="stat-lbl">Tiempo de triaje</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--green)">96%</div>
+        <div class="stat-lbl">Precisión derivación</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-val" style="color:var(--red);font-size:16px">Decisión médica</div>
+        <div class="stat-lbl">siempre del doctor</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 2 — PERFIL AUTOMÁTICO
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p2hd">
+      <h2>Del chat al <span class="c">perfil clínico</span><br>en segundos.</h2>
+      <p>Cada respuesta en el chat extrae datos estructurados. El sistema construye automáticamente un perfil de riesgo personalizado — considerando sexo, edad, antecedentes y condiciones crónicas — para que el médico tenga contexto completo desde el primer momento.</p>
+    </div>
+
+    <div class="extract-flow vis-up" id="p2flow">
+      <span class="ef-tag">Diabetes T2</span>
+      <span class="ef-arrow">+</span>
+      <span class="ef-tag">58 años</span>
+      <span class="ef-arrow">+</span>
+      <span class="ef-tag">Mujer</span>
+      <span class="ef-arrow">+</span>
+      <span class="ef-tag">Metformina</span>
+      <span class="ef-arrow">→</span>
+      <span class="ef-tag out">Perfil Automático ✓</span>
+    </div>
+
+    <div class="profile-grid vis-up" id="p2grid" style="animation-delay:.2s">
+      <div class="prof-card highlight">
+        <div class="prof-card-label">Control prioritario</div>
+        <div class="prof-card-val red">HbA1c</div>
+        <div class="prof-card-sub">Por DM2 + edad ≥ 55</div>
+      </div>
+      <div class="prof-card highlight">
+        <div class="prof-card-label">Examen recomendado</div>
+        <div class="prof-card-val red">Función renal</div>
+        <div class="prof-card-sub">Creatinina · eGFR</div>
+      </div>
+      <div class="prof-card">
+        <div class="prof-card-label">Interacciones</div>
+        <div class="prof-card-val" style="font-size:16px">Metformina</div>
+        <div class="prof-card-sub">Revisar función renal antes de ajustar dosis</div>
+      </div>
+      <div class="prof-card">
+        <div class="prof-card-label">Frecuencia control</div>
+        <div class="prof-card-val">Trimestral</div>
+        <div class="prof-card-sub">Protocolo adulto mayor DM2</div>
+      </div>
+    </div>
+
+    <div class="risk-list vis-fade" id="p2risk" style="animation-delay:.35s">
+      <div class="rf-item">
+        <div class="rf-dot high"></div>
+        <span class="rf-label">Riesgo cardiovascular</span>
+        <span class="rf-val">Alto · DM2 + Edad</span>
+      </div>
+      <div class="rf-item">
+        <div class="rf-dot med"></div>
+        <span class="rf-label">Riesgo renal</span>
+        <span class="rf-val">Moderado · Metformina</span>
+      </div>
+      <div class="rf-item">
+        <div class="rf-dot low"></div>
+        <span class="rf-label">Adherencia estimada</span>
+        <span class="rf-val">Alta · Respuesta activa</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 3 — SCORE
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p3hd">
+      <h2>Score de salud:<br><span class="c">en tiempo real</span>, siempre en la nube.</h2>
+      <p>El sistema consolida adherencia, síntomas, exámenes y controles en un puntaje continuo almacenado en la nube. El médico lo revisa para tomar decisiones informadas — el paciente lo recibe de forma comprensible.</p>
+    </div>
+
+    <div class="section-label vis-fade" id="p3lbl">Panel de seguimiento · Esteban M.</div>
+
+    <div class="score-panel vis-up" id="p3score">
+      <div class="score-left">
+        <div class="score-ring-wrap">
+          <svg viewBox="0 0 140 140">
+            <circle class="arc-bg" cx="70" cy="70" r="58"/>
+            <circle class="arc-fill-g" id="arc3" cx="70" cy="70" r="58"/>
+          </svg>
+          <div class="score-ring-val">
+            <div class="srv-num">78</div>
+            <div class="srv-lbl">SCORE</div>
+          </div>
+        </div>
+        <div class="score-status">Bueno</div>
+        <div class="score-desc">Umbral óptimo: 80+</div>
+      </div>
+
+      <div class="score-right">
+        <div class="score-bar-row">
+          <div class="sbr-label"><span>Adherencia medicación</span><span>92%</span></div>
+          <div class="sbr-track"><div class="sbr-fill sbr-green" id="sb1" style="width:0"></div></div>
+        </div>
+        <div class="score-bar-row">
+          <div class="sbr-label"><span>Control de síntomas</span><span>74%</span></div>
+          <div class="sbr-track"><div class="sbr-fill sbr-amber" id="sb2" style="width:0"></div></div>
+        </div>
+        <div class="score-bar-row">
+          <div class="sbr-label"><span>Exámenes al día</span><span>60%</span></div>
+          <div class="sbr-track"><div class="sbr-fill sbr-red" id="sb3" style="width:0"></div></div>
+        </div>
+        <div class="score-bar-row">
+          <div class="sbr-label"><span>Respuesta a check-ins</span><span>88%</span></div>
+          <div class="sbr-track"><div class="sbr-fill sbr-green" id="sb4" style="width:0"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cloud-badge vis-fade" id="p3cloud" style="animation-delay:.4s">
+      ☁️ &nbsp; Historial completo en la nube — disponible para el médico en cualquier momento y dispositivo
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 4 — RECORDATORIOS
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p4hd">
+      <h2>Seguimiento <span class="c">proactivo</span>,<br>sin acosar al usuario.</h2>
+      <p>El sistema envía recordatorios precisos en el momento correcto. Sin saturar. Sin presionar. Cada mensaje tiene un propósito clínico — siempre respaldado y definido por el médico.</p>
+    </div>
+
+    <div class="section-label vis-fade" id="p4lbl">Casos activos bajo seguimiento</div>
+
+    <div class="vis-up" id="p4table" style="animation-delay:.15s;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)">
+      <table class="remind-table">
+        <thead>
+          <tr>
+            <th>Paciente</th><th>Medicación</th><th>Último check</th>
+            <th>Respuesta</th><th>Próxima acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="now">
+            <td><strong>Carlos M.</strong></td><td>Atorvastatina 20mg</td>
+            <td>Hoy 07:30</td><td><span class="rtag ok">✓ Respondió</span></td>
+            <td>Control viernes</td>
+          </tr>
+          <tr>
+            <td>María G.</td><td>Metformina 500mg</td>
+            <td>Ayer 08:00</td><td><span class="rtag ok">✓ Confirmó</span></td>
+            <td>Check D5</td>
+          </tr>
+          <tr>
+            <td>Ana R.</td><td>Amoxicilina 500mg</td>
+            <td>Hoy 09:00</td><td><span class="rtag pend">Pendiente</span></td>
+            <td>Recordatorio D2</td>
+          </tr>
+          <tr>
+            <td>Luis P.</td><td>Losartán 50mg</td>
+            <td>Ayer 20:00</td><td><span class="rtag ok">✓ Confirmó</span></td>
+            <td>Check semana</td>
+          </tr>
+          <tr>
+            <td>Pedro S.</td><td>Omeprazol 20mg</td>
+            <td>Hace 3 días</td><td><span class="rtag miss">Sin respuesta</span></td>
+            <td>⚠ Notif. médico</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="no-harassment vis-fade" id="p4nh" style="animation-delay:.3s">
+      <strong>Sin acoso:</strong> máximo 1 recordatorio diario · silencio automático en fin de semana · el paciente puede pausar alertas respondiendo "Pausa". Siempre humano, siempre respetuoso.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 5 — PSICOSOCIAL
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p5hd">
+      <h2>Bienestar <span class="c">psicosocial</span>:<br>el médico siempre guía.</h2>
+      <p>No es salud mental clínica. Son indicadores de bienestar laboral y social que el médico incorpora para una atención integral. Las preguntas las define el especialista — MEDILYFT solo recoge y organiza los datos.</p>
+    </div>
+
+    <div class="section-label vis-fade" id="p5lbl">Indicadores psicosociales · Ricardo V.</div>
+
+    <div class="psico-grid vis-up" id="p5grid" style="animation-delay:.15s">
+      <div class="psico-card">
+        <h4>🧠 Estrés laboral</h4>
+        <p>Score: <strong style="color:var(--gold)">4 / 5</strong> — Elevado esta semana. Detectado en check-in del martes.</p>
+      </div>
+      <div class="psico-card">
+        <h4>😴 Calidad del sueño</h4>
+        <p>Score: <strong style="color:var(--green)">3 / 5</strong> — Moderado. Sin cambio respecto a semana anterior.</p>
+      </div>
+      <div class="psico-card">
+        <h4>🤝 Red de apoyo</h4>
+        <p>Respuesta positiva. Vive con familia. Factor protector registrado en perfil.</p>
+      </div>
+      <div class="psico-card">
+        <h4>⚙️ Carga laboral</h4>
+        <p>Alta. Datos disponibles para el médico en la consulta del próximo viernes.</p>
+      </div>
+    </div>
+
+    <div class="doc-stamp vis-up" id="p5doc" style="animation-delay:.3s">
+      <div style="font-size:32px">👨‍⚕️</div>
+      <div>
+        <div style="font-size:14px;font-weight:800;margin-bottom:4px;color:var(--text)">Decisión médica, siempre.</div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.5">Los indicadores psicosociales se presentan al médico como contexto clínico complementario. Solo el médico interpreta, actúa y recomienda. MEDILYFT nunca diagnostica ni interviene psicológicamente.</div>
+      </div>
+    </div>
+
+    <div class="vis-fade" id="p5min" style="animation-delay:.45s;background:var(--gold-light);border:1px solid rgba(217,119,6,0.2);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--text-sub)">
+      📋 <strong style="color:var(--gold)">Ministerio del Trabajo:</strong> cuestionarios de bienestar laboral oficiales disponibles en el chat cuando el médico lo indica.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 6 — CENTRALIZACIÓN (orbital, full width)
+══════════════════════════════════════════════════════ -->
+<div class="slide slide-full" id="s6">
+  <div class="orbit-layout">
+    <!-- Left: heading -->
+    <div class="orbit-hd vis-up" id="p6hd">
+      <div class="orbit-eyebrow">Centralización</div>
+      <h2>Todo conectado.<br>Un solo <span class="c">superperfil</span>.</h2>
+      <p>Cada módulo alimenta un perfil clínico unificado en la nube. El médico ve la imagen completa — no datos aislados.</p>
+      <div class="orbit-tags">
+        <span class="otag vis-up" id="ot1">🔀 Triaje</span>
+        <span class="otag vis-up" id="ot2">👤 Perfil</span>
+        <span class="otag vis-up" id="ot3">📊 Score</span>
+        <span class="otag vis-up" id="ot4">💊 Adherencia</span>
+        <span class="otag vis-up" id="ot5">🧠 Psicosocial</span>
+      </div>
+    </div>
+
+    <!-- Right: orbital diagram -->
+    <div class="orbit-diagram vis-scale" id="p6orb">
+      <!-- orbit rings -->
+      <div class="orbit-ring ring-1"></div>
+      <div class="orbit-ring ring-2"></div>
+
+      <!-- center -->
+      <div class="orbit-center">
+        <div class="oc-logo">
+          <svg viewBox="0 0 1024 1024" fill="none" style="width:36px;height:36px">
+            <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+            <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+            <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="oc-name">Superperfil</div>
+        <div class="oc-sub">Esteban M.</div>
+        <div class="oc-score">82 pts</div>
+      </div>
+
+      <!-- orbiting nodes — each wraps a planet that counter-rotates -->
+      <div class="orbit-node on-1"><div class="onode-planet"><div class="op-ico">🔀</div><div class="op-lbl">Triaje</div></div></div>
+      <div class="orbit-node on-2"><div class="onode-planet"><div class="op-ico">👤</div><div class="op-lbl">Perfil</div></div></div>
+      <div class="orbit-node on-3"><div class="onode-planet"><div class="op-ico">📊</div><div class="op-lbl">Score</div></div></div>
+      <div class="orbit-node on-4"><div class="onode-planet"><div class="op-ico">💊</div><div class="op-lbl">Adherencia</div></div></div>
+      <div class="orbit-node on-5"><div class="onode-planet"><div class="op-ico">🧠</div><div class="op-lbl">Psicosocial</div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 7 — BENEFICIOS (full width, impactful)
+══════════════════════════════════════════════════════ -->
+<div class="slide slide-full" id="s7">
+  <div class="bfull-layout">
+    <div class="bfull-hd vis-up" id="p7hd">
+      <div class="orbit-eyebrow">Para la aseguradora</div>
+      <h2>La tecnología da <span class="c">datos</span>.<br>El médico toma <span class="g">decisiones</span>.</h2>
+    </div>
+
+    <div class="bfull-grid">
+      <div class="bfull-item vis-up" id="b1">
+        <div class="bfi-num c">−38%</div>
+        <div class="bfi-ico">🏥</div>
+        <h3>Hospitalizaciones evitables</h3>
+        <p>El seguimiento continuo detecta señales de deterioro días antes de que lleguen a urgencias. Cada alerta temprana es una hospitalización evitada.</p>
+      </div>
+      <div class="bfull-item vis-up" id="b2">
+        <div class="bfi-num g">+60%</div>
+        <div class="bfi-ico">💊</div>
+        <h3>Adherencia al tratamiento</h3>
+        <p>Los recordatorios precisos y sin acoso aumentan la tasa de cumplimiento del tratamiento. Pacientes que terminan su tratamiento no recaen.</p>
+      </div>
+      <div class="bfull-item vis-up" id="b3">
+        <div class="bfi-num" style="color:var(--gold)">360°</div>
+        <div class="bfi-ico">📊</div>
+        <h3>Datos para actuaría</h3>
+        <p>Perfiles clínicos continuos permiten segmentar el riesgo del pool con precisión. Mejor actuaría significa mejores primas y menos siniestros inesperados.</p>
+      </div>
+      <div class="bfull-item vis-up" id="b4">
+        <div class="bfi-num c">👨‍⚕️</div>
+        <div class="bfi-ico" style="font-size:0"></div>
+        <h3>El médico siempre decide</h3>
+        <p>MEDILYFT no reemplaza al médico. Le entrega información completa, sintetizada y en el momento exacto — para que cada decisión clínica sea la mejor posible.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /stage -->
+
+<div class="dots" id="dots"></div>
+<button class="nav-btn nav-prev" id="prev">←</button>
+<button class="nav-btn nav-next" id="next">→</button>
+
+<script>
+const SLIDES = 8;
+const TITLES = ['Introducción','Triaje Inteligente','Perfil Automático',
+  'Score de Salud','Recordatorios','Psicosocial','Centralización','Beneficios'];
+let cur = 0, busy = false;
+
+const dotsEl = document.getElementById('dots');
+for(let i=0;i<SLIDES;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+}
+
+function updateUI(n){
+  document.getElementById('counter').textContent =
+    String(n+1).padStart(2,'0')+' / '+String(SLIDES).padStart(2,'0');
+  document.getElementById('slide-title-tag').textContent = TITLES[n];
+  document.getElementById('prog').style.width = ((n+1)/SLIDES*100)+'%';
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===n));
+}
+
+const PHONE_SLIDES = new Set([1,2,3,4,5]);
+const sharedPhone = document.getElementById('shared-phone');
+const stageEl = document.getElementById('stage');
+
+function goTo(n){
+  if(n===cur||busy||n<0||n>=SLIDES)return;
+  busy=true;
+  const lv = document.getElementById('s'+cur);
+  const en = document.getElementById('s'+n);
+  const fwd = n > cur;
+
+  // phone visibility + stage shift
+  if(PHONE_SLIDES.has(n)){
+    sharedPhone.classList.add('visible');
+    stageEl.classList.add('with-phone');
+  } else {
+    sharedPhone.classList.remove('visible');
+    stageEl.classList.remove('with-phone');
+  }
+
+  // on backward nav, hide messages from slides > n
+  if(!fwd){
+    document.querySelectorAll('#shared-chat [data-slide]').forEach(el=>{
+      if(parseInt(el.dataset.slide) > n){
+        el.style.display='none';
+        el.classList.remove('show');
+      }
+    });
+  }
+
+  // 1. snap leaving to current position (no transition yet)
+  lv.classList.remove('animating');
+  lv.style.transform = 'translateY(0)';
+  lv.style.opacity = '1';
+
+  // 2. snap entering just off-screen (no transition)
+  en.classList.remove('animating','active');
+  en.style.transform = fwd ? 'translateY(70px)' : 'translateY(-70px)';
+  en.style.opacity = '0';
+
+  // 3. force layout
+  void en.offsetHeight;
+
+  // 4. enable transitions and animate
+  lv.classList.add('animating');
+  en.classList.add('animating');
+  lv.style.transform = fwd ? 'translateY(-70px)' : 'translateY(70px)';
+  lv.style.opacity = '0';
+  en.style.transform = 'translateY(0)';
+  en.style.opacity = '1';
+  en.classList.add('active');
+  cur=n; updateUI(n);
+
+  setTimeout(()=>{
+    lv.classList.remove('active','animating');
+    lv.style.cssText = '';
+    en.classList.remove('animating');
+    en.style.cssText = '';
+    busy=false;
+    animSlide(n);
+  }, 560);
+}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();goTo(cur+1);}
+  if(e.key==='ArrowLeft'){e.preventDefault();goTo(cur-1);}
+});
+
+let wheelAcc = 0, wheelTimer = null;
+document.addEventListener('wheel', e=>{
+  e.preventDefault();
+  wheelAcc += e.deltaY;
+  clearTimeout(wheelTimer);
+  wheelTimer = setTimeout(()=>{
+    if(wheelAcc > 40) goTo(cur+1);
+    else if(wheelAcc < -40) goTo(cur-1);
+    wheelAcc = 0;
+  }, 80);
+}, {passive:false});
+document.getElementById('prev').onclick=()=>goTo(cur-1);
+document.getElementById('next').onclick=()=>goTo(cur+1);
+
+function show(id,delay){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.opacity='';
+  el.classList.remove('vis');
+  setTimeout(()=>el.classList.add('vis'),delay);
+}
+function showMsg(id,delay){
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.display='flex';
+    requestAnimationFrame(()=>el.classList.add('show'));
+  },delay);
+}
+function showTyping(id,delay,duration,thenId){
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.display='flex';
+    setTimeout(()=>{
+      el.style.display='none';
+      if(thenId)showMsg(thenId,0);
+    },duration);
+  },delay);
+}
+
+function animSlide(n){
+  const fns=[anim0,anim1,anim2,anim3,anim4,anim5,anim6,anim7];
+  fns[n]?.();
+}
+
+function anim0(){
+  ['h0ey','h0h1','h0sub','h0pills','h0cta'].forEach((id,i)=>show(id,80+i*160));
+}
+function scrollChat(){ const c=document.getElementById('shared-chat'); if(c) c.scrollTop=c.scrollHeight; }
+function anim1(){
+  ['p1hd','p1lbl','p1case','p1deriv','p1stats'].forEach((id,i)=>show(id,80+i*200));
+  showMsg('c1m2', 600);      setTimeout(scrollChat,700);
+  showTyping('c1t1', 1600, 1000, 'c1m3');  setTimeout(scrollChat,2700);
+  showMsg('c1m4', 3400);     setTimeout(scrollChat,3500);
+  showTyping('c1t2', 4400, 900, 'c1m5');   setTimeout(scrollChat,5400);
+}
+function anim2(){
+  ['p2hd','p2flow','p2grid','p2risk'].forEach((id,i)=>show(id,80+i*180));
+  showMsg('c2m1', 400);      setTimeout(scrollChat,500);
+  showMsg('c2m2', 1600);     setTimeout(scrollChat,1700);
+  showTyping('c2t1', 2600, 900, 'c2m3');   setTimeout(scrollChat,3600);
+  showMsg('c2m4', 4200);     setTimeout(scrollChat,4300);
+  showMsg('c2m5', 5400);     setTimeout(scrollChat,5500);
+}
+function anim3(){
+  ['p3hd','p3lbl','p3score','p3cloud'].forEach((id,i)=>show(id,80+i*200));
+  setTimeout(()=>{
+    const arc=document.getElementById('arc3');
+    if(arc){ const c=2*Math.PI*58; arc.style.strokeDasharray=c; arc.style.strokeDashoffset=c-(c*0.78); }
+  },700);
+  setTimeout(()=>{ ['sb1','sb2','sb3','sb4'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el) el.style.width=['92%','74%','60%','88%'][i];
+  }); },750);
+  showMsg('c3m1', 500);      setTimeout(scrollChat,600);
+  showMsg('c3m2', 1600);
+  setTimeout(()=>{
+    const a=document.getElementById('wa-arc');
+    if(a){ const c=2*Math.PI*36; a.style.strokeDasharray=c; a.style.strokeDashoffset=c-(c*0.78); }
+    scrollChat();
+  },2100);
+  showMsg('c3m3', 3400);     setTimeout(scrollChat,3500);
+  showMsg('c3m4', 4600);     setTimeout(scrollChat,4700);
+}
+function anim4(){
+  ['p4hd','p4lbl','p4table','p4nh'].forEach((id,i)=>show(id,80+i*200));
+  showMsg('c4m1', 400);      setTimeout(scrollChat,500);
+  showMsg('c4m2', 1400);     setTimeout(scrollChat,1500);
+  showMsg('c4m3', 2400);     setTimeout(scrollChat,2500);
+}
+function anim5(){
+  ['p5hd','p5lbl','p5grid','p5doc','p5min'].forEach((id,i)=>show(id,80+i*180));
+  showMsg('c5m1', 400);      setTimeout(scrollChat,500);
+  showMsg('c5m2', 1600);     setTimeout(scrollChat,1700);
+  showMsg('c5m3', 2600);     setTimeout(scrollChat,2700);
+  showMsg('c5m4', 3800);     setTimeout(scrollChat,3900);
+  showMsg('c5m5', 5000);     setTimeout(scrollChat,5100);
+}
+function anim6(){
+  show('p6hd', 100);
+  ['ot1','ot2','ot3','ot4','ot5'].forEach((id,i)=>show(id, 600+i*120));
+  show('p6orb', 300);
+}
+function anim7(){
+  show('p7hd', 80);
+  ['b1','b2','b3','b4'].forEach((id,i)=>show(id, 300+i*180));
+}
+
+updateUI(0);
+setTimeout(()=>anim0(),200);
+</script>
+</body>
+</html>

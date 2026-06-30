@@ -66,11 +66,12 @@ async function showPacienteDetalle(id) {
     </tr>`).join('')}</tbody></table>`
     : '<div class="empty-state">Sin consultas</div>';
 
-  const [seguimientos, labSeguimientos, cronicas, ultimoBienestar] = await Promise.all([
+  const [seguimientos, labSeguimientos, cronicas, ultimoBienestar, healthScores] = await Promise.all([
     supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&order=tipo.asc,activo.desc,created_at.desc`).then(r => r || []),
     supa('GET', 'seguimiento_laboratorio', null, `?paciente_id=eq.${id}&order=created_at.desc&limit=5&select=*,consultas(created_at,diagnostico)`).then(r => r || []),
     supa('GET', 'enfermedades_cronicas', null, `?paciente_id=eq.${id}&order=activo.desc,created_at.desc`).then(r => r || []),
-    supa('GET', 'seguimiento_respuestas', null, `?paciente_id=eq.${id}&tipo=eq.bienestar&respuesta=not.is.null&order=created_at.desc&limit=5`).then(r => r || [])
+    supa('GET', 'seguimiento_respuestas', null, `?paciente_id=eq.${id}&tipo=eq.bienestar&respuesta=not.is.null&order=created_at.desc&limit=5`).then(r => r || []),
+    supa('GET', 'paciente_health_score', null, `?paciente_id=eq.${id}&order=created_at.desc&limit=1`).then(r => r || [])
   ]);
 
   const fmtCada = s => s.frecuencia_horas < 1 ? `cada ${Math.round(s.frecuencia_horas * 60)} min` : `cada ${s.frecuencia_horas}h`;
@@ -78,6 +79,30 @@ async function showPacienteDetalle(id) {
   const _BW_LBL = ['','Excelente','Bien','Regular','Mal','Muy mal'];
   const _btnDes = (recId) => `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorio('${recId}','${id}')">🔕 Desactivar</button>`;
   const _btnRea = (recId) => `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorio('${recId}','${id}')">🔔 Reactivar</button>`;
+
+  // ── Sección Health Score ─────────────────────────────────────────────────
+  const _HS_COL = { controlado: '#16a34a', en_riesgo: '#f59e0b', alerta: '#dc2626' };
+  const _HS_LBL = { controlado: 'Controlado', en_riesgo: 'En riesgo', alerta: 'Alerta' };
+  const hs = healthScores[0];
+  let htmlHealthScore = `<div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">📊 Health Score</div>`;
+  htmlHealthScore += hs ? `
+    <div class="detail-item" style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div>
+          <div class="detail-label">Últimos ${new Date(hs.periodo_desde).toLocaleDateString('es-EC')} – ${new Date(hs.periodo_hasta).toLocaleDateString('es-EC')}</div>
+          <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px">
+            <span style="font-size:24px;font-weight:700;color:${_HS_COL[hs.etiqueta]}">${hs.score_calculado}</span>
+            <span class="badge" style="background:${_HS_COL[hs.etiqueta]}22;color:${_HS_COL[hs.etiqueta]}">${_HS_LBL[hs.etiqueta]}</span>
+          </div>
+          <div style="font-size:11px;color:#888;margin-top:6px;display:flex;flex-wrap:wrap;gap:10px">
+            ${hs.adherencia_tratamiento_pct != null ? `<span>💊 Adherencia: ${hs.adherencia_tratamiento_pct}%</span>` : ''}
+            ${hs.bienestar_promedio != null ? `<span>💙 Bienestar prom: ${hs.bienestar_promedio}</span>` : ''}
+            ${hs.controles_preventivos_pct != null ? `<span>🧪 Controles: ${hs.controles_preventivos_pct}%</span>` : ''}
+            ${hs.participacion_activa_pct != null ? `<span>📱 Participación: ${hs.participacion_activa_pct}%</span>` : ''}
+          </div>
+        </div>
+      </div>
+    </div>` : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin Health Score calculado aún — se genera automáticamente con la actividad de seguimiento del paciente.</div>`;
 
   // ── Sección Bienestar ────────────────────────────────────────────────────
   const recBienestar = seguimientos.filter(s => s.tipo === 'bienestar');
@@ -167,7 +192,7 @@ async function showPacienteDetalle(id) {
         </div>`).join('')
     : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin enfermedades crónicas registradas.</div>`;
 
-  document.getElementById('seguimientoList').innerHTML = htmlBienestar + htmlMeds + htmlLab + htmlCronicas;
+  document.getElementById('seguimientoList').innerHTML = htmlHealthScore + htmlBienestar + htmlMeds + htmlLab + htmlCronicas;
 
   showPage('paciente-detalle');
   document.querySelectorAll('#page-paciente-detalle .tab').forEach(t => t.classList.remove('active'));

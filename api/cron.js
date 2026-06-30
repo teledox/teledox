@@ -8,6 +8,7 @@ const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratori
 const { procesarTracking: _procesarTracking } = require('../src/flows/flujo-tracking');
 const { getMsgPregunta: getPsiPregunta } = require('../src/flows/flujo-psicosocial');
 const { normalizePhone } = require('../src/utils/telefono');
+const { calcularYGuardarScorePaciente } = require('../src/services/healthScoreAdherencia');
 
 // Ecuador es UTC-5 sin horario de verano.
 // Convierte una fecha UTC al día de semana y hora local ecuatoriana.
@@ -577,6 +578,24 @@ module.exports = async function handler(req, res) {
         procesados++;
       } catch (e) {
         console.error('Error procesando propuesta:', c.id, e.message);
+        errores++;
+      }
+    }
+
+    // Health Score de adherencia — mensual, por paciente regular (no B2B tracking)
+    const pacientesScore = await query('GET', 'pacientes', null,
+      `?proximo_health_score=lte.${ahora.toISOString()}&select=id,nombre,apellidos,telefono`
+    );
+
+    for (const p of pacientesScore || []) {
+      try {
+        await calcularYGuardarScorePaciente(p);
+        await query('PATCH', 'pacientes', {
+          proximo_health_score: new Date(ahora.getTime() + 30 * 86400000).toISOString()
+        }, `?id=eq.${p.id}`);
+        procesados++;
+      } catch (e) {
+        console.error('Error calculando health score:', p.id, e.message);
         errores++;
       }
     }

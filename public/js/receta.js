@@ -296,6 +296,7 @@ async function openReceta(consultaId, pacienteId) {
   if (typeof renderPreviewsGuardados === 'function') renderPreviewsGuardados();
 
   // Timeline de seguimiento de esta consulta + enfermedades crónicas del paciente
+  if (typeof renderHealthScoreConsulta === 'function') renderHealthScoreConsulta();
   if (typeof renderBienestarConsulta === 'function') renderBienestarConsulta();
   if (typeof renderSeguimientoTimeline === 'function') renderSeguimientoTimeline();
   if (typeof renderRecordatoriosConsulta === 'function') renderRecordatoriosConsulta();
@@ -310,6 +311,107 @@ async function openReceta(consultaId, pacienteId) {
 
   // Preguntas del paciente
   renderMensajesConsulta();
+}
+
+// ── Health Score de la consulta (adherencia/engagement, no signos vitales) ──
+// Mismos 4 pilares que el Health Score mensual del paciente, pero escopados a
+// esta consulta_id en vez de una ventana de 30 días — sirve como insumo para
+// decidir el alta, no como tendencia de largo plazo.
+async function renderHealthScoreConsulta() {
+  const el = document.getElementById('healthScoreConsultaContent');
+  if (!el) return;
+  el.innerHTML = '<div class="empty-state" style="padding:8px 0">Cargando...</div>';
+
+  const [respuestas, labs, yaCerrado] = await Promise.all([
+    supa('GET', 'seguimiento_respuestas', null, `?consulta_id=eq.${recetaConsultaId}&select=*,recordatorios(tipo)`).then(r => r || []),
+    supa('GET', 'seguimiento_laboratorio', null, `?consulta_id=eq.${recetaConsultaId}`).then(r => r || []),
+    supa('GET', 'cierres_casos', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`).then(r => (r || [])[0] || null)
+  ]);
+
+  const respondidas = respuestas.filter(r => r.respuesta != null);
+  const respuestasMed = respondidas.filter(r => r.recordatorios?.tipo === 'medicamento');
+  const adherenciaTratamientoPct = respuestasMed.length
+    ? Math.round((respuestasMed.filter(r => r.tomo_medicamento === true).length / respuestasMed.length) * 100)
+    : null;
+
+  const respuestasBienestar = respondidas.filter(r => r.nivel_bienestar != null);
+  const bienestarProm = respuestasBienestar.length
+    ? respuestasBienestar.reduce((s, r) => s + r.nivel_bienestar, 0) / respuestasBienestar.length
+    : null;
+
+  const controlesPreventivosPct = labs.length
+    ? Math.round((labs.filter(l => l.estado === 'confirmado').length / labs.length) * 100)
+    : null;
+
+  const participacionActivaPct = respuestas.length
+    ? Math.round((respondidas.length / respuestas.length) * 100)
+    : null;
+
+  const { score, etiqueta } = calcularScoreAdherencia({
+    adherenciaTratamientoPct, bienestarProm, controlesPreventivosPct, participacionActivaPct
+  });
+
+  const _HS_COL = { controlado: '#16a34a', en_riesgo: '#f59e0b', alerta: '#dc2626' };
+  const _HS_LBL = { controlado: 'Controlado', en_riesgo: 'En riesgo', alerta: 'Alerta' };
+
+  el.innerHTML = score != null ? `
+    <div class="detail-item" style="margin-bottom:8px">
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span style="font-size:24px;font-weight:700;color:${_HS_COL[etiqueta]}">${score}</span>
+        <span class="badge" style="background:${_HS_COL[etiqueta]}22;color:${_HS_COL[etiqueta]}">${_HS_LBL[etiqueta]}</span>
+      </div>
+      <div style="font-size:11px;color:#888;margin-top:6px;display:flex;flex-wrap:wrap;gap:10px">
+        ${adherenciaTratamientoPct != null ? `<span>💊 Adherencia: ${adherenciaTratamientoPct}%</span>` : ''}
+        ${bienestarProm != null ? `<span>💙 Bienestar prom: ${Math.round(bienestarProm * 100) / 100}</span>` : ''}
+        ${controlesPreventivosPct != null ? `<span>🧪 Controles: ${controlesPreventivosPct}%</span>` : ''}
+        ${participacionActivaPct != null ? `<span>📱 Participación: ${participacionActivaPct}%</span>` : ''}
+      </div>
+    </div>` : `<div class="empty-state" style="padding:6px 0;font-size:12px">Aún no hay suficiente actividad de seguimiento para calcular el score de esta consulta.</div>`;
+
+  const btnAlta = document.getElementById('btnDarDeAlta');
+  if (btnAlta) {
+    if (yaCerrado) {
+      btnAlta.disabled = true;
+      btnAlta.textContent = `✅ Dada de alta (${yaCerrado.resultado})`;
+    } else {
+      btnAlta.disabled = false;
+      btnAlta.textContent = '✅ Dar de alta';
+    }
+  }
+}
+
+// ── Dar de alta — cierre manual del caso por el médico ──────────────────────
+// A diferencia del cierre automático (paciente responde el WhatsApp de fin de
+// tratamiento), esto lo decide el médico directamente desde el panel.
+function darDeAltaConsulta() {
+  abrirConfirmAccion(
+    'Dar de alta',
+    '¿Confirmas el alta de esta consulta? Se desactivarán los recordatorios pendientes.',
+    async () => {
+      const resultado = prompt('Resultado del caso:\n1 = Exitoso\n2 = Parcial\n3 = Sin mejoría\n4 = Abandono', '1');
+      const mapa = { '1': 'exitoso', '2': 'parcial', '3': 'sin_mejoria', '4': 'abandono' };
+      const valor = mapa[resultado];
+      if (!valor) { showToast('⚠️ Alta cancelada — resultado no válido'); return; }
+
+      try {
+        await supa('POST', 'cierres_casos', {
+          tipo: 'prescripcion',
+          resultado: valor,
+          paciente_id: recetaPacienteId,
+          consulta_id: recetaConsultaId,
+          empresa_id: currentPacienteData?.cliente_b2b_id || null,
+          cerrado_por_medico_id: currentUser?.id || null
+        });
+        await supa('PATCH', 'recordatorios', { activo: false }, `?consulta_id=eq.${recetaConsultaId}&activo=eq.true`);
+        showToast('✅ Caso dado de alta');
+        renderHealthScoreConsulta();
+        if (typeof renderRecordatoriosConsulta === 'function') renderRecordatoriosConsulta();
+      } catch (e) {
+        console.error('Error dando de alta:', e);
+        showToast('❌ No se pudo registrar el alta');
+      }
+    }
+  );
 }
 
 // ── Enlace de teleconsulta (Meet/Zoom/Teams) ─────────────────────────────

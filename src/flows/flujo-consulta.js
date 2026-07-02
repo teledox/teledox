@@ -17,7 +17,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
   let nuevoPaso = paso;
 
   const ESTADOS_VALIDOS = ['inicio', 'cedula', 'consentimiento', 'sintomas', 'confirmar_datos',
-    'nombre', 'apellidos', 'edad', 'fecha_nacimiento', 'correo', 'confirmar_telefono',
+    'nombre', 'apellidos', 'edad', 'sexo', 'fecha_nacimiento', 'correo', 'confirmar_telefono',
     'otro_telefono', 'residencia', 'prioridad', 'finalizar'];
   if (!ESTADOS_VALIDOS.includes(paso)) {
     await eliminar(telefono);
@@ -73,6 +73,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       datos.apellidos = paciente.apellidos || '';
       datos.nombreCompleto = `${paciente.nombre || ''} ${paciente.apellidos || ''}`.trim();
       datos.edad = paciente.edad || '';
+      datos.sexo = paciente.sexo || '';
       datos.fecha_nacimiento = paciente.fecha_nacimiento || '';
       datos.correo = paciente.correo || '';
       datos.telefono = paciente.telefono || '';
@@ -194,7 +195,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
         const b2cDatos = { ...datos, _flujo: 'b2c', modalidad: datos.modalidad || 'b2c' };
         await guardar(telefono, 'pago', b2cDatos, 'b2c');
         const resumen = datosCompletos
-          ? `\n\nYa tenemos sus datos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}`
+          ? `\n\nYa tenemos sus datos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n⚧ *Sexo:* ${datos.sexo === 'F' ? 'Femenino' : datos.sexo === 'M' ? 'Masculino' : '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}`
           : '';
         return {
           respuesta: `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.${resumen}\n\nEl costo de la teleconsulta es *$8.00*.\n\n¿Cómo desea realizar el pago?`,
@@ -205,7 +206,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
 
       if (datosCompletos) {
         return {
-          respuesta: `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nYa tenemos estos datos suyos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n\n¿Desea usar estos datos o prefiere actualizarlos?`,
+          respuesta: `✅ Sus síntomas pueden ser atendidos por *teleconsulta*.\n\nYa tenemos estos datos suyos registrados:\n\n👤 *Nombre:* ${datos.nombreCompleto}\n🎂 *Edad:* ${datos.edad || '—'}\n⚧ *Sexo:* ${datos.sexo === 'F' ? 'Femenino' : datos.sexo === 'M' ? 'Masculino' : '—'}\n📧 *Correo:* ${datos.correo}\n📱 *Teléfono:* ${datos.telefono}\n📍 *Residencia:* ${datos.lugar_residencia}\n\n¿Desea usar estos datos o prefiere actualizarlos?`,
           paso: 'confirmar_datos', datos, terminar: false,
           botones: [
             { id: 'usar',       titulo: '✅ Usar mis datos'  },
@@ -255,6 +256,18 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
 
   } else if (paso === 'edad') {
     datos.edad = mensaje;
+    return {
+      respuesta: `*Sexo biológico:*`,
+      paso: 'sexo', datos, terminar: false,
+      botones: [
+        { id: 'masculino', titulo: '👨 Masculino' },
+        { id: 'femenino',  titulo: '👩 Femenino'  },
+      ]
+    };
+
+  } else if (paso === 'sexo') {
+    const m = mensaje.trim().toLowerCase();
+    datos.sexo = (m === 'femenino' || m === 'f') ? 'F' : 'M';
     respuesta = `*Fecha de nacimiento* (DD/MM/AAAA, ej: 15/03/1990):`;
     nuevoPaso = 'fecha_nacimiento';
 
@@ -334,7 +347,7 @@ async function procesarPaso(paso, mensaje, datos, telefono, nombreWhatsApp, msg)
       apellidos: datos.apellidos,
       edad: datos.edad,
       fecha_nacimiento: datos.fecha_nacimiento,
-      sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
+      sexo: datos.sexo || inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
       correo: datos.correo,
       telefono: datos.telefono,
       lugar_residencia: datos.lugar_residencia,
@@ -409,7 +422,7 @@ async function confirmarConsultaFueraHorario(datos, telefono) {
   await actualizar(datos.cedula, {
     nombre: datos.nombre, apellidos: datos.apellidos,
     edad: datos.edad, fecha_nacimiento: datos.fecha_nacimiento,
-    sexo: inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
+    sexo: datos.sexo || inferirSexo(datos.nombreCompleto || `${datos.nombre} ${datos.apellidos}`),
     correo: datos.correo, telefono: datos.telefono,
     lugar_residencia: datos.lugar_residencia,
     updated_at: new Date().toISOString()

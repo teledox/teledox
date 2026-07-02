@@ -206,13 +206,14 @@ async function generarRecetaPDF() {
   }
 
   // ── FIRMA ──────────────────────────────────────────────────────────────────
-  y -= 20;
+  // El sello de firma electrónica va sobre la línea, encima del nombre del profesional
+  y -= 64;
   page.drawLine({ start:{x:248, y}, end:{x:480, y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
   if (medNom) page.drawText(medNom, { x:252, y:y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
   if (medReg) page.drawText(medReg, { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   if (medEsp) page.drawText(medEsp, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Receta medica', posY: y - 40 });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Receta medica', posX: 252, posY: y + 6 });
   return await guardarPDFConFirma(doc, 'Receta medica');
 }
 
@@ -456,14 +457,15 @@ async function generarHistoriaClinicaPDF() {
     s3.y -= 18;
   });
 
-  // Firma siempre anclada al tercio inferior de la página
-  const firmaY = Math.min(s3.y - 20, 200);
+  // Firma siempre anclada al tercio inferior de la página; el sello de firma
+  // electrónica va sobre la línea, encima del nombre del profesional
+  const firmaY = Math.min(s3.y - 64, 200);
   p3.drawLine({ start:{x:248, y:firmaY}, end:{x:480, y:firmaY}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
   if (docNom) p3.drawText(docNom, { x:252, y:firmaY-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
   if (docReg) p3.drawText(docReg, { x:252, y:firmaY-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   if (docEsp) p3.drawText(docEsp, { x:252, y:firmaY-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
-  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: grisOsc, tipoDocumento: 'Historia clinica', posY: firmaY - 40 });
+  await dibujarFirmaElectronicaPDF(doc, p3, { font: normal, color: grisOsc, tipoDocumento: 'Historia clinica', posX: 252, posY: firmaY + 6 });
   return await guardarPDFConFirma(doc, 'Historia clinica');
 }
 
@@ -559,7 +561,8 @@ async function generarInterconsultaPDF() {
   // ── FECHA Y FIRMA ───────────────────────────────────────────────────────────
   const fechaSol = gV('inter-fecha') || new Date().toLocaleDateString('es-EC');
   page.drawText('Fecha de solicitud: ' + fechaSol, { x: LM+4, y, size:8, font:normal, color:negro });
-  y -= 26;
+  // El sello de firma electrónica va sobre la línea, encima del nombre del profesional
+  y -= 64;
 
   const medNom = _pdfSafe(`Dr. ${u.nombre||''} ${u.apellidos||''}`.trim());
   const medReg = _pdfSafe(u.numero_registro ? 'Reg. MSP: ' + u.numero_registro : '');
@@ -570,7 +573,7 @@ async function generarInterconsultaPDF() {
   if (medReg) page.drawText(medReg, { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   if (medEsp) page.drawText(medEsp, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Interconsulta medica', posY: y - 40 });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Interconsulta medica', posX: 252, posY: y + 6 });
   return await guardarPDFConFirma(doc, 'Interconsulta medica');
 }
 
@@ -639,7 +642,7 @@ async function generarCertificadoPDF() {
   y -= 4;
 
   // ── SECCIÓN C ──────────────────────────────────────────────────────────────
-  seccion('C)  MOTIVO DE AISLAMIENTO/ENFERMEDAD');
+  seccion('C)  MOTIVO DE ENFERMEDAD');
   fila('Diagnostico',          gV('cert-diagnostico'));
   fila('Codigo CIE 10',        gV('cert-cie10'));
   fila('Tipo de Contingencia', gV('cert-tipo-contingencia'));
@@ -652,10 +655,9 @@ async function generarCertificadoPDF() {
   cb(CX + 32, sval === 'NO'); page.drawText('NO', { x: CX + 43,      y, size: 7.5, font: normal, color: negro });
   y -= 14;
 
-  // Tipo enfermedad / aislamiento
+  // Tipo enfermedad
   page.drawText('Tipo de enfermedad:', { x: LM + 4, y, size: 7.5, font: bold, color: grisOsc });
-  cb(CX,      gCB('cert-tipo-enfermedad'));  page.drawText('Enfermedad',             { x: CX + 11,  y, size: 7.5, font: normal, color: negro });
-  cb(CX + 84, gCB('cert-tipo-aislamiento')); page.drawText('Aislamiento/teletrabajo', { x: CX + 95, y, size: 7.5, font: normal, color: negro });
+  cb(CX, gCB('cert-tipo-enfermedad'));  page.drawText('Enfermedad', { x: CX + 11, y, size: 7.5, font: normal, color: negro });
   y -= 16;
 
   // Descripción
@@ -680,12 +682,15 @@ async function generarCertificadoPDF() {
   y -= 14;
   const diasNum   = gV('cert-dias-num');
   const diasLetra = gV('cert-dias-letra');
+  // Las fechas del reposo van en formato DD-MM-AAAA (el input type=date da AAAA-MM-DD)
+  const fDMA = s => /^\d{4}-\d{2}-\d{2}$/.test(s) ? s.split('-').reverse().join('-') : s;
   fila('Total de dias concedidos', [diasNum ? diasNum + ' dias' : '', diasLetra ? '(' + diasLetra + ')' : ''].filter(Boolean).join(' '));
-  fila('Desde', [gV('cert-desde'), gV('cert-desde-letra')].filter(Boolean).join('   '));
-  fila('Hasta', [gV('cert-hasta'), gV('cert-hasta-letra')].filter(Boolean).join('   '));
+  fila('Desde', [fDMA(gV('cert-desde')), gV('cert-desde-letra')].filter(Boolean).join('   '));
+  fila('Hasta', [fDMA(gV('cert-hasta')), gV('cert-hasta-letra')].filter(Boolean).join('   '));
 
   // ── FIRMA ──────────────────────────────────────────────────────────────────
-  y -= 18;
+  // El sello de firma electrónica va sobre la línea, encima del nombre del profesional
+  y -= 64;
   const docNom = _pdfSafe(gV('cert-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre||''} ${currentUser.apellidos||''}`.trim() : ''));
   const docReg = _pdfSafe(gV('cert-reg-medico') || (currentUser?.numero_registro ? 'Reg. MSP: ' + currentUser.numero_registro : ''));
   const docEsp = _pdfSafe(currentUser?.especialidad || 'MEDICINA GENERAL');
@@ -695,7 +700,7 @@ async function generarCertificadoPDF() {
   if (docReg) page.drawText(docReg, { x: 252, y: y - 25, size: 7.5, font: normal, color: grisOsc, maxWidth: 224 });
   if (docEsp) page.drawText(docEsp, { x: 252, y: y - 37, size: 7.5, font: normal, color: grisOsc, maxWidth: 224 });
 
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Certificado medico', posY: y - 40 });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Certificado medico', posX: 252, posY: y + 6 });
   return await guardarPDFConFirma(doc, 'Certificado medico');
 }
 
@@ -787,20 +792,18 @@ async function generarPedidoPDF() {
     y -= 6;
   }
 
-  y -= 30;
+  // El sello de firma electrónica va sobre la línea, encima del nombre del profesional
+  y -= 64;
   const nombreMedico2 = gV('lab-nombre-medico') || (currentUser ? `Dr. ${currentUser.nombre || ''} ${currentUser.apellidos || ''}`.trim() : '');
-  const _p12Lab = typeof getP12Activo === 'function' ? getP12Activo() : null;
-  if (!_p12Lab) {
-    page.drawLine({ start:{x:248, y}, end:{x:480, y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
-    if (nombreMedico2) page.drawText(nombreMedico2, { x:252, y:y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
-    const regMedico = gV('lab-reg-medico');
-    if (regMedico)    page.drawText(regMedico,    { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
-    const espMedico = gV('lab-esp-medico') || (currentUser?.especialidad || 'MEDICINA GENERAL');
-    page.drawText(espMedico, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
-  }
+  page.drawLine({ start:{x:248, y}, end:{x:480, y}, thickness:0.5, color:rgb(0.5,0.5,0.5) });
+  if (nombreMedico2) page.drawText(nombreMedico2, { x:252, y:y-13, size:8,   font:bold,   color:negro,   maxWidth:224 });
+  const regMedico = gV('lab-reg-medico');
+  if (regMedico)    page.drawText(regMedico,    { x:252, y:y-25, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
+  const espMedico = gV('lab-esp-medico') || (currentUser?.especialidad || 'MEDICINA GENERAL');
+  page.drawText(espMedico, { x:252, y:y-37, size:7.5, font:normal, color:grisOsc, maxWidth:224 });
   page.drawLine({ start:{x:LM, y:55}, end:{x:RM, y:55}, thickness:0.4, color:rgb(0.82,0.82,0.82) });
   page.drawText('Documento generado por MediLyft · VitalClub · Confidencial · LOPDP Ecuador', { x:LM, y:42, size:7, font:normal, color:grisOsc });
-  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Pedido de laboratorio', posY: y - 40 });
+  await dibujarFirmaElectronicaPDF(doc, page, { font: normal, color: grisOsc, tipoDocumento: 'Pedido de laboratorio', posX: 252, posY: y + 6 });
 
   return await guardarPDFConFirma(doc, 'Pedido de laboratorio');
 }

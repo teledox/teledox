@@ -101,6 +101,15 @@ tr:hover td{background:#fafafa}
 .muted{color:#9ca3af}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e3a5f;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
+/* mapa de flujos */
+.mapa-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#555}
+.mapa-legend b{color:#333}
+.mapa-container{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.2rem;overflow:auto}
+.mapa-container svg{min-width:900px;height:auto}
+.mapa-container .node rect,.mapa-container .node polygon{cursor:pointer}
+.mapa-fallback .flow-lane{cursor:default}
+.mapa-fallback .chip.link{cursor:pointer;border-color:#93c5fd;background:#eff6ff;color:#1d4ed8;font-weight:600}
+.mapa-fallback .chip.link:hover{background:#dbeafe}
 @media(max-width:760px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -136,6 +145,7 @@ tr:hover td{background:#fafafa}
     <button class="tab active" id="tab-tecnica" onclick="showTab('tecnica')">Salud técnica</button>
     <button class="tab" id="tab-vivo" onclick="showTab('vivo')">Flujos en vivo</button>
     <button class="tab" id="tab-explorador" onclick="showTab('explorador')">Explorador</button>
+    <button class="tab" id="tab-mapa" onclick="showTab('mapa')">Mapa</button>
   </div>
 
   <div class="main">
@@ -175,13 +185,21 @@ tr:hover td{background:#fafafa}
       <div id="flowPills"></div>
       <div id="flowDetail"></div>
     </div>
+
+    <div class="page" id="page-mapa">
+      <div class="toolbar"><h1>Mapa de flujos</h1><div class="toolbar-right"><span>qué flujo lleva a cuál · clic en una caja para abrirla en el Explorador</span></div></div>
+      <div class="mapa-legend" id="mapaLegend"></div>
+      <div id="mapaContainer" class="mapa-container"></div>
+    </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script src="/flows/flow-graph.js"></script>
+<script src="/flows/flow-map.js"></script>
 <script>
 const SUPA_URL = 'https://kcoopkkvbkgrnkpksiuh.supabase.co';
 const SUPA_KEY = 'sb_publishable_cxK_dgG5vRrJQynj06G-Bg_MrZotk6D';
@@ -241,6 +259,7 @@ function showTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   document.getElementById('tab-' + name).classList.add('active');
+  if (name === 'mapa') renderMapa();
 }
 
 // ── Explorador de flujos (lee FLOW_GRAPH del manifiesto) ───────────────────
@@ -303,6 +322,120 @@ function renderDetalle() {
 function abrirNodo(id) {
   const el = document.getElementById('node-' + id);
   if (el) { el.classList.add('open'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
+}
+
+// ── Mapa de flujos (deriva de FLOW_GRAPH vía flow-map.js, render con Mermaid) ─
+const ORIGEN_INFO = {
+  chat:   { emoji: '💬', label: 'se entra escribiendo "hola"' },
+  cron:   { emoji: '⏰', label: 'disparado por api/cron.js' },
+  medico: { emoji: '🩺', label: 'disparado por acción del médico/agente' },
+  boton:  { emoji: '🔘', label: 'botón puntual de WhatsApp' },
+  salto:  { emoji: '',   label: 'solo se llega desde otro flujo (ver flechas)' },
+};
+let mapaRenderizado = false;
+
+function irAFlujo(id) {
+  selFlujo(id);
+  showTab('explorador');
+}
+window.irAFlujo = irAFlujo; // mermaid invoca los "click" fuera del scope de módulo
+
+function mmEsc(s) {
+  return String(s ?? '').replace(/"/g, "'").replace(/[\n\r]/g, ' ').trim();
+}
+
+function renderMapa() {
+  if (mapaRenderizado) return;
+  mapaRenderizado = true;
+  renderLeyendaMapa();
+  const cont = document.getElementById('mapaContainer');
+  if (typeof FLOW_MAP === 'undefined' || typeof mermaid === 'undefined') {
+    renderMapaFallback('La librería de diagramas (Mermaid) no cargó — mostrando lista de conexiones.');
+    return;
+  }
+  try {
+    const { edges, fueraHorario } = FLOW_MAP.derivarMapa(FLOW_GRAPH);
+    const grupos = { normal: [], tracking: [] };
+    for (const [id, f] of Object.entries(FLOW_GRAPH)) grupos[f.panel || 'normal'].push(id);
+
+    const nodoDef = id => {
+      const f = FLOW_GRAPH[id];
+      const info = ORIGEN_INFO[f.origen] || {};
+      const label = mmEsc(`${info.emoji ? info.emoji + ' ' : ''}${f.nombre}`);
+      return `    ${id}["${label}"]`;
+    };
+
+    let mm = 'flowchart LR\n';
+    mm += '  subgraph panelNormal["PANEL NORMAL"]\n' + grupos.normal.map(nodoDef).join('\n') + '\n  end\n';
+    if (grupos.tracking.length) {
+      mm += '  subgraph panelTracking["PANEL TRACKING"]\n' + grupos.tracking.map(nodoDef).join('\n') + '\n  end\n';
+    }
+    if (Object.keys(fueraHorario).length) {
+      mm += '  FUERA_HORARIO(["⏳ Fuera de horario\\n(queda pendiente)"])\n';
+    }
+    for (const e of edges) {
+      mm += `  ${e.from} -->|"${mmEsc(e.label)}"| ${e.to}\n`;
+    }
+    for (const fid of Object.keys(fueraHorario)) {
+      mm += `  ${fid} -.->|"fuera de horario"| FUERA_HORARIO\n`;
+    }
+    for (const id of Object.keys(FLOW_GRAPH)) {
+      mm += `  click ${id} call irAFlujo("${id}")\n`;
+    }
+    mm += '  classDef default fill:#fff,stroke:#cbd5e1,stroke-width:1.3px,color:#1e293b,font-size:12px;\n';
+    mm += '  classDef fueraH fill:#fef3c7,stroke:#f59e0b,color:#92400e,font-size:11px;\n';
+    if (Object.keys(fueraHorario).length) mm += '  class FUERA_HORARIO fueraH;\n';
+
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose', flowchart: { curve: 'basis' } });
+    mermaid.render('mapaSvg', mm).then(({ svg, bindFunctions }) => {
+      cont.innerHTML = svg;
+      if (bindFunctions) bindFunctions(cont);
+    }).catch(err => {
+      console.error('[mapa] error renderizando mermaid', err);
+      renderMapaFallback('No se pudo dibujar el diagrama — mostrando lista de conexiones.');
+    });
+  } catch (err) {
+    console.error('[mapa] error derivando el grafo', err);
+    renderMapaFallback('Error derivando el mapa — mostrando lista de conexiones.');
+  }
+}
+
+function renderLeyendaMapa() {
+  const chips = Object.entries(ORIGEN_INFO).filter(([k]) => k !== 'salto')
+    .map(([, i]) => `<span>${i.emoji} ${esc(i.label)}</span>`).join('');
+  document.getElementById('mapaLegend').innerHTML =
+    `<b>Cómo leer el mapa:</b> ${chips}<span>➜ flecha sólida = salto entre flujos, con la condición que lo dispara</span>` +
+    `<span>┄➜ flecha punteada = puede quedar pendiente hasta que abra el horario de atención</span>`;
+}
+
+function renderMapaFallback(motivo) {
+  const cont = document.getElementById('mapaContainer');
+  if (motivo) {
+    const banner = document.getElementById('banner');
+    banner.className = 'banner show';
+    banner.innerHTML = '⚠️ ' + esc(motivo);
+  }
+  if (typeof FLOW_MAP === 'undefined') {
+    cont.innerHTML = '<div class="empty">No se pudo derivar el mapa de flujos.</div>';
+    return;
+  }
+  const { edges, fueraHorario } = FLOW_MAP.derivarMapa(FLOW_GRAPH);
+  const salidas = {};
+  for (const e of edges) (salidas[e.from] ??= []).push(e);
+
+  const html = Object.keys(FLOW_GRAPH).map(id => {
+    const f = FLOW_GRAPH[id];
+    const info = ORIGEN_INFO[f.origen] || {};
+    const propias = salidas[id] || [];
+    const chips = propias.map(e =>
+      `<span class="chip link" onclick="irAFlujo('${e.to}')">${esc(f.nombre)} → ${esc(FLOW_GRAPH[e.to].nombre)} <span class="muted">(${esc(e.label)})</span></span>`
+    ).join('');
+    const fh = fueraHorario[id] ? `<span class="chip">⏳ puede quedar pendiente de horario</span>` : '';
+    if (!chips && !fh) return '';
+    return `<div class="flow-lane"><div class="flow-name">${info.emoji ? info.emoji + ' ' : ''}${esc(f.nombre)}</div><div class="chips">${chips}${fh}</div></div>`;
+  }).filter(Boolean).join('');
+
+  cont.innerHTML = `<div class="mapa-fallback">${html || '<div class="empty">Sin conexiones entre flujos</div>'}</div>`;
 }
 
 function hace(iso) {

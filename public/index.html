@@ -1000,7 +1000,7 @@
           </div>
         </div>
 
-        <div class="doc-section"><div class="doc-section-title">C) Motivo de aislamiento/enfermedad</div>
+        <div class="doc-section"><div class="doc-section-title">C) Motivo de enfermedad</div>
           <div class="doc-grid2">
             <div class="doc-row"><span class="doc-lbl">Diagnóstico:</span><input class="doc-val-edit" id="cert-diagnostico" placeholder="Diagnóstico del paciente..." /></div>
             <div class="doc-row"><span class="doc-lbl">Código CIE-10:</span><input class="doc-val-edit" id="cert-cie10" list="cie10-list" placeholder="Ej: J06, R51" /></div>
@@ -1012,7 +1012,6 @@
             <div class="doc-row">
               <span class="doc-lbl">Tipo de caso:</span>
               <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555"><input type="checkbox" id="cert-tipo-enfermedad" style="accent-color:#1a4a8a" checked> Enfermedad</label>
-              <label style="display:flex;align-items:center;gap:4px;font-size:10px;color:#555;margin-left:8px"><input type="checkbox" id="cert-tipo-aislamiento" style="accent-color:#1a4a8a"> Aislamiento/teletrabajo</label>
             </div>
             <div class="doc-row"><span class="doc-lbl">Tipo de contingencia:</span><select class="doc-val-edit" id="cert-tipo-contingencia" style="font-size:10px"><option value="ENFERMEDAD GENERAL">Enfermedad General</option><option value="ACCIDENTE DE TRABAJO">Accidente de Trabajo</option><option value="ENFERMEDAD PROFESIONAL">Enfermedad Profesional</option><option value="MATERNIDAD">Maternidad</option></select></div>
           </div>
@@ -1361,13 +1360,7 @@
         <!-- Identificación -->
         <div class="hc-section">
           <div class="hc-section-title">Datos del Paciente</div>
-          <div class="hc-grid2" style="margin-bottom:8px">
-            <div class="hc-field"><span class="hc-label">Nombre Completo</span><input class="hc-input" id="inter-nombre"/></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-              <div class="hc-field"><span class="hc-label">Primer Apellido</span><input class="hc-input" id="inter-primer-ap"/></div>
-              <div class="hc-field"><span class="hc-label">Segundo Apellido</span><input class="hc-input" id="inter-segundo-ap"/></div>
-            </div>
-          </div>
+          <div class="hc-field" style="margin-bottom:8px"><span class="hc-label">Nombre Completo</span><input class="hc-input" id="inter-nombre"/></div>
           <div class="hc-grid4" style="margin-bottom:8px">
             <div class="hc-field"><span class="hc-label">No. de Historial</span><input class="hc-input" id="inter-historial"/></div>
             <div class="hc-field"><span class="hc-label">N° Cédula</span><input class="hc-input" id="inter-cedula"/></div>

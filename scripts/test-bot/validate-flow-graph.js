@@ -13,6 +13,7 @@ const path = require('path');
 const GRAPH = require('../../public/flows/flow-graph.js');
 
 const SINTETICOS = new Set(['_fin', '_emergencia', '_laboratorio', '_antecedentes', '_fuera_horario']);
+const ORIGENES_VALIDOS = new Set(['chat', 'cron', 'medico', 'boton', 'salto']);
 const RAIZ = path.resolve(__dirname, '../..');
 
 function estadosEnCodigo(archivo) {
@@ -42,7 +43,19 @@ function validar() {
         if (!SINTETICOS.has(r.destino) && !todosLosNodos.has(r.destino)) {
           problemas.push(`[${id}] nodo "${n.id}" → destino desconocido "${r.destino}"`);
         }
+        // rama.salta_a: fuerza el flujo destino para flow-map.js (desambigua o
+        // corrige destinos '_fin'/sintéticos que en realidad relanzan otro flujo)
+        if (r.salta_a && !GRAPH[r.salta_a]) {
+          problemas.push(`[${id}] nodo "${n.id}" → salta_a apunta a flujo inexistente "${r.salta_a}"`);
+        }
       }
+    }
+
+    // 1b. flujo.origen: obligatorio y debe ser uno de los valores conocidos
+    if (!flujo.origen) {
+      problemas.push(`[${id}] falta el campo "origen" (chat/cron/medico/boton/salto)`);
+    } else if (!ORIGENES_VALIDOS.has(flujo.origen)) {
+      problemas.push(`[${id}] origen "${flujo.origen}" no es válido (chat/cron/medico/boton/salto)`);
     }
 
     if (!flujo.validar) continue;

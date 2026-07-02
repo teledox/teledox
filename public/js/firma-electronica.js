@@ -306,10 +306,12 @@ function _generarQRDataURL(texto, cellSize = 4, margin = 4) {
 }
 
 // Dibuja un sello visual de firma electrónica (QR + datos del firmante) en la
-// esquina inferior izquierda de la página. Registra el documento en Supabase
+// posición indicada (posX/posY; por defecto esquina inferior izquierda). Los
+// documentos lo colocan sobre la línea de firma, encima del nombre del
+// profesional. Registra el documento en Supabase
 // para el QR de verificación y almacena el doc_id en _firmaDocIdActual para
 // que guardarPDFConFirma pueda actualizar el registro con el token TSA.
-async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocumento, posY }) {
+async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocumento, posY, posX }) {
   const p12 = typeof getP12Activo === 'function' ? getP12Activo() : null;
   if (!p12) {
     _logFirma('sello:sin-p12', true, 'sin certificado activo — sin sello visual');
@@ -367,7 +369,7 @@ async function dibujarFirmaElectronicaPDF(doc, page, { font, color, tipoDocument
     const dataUrl = _generarQRDataURL(qrTexto);
     const qrImg = await doc.embedPng(dataUrl.split(',')[1]);
     const size = 38;
-    const x = 40, y = posY ?? 60;
+    const x = posX ?? 40, y = posY ?? 60;
     page.drawImage(qrImg, { x, y, width: size, height: size });
     page.drawText('Firmado electronicamente',   { x: x + size + 6, y: y + size - 9,  size: 7, font, color });
     page.drawText(titular,                       { x: x + size + 6, y: y + size - 18, size: 7, font, color });

@@ -57,16 +57,33 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
 
     const cedula = cedulaLimpia || mensaje.replace(/\D/g, '');
 
-    let paciente = await buscarPorCedula(cedula);
-    if (!paciente) {
-      const { nombre, apellidos } = separarNombre(paciente_nombre || '');
-      paciente = await crearPaciente({
-        cedula,
-        nombre:    nombre    || paciente_nombre || '',
-        apellidos: apellidos || '',
-        telefono:  telefono.replace(/\D/g, ''),
-      });
+    const paciente = await buscarPorCedula(cedula);
+    if (paciente?.id) {
+      return continuarMigracion(datos, telefono, paciente.id, caso_id, paciente_nombre, diagnostico, tratamiento);
     }
+
+    datos.tm_cedula = cedula;
+    return {
+      respuesta: '*Sexo biológico:*',
+      paso: 'tm_sexo', datos, terminar: false,
+      botones: [
+        { id: 'masculino', titulo: '👨 Masculino' },
+        { id: 'femenino',  titulo: '👩 Femenino'  },
+      ]
+    };
+  }
+
+  if (paso === 'tm_sexo') {
+    const m = mensaje.trim().toLowerCase();
+    const sexo = (m === 'femenino' || m === 'f') ? 'F' : 'M';
+    const { nombre, apellidos } = separarNombre(paciente_nombre || '');
+    const paciente = await crearPaciente({
+      cedula:    datos.tm_cedula,
+      nombre:    nombre    || paciente_nombre || '',
+      apellidos: apellidos || '',
+      sexo,
+      telefono:  telefono.replace(/\D/g, ''),
+    });
 
     if (!paciente?.id) {
       return {
@@ -75,43 +92,7 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
       };
     }
 
-    // Verificar horario de operación antes de crear la consulta
-    if (!estaEnHorario()) {
-      const prox = proximaApertura();
-      const fhDatos = {
-        ...datos,
-        paciente_id:    paciente.id,
-        _flujo:         'fuera_horario',
-        _pendingOrigen: 'tracking',
-        _activada_at:   prox.fecha.toISOString(),
-        _proximaTexto:  prox.texto
-      };
-      await guardar(telefono, 0, fhDatos, 'fuera_horario');
-      const { respuesta, botones } = mensajeFueraHorario(prox);
-      return { respuesta, botones, paso: 0, datos: fhDatos, terminar: false };
-    }
-
-    await crearConsulta({
-      paciente_id:         paciente.id,
-      nivel_sintomas:      1,
-      sintomas_descripcion: [diagnostico, tratamiento ? `Tratamiento: ${tratamiento}` : ''].filter(Boolean).join(' — ') || 'Seguimiento tracking',
-      estado:              'pendiente',
-      activada_at:         new Date().toISOString()
-    });
-
-    await query('PATCH', 'tracking_casos', { estado: 'derivado' }, `?id=eq.${caso_id}`);
-
-    await alertar(
-      `📋 <b>Paciente tracking derivado a consulta</b>\n` +
-      `Paciente: ${paciente_nombre || telefono}\n` +
-      `Cédula: ${cedula}\n` +
-      `Diagnóstico: ${diagnostico || '—'}`
-    );
-
-    return {
-      respuesta: `✅ ¡Tu consulta fue registrada!\n\nUn asesor de *MediLyft* te contactará pronto para confirmar el horario.\n\nSi tienes una urgencia llama al *911*.`,
-      terminar: true
-    };
+    return continuarMigracion(datos, telefono, paciente.id, caso_id, paciente_nombre, diagnostico, tratamiento);
   }
 
   // Paso desconocido — reiniciar
@@ -122,6 +103,47 @@ async function procesarMigracion(paso, mensaje, datos, telefono) {
       { id: 'propuesta_cedula_no', titulo: '➡️ No / Soy extranjero' }
     ],
     paso: 'tm_inicio', datos, terminar: false
+  };
+}
+
+// Crea la consulta médica para un paciente ya identificado (existente o recién
+// creado) y cierra la migración. Compartido por los pasos tm_cedula y tm_sexo.
+async function continuarMigracion(datos, telefono, pacienteId, caso_id, paciente_nombre, diagnostico, tratamiento) {
+  // Verificar horario de operación antes de crear la consulta
+  if (!estaEnHorario()) {
+    const prox = proximaApertura();
+    const fhDatos = {
+      ...datos,
+      paciente_id:    pacienteId,
+      _flujo:         'fuera_horario',
+      _pendingOrigen: 'tracking',
+      _activada_at:   prox.fecha.toISOString(),
+      _proximaTexto:  prox.texto
+    };
+    await guardar(telefono, 0, fhDatos, 'fuera_horario');
+    const { respuesta, botones } = mensajeFueraHorario(prox);
+    return { respuesta, botones, paso: 0, datos: fhDatos, terminar: false };
+  }
+
+  await crearConsulta({
+    paciente_id:         pacienteId,
+    nivel_sintomas:      1,
+    sintomas_descripcion: [diagnostico, tratamiento ? `Tratamiento: ${tratamiento}` : ''].filter(Boolean).join(' — ') || 'Seguimiento tracking',
+    estado:              'pendiente',
+    activada_at:         new Date().toISOString()
+  });
+
+  await query('PATCH', 'tracking_casos', { estado: 'derivado' }, `?id=eq.${caso_id}`);
+
+  await alertar(
+    `📋 <b>Paciente tracking derivado a consulta</b>\n` +
+    `Paciente: ${paciente_nombre || telefono}\n` +
+    `Diagnóstico: ${diagnostico || '—'}`
+  );
+
+  return {
+    respuesta: `✅ ¡Tu consulta fue registrada!\n\nUn asesor de *MediLyft* te contactará pronto para confirmar el horario.\n\nSi tienes una urgencia llama al *911*.`,
+    terminar: true
   };
 }
 

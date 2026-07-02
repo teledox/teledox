@@ -334,8 +334,6 @@ function abrirPlantillaCertificado(soloPreview) {
   if (siRadio) siRadio.checked = true;
   const cbEnf = document.getElementById('cert-tipo-enfermedad');
   if (cbEnf) cbEnf.checked = true;
-  const cbAis = document.getElementById('cert-tipo-aislamiento');
-  if (cbAis) cbAis.checked = false;
   const selCont = document.getElementById('cert-tipo-contingencia');
   if (selCont) selCont.value = 'ENFERMEDAD GENERAL';
   document.getElementById('cert-descripcion').value = c.sintomas_descripcion || '';
@@ -454,10 +452,16 @@ function numALetra(n) {
   return n.toString();
 }
 
+// El año del certificado va desglosado ("veinte y seis", no "veintiséis") — pedido del área médica
+function anioALetra(n) {
+  if (n >= 21 && n <= 29) return `VEINTE Y ${NUMEROS_LETRA[n - 20]}`;
+  return numALetra(n);
+}
+
 function fechaALetra(s) {
   if (!s) return '';
   const [y, m, d] = s.split('-').map(Number);
-  return `${numALetra(d).toLowerCase()} de ${MESES[m - 1]} de dos mil ${numALetra(y - 2000).toLowerCase()}`;
+  return `${numALetra(d).toLowerCase()} de ${MESES[m - 1]} de dos mil ${anioALetra(y - 2000).toLowerCase()}`;
 }
 
 function actualizarDiasLetra() {
@@ -547,7 +551,6 @@ function abrirPlantillaHistoriaClinica(soloPreview) {
 function abrirPlantillaInterconsulta(soloPreview) {
   const p = currentPacienteData || {};
   const c = currentConsultaData || {};
-  const apellidos = (p.apellidos || '').split(' ');
   const set = (id, val) => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -555,8 +558,6 @@ function abrirPlantillaInterconsulta(soloPreview) {
     else el.textContent = val;
   };
   set('inter-nombre', `${(p.apellidos||'').toUpperCase()} ${(p.nombre||'').toUpperCase()}`.trim());
-  set('inter-primer-ap', (apellidos[0] || '').toUpperCase());
-  set('inter-segundo-ap', (apellidos[1] || '').toUpperCase());
   set('inter-historial', p.cedula || '');
   set('inter-cedula', p.cedula || '');
   set('inter-edad', p.edad || '');

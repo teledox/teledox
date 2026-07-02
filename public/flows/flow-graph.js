@@ -17,6 +17,11 @@
 //   'medico' (acción del médico/agente en el panel), 'boton' (botón puntual de
 //   WhatsApp no modelado como rama). Lo usa flow-map.js para no dejar flujos
 //   "huérfanos" en el diagrama aunque nadie les apunte con una rama.
+// `grupo`: agrupación para la pestaña "Mapa" — 'consulta' (captación/intake:
+//   identificar paciente, tomar síntomas, triage) | 'seguimiento' (todo lo que
+//   pasa después de que la consulta existe: pagos, recordatorios, tracking
+//   diario). Las aristas que cruzan de un grupo al otro se muestran como chips
+//   de conexión en vez de dibujarse dentro del mismo panel.
 // Destinos sintéticos: _fin, _emergencia, _antecedentes, _laboratorio, _fuera_horario.
 // `rama.salta_a`: fuerza el flujo destino de una rama para flow-map.js cuando el
 //   `destino` es ambiguo (el mismo id de nodo existe en 2+ flujos, ej. "sintomas"
@@ -36,6 +41,7 @@
       archivo: 'src/flows/flujo-consulta.js',
       trigger: '"hola" (paciente sin caso de tracking)',
       origen: 'chat',
+      grupo: 'consulta',
       validar: true,
       nodos: [
         { id: 'inicio', tipo: 'sistema', titulo: 'Bienvenida', mensaje: 'Saludo inicial; pide cédula o código de empresa.',
@@ -112,6 +118,7 @@
       archivo: 'src/flows/flujo-b2c.js',
       trigger: 'desde consulta cuando la cédula no está registrada',
       origen: 'salto',
+      grupo: 'consulta',
       validar: true,
       nodos: [
         { id: 'inicio_b2c', tipo: 'lista', titulo: '¿Seguro o pago directo?', mensaje: 'No encontramos su cédula. ¿Cómo desea continuar?',
@@ -182,6 +189,7 @@
       archivo: 'src/flows/flujo-callcenter.js',
       trigger: 'código de acceso de empresa en el flujo consulta',
       origen: 'salto',
+      grupo: 'consulta',
       validar: true,
       nodos: [
         { id: 'cc_inicio', tipo: 'sistema', titulo: 'Bienvenida agente', mensaje: 'Modo call center; pide cédula del paciente.',
@@ -240,6 +248,7 @@
       archivo: 'src/flows/flujo-antecedentes.js',
       trigger: 'al finalizar consulta o B2C (paciente sin antecedentes)',
       origen: 'salto',
+      grupo: 'consulta',
       validar: false,
       nota: 'Estados numéricos (13–17) no migrados a nombres.',
       nodos: [
@@ -263,6 +272,7 @@
       archivo: 'src/flows/flujo-cronicas.js',
       trigger: 'api/cron.js para pacientes con enfermedad crónica',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nota: 'Un solo estado `cronico`; las sub-preguntas viven en datos.paso_cronico (varían por enfermedad).',
       nodos: [
@@ -283,6 +293,7 @@
       archivo: 'src/flows/flujo-seguimiento-pago.js',
       trigger: 'api/seguimiento-decision.js cuando el médico aprueba',
       origen: 'medico',
+      grupo: 'seguimiento',
       validar: true,
       nodos: [
         { id: 'sp_confirmar', tipo: 'botones', titulo: '¿Desea agendar?', mensaje: '¿Desea agendar la consulta de control?',
@@ -322,6 +333,7 @@
       archivo: 'api/webhook.js (case seg_med)',
       trigger: 'api/cron.js (recordatorio de medicamento)',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nodos: [
         { id: 'seg_med', tipo: 'botones', titulo: '¿Ya lo tomó?', mensaje: '¿Ya tomó su medicamento (X)?',
@@ -340,6 +352,7 @@
       archivo: 'api/webhook.js (case seg_fin_trat)',
       trigger: 'api/cron.js (fin de tratamiento)',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nodos: [
         { id: 'seg_fin_trat', tipo: 'botones', titulo: '¿Cómo se siente?', mensaje: '¿Cómo se siente después del tratamiento?',
@@ -359,6 +372,7 @@
       archivo: 'api/webhook.js (case seg_bienestar)',
       trigger: 'api/cron.js (bienestar de seguimiento)',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nodos: [
         { id: 'seg_bienestar', tipo: 'lista', titulo: 'Bienestar (1-5)', mensaje: '¿Cómo te sientes hoy? 1 Excelente … 5 Muy mal',
@@ -378,6 +392,7 @@
       archivo: 'api/webhook.js (case seg_lab)',
       trigger: 'api/cron.js (seguimiento de laboratorio)',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nodos: [
         { id: 'seg_lab', tipo: 'botones', titulo: '¿Ya se hizo el examen?', mensaje: '¿Ya se realizó el examen de laboratorio?',
@@ -396,6 +411,7 @@
       archivo: 'src/flows/flujo-seguimiento-laboratorio.js',
       trigger: 'tras confirmar el examen en seg_lab',
       origen: 'salto',
+      grupo: 'seguimiento',
       validar: false,
       nota: 'Estado numérico (150) no migrado a nombre.',
       nodos: [
@@ -414,6 +430,7 @@
       archivo: 'src/flows/flujo-reagendar.js',
       trigger: 'propuesta de reagendamiento (seguimiento)',
       origen: 'medico',
+      grupo: 'seguimiento',
       validar: false,
       nota: 'Sin estados propios; al aceptar guarda `sintomas` en el flujo consulta.',
       nodos: [
@@ -432,6 +449,7 @@
       archivo: 'src/flows/flujo-pregunta-consulta.js',
       trigger: 'mensaje del paciente con consulta en curso',
       origen: 'chat',
+      grupo: 'seguimiento',
       validar: true,
       nodos: [
         { id: 'pq_inicio', tipo: 'botones', titulo: '¿Pregunta o consulta?', mensaje: '¿Tiene una pregunta o desea una nueva consulta?',
@@ -452,6 +470,7 @@
       archivo: 'api/webhook.js (case emergencia)',
       trigger: 'síntomas nivel 3 en cualquier flujo',
       origen: 'salto',
+      grupo: 'consulta',
       validar: false,
       nodos: [
         { id: 'emergencia', tipo: 'botones', titulo: 'Riesgo vital', mensaje: 'Sus síntomas indican riesgo vital. ¿Llamar al 911 o consulta urgente?',
@@ -473,6 +492,7 @@
       archivo: 'src/flows/flujo-tracking.js',
       trigger: 'api/cron.js o "hola" con caso de tracking activo',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nota: 'Ramifica por datos.tipo y el valor del mensaje, no por `paso`.',
       nodos: [
@@ -500,6 +520,7 @@
       archivo: 'src/flows/flujo-biometricos.js',
       trigger: 'webhook tras tracking si biometricos_activos',
       origen: 'salto',
+      grupo: 'seguimiento',
       validar: true,
       nodos: [
         { id: 'bio_altura', tipo: 'entrada', titulo: 'Altura (1 vez)', mensaje: 'Altura en cm (solo se pregunta una vez).',
@@ -537,6 +558,7 @@
       archivo: 'src/flows/flujo-psicosocial.js',
       trigger: 'api/cron.js (evaluación psicosocial programada)',
       origen: 'cron',
+      grupo: 'seguimiento',
       validar: false,
       nota: 'Estado numérico incremental (1→15).',
       nodos: [
@@ -556,6 +578,7 @@
       archivo: 'src/flows/flujo-tracking-consulta.js',
       trigger: 'el paciente pulsa "Consulta médica" en tracking',
       origen: 'boton',
+      grupo: 'seguimiento',
       validar: true,
       nodos: [
         { id: 'tm_inicio', tipo: 'botones', titulo: '¿Tienes cédula?', mensaje: '¿Tienes número de cédula ecuatoriana?',

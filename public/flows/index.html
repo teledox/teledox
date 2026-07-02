@@ -101,15 +101,53 @@ tr:hover td{background:#fafafa}
 .muted{color:#9ca3af}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1e3a5f;color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.show{opacity:1}
-/* mapa de flujos */
-.mapa-legend{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#555}
+/* mapa de flujos — panel de bloques con path highlighting */
+.mapa-legend{display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:12px;color:#555}
 .mapa-legend b{color:#333}
-.mapa-container{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.2rem;overflow:auto}
-.mapa-container svg{min-width:900px;height:auto}
-.mapa-container .node rect,.mapa-container .node polygon{cursor:pointer}
-.mapa-fallback .flow-lane{cursor:default}
-.mapa-fallback .chip.link{cursor:pointer;border-color:#93c5fd;background:#eff6ff;color:#1d4ed8;font-weight:600}
-.mapa-fallback .chip.link:hover{background:#dbeafe}
+.mapa-legend .sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px;border:1.5px solid}
+.mapa-toggle{display:flex;gap:8px;margin-bottom:1rem}
+.mapa-toggle button{border:1.5px solid #e5e7eb;background:#fff;border-radius:10px;padding:9px 16px;cursor:pointer;font-size:13px;font-weight:700;color:#555}
+.mapa-toggle button:hover{background:#f5f6fa}
+.mapa-toggle button.active{background:#1e3a5f;color:#fff;border-color:#1e3a5f}
+.mapa-layout{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+.mapa-container{position:relative;background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:2rem;min-height:320px;overflow:auto}
+.mapa-lines{position:absolute;top:0;left:0;pointer-events:none;overflow:visible}
+.mapa-nodes{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:46px 56px;align-items:start}
+.mapa-node{position:relative;background:#fff;border:1.8px solid #e2e8f0;border-radius:12px;padding:12px 14px;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s,background .15s,opacity .2s}
+.mapa-node:hover{border-color:#93c5fd}
+.mapa-node .mn-name{font-size:12.5px;font-weight:700;color:#1e293b;line-height:1.3}
+.mapa-node .mn-meta{font-size:10.5px;color:#94a3b8;margin-top:4px}
+.mapa-node .mn-open{position:absolute;top:7px;right:8px;font-size:12px;color:#94a3b8;opacity:0;transition:opacity .15s;padding:2px}
+.mapa-node:hover .mn-open{opacity:1}
+.mapa-node.lit-self{background:#1e3a5f;border-color:#1e3a5f;box-shadow:0 4px 16px rgba(30,58,95,.35);transform:translateY(-1px)}
+.mapa-node.lit-self .mn-name{color:#fff}
+.mapa-node.lit-self .mn-meta{color:#a8bdd6}
+.mapa-node.lit-self .mn-open{color:#a8bdd6}
+.mapa-node.lit-pred{background:#fffbeb;border-color:#f59e0b}
+.mapa-node.lit-succ{background:#eff6ff;border-color:#2563eb}
+.mapa-node.lit-both{background:linear-gradient(135deg,#fffbeb 50%,#eff6ff 50%);border-color:#8b5cf6}
+.mapa-node.dimmed{opacity:.32}
+.mapa-line{fill:none;stroke:#d1d5db;stroke-width:1.6px;transition:stroke .15s,opacity .15s,stroke-width .15s}
+.mapa-line.lit-out{stroke:#2563eb;stroke-width:2.4px}
+.mapa-line.lit-in{stroke:#f59e0b;stroke-width:2.4px}
+.mapa-line.dimmed{opacity:.12}
+.mapa-line-label{font-size:10px;fill:#64748b;pointer-events:none;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.mapa-line-label.lit-out{fill:#1d4ed8;font-weight:700}
+.mapa-line-label.lit-in{fill:#b45309;font-weight:700}
+.mapa-line-label.dimmed{opacity:0}
+.mapa-side{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:14px;font-size:12.5px}
+.mapa-side h4{font-size:11px;font-weight:700;color:#1e3a5f;margin-bottom:8px;text-transform:uppercase;letter-spacing:.03em}
+.mapa-side .msg{color:#9ca3af;font-size:12px}
+.mapa-side .rel{display:flex;gap:6px;align-items:baseline;padding:6px 0;border-bottom:1px solid #f3f4f6;font-size:12px;line-height:1.4}
+.mapa-side .rel:last-child{border-bottom:none}
+.mapa-side .rel .arrow{flex-shrink:0;font-weight:700}
+.mapa-side .rel.pred .arrow{color:#b45309}
+.mapa-side .rel.succ .arrow{color:#1d4ed8}
+.mapa-cross{margin-top:14px;padding-top:12px;border-top:1px dashed #e5e7eb}
+.mapa-cross .chips{gap:6px}
+.mapa-cross .chip{cursor:pointer;font-size:11.5px}
+.mapa-cross .chip:hover{background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+@media(max-width:900px){.mapa-layout{grid-template-columns:1fr}}
 @media(max-width:760px){.stats-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -187,9 +225,16 @@ tr:hover td{background:#fafafa}
     </div>
 
     <div class="page" id="page-mapa">
-      <div class="toolbar"><h1>Mapa de flujos</h1><div class="toolbar-right"><span>qué flujo lleva a cuál · clic en una caja para abrirla en el Explorador</span></div></div>
+      <div class="toolbar"><h1>Mapa de flujos</h1><div class="toolbar-right"><span>clic en una caja para iluminar su camino · ↗ abre el detalle en el Explorador</span></div></div>
+      <div class="mapa-toggle" id="mapaToggle"></div>
       <div class="mapa-legend" id="mapaLegend"></div>
-      <div id="mapaContainer" class="mapa-container"></div>
+      <div class="mapa-layout">
+        <div class="mapa-container" id="mapaContainer">
+          <svg class="mapa-lines" id="mapaSvgLines"></svg>
+          <div class="mapa-nodes" id="mapaNodes"></div>
+        </div>
+        <div class="mapa-side" id="mapaSide"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -197,7 +242,6 @@ tr:hover td{background:#fafafa}
 <div class="toast" id="toast"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script src="/flows/flow-graph.js"></script>
 <script src="/flows/flow-map.js"></script>
 <script>
@@ -324,119 +368,240 @@ function abrirNodo(id) {
   if (el) { el.classList.add('open'); el.scrollIntoView({behavior:'smooth', block:'center'}); }
 }
 
-// ── Mapa de flujos (deriva de FLOW_GRAPH vía flow-map.js, render con Mermaid) ─
+// ── Mapa de flujos (deriva de FLOW_GRAPH vía flow-map.js) ───────────────────
+// Panel de bloques dibujado a mano (grid + SVG de líneas), sin librería de
+// diagramas: clic en una caja ilumina su "camino" — ámbar lo que la activa,
+// azul lo que ella activa — en vez de mostrar todo el grafo de una vez.
 const ORIGEN_INFO = {
   chat:   { emoji: '💬', label: 'se entra escribiendo "hola"' },
   cron:   { emoji: '⏰', label: 'disparado por api/cron.js' },
   medico: { emoji: '🩺', label: 'disparado por acción del médico/agente' },
   boton:  { emoji: '🔘', label: 'botón puntual de WhatsApp' },
-  salto:  { emoji: '',   label: 'solo se llega desde otro flujo (ver flechas)' },
+  salto:  { emoji: '',   label: '' },
 };
-let mapaRenderizado = false;
+const CLUSTER_INFO = {
+  consulta:    { titulo: 'Consulta',    desc: 'Captación del paciente: identificación, síntomas y triage.' },
+  seguimiento: { titulo: 'Seguimiento', desc: 'Todo lo que pasa después de que la consulta existe: pagos, recordatorios y tracking diario.' },
+};
+let mapaGrupo = 'consulta';
+let mapaSelNodo = null;
+let mapaEdgesInternos = [];
+let mapaEdgesCruzados = { salientes: [], entrantes: [] };
 
 function irAFlujo(id) {
   selFlujo(id);
   showTab('explorador');
 }
-window.irAFlujo = irAFlujo; // mermaid invoca los "click" fuera del scope de módulo
-
-function mmEsc(s) {
-  return String(s ?? '').replace(/"/g, "'").replace(/[\n\r]/g, ' ').trim();
-}
 
 function renderMapa() {
-  if (mapaRenderizado) return;
-  mapaRenderizado = true;
-  renderLeyendaMapa();
-  const cont = document.getElementById('mapaContainer');
-  if (typeof FLOW_MAP === 'undefined' || typeof mermaid === 'undefined') {
-    renderMapaFallback('La librería de diagramas (Mermaid) no cargó — mostrando lista de conexiones.');
+  if (typeof FLOW_MAP === 'undefined') {
+    document.getElementById('mapaContainer').innerHTML = '<div class="empty">No se pudo cargar flow-map.js</div>';
     return;
   }
-  try {
-    const { edges, fueraHorario } = FLOW_MAP.derivarMapa(FLOW_GRAPH);
-    const grupos = { normal: [], tracking: [] };
-    for (const [id, f] of Object.entries(FLOW_GRAPH)) grupos[f.panel || 'normal'].push(id);
-
-    const nodoDef = id => {
-      const f = FLOW_GRAPH[id];
-      const info = ORIGEN_INFO[f.origen] || {};
-      const label = mmEsc(`${info.emoji ? info.emoji + ' ' : ''}${f.nombre}`);
-      return `    ${id}["${label}"]`;
-    };
-
-    let mm = 'flowchart LR\n';
-    mm += '  subgraph panelNormal["PANEL NORMAL"]\n' + grupos.normal.map(nodoDef).join('\n') + '\n  end\n';
-    if (grupos.tracking.length) {
-      mm += '  subgraph panelTracking["PANEL TRACKING"]\n' + grupos.tracking.map(nodoDef).join('\n') + '\n  end\n';
-    }
-    if (Object.keys(fueraHorario).length) {
-      mm += '  FUERA_HORARIO(["⏳ Fuera de horario\\n(queda pendiente)"])\n';
-    }
-    for (const e of edges) {
-      mm += `  ${e.from} -->|"${mmEsc(e.label)}"| ${e.to}\n`;
-    }
-    for (const fid of Object.keys(fueraHorario)) {
-      mm += `  ${fid} -.->|"fuera de horario"| FUERA_HORARIO\n`;
-    }
-    for (const id of Object.keys(FLOW_GRAPH)) {
-      mm += `  click ${id} call irAFlujo("${id}")\n`;
-    }
-    mm += '  classDef default fill:#fff,stroke:#cbd5e1,stroke-width:1.3px,color:#1e293b,font-size:12px;\n';
-    mm += '  classDef fueraH fill:#fef3c7,stroke:#f59e0b,color:#92400e,font-size:11px;\n';
-    if (Object.keys(fueraHorario).length) mm += '  class FUERA_HORARIO fueraH;\n';
-
-    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose', flowchart: { curve: 'basis' } });
-    mermaid.render('mapaSvg', mm).then(({ svg, bindFunctions }) => {
-      cont.innerHTML = svg;
-      if (bindFunctions) bindFunctions(cont);
-    }).catch(err => {
-      console.error('[mapa] error renderizando mermaid', err);
-      renderMapaFallback('No se pudo dibujar el diagrama — mostrando lista de conexiones.');
-    });
-  } catch (err) {
-    console.error('[mapa] error derivando el grafo', err);
-    renderMapaFallback('Error derivando el mapa — mostrando lista de conexiones.');
-  }
+  renderLeyendaMapa();
+  renderMapaToggle();
+  renderMapaCluster();
 }
 
 function renderLeyendaMapa() {
-  const chips = Object.entries(ORIGEN_INFO).filter(([k]) => k !== 'salto')
-    .map(([, i]) => `<span>${i.emoji} ${esc(i.label)}</span>`).join('');
-  document.getElementById('mapaLegend').innerHTML =
-    `<b>Cómo leer el mapa:</b> ${chips}<span>➜ flecha sólida = salto entre flujos, con la condición que lo dispara</span>` +
-    `<span>┄➜ flecha punteada = puede quedar pendiente hasta que abra el horario de atención</span>`;
+  document.getElementById('mapaLegend').innerHTML = `
+    <b>Cómo leer el mapa:</b>
+    <span><span class="sw" style="background:#1e3a5f;border-color:#1e3a5f"></span>seleccionado</span>
+    <span><span class="sw" style="background:#fffbeb;border-color:#f59e0b"></span>lo activa (viene de acá)</span>
+    <span><span class="sw" style="background:#eff6ff;border-color:#2563eb"></span>lo que él activa</span>
+    <span><span class="sw" style="background:linear-gradient(135deg,#fffbeb 50%,#eff6ff 50%);border-color:#8b5cf6"></span>ambas cosas (van y vuelven)</span>
+    <span>clic de nuevo en la misma caja = quitar selección</span>`;
 }
 
-function renderMapaFallback(motivo) {
-  const cont = document.getElementById('mapaContainer');
-  if (motivo) {
-    const banner = document.getElementById('banner');
-    banner.className = 'banner show';
-    banner.innerHTML = '⚠️ ' + esc(motivo);
-  }
-  if (typeof FLOW_MAP === 'undefined') {
-    cont.innerHTML = '<div class="empty">No se pudo derivar el mapa de flujos.</div>';
-    return;
-  }
-  const { edges, fueraHorario } = FLOW_MAP.derivarMapa(FLOW_GRAPH);
-  const salidas = {};
-  for (const e of edges) (salidas[e.from] ??= []).push(e);
+function renderMapaToggle() {
+  document.getElementById('mapaToggle').innerHTML = Object.entries(CLUSTER_INFO).map(([id, info]) =>
+    `<button class="${id === mapaGrupo ? 'active' : ''}" onclick="cambiarGrupoMapa('${id}')" title="${esc(info.desc)}">${esc(info.titulo)}</button>`
+  ).join('');
+}
 
-  const html = Object.keys(FLOW_GRAPH).map(id => {
+function cambiarGrupoMapa(id) {
+  mapaGrupo = id;
+  mapaSelNodo = null;
+  renderMapaToggle();
+  renderMapaCluster();
+}
+
+function saltarAOtroMapa(id) {
+  mapaGrupo = FLOW_GRAPH[id].grupo;
+  mapaSelNodo = id;
+  renderMapaToggle();
+  renderMapaCluster();
+}
+
+function renderMapaCluster() {
+  const ids = Object.keys(FLOW_GRAPH).filter(id => FLOW_GRAPH[id].grupo === mapaGrupo);
+  const idSet = new Set(ids);
+  const { edges } = FLOW_MAP.derivarMapa(FLOW_GRAPH);
+  mapaEdgesInternos = edges.filter(e => idSet.has(e.from) && idSet.has(e.to));
+  mapaEdgesCruzados = {
+    salientes: edges.filter(e => idSet.has(e.from) && !idSet.has(e.to)),
+    entrantes: edges.filter(e => !idSet.has(e.from) && idSet.has(e.to)),
+  };
+
+  document.getElementById('mapaNodes').innerHTML = ids.map(id => {
     const f = FLOW_GRAPH[id];
-    const info = ORIGEN_INFO[f.origen] || {};
-    const propias = salidas[id] || [];
-    const chips = propias.map(e =>
-      `<span class="chip link" onclick="irAFlujo('${e.to}')">${esc(f.nombre)} → ${esc(FLOW_GRAPH[e.to].nombre)} <span class="muted">(${esc(e.label)})</span></span>`
-    ).join('');
-    const fh = fueraHorario[id] ? `<span class="chip">⏳ puede quedar pendiente de horario</span>` : '';
-    if (!chips && !fh) return '';
-    return `<div class="flow-lane"><div class="flow-name">${info.emoji ? info.emoji + ' ' : ''}${esc(f.nombre)}</div><div class="chips">${chips}${fh}</div></div>`;
-  }).filter(Boolean).join('');
+    const o = ORIGEN_INFO[f.origen] || {};
+    return `<div class="mapa-node" id="mn-${esc(id)}" data-id="${esc(id)}" onclick="clicMapaNodo('${id}', event)">
+      <span class="mn-open" onclick="event.stopPropagation();irAFlujo('${id}')" title="Abrir en Explorador">↗</span>
+      <div class="mn-name">${esc(f.nombre)}</div>
+      ${o.emoji ? `<div class="mn-meta">${o.emoji} ${esc(o.label)}</div>` : ''}
+    </div>`;
+  }).join('');
 
-  cont.innerHTML = `<div class="mapa-fallback">${html || '<div class="empty">Sin conexiones entre flujos</div>'}</div>`;
+  dibujarLineasMapa();
+  aplicarHighlightMapa();
 }
+
+function clicMapaNodo(id, ev) {
+  ev.stopPropagation();
+  mapaSelNodo = (mapaSelNodo === id) ? null : id;
+  aplicarHighlightMapa();
+}
+
+// Redibuja las líneas SVG según la posición REAL de las cajas en el DOM
+// (no hay layout de grafo — se apoya en el CSS grid que ya las ubicó).
+function dibujarLineasMapa() {
+  const cont = document.getElementById('mapaContainer');
+  const svg = document.getElementById('mapaSvgLines');
+  const contRect = cont.getBoundingClientRect();
+  const w = Math.max(cont.scrollWidth, contRect.width);
+  const h = Math.max(cont.scrollHeight, contRect.height);
+  svg.setAttribute('width', w);
+  svg.setAttribute('height', h);
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.innerHTML = `<defs>
+    <marker id="mapaArrowN" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#d1d5db"/></marker>
+    <marker id="mapaArrowOut" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="mapaArrowIn" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#f59e0b"/></marker>
+  </defs>`;
+
+  const centros = {};
+  document.querySelectorAll('.mapa-node').forEach(el => {
+    const r = el.getBoundingClientRect();
+    centros[el.dataset.id] = {
+      x: r.left - contRect.left + cont.scrollLeft + r.width / 2,
+      y: r.top - contRect.top + cont.scrollTop + r.height / 2,
+    };
+  });
+
+  // Cuenta cuántas líneas ya salen/entran de cada nodo, para separar la curvatura
+  // de las que comparten origen o destino (si no, sus etiquetas quedan una sobre otra).
+  const contadorPorNodo = {};
+  mapaEdgesInternos.forEach((e, i) => {
+    const a = centros[e.from], b = centros[e.to];
+    if (!a || !b) return;
+    const midX = (a.x + b.x) / 2, midY = (a.y + b.y) / 2;
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const dist = Math.hypot(dx, dy) || 1;
+    const turno = (contadorPorNodo[e.from] = (contadorPorNodo[e.from] || 0) + 1);
+    const signo = i % 2 === 0 ? 1 : -1;
+    const offset = signo * Math.min(90, 30 + turno * 14);
+    const cx = midX + (-dy / dist) * offset, cy = midY + (dx / dist) * offset;
+
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', `M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`);
+    path.setAttribute('class', 'mapa-line');
+    path.setAttribute('id', `ml-${e.from}-${e.to}`);
+    path.setAttribute('marker-end', 'url(#mapaArrowN)');
+    svg.appendChild(path);
+
+    // Punto medio REAL de la curva (t=0.5), no el punto de control — si no, con
+    // offsets grandes la etiqueta se va más lejos que la curva y sale del lienzo.
+    const labelX = 0.25 * a.x + 0.5 * cx + 0.25 * b.x;
+    const labelY = 0.25 * a.y + 0.5 * cy + 0.25 * b.y;
+    const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    label.setAttribute('x', labelX);
+    label.setAttribute('y', labelY);
+    label.setAttribute('class', 'mapa-line-label');
+    label.setAttribute('id', `mll-${e.from}-${e.to}`);
+    label.setAttribute('text-anchor', 'middle');
+    label.textContent = e.label.length > 26 ? e.label.slice(0, 24) + '…' : e.label;
+    svg.appendChild(label);
+  });
+}
+
+function aplicarHighlightMapa() {
+  document.querySelectorAll('.mapa-node').forEach(el => el.classList.remove('lit-self', 'lit-pred', 'lit-succ', 'dimmed'));
+  document.querySelectorAll('.mapa-line').forEach(el => { el.classList.remove('lit-out', 'lit-in', 'dimmed'); el.setAttribute('marker-end', 'url(#mapaArrowN)'); });
+  document.querySelectorAll('.mapa-line-label').forEach(el => el.classList.remove('lit-out', 'lit-in', 'dimmed'));
+
+  if (!mapaSelNodo) { renderMapaSide(null); return; }
+
+  const preds = mapaEdgesInternos.filter(e => e.to === mapaSelNodo);
+  const succs = mapaEdgesInternos.filter(e => e.from === mapaSelNodo);
+
+  document.querySelectorAll('.mapa-node').forEach(el => {
+    const id = el.dataset.id;
+    const esPred = preds.some(e => e.from === id), esSucc = succs.some(e => e.to === id);
+    if (id === mapaSelNodo) el.classList.add('lit-self');
+    else if (esPred && esSucc) el.classList.add('lit-both');
+    else if (esPred) el.classList.add('lit-pred');
+    else if (esSucc) el.classList.add('lit-succ');
+    else el.classList.add('dimmed');
+  });
+
+  mapaEdgesInternos.forEach(e => {
+    const line = document.getElementById(`ml-${e.from}-${e.to}`);
+    const label = document.getElementById(`mll-${e.from}-${e.to}`);
+    if (!line) return;
+    if (e.to === mapaSelNodo) {
+      line.classList.add('lit-in'); label?.classList.add('lit-in'); line.setAttribute('marker-end', 'url(#mapaArrowIn)');
+    } else if (e.from === mapaSelNodo) {
+      line.classList.add('lit-out'); label?.classList.add('lit-out'); line.setAttribute('marker-end', 'url(#mapaArrowOut)');
+    } else {
+      line.classList.add('dimmed'); label?.classList.add('dimmed');
+    }
+  });
+
+  renderMapaSide(mapaSelNodo, preds, succs);
+}
+
+function renderMapaSide(selId, preds, succs) {
+  let html = '';
+  if (!selId) {
+    html += `<h4>Camino activo</h4><div class="msg">Hacé clic en un flujo para ver qué lo activa y qué activa él.</div>`;
+  } else {
+    const f = FLOW_GRAPH[selId];
+    html += `<h4>${esc(f.nombre)}</h4>`;
+    if (preds.length) {
+      html += `<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:#b45309">🡐 SE ACTIVA DESDE</div>` +
+        preds.map(e => `<div class="rel pred"><span class="arrow">←</span><span>${esc(FLOW_GRAPH[e.from].nombre)} <span class="muted">(${esc(e.label)})</span></span></div>`).join('');
+    }
+    if (succs.length) {
+      html += `<div style="margin-top:6px;font-size:10.5px;font-weight:700;color:#1d4ed8">ACTIVA A 🡒</div>` +
+        succs.map(e => `<div class="rel succ"><span class="arrow">→</span><span>${esc(FLOW_GRAPH[e.to].nombre)} <span class="muted">(${esc(e.label)})</span></span></div>`).join('');
+    }
+    if (!preds.length && !succs.length) html += `<div class="msg">Sin conexiones dentro de este mapa.</div>`;
+  }
+  html += renderMapaCrossHTML();
+  document.getElementById('mapaSide').innerHTML = html;
+}
+
+function renderMapaCrossHTML() {
+  const { salientes, entrantes } = mapaEdgesCruzados;
+  if (!salientes.length && !entrantes.length) return '';
+  const otro = CLUSTER_INFO[mapaGrupo === 'consulta' ? 'seguimiento' : 'consulta'].titulo;
+  const chip = (e, saltarId) => `<span class="chip" onclick="saltarAOtroMapa('${saltarId}')">${esc(FLOW_GRAPH[e.from].nombre)} → ${esc(FLOW_GRAPH[e.to].nombre)} <span class="muted">(${esc(e.label)})</span></span>`;
+  return `<div class="mapa-cross"><h4>🔗 Conexión con ${esc(otro)}</h4><div class="chips">` +
+    salientes.map(e => chip(e, e.to)).join('') +
+    entrantes.map(e => chip(e, e.from)).join('') +
+    `</div></div>`;
+}
+
+document.addEventListener('click', ev => {
+  if (ev.target.id === 'mapaContainer' || ev.target.id === 'mapaNodes') {
+    mapaSelNodo = null;
+    aplicarHighlightMapa();
+  }
+});
+window.addEventListener('resize', () => {
+  if (document.getElementById('page-mapa')?.classList.contains('active')) dibujarLineasMapa();
+});
 
 function hace(iso) {
   if (!iso) return '—';

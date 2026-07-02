@@ -14,6 +14,7 @@ const GRAPH = require('../../public/flows/flow-graph.js');
 
 const SINTETICOS = new Set(['_fin', '_emergencia', '_laboratorio', '_antecedentes', '_fuera_horario']);
 const ORIGENES_VALIDOS = new Set(['chat', 'cron', 'medico', 'boton', 'salto']);
+const GRUPOS_VALIDOS = new Set(['consulta', 'seguimiento']);
 const RAIZ = path.resolve(__dirname, '../..');
 
 function estadosEnCodigo(archivo) {
@@ -56,6 +57,13 @@ function validar() {
       problemas.push(`[${id}] falta el campo "origen" (chat/cron/medico/boton/salto)`);
     } else if (!ORIGENES_VALIDOS.has(flujo.origen)) {
       problemas.push(`[${id}] origen "${flujo.origen}" no es válido (chat/cron/medico/boton/salto)`);
+    }
+
+    // 1c. flujo.grupo: obligatorio y debe ser uno de los valores conocidos (pestaña "Mapa")
+    if (!flujo.grupo) {
+      problemas.push(`[${id}] falta el campo "grupo" (consulta/seguimiento)`);
+    } else if (!GRUPOS_VALIDOS.has(flujo.grupo)) {
+      problemas.push(`[${id}] grupo "${flujo.grupo}" no es válido (consulta/seguimiento)`);
     }
 
     if (!flujo.validar) continue;

@@ -1,3 +1,10 @@
+// La BD guarda sexo como 'M'/'F', pero los radios de Historia Clínica e
+// Interconsulta usan la palabra completa (más legible en el PDF impreso).
+const SEXO_LABEL = { M: 'Masculino', F: 'Femenino' };
+function _sexoRadioValue(sexo) {
+  return sexo ? (SEXO_LABEL[sexo.trim().toUpperCase()] || sexo) : '';
+}
+
 // Normaliza fecha a YYYY-MM-DD para <input type="date">
 // Acepta DD/MM/AAAA (WhatsApp) o AAAA-MM-DD (web)
 function _toISODate(raw) {
@@ -314,7 +321,7 @@ function abrirPlantillaCertificado(soloPreview) {
   const fechaTexto = hoy.toLocaleDateString('es-EC', { day: 'numeric', month: 'long', year: 'numeric' });
   document.getElementById('cert-lugar-fecha').textContent = `MediLyft; ${hoy.toLocaleDateString('es-EC')}`;
   document.getElementById('cert-tel-emisor').value = m.telefono || '';
-  document.getElementById('cert-direccion-establecimiento').value = '';
+  document.getElementById('cert-direccion-establecimiento').value = '9 DE AGOSTO Y AV. CACHA.';
   document.getElementById('cert-lugar-fecha-emision').textContent = `Quito, ${fechaTexto}`;
   document.getElementById('cert-paciente').textContent = `${(p.apellidos || '').toUpperCase()} ${(p.nombre || '').toUpperCase()}`.trim() || '—';
   document.getElementById('cert-direccion').value = (p.domicilio_completo || p.lugar_residencia || '').toUpperCase();
@@ -503,7 +510,7 @@ function abrirPlantillaHistoriaClinica(soloPreview) {
   set('hc-telefono', p.telefono || '');
   set('hc-fecha-doc', new Date().toLocaleDateString('es-EC'));
   if (p.sexo) {
-    const radio = document.querySelector(`input[name="hc-sexo"][value="${p.sexo}"]`);
+    const radio = document.querySelector(`input[name="hc-sexo"][value="${_sexoRadioValue(p.sexo)}"]`);
     if (radio) radio.checked = true;
   }
   // Pre-llenar antecedentes si existen
@@ -574,7 +581,7 @@ function abrirPlantillaInterconsulta(soloPreview) {
   const medNomInt = `Dr. ${currentUser?.nombre || ''} ${currentUser?.apellidos || ''}`.trim();
   set('inter-prof-nombre', medNomInt);
   if (p.sexo) {
-    const radio = document.querySelector(`input[name="inter-sexo"][value="${p.sexo}"]`);
+    const radio = document.querySelector(`input[name="inter-sexo"][value="${_sexoRadioValue(p.sexo)}"]`);
     if (radio) radio.checked = true;
   }
   poblarDatosMedico('inter');

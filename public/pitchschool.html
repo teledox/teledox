@@ -758,7 +758,7 @@ html,body{width:100%;height:100%;background:var(--bg);
       <p>Cada conversación con padres o estudiantes enriquece el expediente automáticamente. El sistema consolida alergias, vacunas, antecedentes y condiciones crónicas: accesibles para el médico en segundos, sin papeles y sin duplicar información.</p>
     </div>
 
-    <div class="extract-flow vis-up" id="p2flow">
+    <div class="extract-flow vis-up" id="p3flow">
       <span class="ef-tag">Alergias</span>
       <span class="ef-arrow">+</span>
       <span class="ef-tag">Vacunas</span>
@@ -770,7 +770,7 @@ html,body{width:100%;height:100%;background:var(--bg);
       <span class="ef-tag out">Expediente Escolar ✓</span>
     </div>
 
-    <div class="profile-grid vis-up" id="p2grid" style="animation-delay:.2s">
+    <div class="profile-grid vis-up" id="p3grid" style="animation-delay:.2s">
       <div class="prof-card highlight">
         <div class="prof-card-label">Alertas clínicas</div>
         <div class="prof-card-val red">Visibles siempre</div>
@@ -793,7 +793,7 @@ html,body{width:100%;height:100%;background:var(--bg);
       </div>
     </div>
 
-    <div class="risk-list vis-fade" id="p2risk" style="animation-delay:.35s">
+    <div class="risk-list vis-fade" id="p3risk" style="animation-delay:.35s">
       <div class="rf-item">
         <div class="rf-dot high"></div>
         <span class="rf-label">Condiciones de riesgo</span>
@@ -1266,7 +1266,7 @@ function anim2(){
   show('p2note', 1200);
 }
 function anim3(){
-  ['p2hd','p2flow','p2grid','p2risk'].forEach((id,i)=>show(id,80+i*180));
+  ['p3hd','p3flow','p3grid','p3risk'].forEach((id,i)=>show(id,80+i*180));
   showMsg('c2m1', 400);      setTimeout(scrollChat,500);
   showMsg('c2m2', 1600);     setTimeout(scrollChat,1700);
   showTyping('c2t1', 2600, 900, 'c2m3');   setTimeout(scrollChat,3600);
@@ -1274,7 +1274,7 @@ function anim3(){
   showMsg('c2m5', 5400);     setTimeout(scrollChat,5500);
 }
 function anim4(){
-  ['p3hd','p3lbl','p3score','p3cloud'].forEach((id,i)=>show(id,80+i*200));
+  ['p4hd','p3lbl','p3score','p3cloud'].forEach((id,i)=>show(id,80+i*200));
   setTimeout(()=>{
     const arc=document.getElementById('arc3');
     if(arc){ const c=2*Math.PI*58; arc.style.strokeDasharray=c; arc.style.strokeDashoffset=c-(c*0.82); }
@@ -1294,13 +1294,13 @@ function anim4(){
   showMsg('c3m4', 4600);     setTimeout(scrollChat,4700);
 }
 function anim5(){
-  ['p4hd','p4lbl','p4table','p4nh'].forEach((id,i)=>show(id,80+i*200));
+  ['p5hd','p4lbl','p4table','p4nh'].forEach((id,i)=>show(id,80+i*200));
   showMsg('c4m1', 400);      setTimeout(scrollChat,500);
   showMsg('c4m2', 1400);     setTimeout(scrollChat,1500);
   showMsg('c4m3', 2400);     setTimeout(scrollChat,2500);
 }
 function anim6(){
-  ['p5hd','p5lbl','p5grid','p5doc','p5min'].forEach((id,i)=>show(id,80+i*180));
+  ['p6hd','p5lbl','p5grid','p5doc','p5min'].forEach((id,i)=>show(id,80+i*180));
   showMsg('c5m1', 400);      setTimeout(scrollChat,500);
   showMsg('c5m2', 1600);     setTimeout(scrollChat,1700);
   showMsg('c5m3', 2600);     setTimeout(scrollChat,2700);

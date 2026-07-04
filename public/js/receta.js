@@ -1237,8 +1237,11 @@ function sincronizarMedicamentosDesdeModal() {
 // Guarda/actualiza la receta (medicamentos + diagnóstico) en BD para que persista al reabrir,
 // aunque todavía no se haya enviado ni activado el seguimiento. No toca seguimiento_activo.
 async function guardarRecetaBD() {
-  if (!recetaConsultaId || medicamentosData.length === 0) return;
+  if (!recetaConsultaId) return;
   const ahora = new Date();
+  // Sin medicamentos, no hay "días de tratamiento" que calcular — usar 1 día
+  // por defecto para no romper fecha_fin (Math.max(...[]) da -Infinity).
+  const diasMax = medicamentosData.length ? Math.max(...medicamentosData.map(m => m.dias || 1)) : 1;
   const payload = {
     consulta_id: recetaConsultaId, paciente_id: recetaPacienteId, medico_id: currentUser?.id,
     medicamentos: medicamentosData,
@@ -1246,7 +1249,7 @@ async function guardarRecetaBD() {
     cie10_codigos: cie10Seleccionados,
     indicaciones: document.getElementById('recetaIndicaciones').value,
     fecha_inicio: ahora.toISOString(),
-    fecha_fin: new Date(ahora.getTime() + Math.max(...medicamentosData.map(m => m.dias || 1)) * 86400000).toISOString()
+    fecha_fin: new Date(ahora.getTime() + diasMax * 86400000).toISOString()
   };
   try {
     const existing = await supa('GET', 'recetas', null, `?consulta_id=eq.${recetaConsultaId}&limit=1`);

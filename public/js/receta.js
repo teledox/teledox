@@ -281,6 +281,7 @@ async function openReceta(consultaId, pacienteId) {
   documentosGuardados = {};
   const docsGuardados = await supa('GET', 'documentos_datos', null, `?consulta_id=eq.${consultaId}`);
   (docsGuardados || []).forEach(d => { documentosGuardados[d.tipo] = d.datos; });
+  actualizarEstadoDocs();
 
   // Restore sent indicators from documentos table
   const _tipoMapInv = { receta: 'receta', certificado: 'certificado', pedido_laboratorio: 'pedido', historia_clinica: 'historia', interconsulta: 'interconsulta' };
@@ -1265,12 +1266,18 @@ async function guardarRecetaBD() {
 // PDFs generados localmente (antes de enviar)
 let pdfGenerados = { receta: null, certificado: null, pedido: null, historia: null, interconsulta: null };
 
+// Mapea el tipo usado en pdfGenerados/badges ('pedido') al tipo usado en
+// documentos_datos/documentosGuardados ('laboratorio') — son distintos históricamente.
+const DOC_DATA_TIPO = { receta: 'receta', certificado: 'certificado', pedido: 'laboratorio', historia: 'historia', interconsulta: 'interconsulta' };
+
 function actualizarEstadoDocs() {
   ['receta', 'certificado', 'pedido', 'historia', 'interconsulta'].forEach(tipo => {
     const status = document.getElementById(`status-${tipo}`);
     const btn = document.getElementById(`btn-enviar-${tipo}`);
     const card = document.getElementById(`card-doc-${tipo}`);
-    const generado = pdfGenerados[tipo] !== null;
+    // "Generado" = hay bytes de PDF en memoria (esta sesión) O ya existe el documento
+    // guardado en BD de una sesión anterior (aunque los bytes se hayan reseteado al reabrir).
+    const generado = pdfGenerados[tipo] !== null || !!(documentosGuardados && documentosGuardados[DOC_DATA_TIPO[tipo]]);
     if (status) {
       status.textContent = generado ? '✓ Generada' : 'No generada';
       status.className = `doc-check-status ${generado ? 'generado' : 'pendiente'}`;
@@ -1321,10 +1328,33 @@ async function enviarDocumento(tipo) {
   await _doEnviarDocumento(tipo, '');
 }
 
+// Reconstruye los bytes de un PDF ya generado en una sesión anterior: los datos
+// del formulario están guardados en documentos_datos (badge en verde), pero
+// pdfGenerados se resetea a null cada vez que se abre la consulta.
+const REGENERAR_PDF = {
+  receta:        () => { abrirPlantillaReceta(true); return generarRecetaPDF(); },
+  certificado:   () => { abrirPlantillaCertificado(true); return generarCertificadoPDF(); },
+  pedido:        () => { abrirPlantillaLaboratorio(true); return generarPedidoPDF(); },
+  historia:      () => { abrirPlantillaHistoriaClinica(true); return generarHistoriaClinicaPDF(); },
+  interconsulta: () => { abrirPlantillaInterconsulta(true); return generarInterconsultaPDF(); }
+};
+
+async function _regenerarPDFDesdeDatosGuardados(tipo) {
+  if (!documentosGuardados[DOC_DATA_TIPO[tipo]] || !REGENERAR_PDF[tipo]) return null;
+  try {
+    const bytes = await REGENERAR_PDF[tipo]();
+    pdfGenerados[tipo] = bytes;
+    return bytes;
+  } catch (e) {
+    console.error('Error regenerando PDF antes de enviar', tipo, e);
+    return null;
+  }
+}
+
 async function _doEnviarDocumento(tipo, nota) {
   const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
   if (!diagnostico) { alert('Ingrese el diagnóstico antes de enviar'); return; }
-  const pdfBytes = pdfGenerados[tipo];
+  const pdfBytes = pdfGenerados[tipo] || await _regenerarPDFDesdeDatosGuardados(tipo);
   if (!pdfBytes) { alert('Primero genere el documento'); return; }
 
   const btn = document.getElementById(`btn-enviar-${tipo}`);

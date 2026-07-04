@@ -913,7 +913,7 @@
 <!-- MODAL RECETA -->
 <div class="plantilla-modal-overlay" id="modalReceta">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalReceta()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">💊 Receta Médica</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('receta')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalReceta()">💾 Guardar</button><button class="btn btn-sm" onclick="cerrarModal('modalReceta')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div id="rec-cronicas-strip" style="background:#fff5f5;border:1px solid #ffd5d6;border-radius:8px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-size:11px;font-weight:700;color:#c0392b;white-space:nowrap">Crónicas:</span>
@@ -969,7 +969,7 @@
 <!-- MODAL CERTIFICADO -->
 <div class="plantilla-modal-overlay" id="modalCertificado">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalCertificado()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">📄 Certificado Médico</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('certificado')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalCertificado()">💾 Guardar</button><button class="btn btn-sm" onclick="cerrarModal('modalCertificado')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body" style="max-height:80vh;overflow-y:auto">
       <div id="cert-cronicas-strip" style="background:#fff5f5;border:1px solid #ffd5d6;border-radius:8px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-size:11px;font-weight:700;color:#c0392b;white-space:nowrap">Crónicas:</span>
@@ -1039,7 +1039,7 @@
 <!-- MODAL LABORATORIO -->
 <div class="plantilla-modal-overlay" id="modalLaboratorio">
   <div class="plantilla-modal">
-    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalLaboratorio()">💾 Generar para envío</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
+    <div class="plantilla-modal-topbar"><span class="plantilla-modal-title">🔬 Pedido de Laboratorio</span><div style="display:flex;gap:8px"><button class="btn btn-sm btn-success" onclick="imprimirPlantilla('laboratorio')">🖨 Imprimir / PDF</button><button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalLaboratorio()">💾 Guardar</button><button class="btn btn-sm" onclick="cerrarModal('modalLaboratorio')">✕ Cerrar</button></div></div>
     <div class="plantilla-modal-body">
       <div id="lab-cronicas-strip" style="background:#fff5f5;border:1px solid #ffd5d6;border-radius:8px;padding:7px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <span style="font-size:11px;font-weight:700;color:#c0392b;white-space:nowrap">Crónicas:</span>
@@ -1087,7 +1087,7 @@
       <span class="plantilla-modal-title">📋 Historia Clínica</span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('historiaclinica')">🖨 Imprimir / PDF</button>
-        <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalHC()">💾 Generar para envío</button>
+        <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalHC()">💾 Guardar</button>
         <button class="btn btn-sm" onclick="cerrarModal('modalHistoriaClinica')">✕ Cerrar</button>
       </div>
     </div>
@@ -1339,7 +1339,7 @@
       <span class="plantilla-modal-title">🔄 Hoja de Interconsulta</span>
       <div style="display:flex;gap:8px">
         <button class="btn btn-sm btn-success" onclick="imprimirPlantilla('interconsulta')">🖨 Imprimir / PDF</button>
-        <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalInterconsulta()">💾 Generar para envío</button>
+        <button class="btn btn-sm btn-primary" style="background:#FF5A5F;border-color:#FF5A5F" onclick="generarDocumentoDesdeModalInterconsulta()">💾 Guardar</button>
         <button class="btn btn-sm" onclick="cerrarModal('modalInterconsulta')">✕ Cerrar</button>
       </div>
     </div>

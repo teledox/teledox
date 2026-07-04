@@ -225,6 +225,8 @@ async function openReceta(consultaId, pacienteId) {
   currentPacienteData = _pacData;
   currentConsultaData = (consultaRes || [])[0] || {};
   if (typeof _renderInfoCard === 'function') _renderInfoCard();
+  const _notasEl = document.getElementById('recetaNotas');
+  if (_notasEl) _notasEl.value = currentConsultaData.notas_medico || '';
 
   const init = ((_pacData.nombre || '?')[0] + (_pacData.apellidos || '?')[0]).toUpperCase();
   document.getElementById('recetaPacienteHeader').innerHTML = `
@@ -1867,12 +1869,24 @@ function agregarCIE10(codigo, nombre) {
   _sincronizarDiagnostico();
   document.getElementById('cie10Search').value = '';
   document.getElementById('cie10Dropdown').style.display = 'none';
+  _guardarDiagnosticoYCIE10Ahora();
 }
 
 function quitarCIE10(codigo) {
   cie10Seleccionados = cie10Seleccionados.filter(x => x.c !== codigo);
   renderCIE10();
   _sincronizarDiagnostico();
+  _guardarDiagnosticoYCIE10Ahora();
+}
+
+// _sincronizarDiagnostico fija recetaDiagnostico.value directamente (sin evento 'input'),
+// así que el autosave debounced de más abajo nunca se dispara al elegir un CIE-10.
+// Se persiste aquí de inmediato en consultas (diagnóstico) y recetas (diagnóstico + CIE-10).
+function _guardarDiagnosticoYCIE10Ahora() {
+  if (!recetaConsultaId) return;
+  const diagnostico = document.getElementById('recetaDiagnostico').value.trim();
+  supa('PATCH', 'consultas', { diagnostico }, `?id=eq.${recetaConsultaId}`).catch(() => {});
+  guardarRecetaBD();
 }
 
 function renderCIE10() {
@@ -1963,7 +1977,7 @@ async function responderMensaje(msgId) {
   }
 }
 
-// Autosave diagnosis + cie10 to consultas table (debounced)
+// Autosave de diagnóstico, notas, indicaciones y CIE-10 (debounced)
 document.addEventListener('DOMContentLoaded', () => {
   let _diagTimer = null;
   const diagEl = document.getElementById('recetaDiagnostico');
@@ -1976,6 +1990,32 @@ document.addEventListener('DOMContentLoaded', () => {
           await supa('PATCH', 'consultas', { diagnostico: diagEl.value.trim() }, `?id=eq.${recetaConsultaId}`);
           localStorage.setItem(`cie10_${recetaConsultaId}`, JSON.stringify(cie10Seleccionados));
         } catch (_) {}
+        guardarRecetaBD();
+      }, 1500);
+    });
+  }
+
+  let _notasTimer = null;
+  const notasEl = document.getElementById('recetaNotas');
+  if (notasEl) {
+    notasEl.addEventListener('input', () => {
+      clearTimeout(_notasTimer);
+      _notasTimer = setTimeout(async () => {
+        if (!recetaConsultaId) return;
+        try {
+          await supa('PATCH', 'consultas', { notas_medico: notasEl.value }, `?id=eq.${recetaConsultaId}`);
+        } catch (_) {}
+      }, 1500);
+    });
+  }
+
+  let _indicTimer = null;
+  const indicEl = document.getElementById('recetaIndicaciones');
+  if (indicEl) {
+    indicEl.addEventListener('input', () => {
+      clearTimeout(_indicTimer);
+      _indicTimer = setTimeout(() => {
+        if (recetaConsultaId) guardarRecetaBD();
       }, 1500);
     });
   }

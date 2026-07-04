@@ -9,4 +9,9 @@ module.exports = {
   WA_VERIFY_TOKEN: process.env.WA_VERIFY_TOKEN,
   // Google Gemini (verificación de comprobantes de pago)
   GEMINI_API_KEY:  process.env.GEMINI_API_KEY,
+  // Números autorizados (formato tal cual lo manda Meta, ej. 593987654321) para
+  // saltarse el comprobante de pago escribiendo "DEMOTEST" — solo para demos
+  // controladas, nunca vacío por accidente en producción real de clientes.
+  DEMO_PHONE_NUMBERS: (process.env.DEMO_PHONE_NUMBERS || '')
+    .split(',').map(s => s.replace(/\D/g, '')).filter(Boolean),
 };

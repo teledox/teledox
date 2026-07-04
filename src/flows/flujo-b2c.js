@@ -10,6 +10,7 @@ const { clasificarSintomas, esSi, inferirSexo, separarNombre } = require('../uti
 const { mensajeBienvenida } = require('./flujo-inicio');
 const { estaEnHorario, proximaApertura } = require('../utils/horarioOperacion');
 const { mensajeFueraHorario } = require('../utils/mensajesFueraHorario');
+const { DEMO_PHONE_NUMBERS } = require('../config');
 
 const MONTO_TELECONSULTA = 8.00;
 
@@ -252,8 +253,21 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
 
   } else if (paso === 'comprobante') {
     const media = msg?.image || msg?.document;
+    const esDemoAutorizado = mensaje.trim().toUpperCase() === 'DEMOTEST'
+      && DEMO_PHONE_NUMBERS.includes(String(telefono || '').replace(/\D/g, ''));
 
-    if (mensaje !== '__media__' || !media?.id) {
+    if (esDemoAutorizado) {
+      datos.comprobante_ref = '__demo_bypass__';
+      return {
+        respuesta: `✅ *¡Pago confirmado!* (modo demo)\n\n🎉 Su teleconsulta ha sido registrada exitosamente.\n\nUn asesor de *MediLyft* le contactará en breve para confirmar el horario.\n\n📧 La factura electrónica será enviada a *${datos.correo}*.\n\n¡Gracias por confiar en MediLyft! 💙`,
+        paso: 'finalizar', datos, terminar: false,
+        botones: [
+          { id: 'otra_consulta', titulo: '✅ Otra consulta'     },
+          { id: 'finalizar',     titulo: '🔚 Finalizar proceso' },
+        ]
+      };
+
+    } else if (mensaje !== '__media__' || !media?.id) {
       respuesta = `Por favor envíenos la *foto o captura del comprobante* de su transferencia (monto *$8.00*) para confirmar su consulta.`;
       nuevoPaso = 'comprobante';
 

@@ -210,6 +210,21 @@ module.exports = async function handler(req, res) {
       confirmarConsultaFueraHorario, confirmarMigracionFueraHorario, confirmarCallCenterFueraHorario
     } = getFlows();
 
+    // Comando global de salida — funciona en cualquier paso de cualquier flujo
+    // (ej. si el paciente no tiene el comprobante de pago o el examen de
+    // laboratorio a la mano y quiere cancelar en vez de quedarse atascado
+    // esperando a que se le pida una foto).
+    if (['cancelar', 'salir', 'menu', 'menú'].includes(mensaje.toLowerCase())) {
+      const habiaSesion = await obtener(telefono);
+      await eliminar(telefono);
+      if (habiaSesion) {
+        await enviar(telefono, `❌ Proceso cancelado.\n\nEscribe *hola* cuando quieras empezar de nuevo.`);
+      } else {
+        await enviar(telefono, `No tienes ningún proceso activo en este momento.\n\nEscribe *hola* para comenzar.`);
+      }
+      return res.status(200).send('OK');
+    }
+
     // Reinicio de sesión con "hola"
     if (mensaje.toLowerCase() === 'hola') {
       await eliminar(telefono);

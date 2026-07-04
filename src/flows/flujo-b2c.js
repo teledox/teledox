@@ -74,6 +74,60 @@ function esSeguroAliado(nombre) {
   return SEGUROS_ALIADOS.some(s => n.includes(s));
 }
 
+// Crea paciente (si no existe) + consulta + notificación + factura + registro
+// de documento — el mismo camino que sigue un pago real ya verificado, para
+// que tanto el pago aprobado por Gemini como el bypass de demo (DEMOTEST)
+// terminen en una consulta real visible en el panel, no solo en un mensaje
+// de WhatsApp que aparenta éxito sin dejar rastro en la base de datos.
+async function crearConsultaB2C(datos, telefono) {
+  let pacienteId = datos.paciente_id || null;
+  if (!pacienteId) {
+    const { nombre, apellidos } = separarNombre(datos.nombreCompleto);
+    const existente = await buscarPorCedula(datos.cedula);
+    if (existente) {
+      pacienteId = existente.id;
+    } else {
+      const nuevo = await crearPaciente({
+        cedula: datos.cedula || '',
+        nombre,
+        apellidos,
+        edad: datos.edad || null,
+        sexo: datos.sexo || inferirSexo(datos.nombreCompleto || nombre),
+        correo: datos.correo || '',
+        telefono: datos.telefonoContacto || telefono,
+        lugar_residencia: datos.lugar_residencia || '',
+      });
+      pacienteId = nuevo?.id || null;
+    }
+    datos.paciente_id = pacienteId;
+  }
+
+  const consulta = await crearConsulta({
+    paciente_id: pacienteId,
+    nivel_sintomas: datos.nivel || 1,
+    sintomas_descripcion: datos.sintomas || '',
+    estado: 'pendiente',
+  });
+
+  const esAliado = datos.modalidad === 'b2b_externo';
+  await crearNotificacion(
+    'nueva_consulta',
+    esAliado ? '🏥 Nuevo pago — Seguro aliado' : '💰 Nuevo pago B2C',
+    `${datos.nombreCompleto} registró teleconsulta (${esAliado ? `seguro: ${datos.seguro_nombre}` : 'pago directo $8.00'})`,
+    pacienteId,
+    consulta?.id,
+    { origen: esAliado ? 'b2b' : 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: esAliado ? 'PAGO SEGURO' : 'PAGO' }
+  );
+
+  await registrarFacturacionB2C(datos);
+
+  await registrarDocumento(pacienteId, consulta?.id, 'comprobante', datos.comprobante_ref).catch(e =>
+    console.error('Error registrando documento comprobante:', e.message)
+  );
+
+  return { pacienteId, consulta };
+}
+
 async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) {
   let respuesta = '';
   let nuevoPaso = paso;
@@ -258,6 +312,8 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
 
     if (esDemoAutorizado) {
       datos.comprobante_ref = '__demo_bypass__';
+      await crearConsultaB2C(datos, telefono);
+      await alertar(`💰 <b>NUEVO PAGO (MODO DEMO) B2C - MEDILYFT</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nSíntomas: ${datos.sintomas}`);
       return {
         respuesta: `✅ *¡Pago confirmado!* (modo demo)\n\n🎉 Su teleconsulta ha sido registrada exitosamente.\n\nUn asesor de *MediLyft* le contactará en breve para confirmar el horario.\n\n📧 La factura electrónica será enviada a *${datos.correo}*.\n\n¡Gracias por confiar en MediLyft! 💙`,
         paso: 'finalizar', datos, terminar: false,
@@ -366,50 +422,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
 
       datos.comprobante_ref = storagePath;
 
-      let pacienteId = datos.paciente_id || null;
-      if (!pacienteId) {
-        const { nombre, apellidos } = separarNombre(datos.nombreCompleto);
-        const existente = await buscarPorCedula(datos.cedula);
-        if (existente) {
-          pacienteId = existente.id;
-        } else {
-          const nuevo = await crearPaciente({
-            cedula: datos.cedula || '',
-            nombre,
-            apellidos,
-            edad: datos.edad || null,
-            sexo: datos.sexo || inferirSexo(datos.nombreCompleto || nombre),
-            correo: datos.correo || '',
-            telefono: datos.telefonoContacto || telefono,
-            lugar_residencia: datos.lugar_residencia || '',
-          });
-          pacienteId = nuevo?.id || null;
-        }
-        datos.paciente_id = pacienteId;
-      }
-
-      const consulta = await crearConsulta({
-        paciente_id: pacienteId,
-        nivel_sintomas: datos.nivel || 1,
-        sintomas_descripcion: datos.sintomas || '',
-        estado: 'pendiente',
-      });
-
-      const esAliado = datos.modalidad === 'b2b_externo';
-      await crearNotificacion(
-        'nueva_consulta',
-        esAliado ? '🏥 Nuevo pago — Seguro aliado' : '💰 Nuevo pago B2C',
-        `${datos.nombreCompleto} registró teleconsulta (${esAliado ? `seguro: ${datos.seguro_nombre}` : 'pago directo $8.00'})`,
-        pacienteId,
-        consulta?.id,
-        { origen: esAliado ? 'b2b' : 'b2c', categoria: nivelACategoria(datos.nivel), etiqueta: esAliado ? 'PAGO SEGURO' : 'PAGO' }
-      );
-
-      await registrarFacturacionB2C(datos);
-
-      await registrarDocumento(pacienteId, consulta?.id, 'comprobante', datos.comprobante_ref).catch(e =>
-        console.error('Error registrando documento comprobante:', e.message)
-      );
+      await crearConsultaB2C(datos, telefono);
 
       await alertar(`💰 <b>NUEVO PAGO DIRECTO B2C - MEDILYFT</b>\nNombre: ${datos.nombreCompleto}\nCédula: ${datos.cedula}\nTeléfono: ${telefono}\nCorreo: ${datos.correo}\nSíntomas: ${datos.sintomas}\nPago: ${datos.forma_pago}\nMonto: $8.00`);
 

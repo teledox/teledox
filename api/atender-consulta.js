@@ -8,33 +8,10 @@ const { query } = require('../src/services/supabase');
 const { enviar } = require('../src/services/whatsapp');
 const { guardar, obtener } = require('../src/services/sesiones');
 const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
+const { verificarUsuario } = require('../src/services/authVerify');
 
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY;
-
-function decodeJWT(token) {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
-  } catch { return {}; }
-}
-
-async function verificarMedico(token) {
-  if (!token) throw new Error('Sin token de autenticación');
-  const payload = decodeJWT(token);
-  const email   = payload.email;
-  if (!email) throw new Error('Token sin email');
-
-  const res = await fetch(
-    `${SUPA_URL}/rest/v1/usuarios?correo=eq.${encodeURIComponent(email)}&activo=eq.true&select=id,rol`,
-    { headers: { 'apikey': SUPA_SERVICE_KEY, 'Authorization': `Bearer ${SUPA_SERVICE_KEY}` } }
-  );
-  const usuarios = await res.json().catch(() => []);
-  const u = Array.isArray(usuarios) ? usuarios[0] : null;
-  if (!u) throw new Error('Usuario no encontrado');
-  if (!['medico', 'admin'].includes(u.rol)) throw new Error(`Sin permisos (rol: ${u.rol})`);
-  return u.id;
-}
 
 // Dispara manualmente (desde el panel) el envío de la primera pregunta de
 // seguimiento de una enfermedad crónica, para pruebas/demo sin esperar al cron.
@@ -92,7 +69,7 @@ module.exports = async function handler(req, res) {
   const { token, consulta_id, accion } = req.body || {};
 
   try {
-    const medicoId = await verificarMedico(token);
+    const { id: medicoId } = await verificarUsuario(token, ['medico', 'admin']);
 
     if (accion === 'disparar_cronico') return await dispararSeguimientoCronico(req, res);
 

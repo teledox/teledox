@@ -7,6 +7,7 @@
 
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY; // service_role en Vercel env vars
+const { verificarUsuario } = require('../src/services/authVerify');
 
 async function q(method, table, query = '') {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {
@@ -24,43 +25,6 @@ async function q(method, table, query = '') {
   }
   const err = await r.json().catch(() => ({}));
   throw new Error(err.message || `HTTP ${r.status} en ${table}`);
-}
-
-// ── Decodificar payload del JWT ───────────────────────────────────────────
-function decodeJWT(token) {
-  try {
-    const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-    return JSON.parse(Buffer.from(base64, 'base64').toString('utf8'));
-  } catch { return {}; }
-}
-
-// ── Validar que el token pertenece a un admin activo ──────────────────────
-async function verificarAdmin(token) {
-  if (!token) throw new Error('Sin token de autenticación');
-
-  // El JWT de Supabase contiene el email del usuario
-  const payload = decodeJWT(token);
-  const email   = payload.email;
-  if (!email) throw new Error('Token sin email — vuelve a iniciar sesión');
-
-  // Buscar por correo (campo garantizado en la tabla usuarios)
-  const res = await fetch(
-    `${SUPA_URL}/rest/v1/usuarios?correo=eq.${encodeURIComponent(email)}&activo=eq.true&select=id,rol`,
-    {
-      headers: {
-        'apikey':        SUPA_SERVICE_KEY,
-        'Authorization': `Bearer ${SUPA_SERVICE_KEY}`,
-      }
-    }
-  );
-
-  const usuarios = await res.json().catch(() => []);
-  const u = Array.isArray(usuarios) ? usuarios[0] : null;
-
-  if (!u)              throw new Error(`Usuario no encontrado: ${email}`);
-  if (u.rol !== 'admin') throw new Error(`Sin permisos de admin (rol: ${u.rol})`);
-
-  return u.id;
 }
 
 // ── Borrar recetas + toda su cadena de dependientes
@@ -178,7 +142,7 @@ module.exports = async function handler(req, res) {
   if (!tipo || !id) return res.status(400).json({ error: 'Faltan parámetros (tipo, id)' });
 
   try {
-    await verificarAdmin(token);
+    await verificarUsuario(token, ['admin']);
 
     if (tipo === 'consulta') {
       await eliminarConsulta(id);

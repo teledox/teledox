@@ -4,6 +4,20 @@
 // Uso: node --env-file=.env.local scripts/test-bot/server.js
 
 const http = require('http');
+const crypto = require('crypto');
+
+// api/webhook.js ahora exige X-Hub-Signature-256 válida (fail-closed). Los
+// escenarios de prueba firman su payload con este mismo secreto — ver
+// firmarPayload() más abajo, usado por run.js y repl.js.
+process.env.WHATSAPP_APP_SECRET = process.env.WHATSAPP_APP_SECRET || 'test-secret-solo-para-scripts-test-bot';
+
+// Habilita el atajo media.id === '__TEST__' de flujo-b2c.js (confirmación de
+// pago sin comprobante real) SOLO dentro de este harness de pruebas.
+process.env.ALLOW_TEST_BYPASS = 'true';
+
+function firmarPayload(rawBody) {
+  return 'sha256=' + crypto.createHmac('sha256', process.env.WHATSAPP_APP_SECRET).update(rawBody).digest('hex');
+}
 
 const whatsappPath = require.resolve('../../src/services/whatsapp');
 const mock = require('./mock-whatsapp');
@@ -46,6 +60,7 @@ const server = http.createServer((req, res) => {
   let body = '';
   req.on('data', (chunk) => { body += chunk; });
   req.on('end', () => {
+    req.rawBody = body;
     try { req.body = JSON.parse(body || '{}'); } catch { req.body = {}; }
     handler(req, res).catch((err) => {
       console.error('Error no manejado:', err);
@@ -65,4 +80,4 @@ const ready = new Promise((resolve) => {
   });
 });
 
-module.exports = { server, mock, PORT, ready };
+module.exports = { server, mock, PORT, ready, firmarPayload };

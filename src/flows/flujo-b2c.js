@@ -257,7 +257,7 @@ async function procesarB2C(paso, mensaje, datos, telefono, nombreWhatsApp, msg) 
       respuesta = `Por favor envíenos la *foto o captura del comprobante* de su transferencia (monto *$8.00*) para confirmar su consulta.`;
       nuevoPaso = 'comprobante';
 
-    } else if (media.id === '__TEST__') {
+    } else if (media.id === '__TEST__' && process.env.ALLOW_TEST_BYPASS === 'true') {
       datos.comprobante_ref = '__test_bypass__';
       return {
         respuesta: `✅ *¡Pago confirmado!*\n\n🎉 Su teleconsulta ha sido registrada exitosamente.\n\nUn asesor de *MediLyft* le contactará en breve para confirmar el horario.\n\n📧 La factura electrónica será enviada a *${datos.correo}*.\n\n¡Gracias por confiar en MediLyft! 💙`,

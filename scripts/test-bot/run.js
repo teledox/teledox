@@ -9,7 +9,7 @@
 // Cada escenario usa su propio número de teléfono dedicado para no colisionar
 // con el REPL interactivo ni entre sí. WhatsApp mockeado, Supabase real.
 
-const { server, mock, PORT, ready } = require('./server');
+const { server, mock, PORT, ready, firmarPayload } = require('./server');
 const scenarios = require('./scenarios');
 
 const G = '\x1b[32m', R = '\x1b[31m', Y = '\x1b[33m', D = '\x1b[2m', Z = '\x1b[0m', BOLD = '\x1b[1m';
@@ -50,10 +50,11 @@ function extractContent(messages) {
 
 async function sendStep(phone, step) {
   const payload = buildPayload(phone, toMsg(step));
+  const rawBody = JSON.stringify(payload);
   await fetch(`http://localhost:${PORT}/api/webhook`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json', 'x-hub-signature-256': firmarPayload(rawBody) },
+    body: rawBody,
   });
   return mock.popLog();
 }

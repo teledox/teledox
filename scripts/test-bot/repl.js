@@ -18,7 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
-const { server, mock, PORT, ready } = require('./server');
+const { server, mock, PORT, ready, firmarPayload } = require('./server');
 
 let telefono = process.argv[2] || '593900000001';
 let nombre = process.argv[3] || 'Tester';
@@ -49,10 +49,11 @@ async function enviarAlBot(message, etiquetaUsuario) {
   appendTranscript(`\n**👤 ${nombre} (${telefono}):** ${etiquetaUsuario}`);
   console.log(`👤 → ${etiquetaUsuario}`);
 
+  const rawBody = JSON.stringify(buildPayload(message));
   await fetch(`http://localhost:${PORT}/api/webhook`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(buildPayload(message)),
+    headers: { 'Content-Type': 'application/json', 'x-hub-signature-256': firmarPayload(rawBody) },
+    body: rawBody,
   });
 
   const respuestas = mock.popLog();

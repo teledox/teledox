@@ -80,16 +80,46 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  // Verificación de firma Meta (X-Hub-Signature-256)
+  // Body crudo: si ya viene puesto en req.rawBody (nuestro harness de pruebas
+  // en scripts/test-bot/server.js lo hace), se usa tal cual. En producción
+  // (Vercel) nadie lo pone — Vercel expone req.body ya parseado vía un getter
+  // "lazy" que solo se dispara al accederlo, así que leemos el stream crudo
+  // nosotros mismos ANTES de tocar req.body en cualquier lugar del archivo.
+  // Antes se reconstruía con JSON.stringify(req.body), que no coincide byte
+  // a byte con lo que Meta firmó para payloads más complejos (botones,
+  // listas, multimedia) — solo texto simple pasaba la verificación por
+  // casualidad, y el resto se rechazaba con 401 en silencio.
+  let rawBody;
+  if (typeof req.rawBody === 'string') {
+    rawBody = req.rawBody;
+  } else {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    rawBody = Buffer.concat(chunks).toString('utf8');
+  }
+
+  let parsedBody;
+  try {
+    parsedBody = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    return res.status(400).send('Invalid JSON');
+  }
+
+  // Verificación de firma Meta (X-Hub-Signature-256) — fail-closed: sin
+  // secreto configurado o sin header, se rechaza (antes se dejaba pasar).
   const appSecret = process.env.WHATSAPP_APP_SECRET;
-  if (appSecret) {
-    const sigHeader = req.headers['x-hub-signature-256'] || '';
-    const rawBody   = typeof req.rawBody === 'string' ? req.rawBody : JSON.stringify(req.body);
-    const expected  = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
-    if (sigHeader && sigHeader !== expected) {
-      console.warn('Firma Meta inválida — posible replay o spoofing:', sigHeader);
-      return res.status(401).send('Unauthorized');
-    }
+  if (!appSecret) {
+    console.error('WHATSAPP_APP_SECRET no configurado — rechazando webhook');
+    return res.status(401).send('Unauthorized');
+  }
+  const sigHeader = req.headers['x-hub-signature-256'] || '';
+  const expected  = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
+  const sigBuf = Buffer.from(sigHeader);
+  const expBuf = Buffer.from(expected);
+  const firmaValida = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+  if (!firmaValida) {
+    console.warn('Firma Meta inválida — posible replay o spoofing:', sigHeader);
+    return res.status(401).send('Unauthorized');
   }
 
   // Declarados fuera del try para poder reportarlos en el catch si algo falla
@@ -97,7 +127,7 @@ module.exports = async function handler(req, res) {
   let paso = null;
 
   try {
-    const body = req.body || {};
+    const body = parsedBody;
     if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
     const entry   = body.entry?.[0];

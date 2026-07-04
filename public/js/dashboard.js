@@ -14,8 +14,8 @@ function _bannerHtmlDesde(sinMedico) {
         const nivel = c.nivel_sintomas === 3 ? '🔴 Grave' : c.nivel_sintomas === 2 ? '🟡 Medio' : '🟢 Leve';
         return `<div class="alerta-item">
           <div class="alerta-item-info">
-            <div class="alerta-item-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
-            <div class="alerta-item-meta">${nivel} · ${p.clientes_b2b?.nombre_empresa || 'B2C'}</div>
+            <div class="alerta-item-nombre">${escapeHtml(p.nombre) || '—'} ${escapeHtml(p.apellidos)}</div>
+            <div class="alerta-item-meta">${nivel} · ${escapeHtml(p.clientes_b2b?.nombre_empresa) || 'B2C'}</div>
             <span class="alerta-timer" data-created="${c.created_at}" style="font-size:13px;font-weight:700">⏱ ${formatElapsedTime(c.created_at)}</span>
           </div>
           <button class="btn-atender-banner" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>
@@ -78,8 +78,8 @@ async function loadDashboard() {
   document.getElementById('pendBody').innerHTML = pendientes.slice(0, 5).map(c => {
     const p = c.pacientes || {}; const n = c.nivel_sintomas;
     return `<tr>
-      <td><strong>${p.nombre || '—'} ${p.apellidos || ''}</strong><br><span style="font-size:11px;color:#aaa">${p.clientes_b2b?.nombre_empresa || ''}</span></td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.sintomas_descripcion || '—'}</td>
+      <td><strong>${escapeHtml(p.nombre) || '—'} ${escapeHtml(p.apellidos)}</strong><br><span style="font-size:11px;color:#aaa">${escapeHtml(p.clientes_b2b?.nombre_empresa)}</span></td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.sintomas_descripcion) || '—'}</td>
       <td>${n===3?'<span class="badge badge-red">Grave</span>':n===2?'<span class="badge badge-yellow">Medio</span>':'<span class="badge badge-green">Leve</span>'}</td>
       <td style="display:flex;gap:4px;flex-wrap:wrap">
         ${!c.medico_id && (currentUser.rol === 'medico' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
@@ -91,8 +91,8 @@ async function loadDashboard() {
   document.getElementById('recentNotifs').innerHTML = (notifs || []).map(n => `
     <div style="padding:10px 0;border-bottom:1px solid #f5f5f5">
       <div style="font-size:12px;font-weight:600;color:${n.tipo === 'urgente' ? '#dc2626' : '#2563eb'}">${n.tipo === 'urgente' ? '⚠️ Urgente' : '📅 Nueva consulta'}</div>
-      <div style="font-size:13px;color:#333;margin-top:2px">${n.titulo}</div>
-      <div style="font-size:12px;color:#888">${n.mensaje}</div>
+      <div style="font-size:13px;color:#333;margin-top:2px">${escapeHtml(n.titulo)}</div>
+      <div style="font-size:12px;color:#888">${escapeHtml(n.mensaje)}</div>
     </div>
   `).join('') || '<div class="empty-state" style="padding:1.5rem">Sin alertas</div>';
 }
@@ -140,11 +140,11 @@ async function loadAlertasServicio() {
     : c === 'medio' ? '<span class="badge badge-yellow">🟡 Medio</span>'
                      : '<span class="badge badge-green">🟢 Leve</span>';
 
-  const tag = etiqueta => etiqueta ? `<span class="alerta-tag">${etiqueta}</span>` : '';
+  const tag = etiqueta => etiqueta ? `<span class="alerta-tag">${escapeHtml(etiqueta)}</span>` : '';
 
   const datosContacto = p => `
     <div class="alerta-datos">
-      📱 ${p.telefono || '—'} &nbsp;·&nbsp; ✉️ ${p.correo || '—'} &nbsp;·&nbsp; 📍 ${p.lugar_residencia || '—'}
+      📱 ${escapeHtml(p.telefono) || '—'} &nbsp;·&nbsp; ✉️ ${escapeHtml(p.correo) || '—'} &nbsp;·&nbsp; 📍 ${escapeHtml(p.lugar_residencia) || '—'}
     </div>`;
 
   const cardConsulta = c => {
@@ -153,12 +153,12 @@ async function loadAlertasServicio() {
       <div class="alerta-card">
         <div class="alerta-card-head">
           <div>
-            <div class="alerta-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
-            <div class="alerta-sub">Cédula: ${p.cedula || '—'} ${p.clientes_b2b?.nombre_empresa ? `· ${p.clientes_b2b.nombre_empresa}` : ''}</div>
+            <div class="alerta-nombre">${escapeHtml(p.nombre) || '—'} ${escapeHtml(p.apellidos)}</div>
+            <div class="alerta-sub">Cédula: ${escapeHtml(p.cedula) || '—'} ${p.clientes_b2b?.nombre_empresa ? `· ${escapeHtml(p.clientes_b2b.nombre_empresa)}` : ''}</div>
           </div>
           ${tag(etiquetas[c.id])}
         </div>
-        <div class="alerta-sintoma">${c.sintomas_descripcion || '—'}</div>
+        <div class="alerta-sintoma">${escapeHtml(c.sintomas_descripcion) || '—'}</div>
         ${datosContacto(p)}
         <div class="alerta-card-foot">
           <div style="display:flex;align-items:center;gap:10px">
@@ -176,12 +176,12 @@ async function loadAlertasServicio() {
       <div class="alerta-card">
         <div class="alerta-card-head">
           <div>
-            <div class="alerta-nombre">${p.nombre || '—'} ${p.apellidos || ''}</div>
-            <div class="alerta-sub">Cédula: ${p.cedula || '—'}</div>
+            <div class="alerta-nombre">${escapeHtml(p.nombre) || '—'} ${escapeHtml(p.apellidos)}</div>
+            <div class="alerta-sub">Cédula: ${escapeHtml(p.cedula) || '—'}</div>
           </div>
           ${tag(n.etiqueta)}
         </div>
-        <div class="alerta-sintoma">${n.mensaje || '—'}</div>
+        <div class="alerta-sintoma">${escapeHtml(n.mensaje) || '—'}</div>
         ${datosContacto(p)}
         <div class="alerta-card-foot">
           ${catBadge(n.categoria)}

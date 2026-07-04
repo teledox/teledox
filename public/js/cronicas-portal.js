@@ -34,13 +34,13 @@ async function cargarCronicas(pacienteId) {
   document.getElementById('cronicasList').innerHTML = data.map(ec => `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px;border-bottom:1px solid #f5f5f5">
       <div>
-        <div style="font-size:14px;font-weight:600;color:#1a1a1a">${NOMBRES_ENFERMEDAD[ec.enfermedad] || ec.enfermedad}</div>
-        <div style="font-size:12px;color:#888;margin-top:2px">${ec.codigo_cie10 ? `CIE-10: ${ec.codigo_cie10} · ` : ''}Seguimiento cada ${ec.frecuencia_horas}h · Desde: ${ec.fecha_inicio || '—'}</div>
-        ${ec.notas ? `<div style="font-size:12px;color:#555;margin-top:4px">${ec.notas}</div>` : ''}
+        <div style="font-size:14px;font-weight:600;color:#1a1a1a">${escapeHtml(NOMBRES_ENFERMEDAD[ec.enfermedad] || ec.enfermedad)}</div>
+        <div style="font-size:12px;color:#888;margin-top:2px">${ec.codigo_cie10 ? `CIE-10: ${escapeHtml(ec.codigo_cie10)} · ` : ''}Seguimiento cada ${ec.frecuencia_horas}h · Desde: ${ec.fecha_inicio || '—'}</div>
+        ${ec.notas ? `<div style="font-size:12px;color:#555;margin-top:4px">${escapeHtml(ec.notas)}</div>` : ''}
       </div>
       <div style="display:flex;align-items:center;gap:8px">
         <span class="badge ${ec.activo ? 'badge-green' : 'badge-gray'}">${ec.activo ? 'Activo' : 'Inactivo'}</span>
-        <button class="btn btn-sm" onclick="verRegistrosCronicos('${ec.id}','${NOMBRES_ENFERMEDAD[ec.enfermedad] || ec.enfermedad}')">Ver registros</button>
+        <button class="btn btn-sm" onclick="verRegistrosCronicos('${ec.id}','${escapeHtml(NOMBRES_ENFERMEDAD[ec.enfermedad] || ec.enfermedad)}')">Ver registros</button>
         ${ec.activo && (currentUser?.rol === 'medico' || currentUser?.rol === 'admin') ? `<button class="btn btn-sm" onclick="dispararSeguimientoCronico('${ec.id}')">📨 Enviar ahora</button>` : ''}
         <button class="btn btn-sm ${ec.activo ? 'btn-danger' : ''}" onclick="toggleCronica('${ec.id}',${ec.activo})">${ec.activo ? 'Pausar' : 'Activar'}</button>
       </div>
@@ -105,7 +105,7 @@ async function verRegistrosCronicos(enfermedadId, nombre) {
     return `<div style="padding:10px;border-bottom:1px solid #f5f5f5;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-size:12px;color:#888">${new Date(r.created_at).toLocaleString('es-EC')}</div>
-        <div style="font-size:13px;margin-top:4px">${Object.entries(vals).map(([k, v]) => `<strong>${k}:</strong> ${v}`).join(' · ')}</div>
+        <div style="font-size:13px;margin-top:4px">${Object.entries(vals).map(([k, v]) => `<strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}`).join(' · ')}</div>
       </div>
       <span style="font-size:18px">${icon}</span>
     </div>`;
@@ -114,7 +114,7 @@ async function verRegistrosCronicos(enfermedadId, nombre) {
   popup.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;display:flex;align-items:center;justify-content:center';
   popup.innerHTML = `<div style="background:white;border-radius:16px;padding:1.5rem;width:560px;max-height:80vh;overflow-y:auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
-      <h3 style="font-size:16px;font-weight:600">Registros: ${nombre}</h3>
+      <h3 style="font-size:16px;font-weight:600">Registros: ${escapeHtml(nombre)}</h3>
       <button onclick="this.closest('[style*=fixed]').remove()" style="background:none;border:none;font-size:20px;cursor:pointer">✕</button>
     </div>${html}</div>`;
   document.body.appendChild(popup);

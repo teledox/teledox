@@ -15,21 +15,21 @@ async function loadEmpresas() {
 
   document.getElementById('empresasBody').innerHTML = (empresas || []).map(e => `
     <tr>
-      <td><strong>${e.nombre_empresa}</strong></td>
+      <td><strong>${escapeHtml(e.nombre_empresa)}</strong></td>
       <td style="text-align:center">${countsPac[e.id] || 0}</td>
       <td style="text-align:center">${countsEmp[e.id] || 0}</td>
       <td>${e.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-red">Inactivo</span>'}</td>
       <td style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-sm" style="background:#f3f0ff;color:#7c3aed;border-color:#7c3aed"
-          onclick="abrirCodigoPanel('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}','${e.codigo_acceso || ''}')">
-          🔑 ${e.codigo_acceso ? '<span style=\'color:#7c3aed;font-weight:700\'>' + e.codigo_acceso + '</span>' : 'Código'}
+          onclick="abrirCodigoPanel('${e.id}','${escapeHtml(e.nombre_empresa)}','${escapeHtml(e.codigo_acceso || '')}')">
+          🔑 ${e.codigo_acceso ? '<span style=\'color:#7c3aed;font-weight:700\'>' + escapeHtml(e.codigo_acceso) + '</span>' : 'Código'}
         </button>
         <button class="btn btn-sm" style="background:#f0f6ff;color:#4f8ef7;border-color:#4f8ef7"
-          onclick="abrirCedulasPanel('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}')">📋 Cédulas</button>
+          onclick="abrirCedulasPanel('${e.id}','${escapeHtml(e.nombre_empresa)}')">📋 Cédulas</button>
         <button class="btn btn-sm" style="background:#fff0f0;color:#FF5A5F;border-color:#FF5A5F"
-          onclick="abrirEditarEmpresa('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}')">✏️ Editar</button>
+          onclick="abrirEditarEmpresa('${e.id}','${escapeHtml(e.nombre_empresa)}')">✏️ Editar</button>
         <button class="btn btn-sm btn-danger"
-          onclick="eliminarEmpresa('${e.id}','${e.nombre_empresa.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+          onclick="eliminarEmpresa('${e.id}','${escapeHtml(e.nombre_empresa)}')">🗑 Eliminar</button>
       </td>
     </tr>
   `).join('') || '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:2rem">Sin empresas</td></tr>';

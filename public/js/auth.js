@@ -21,7 +21,7 @@ async function doLogin() {
   btn.textContent = 'Cargando perfil...';
 
   const users = await supa('GET', 'usuarios', null,
-    `?correo=eq.${encodeURIComponent(email)}&activo=eq.true`);
+    `?correo=eq.${encodeURIComponent(email)}&activo=eq.true&select=id,nombre,apellidos,correo,rol,especialidad,numero_registro,cedula,telefono,firma_digital,firma_p12,firma_p12_info,sello,activo`);
 
   btn.disabled = false; btn.textContent = 'Ingresar';
 

@@ -11,15 +11,15 @@ function renderPacientes(list) {
   document.getElementById('pacBody').innerHTML = list.map((p, i) => `
     <tr>
       <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa;min-width:36px">${total - i}</td>
-      <td><strong>${p.nombre || '—'} ${p.apellidos || ''}</strong></td>
-      <td>${p.cedula || '—'}</td>
-      <td>${p.clientes_b2b?.nombre_empresa || '—'}</td>
-      <td>${p.telefono || '—'}</td>
-      <td>${p.lugar_residencia || '—'}</td>
-      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.correo || '—'}</td>
+      <td><strong>${escapeHtml(p.nombre) || '—'} ${escapeHtml(p.apellidos)}</strong></td>
+      <td>${escapeHtml(p.cedula) || '—'}</td>
+      <td>${escapeHtml(p.clientes_b2b?.nombre_empresa) || '—'}</td>
+      <td>${escapeHtml(p.telefono) || '—'}</td>
+      <td>${escapeHtml(p.lugar_residencia) || '—'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(p.correo) || '—'}</td>
       <td style="display:flex;gap:6px">
         <button class="btn btn-sm" onclick="showPacienteDetalle('${p.id}')">Ver</button>
-        ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarPaciente('${p.id}','${(p.nombre+' '+(p.apellidos||'')).trim().replace(/'/g,"\\'")}')">🗑 Eliminar</button>` : ''}
+        ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarPaciente('${p.id}')">🗑 Eliminar</button>` : ''}
       </td>
     </tr>
   `).join('') || '<tr><td colspan="7" style="text-align:center;color:#aaa;padding:2rem">Sin pacientes</td></tr>';
@@ -37,17 +37,17 @@ async function showPacienteDetalle(id) {
   const init = ((pac.nombre || '?')[0] + (pac.apellidos || '?')[0]).toUpperCase();
   const esAdmin = currentUser?.rol === 'admin';
   document.getElementById('patientHeader').innerHTML = `
-    <div class="patient-avatar-lg">${init}</div>
-    <div style="flex:1"><div class="patient-name">${pac.nombre || ''} ${pac.apellidos || ''}</div>
-    <div class="patient-meta">Cédula: ${pac.cedula || '—'} · ${pac.clientes_b2b?.nombre_empresa || '—'}</div></div>
+    <div class="patient-avatar-lg">${escapeHtml(init)}</div>
+    <div style="flex:1"><div class="patient-name">${escapeHtml(pac.nombre)} ${escapeHtml(pac.apellidos)}</div>
+    <div class="patient-meta">Cédula: ${escapeHtml(pac.cedula) || '—'} · ${escapeHtml(pac.clientes_b2b?.nombre_empresa) || '—'}</div></div>
     <button class="btn btn-sm" style="margin-left:auto" onclick="mostrarEditorPaciente('${pac.id}')">✏️ Editar datos</button>
-    ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarPaciente('${pac.id}','${(pac.nombre+' '+(pac.apellidos||'')).trim().replace(/'/g,"\\'")}')">🗑 Eliminar paciente</button>` : ''}
+    ${esAdmin ? `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarPaciente('${pac.id}')">🗑 Eliminar paciente</button>` : ''}
   `;
   document.getElementById('detailGrid').innerHTML = [
     ['Edad', pac.edad || '—'], ['Sexo', pac.sexo === 'M' ? 'Masculino' : pac.sexo === 'F' ? 'Femenino' : '—'],
     ['Nacimiento', pac.fecha_nacimiento || '—'], ['Correo', pac.correo || '—'],
     ['Teléfono', pac.telefono || '—'], ['Residencia', pac.lugar_residencia || '—'], ['Empresa', pac.clientes_b2b?.nombre_empresa || '—']
-  ].map(([l, v]) => `<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${v}</div></div>`).join('');
+  ].map(([l, v]) => `<div class="detail-item"><div class="detail-label">${escapeHtml(l)}</div><div class="detail-value">${escapeHtml(v)}</div></div>`).join('');
 
   const consultas = await supa('GET', 'consultas', null, `?paciente_id=eq.${id}&order=created_at.desc`) || [];
   const totalC = consultas.length;
@@ -57,8 +57,8 @@ async function showPacienteDetalle(id) {
     <tbody>${consultas.map((c, i) => `<tr>
       <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa">${totalC - i}</td>
       <td>${new Date(c.created_at).toLocaleDateString('es-EC')}</td>
-      <td>${c.sintomas_descripcion || '—'}</td>
-      <td>${c.diagnostico || '—'}</td>
+      <td>${escapeHtml(c.sintomas_descripcion) || '—'}</td>
+      <td>${escapeHtml(c.diagnostico) || '—'}</td>
       <td>${c.nivel_sintomas === 3 ? '<span class="badge badge-red">Grave</span>' : c.nivel_sintomas === 2 ? '<span class="badge badge-yellow">Medio</span>' : '<span class="badge badge-green">Leve</span>'}</td>
       <td><span class="badge badge-gray">${c.estado}</span></td>
       <td><button class="btn btn-sm" onclick="openReceta('${c.id}','${id}')">➡️ Ir a consulta</button></td>
@@ -307,8 +307,10 @@ async function adminDelete(tipo, id) {
   return result;
 }
 
-async function eliminarPaciente(id, nombre) {
+async function eliminarPaciente(id) {
   if (currentUser?.rol !== 'admin') return;
+  const pac = pacientesData.find(x => x.id === id);
+  const nombre = pac ? `${pac.nombre || ''} ${pac.apellidos || ''}`.trim() : 'este paciente';
   if (!confirm(`¿Eliminar permanentemente a ${nombre}?\n\n⚠️ No se puede deshacer.`)) return;
   showToast('⏳ Eliminando...');
   try {

@@ -230,9 +230,9 @@ async function openReceta(consultaId, pacienteId) {
 
   const init = ((_pacData.nombre || '?')[0] + (_pacData.apellidos || '?')[0]).toUpperCase();
   document.getElementById('recetaPacienteHeader').innerHTML = `
-    <div class="patient-avatar-lg">${init}</div>
-    <div><div class="patient-name">${_pacData.nombre || ''} ${_pacData.apellidos || ''}</div>
-    <div class="patient-meta">Cédula: ${_pacData.cedula || '—'} · ${_pacData.clientes_b2b?.nombre_empresa || '—'} · Tel: ${_pacData.telefono || '—'}</div></div>
+    <div class="patient-avatar-lg">${escapeHtml(init)}</div>
+    <div><div class="patient-name">${escapeHtml(_pacData.nombre)} ${escapeHtml(_pacData.apellidos)}</div>
+    <div class="patient-meta">Cédula: ${escapeHtml(_pacData.cedula) || '—'} · ${escapeHtml(_pacData.clientes_b2b?.nombre_empresa) || '—'} · Tel: ${escapeHtml(_pacData.telefono) || '—'}</div></div>
     <div style="display:flex;gap:6px;margin-left:auto;flex-shrink:0">
       <button class="btn btn-sm" onclick="showPacienteDetalle('${pacienteId}')" style="white-space:nowrap">👤 Ver perfil</button>
       <button class="btn btn-sm" id="btnCopiarInfo" onclick="copiarInfoConsulta()" style="white-space:nowrap">📋 Copiar info</button>
@@ -248,7 +248,7 @@ async function openReceta(consultaId, pacienteId) {
     _banner.innerHTML = `
       <span style="flex-shrink:0;background:${_nivelBadge[0]};color:${_nivelBadge[1]};border-radius:20px;font-size:11px;font-weight:700;padding:4px 12px;white-space:nowrap;align-self:center">${_nivelBadge[2]}</span>
       <div style="min-width:0">
-        <div style="font-size:12px;color:#111;line-height:1.5">${_c.sintomas_descripcion || '<em style="color:#aaa">Sin descripción de síntomas</em>'}</div>
+        <div style="font-size:12px;color:#111;line-height:1.5">${_c.sintomas_descripcion ? escapeHtml(_c.sintomas_descripcion) : '<em style="color:#aaa">Sin descripción de síntomas</em>'}</div>
         ${_fechaStr ? `<div style="font-size:11px;color:#aaa;margin-top:2px">📅 ${_fechaStr}</div>` : ''}
       </div>`;
   }
@@ -1964,7 +1964,7 @@ async function renderMensajesConsulta() {
           <span style="font-size:11px;color:#aaa;margin-left:auto">${fecha}</span>
         </div>
         <div style="background:${esPaciente ? '#f9fafb' : '#f0fdf4'};border:1px solid ${esPaciente ? '#e5e7eb' : '#bbf7d0'};border-radius:8px;padding:10px 12px;font-size:13px;color:#374151">
-          ${(m.contenido || '').replace(/\n/g, '<br>')}
+          ${escapeHtml(m.contenido).replace(/\n/g, '<br>')}
         </div>
         ${esPaciente && !msgs.some(r => r.tipo === 'respuesta_medico' && new Date(r.created_at) > new Date(m.created_at))
           ? `<div style="margin-top:6px">

@@ -34,6 +34,15 @@
 
     function render(html) { card.innerHTML = html; }
 
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     if (!id) {
       render(`<div class="icon err">⚠️</div><h1 class="err">Falta el identificador del documento</h1>`);
     } else {
@@ -52,7 +61,7 @@
             : '';
 
           const rowEmisor = data.cert_emisor
-            ? `<div class="row"><span>Entidad emisora</span><span>${data.cert_emisor}</span></div>`
+            ? `<div class="row"><span>Entidad emisora</span><span>${escapeHtml(data.cert_emisor)}</span></div>`
             : '';
 
           const rowTSA = fechaTSA
@@ -65,9 +74,9 @@
             ${eciBadge}
             ${tsaBadge}
             <div style="margin-top:12px">
-              <div class="row"><span>Firmante</span><span>${data.titular || '—'}</span></div>
+              <div class="row"><span>Firmante</span><span>${escapeHtml(data.titular) || '—'}</span></div>
               ${rowEmisor}
-              <div class="row"><span>Tipo de documento</span><span>${data.tipo_documento || '—'}</span></div>
+              <div class="row"><span>Tipo de documento</span><span>${escapeHtml(data.tipo_documento) || '—'}</span></div>
               <div class="row"><span>Fecha de firma</span><span>${fechaFirma}</span></div>
               ${rowTSA}
             </div>

@@ -2,11 +2,11 @@ async function openAgendar(consultaId, pacienteId) {
   currentConsultaId = consultaId; currentPacienteId = pacienteId;
   const [pac, medicos] = await Promise.all([
     supa('GET', 'pacientes', null, `?id=eq.${pacienteId}&select=*,clientes_b2b(*)`),
-    supa('GET', 'usuarios', null, '?rol=eq.medico&activo=eq.true')
+    supa('GET', 'usuarios', null, '?rol=eq.medico&activo=eq.true&select=id,nombre,apellidos,especialidad')
   ]);
   const p = (pac || [])[0] || {};
-  document.getElementById('popupPacienteInfo').innerHTML = `<strong>${p.nombre || ''} ${p.apellidos || ''}</strong> · Cédula: ${p.cedula || '—'}<br>Empresa: ${p.clientes_b2b?.nombre_empresa || '—'} · Tel: ${p.telefono || '—'}`;
-  document.getElementById('medicoAsignado').innerHTML = (medicos || []).map(m => `<option value="${m.id}">${m.nombre} ${m.apellidos} — ${m.especialidad || 'Medicina General'}</option>`).join('') || '<option>Sin médicos</option>';
+  document.getElementById('popupPacienteInfo').innerHTML = `<strong>${escapeHtml(p.nombre)} ${escapeHtml(p.apellidos)}</strong> · Cédula: ${escapeHtml(p.cedula) || '—'}<br>Empresa: ${escapeHtml(p.clientes_b2b?.nombre_empresa) || '—'} · Tel: ${escapeHtml(p.telefono) || '—'}`;
+  document.getElementById('medicoAsignado').innerHTML = (medicos || []).map(m => `<option value="${m.id}">${escapeHtml(m.nombre)} ${escapeHtml(m.apellidos)} — ${escapeHtml(m.especialidad) || 'Medicina General'}</option>`).join('') || '<option>Sin médicos</option>';
   const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   document.getElementById('fechaConfirmada').value = now.toISOString().slice(0, 16);
   document.getElementById('popupAgendar').classList.add('open');

@@ -1,3 +1,15 @@
+// ===== ESCAPE HTML — usar SIEMPRE al insertar datos de BD en innerHTML =====
+// Datos de paciente (nombre, síntomas, mensajes de chat, etc.) pueden llegar
+// con HTML/JS arbitrario desde el bot de WhatsApp; nunca son de confianza.
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ===== CRONÓMETRO DE ESPERA =====
 // Postgres devuelve los timestamps SIN zona horaria (ej. "2026-06-08T23:22:10").
 // El navegador los interpretaría como hora local; como en realidad son UTC, hay que
@@ -175,11 +187,11 @@ function copiarInfoConsulta() {
     const color      = empty ? '#dc2626' : '#1a1a1a';
     const baseStyle  = `width:100%;box-sizing:border-box;border:1px solid ${borderColor};border-radius:6px;padding:5px 8px;font-size:13px;background:${bg};color:${color}`;
     const inputEl    = c.multi
-      ? `<textarea id="${id}" rows="2" style="${baseStyle};resize:vertical">${c.value}</textarea>`
-      : `<input id="${id}" type="text" value="${c.value.replace(/"/g, '&quot;')}" placeholder="(vacío — escribe para copiar)" style="${baseStyle}" ${empty ? '' : 'readonly'} />`;
+      ? `<textarea id="${id}" rows="2" style="${baseStyle};resize:vertical">${escapeHtml(c.value)}</textarea>`
+      : `<input id="${id}" type="text" value="${escapeHtml(c.value)}" placeholder="(vacío — escribe para copiar)" style="${baseStyle}" ${empty ? '' : 'readonly'} />`;
     return `
       <div style="display:grid;grid-template-columns:130px 1fr 34px;gap:6px;align-items:start;margin-bottom:5px">
-        <label style="font-size:12px;font-weight:600;color:#374151;padding-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${c.label}">${c.label}</label>
+        <label style="font-size:12px;font-weight:600;color:#374151;padding-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escapeHtml(c.label)}">${escapeHtml(c.label)}</label>
         ${inputEl}
         <button onclick="_copiarCampo('${id}',this)" title="Copiar ${c.label}"
           style="margin-top:2px;padding:4px 6px;font-size:13px;border:1px solid ${empty ? '#fecaca' : '#e5e7eb'};border-radius:6px;background:white;cursor:pointer;color:${empty ? '#dc2626' : '#374151'};line-height:1">📋</button>

@@ -41,7 +41,7 @@ async function loadConsultas() {
     selEmpresa.innerHTML = '<option value="">Todas las empresas</option>' +
       Object.entries(empresasMap)
         .sort((a, b) => (a[1] || '').localeCompare(b[1] || ''))
-        .map(([id, nombre]) => `<option value="${id}">${nombre || '—'}</option>`).join('');
+        .map(([id, nombre]) => `<option value="${id}">${escapeHtml(nombre) || '—'}</option>`).join('');
     if ([...selEmpresa.options].some(o => o.value === valorActual)) selEmpresa.value = valorActual;
   }
 
@@ -64,9 +64,9 @@ async function loadConsultas() {
     const puedeAtender = sinMedico && (currentUser.rol === 'medico' || currentUser.rol === 'admin');
     const empresaB2B = p.clientes_b2b?.nombre_empresa;
     const origenHtml = empresaB2B
-      ? `<span class="alerta-tag" style="background:#eff6ff;color:#2563eb">🏢 ${empresaB2B}</span>`
+      ? `<span class="alerta-tag" style="background:#eff6ff;color:#2563eb">🏢 ${escapeHtml(empresaB2B)}</span>`
       : `<span class="alerta-tag" style="background:#f3f4f6;color:#6b7280">👤 B2C</span>`;
-    const etiquetaHtml = etiquetas[c.id] ? `<br><span class="alerta-tag">${etiquetas[c.id]}</span>` : '';
+    const etiquetaHtml = etiquetas[c.id] ? `<br><span class="alerta-tag">${escapeHtml(etiquetas[c.id])}</span>` : '';
 
     const nivelBadge = c.nivel_sintomas === 3
       ? '<span class="badge badge-red">🔴 Grave</span>'
@@ -87,15 +87,15 @@ async function loadConsultas() {
       : '';
 
     const medicoInfo = med
-      ? `<div style="font-size:11px;color:#16a34a;margin-top:3px">🩺 Dr. ${med.nombre || ''} ${med.apellidos || ''}</div>`
+      ? `<div style="font-size:11px;color:#16a34a;margin-top:3px">🩺 Dr. ${escapeHtml(med.nombre)} ${escapeHtml(med.apellidos)}</div>`
       : `<div style="font-size:11px;color:#FF5A5F;margin-top:3px">⚠️ Sin médico asignado</div>`;
 
     return `
       <tr ${sinMedico && c.estado !== 'completada' ? 'style="background:#fff8f8"' : ''}>
         <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa;min-width:36px">${totalCons - i}</td>
         <td>
-          <strong>${p.nombre || '—'} ${p.apellidos || ''}</strong>
-          <br><span style="font-size:11px;color:#aaa">${p.cedula || ''}</span>
+          <strong>${escapeHtml(p.nombre) || '—'} ${escapeHtml(p.apellidos)}</strong>
+          <br><span style="font-size:11px;color:#aaa">${escapeHtml(p.cedula)}</span>
           ${medicoInfo}
         </td>
         <td style="white-space:nowrap">${origenHtml}${etiquetaHtml}</td>
@@ -103,7 +103,7 @@ async function loadConsultas() {
           ${new Date(c.created_at).toLocaleDateString('es-EC',{day:'2-digit',month:'short',year:'numeric'})}
           <br><span style="font-size:11px;color:#aaa">${new Date(c.created_at).toLocaleTimeString('es-EC',{hour:'2-digit',minute:'2-digit'})}</span>
         </td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.sintomas_descripcion||'').replace(/"/g,"&quot;")}">${c.sintomas_descripcion || '—'}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${escapeHtml(c.sintomas_descripcion)}">${escapeHtml(c.sintomas_descripcion) || '—'}</td>
         <td>${nivelBadge}</td>
         <td>${estadoBadge}${timerEspera}</td>
         <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:170px">

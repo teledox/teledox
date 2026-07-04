@@ -12,7 +12,7 @@ async function loadNotificaciones() {
   document.getElementById('notifBody').innerHTML = notifs.map(n => `
     <tr style="${n.leida ? '' : 'background:#fffbeb'}">
       <td><span style="font-size:12px;font-weight:600;color:${n.tipo === 'urgente' ? '#dc2626' : '#2563eb'}">${n.tipo === 'urgente' ? '⚠️ Urgente' : '📅 Nueva'}</span></td>
-      <td><strong>${n.titulo}</strong><br><span style="font-size:12px;color:#888">${n.mensaje}</span></td>
+      <td><strong>${escapeHtml(n.titulo)}</strong><br><span style="font-size:12px;color:#888">${escapeHtml(n.mensaje)}</span></td>
       <td style="white-space:nowrap;font-size:12px">
         ${n.leida ? '' : `<span class="alerta-timer" data-created="${n.created_at}" style="font-weight:700;color:${getTimerColor(n.created_at)}">⏱ ${formatElapsedTime(n.created_at)}</span><br>`}
         <span style="color:#aaa;font-size:11px">${new Date(n.created_at).toLocaleString('es-EC')}</span>
@@ -28,8 +28,8 @@ async function loadNotificaciones() {
   document.getElementById('notifList').innerHTML = notifs.slice(0, 8).map(n => `
     <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="marcarLeida('${n.id}')">
       <div class="notif-tipo ${n.tipo === 'urgente' ? 'notif-urgente' : 'notif-nueva'}">${n.tipo === 'urgente' ? '⚠️ URGENTE' : '📅 NUEVA'}</div>
-      <div class="notif-titulo">${n.titulo}</div>
-      <div class="notif-msg">${n.mensaje}</div>
+      <div class="notif-titulo">${escapeHtml(n.titulo)}</div>
+      <div class="notif-msg">${escapeHtml(n.mensaje)}</div>
       <div class="notif-time">
         ${n.leida ? '' : `<span class="alerta-timer" data-created="${n.created_at}" style="font-weight:700;color:${getTimerColor(n.created_at)}">⏱ ${formatElapsedTime(n.created_at)}</span>`}
       </div>

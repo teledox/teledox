@@ -3,7 +3,8 @@ async function loadUsuarios() {
   const btnPass = document.getElementById('btnAdminPassword');
   if (btnPass) btnPass.style.display = currentUser?.rol === 'admin' ? 'inline-flex' : 'none';
 
-  const users = await supa('GET', 'usuarios', null, '?order=created_at.desc') || [];
+  const users = await supa('GET', 'usuarios', null,
+    '?order=created_at.desc&select=id,nombre,apellidos,correo,rol,especialidad,numero_registro,firma_digital,activo,created_at') || [];
   document.getElementById('usuariosBody').innerHTML = users.map(u => `
     <tr>
       <td><strong>${u.nombre} ${u.apellidos}</strong></td>
@@ -49,7 +50,8 @@ async function saveUser() {
 }
 
 async function abrirEditarUsuario(id) {
-  const users = await supa('GET', 'usuarios', null, `?id=eq.${id}`) || [];
+  const users = await supa('GET', 'usuarios', null,
+    `?id=eq.${id}&select=id,nombre,apellidos,correo,rol,especialidad,numero_registro,cedula,telefono`) || [];
   const u = users[0]; if (!u) return;
 
   document.getElementById('editUserId').value      = u.id;
@@ -136,18 +138,12 @@ async function abrirCambiarPassword() {
 
 async function adminCambiarPassword() {
   if (currentUser?.rol !== 'admin') return;
-  const userId  = document.getElementById('passUsuarioSelect').value;
-  const np      = document.getElementById('adminNewPass').value;
-  const cp      = document.getElementById('adminConfirmPass').value;
-  if (!np || np.length < 6)    { showToast('⚠️ La contraseña debe tener al menos 6 caracteres'); return; }
-  if (np !== cp)                { showToast('⚠️ Las contraseñas no coinciden'); return; }
-  if (!userId)                  { showToast('⚠️ Selecciona un usuario'); return; }
-
-  await supa('PATCH', 'usuarios', { password_hash: np }, `?id=eq.${userId}`);
-  document.getElementById('adminNewPass').value     = '';
-  document.getElementById('adminConfirmPass').value = '';
+  // Esta función escribía la contraseña en texto plano en usuarios.password_hash,
+  // una columna que no usa Supabase Auth para el login (vive en auth.users) —
+  // no cambiaba la contraseña real y quedaba expuesta en texto plano. Deshabilitada
+  // hasta que exista un endpoint backend que llame a auth.admin.updateUserById.
+  showToast('⚠️ Cambio de contraseña no disponible aquí todavía. Pide al usuario "Olvidé mi contraseña" en el login, o cámbiala desde el dashboard de Supabase Auth.');
   document.getElementById('cardCambiarPassword').style.display = 'none';
-  showToast('✓ Contraseña actualizada correctamente');
 }
 
 async function eliminarUsuario(id, nombre) {

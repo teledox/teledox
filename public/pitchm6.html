@@ -713,41 +713,129 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <!-- SLIDE 7: AUDITORÍA MÉDICA -->
 <div class="slide slide-full" id="s7">
-  <div class="bfull-layout">
-    <div class="bfull-hd vis-up" id="p7hd">
-      <div class="orbit-eyebrow">Diferenciador para el cliente</div>
-      <h2 style="font-size:34px">Auditoría médica:<br><span class="c">pertinencia, trazabilidad y control de costos.</span></h2>
-      <p style="font-size:14px;color:var(--text-sub);margin-top:6px;max-width:700px">Cada consulta genera automáticamente un registro auditable completo: desde el primer mensaje hasta el diagnóstico y la receta. El cliente tiene visibilidad total sin fricción adicional.</p>
+  <style>
+    .aud-layout{display:grid;grid-template-columns:1fr 1fr;height:100%;align-items:center;gap:0}
+    .aud-graph{display:flex;align-items:center;justify-content:center;height:100%;background:linear-gradient(135deg,var(--bg) 0%,color-mix(in srgb,var(--blue) 4%,var(--bg)) 100%);position:relative;overflow:hidden}
+    .aud-doc{width:260px;position:relative}
+    .aud-page{background:var(--surface);border-radius:12px;box-shadow:var(--shadow-lg);padding:24px 22px;display:flex;flex-direction:column;gap:10px;position:relative;z-index:2}
+    .aud-page-header{display:flex;align-items:center;gap:10px;padding-bottom:12px;border-bottom:2px solid var(--red)}
+    .aud-page-title{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--text)}
+    .aud-line{height:8px;border-radius:4px;background:var(--border)}
+    .aud-line.long{width:100%}
+    .aud-line.med{width:72%}
+    .aud-line.short{width:48%}
+    .aud-line.red{background:color-mix(in srgb,var(--red) 30%,var(--border))}
+    .aud-row{display:flex;gap:8px;align-items:center}
+    .aud-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .aud-dot.green{background:var(--green)}.aud-dot.red{background:var(--red)}.aud-dot.gold{background:var(--gold)}
+    .aud-stamp{position:absolute;top:-18px;right:-18px;width:72px;height:72px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--surface);box-shadow:var(--shadow);z-index:3;transform:rotate(12deg)}
+    .aud-stamp-ico{font-size:22px;line-height:1}
+    .aud-stamp-lbl{font-size:8px;font-weight:800;color:var(--green);letter-spacing:.06em;text-transform:uppercase}
+    .aud-shadow-doc{position:absolute;top:12px;left:12px;right:-12px;bottom:-12px;background:color-mix(in srgb,var(--blue) 8%,var(--border));border-radius:12px;z-index:1}
+    /* right list */
+    .aud-list{padding:52px 60px 52px 52px;display:flex;flex-direction:column;gap:0;justify-content:center;height:100%;box-sizing:border-box}
+    .aud-hd{margin-bottom:24px}
+    .aud-hd .orbit-eyebrow{margin-bottom:10px}
+    .aud-hd h2{font-size:28px;line-height:1.2;margin:0 0 8px}
+    .aud-hd p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0}
+    .aud-item{border-bottom:1px solid var(--border);overflow:hidden}
+    .aud-item:first-child{border-top:1px solid var(--border)}
+    .aud-trigger{display:flex;align-items:center;gap:14px;padding:13px 0;cursor:pointer;user-select:none;width:100%}
+    .aud-trigger-ico{font-size:18px;width:26px;text-align:center;flex-shrink:0}
+    .aud-trigger-title{font-size:14px;font-weight:700;color:var(--text);flex:1}
+    .aud-trigger-arrow{font-size:11px;color:var(--text-muted);transition:transform .25s;flex-shrink:0}
+    .aud-item.open .aud-trigger-arrow{transform:rotate(90deg)}
+    .aud-item.open .aud-trigger-title{color:var(--red)}
+    .aud-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+    .aud-item.open .aud-body{max-height:100px}
+    .aud-body-inner{padding:0 0 13px 40px;font-size:12px;color:var(--text-muted);line-height:1.6}
+    .aud-banner{margin-top:18px;background:linear-gradient(90deg,var(--red-light),var(--blue-light));border:1px solid rgba(37,99,235,0.15);border-radius:12px;padding:13px 18px;display:flex;align-items:center;gap:12px}
+    .aud-banner-ico{font-size:22px;flex-shrink:0}
+    .aud-banner-title{font-size:13px;font-weight:700;color:var(--text)}
+    .aud-banner-sub{font-size:12px;color:var(--text-sub)}
+  </style>
+
+  <div class="aud-layout">
+    <!-- LEFT: audit document graphic -->
+    <div class="aud-graph">
+      <div class="aud-doc vis-scale" id="p7doc">
+        <div class="aud-shadow-doc"></div>
+        <div class="aud-page">
+          <div class="aud-stamp">
+            <div class="aud-stamp-ico">✓</div>
+            <div class="aud-stamp-lbl">Auditado</div>
+          </div>
+          <div class="aud-page-header">
+            <div style="font-size:20px">🗂️</div>
+            <div class="aud-page-title">Expediente clínico</div>
+          </div>
+          <div class="aud-row"><div class="aud-dot green"></div><div class="aud-line long"></div></div>
+          <div class="aud-row"><div class="aud-dot green"></div><div class="aud-line med"></div></div>
+          <div class="aud-row"><div class="aud-dot gold"></div><div class="aud-line long"></div></div>
+          <div class="aud-row"><div class="aud-dot green"></div><div class="aud-line short"></div></div>
+          <div style="height:1px;background:var(--border);margin:4px 0"></div>
+          <div class="aud-row"><div class="aud-dot red"></div><div class="aud-line med red"></div></div>
+          <div class="aud-row"><div class="aud-dot green"></div><div class="aud-line long"></div></div>
+          <div class="aud-row"><div class="aud-dot green"></div><div class="aud-line short"></div></div>
+          <div style="height:1px;background:var(--border);margin:4px 0"></div>
+          <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+            <div style="font-size:9px;color:var(--text-muted);font-weight:600">MediLyft Audit ·</div>
+            <div style="font-size:9px;color:var(--green);font-weight:700">Verificado ✓</div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="audit-grid vis-up" id="p7grid" style="animation-delay:.2s">
-      <div class="audit-card red">
-        <div class="audit-ico">🔎</div>
-        <div class="audit-title">Pertinencia médica</div>
-        <div class="audit-desc">Validación automática de si la consulta o procedimiento era clínicamente justificado. Contrasta el diagnóstico con protocolos y el historial del cliente.</div>
+    <!-- RIGHT: toggle list -->
+    <div class="aud-list" id="p7list">
+      <div class="aud-hd vis-up" id="p7hd">
+        <div class="orbit-eyebrow">Diferenciador para el cliente</div>
+        <h2>Auditoría médica:<br><span class="c">pertinencia y trazabilidad.</span></h2>
+        <p>Cada consulta genera un registro auditable completo. El cliente tiene visibilidad total sin fricción adicional.</p>
       </div>
-      <div class="audit-card blue">
-        <div class="audit-ico">💰</div>
-        <div class="audit-title">Control de costos</div>
-        <div class="audit-desc">Revisión de prestaciones facturadas versus la atención real documentada. Detecta inconsistencias entre lo cobrado y el registro clínico generado.</div>
-      </div>
-      <div class="audit-card gold">
-        <div class="audit-ico">📡</div>
-        <div class="audit-title">Auditoría de altas hospitalarias</div>
-        <div class="audit-desc">Revisión de egresos hospitalarios: valida diagnóstico, procedimientos realizados y días de estancia versus la evidencia clínica registrada.</div>
-      </div>
-      <div class="audit-card green">
-        <div class="audit-ico">🗂️</div>
-        <div class="audit-title">Trazabilidad completa</div>
-        <div class="audit-desc">Cada interacción registrada con timestamp, médico responsable, diagnóstico y derivaciones. El cliente accede al expediente en cualquier momento.</div>
-      </div>
-    </div>
 
-    <div class="vis-up" id="p7banner" style="animation-delay:.5s;background:linear-gradient(90deg,var(--red-light),var(--blue-light));border:1px solid rgba(37,99,235,0.15);border-radius:14px;padding:16px 24px;display:flex;align-items:center;gap:16px">
-      <div style="font-size:28px;flex-shrink:0">📊</div>
-      <div>
-        <div style="font-weight:700;font-size:14px;color:var(--text);margin-bottom:3px">Reporte de auditoría mensual</div>
-        <div style="font-size:13px;color:var(--text-sub)">Exportable. Listo para su uso.</div>
+      <div class="aud-item vis-up" id="ai0">
+        <div class="aud-trigger" onclick="audToggle(0)">
+          <span class="aud-trigger-ico">🔎</span>
+          <span class="aud-trigger-title">Pertinencia médica</span>
+          <span class="aud-trigger-arrow">▶</span>
+        </div>
+        <div class="aud-body"><div class="aud-body-inner">Validación automática de si la consulta era clínicamente justificada. Contrasta el diagnóstico con protocolos y el historial del cliente.</div></div>
+      </div>
+
+      <div class="aud-item vis-up" id="ai1">
+        <div class="aud-trigger" onclick="audToggle(1)">
+          <span class="aud-trigger-ico">💰</span>
+          <span class="aud-trigger-title">Control de costos</span>
+          <span class="aud-trigger-arrow">▶</span>
+        </div>
+        <div class="aud-body"><div class="aud-body-inner">Revisión de prestaciones facturadas versus la atención real documentada. Detecta inconsistencias entre lo cobrado y el registro clínico.</div></div>
+      </div>
+
+      <div class="aud-item vis-up" id="ai2">
+        <div class="aud-trigger" onclick="audToggle(2)">
+          <span class="aud-trigger-ico">📡</span>
+          <span class="aud-trigger-title">Auditoría de altas hospitalarias</span>
+          <span class="aud-trigger-arrow">▶</span>
+        </div>
+        <div class="aud-body"><div class="aud-body-inner">Revisión de egresos hospitalarios: valida diagnóstico, procedimientos y días de estancia versus la evidencia clínica registrada.</div></div>
+      </div>
+
+      <div class="aud-item vis-up" id="ai3">
+        <div class="aud-trigger" onclick="audToggle(3)">
+          <span class="aud-trigger-ico">🗂️</span>
+          <span class="aud-trigger-title">Trazabilidad completa</span>
+          <span class="aud-trigger-arrow">▶</span>
+        </div>
+        <div class="aud-body"><div class="aud-body-inner">Cada interacción registrada con timestamp, médico responsable, diagnóstico y derivaciones. El cliente accede al expediente en cualquier momento.</div></div>
+      </div>
+
+      <div class="aud-banner vis-up" id="p7banner">
+        <div class="aud-banner-ico">📊</div>
+        <div>
+          <div class="aud-banner-title">Reporte de auditoría mensual</div>
+          <div class="aud-banner-sub">Exportable. Listo para su uso.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -1082,7 +1170,16 @@ function anim6(){
   ['pa1','pa2','pa3','pa4'].forEach((id,i)=>show(id,600+i*180));
 }
 function anim7(){
-  show('p7hd',80);show('p7grid',300);show('p7banner',700);
+  show('p7doc',80);
+  show('p7hd',200);
+  ['ai0','ai1','ai2','ai3','p7banner'].forEach((id,i)=>show(id,380+i*100));
+}
+function audToggle(idx){
+  const items=document.querySelectorAll('#s7 .aud-item');
+  items.forEach((el,i)=>{
+    if(i===idx){ el.classList.toggle('open'); }
+    else{ el.classList.remove('open'); }
+  });
 }
 function anim8(){
   show('p8hub',80);

@@ -751,37 +751,122 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 
 <!-- SLIDE 8: ECOSISTEMA NESEC -->
 <div class="slide slide-full" id="s8">
-  <div class="orbit-layout">
-    <div class="orbit-hd vis-up" id="p9hd">
-      <div class="orbit-eyebrow">Plataforma NESEC · MediLyft</div>
-      <h2>Todo conectado.<br>Un solo <span class="c">ecosistema de salud</span>.</h2>
-      <p>NESEC ofrece a sus aseguradoras cliente una plataforma completa: desde el primer síntoma hasta el reporte de auditoría, todo en un solo flujo integrado.</p>
-      <div class="orbit-tags">
-        <span class="otag vis-up" id="ot1">🏥 Aseguradoras</span>
-        <span class="otag vis-up" id="ot2">👤 Asegurados</span>
-        <span class="otag vis-up" id="ot3">👨‍⚕️ Médicos</span>
-        <span class="otag vis-up" id="ot4">📊 Auditoría</span>
-        <span class="otag vis-up" id="ot5">📋 TPA NESEC</span>
+  <style>
+    .eco-layout{display:grid;grid-template-columns:1fr 1fr;height:100%;align-items:center;gap:0;padding:0}
+    .eco-graph{display:flex;align-items:center;justify-content:center;height:100%;background:linear-gradient(135deg,var(--bg) 0%,color-mix(in srgb,var(--red) 4%,var(--bg)) 100%);position:relative;overflow:hidden}
+    .eco-hub{position:relative;width:320px;height:320px}
+    .eco-hub svg{position:absolute;inset:0;width:100%;height:100%}
+    .eco-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:88px;height:88px;border-radius:50%;background:var(--red);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:0 0 0 10px color-mix(in srgb,var(--red) 18%,transparent),0 8px 32px color-mix(in srgb,var(--red) 30%,transparent);z-index:2}
+    .eco-center-name{font-size:11px;font-weight:800;color:#fff;letter-spacing:.04em}
+    .eco-center-sub{font-size:9px;color:rgba(255,255,255,.7);letter-spacing:.03em}
+    .eco-node{position:absolute;width:72px;height:72px;border-radius:50%;background:var(--surface);border:2px solid var(--border);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;transition:border-color .2s,box-shadow .2s;z-index:2}
+    .eco-node.active{border-color:var(--red);box-shadow:0 0 0 3px color-mix(in srgb,var(--red) 20%,transparent)}
+    .eco-node-ico{font-size:22px;line-height:1}
+    .eco-node-lbl{font-size:9px;font-weight:700;color:var(--text-sub);text-align:center;line-height:1.2}
+    /* node positions around circle r=115 */
+    .eco-n0{top:50%;left:50%;transform:translate(calc(-50% + 0px),calc(-50% - 115px))}   /* top */
+    .eco-n1{top:50%;left:50%;transform:translate(calc(-50% + 109px),calc(-50% - 36px))}  /* top-right */
+    .eco-n2{top:50%;left:50%;transform:translate(calc(-50% + 67px),calc(-50% + 95px))}   /* bot-right */
+    .eco-n3{top:50%;left:50%;transform:translate(calc(-50% - 67px),calc(-50% + 95px))}   /* bot-left */
+    .eco-n4{top:50%;left:50%;transform:translate(calc(-50% - 109px),calc(-50% - 36px))}  /* top-left */
+    /* right panel */
+    .eco-list{padding:52px 60px 52px 52px;display:flex;flex-direction:column;gap:0;justify-content:center;height:100%;box-sizing:border-box}
+    .eco-hd{margin-bottom:28px}
+    .eco-hd .orbit-eyebrow{margin-bottom:10px}
+    .eco-hd h2{font-size:30px;line-height:1.2;margin:0 0 8px}
+    .eco-hd p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0}
+    .eco-item{border-bottom:1px solid var(--border);overflow:hidden}
+    .eco-item:first-child{border-top:1px solid var(--border)}
+    .eco-trigger{display:flex;align-items:center;gap:14px;padding:14px 0;cursor:pointer;user-select:none;width:100%}
+    .eco-trigger-ico{font-size:20px;width:28px;text-align:center;flex-shrink:0}
+    .eco-trigger-title{font-size:14px;font-weight:700;color:var(--text);flex:1}
+    .eco-trigger-arrow{font-size:11px;color:var(--text-muted);transition:transform .25s;flex-shrink:0}
+    .eco-item.open .eco-trigger-arrow{transform:rotate(90deg)}
+    .eco-item.open .eco-trigger-title{color:var(--red)}
+    .eco-body{max-height:0;overflow:hidden;transition:max-height .3s ease}
+    .eco-item.open .eco-body{max-height:120px}
+    .eco-body-inner{padding:0 0 14px 42px;font-size:12px;color:var(--text-muted);line-height:1.6}
+  </style>
+
+  <div class="eco-layout">
+    <!-- LEFT: hub graphic -->
+    <div class="eco-graph" id="p8graph">
+      <div class="eco-hub vis-scale" id="p8hub">
+        <svg viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- spokes from center to each node center -->
+          <line class="eco-spoke" x1="160" y1="160" x2="160" y2="45"  stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".4"/>
+          <line class="eco-spoke" x1="160" y1="160" x2="269" y2="124" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".4"/>
+          <line class="eco-spoke" x1="160" y1="160" x2="227" y2="255" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".4"/>
+          <line class="eco-spoke" x1="160" y1="160" x2="93"  y2="255" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".4"/>
+          <line class="eco-spoke" x1="160" y1="160" x2="51"  y2="124" stroke="var(--red)" stroke-width="1.5" stroke-dasharray="4 4" opacity=".4"/>
+          <!-- outer ring -->
+          <circle cx="160" cy="160" r="115" stroke="var(--border)" stroke-width="1" stroke-dasharray="3 5"/>
+        </svg>
+        <div class="eco-center">
+          <div class="eco-center-name">MediLyft</div>
+          <div class="eco-center-sub">TPA Digital</div>
+        </div>
+        <!-- nodes -->
+        <div class="eco-node eco-n0" data-idx="0" onclick="ecoToggle(0)"><div class="eco-node-ico">🏥</div><div class="eco-node-lbl">Aseguradora</div></div>
+        <div class="eco-node eco-n1" data-idx="1" onclick="ecoToggle(1)"><div class="eco-node-ico">👤</div><div class="eco-node-lbl">Asegurado</div></div>
+        <div class="eco-node eco-n2" data-idx="2" onclick="ecoToggle(2)"><div class="eco-node-ico">👨‍⚕️</div><div class="eco-node-lbl">Médico</div></div>
+        <div class="eco-node eco-n3" data-idx="3" onclick="ecoToggle(3)"><div class="eco-node-ico">📊</div><div class="eco-node-lbl">Auditoría</div></div>
+        <div class="eco-node eco-n4" data-idx="4" onclick="ecoToggle(4)"><div class="eco-node-ico">📋</div><div class="eco-node-lbl">TPA NESEC</div></div>
       </div>
     </div>
-    <div class="orbit-diagram vis-scale" id="p9orb">
-      <div class="orbit-ring ring-1"></div>
-      <div class="orbit-ring ring-2"></div>
-      <div class="orbit-center">
-        <svg viewBox="0 0 1024 1024" fill="none" style="width:36px;height:36px">
-          <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
-          <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
-          <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-        <div class="oc-name">MediLyft</div>
-        <div class="oc-sub">TPA Digital</div>
-        <div class="oc-score">NESEC</div>
+
+    <!-- RIGHT: toggle list -->
+    <div class="eco-list" id="p8list">
+      <div class="eco-hd vis-up" id="p8hd">
+        <div class="orbit-eyebrow">Plataforma NESEC · MediLyft</div>
+        <h2>Todo conectado.<br>Un solo <span class="c">ecosistema.</span></h2>
+        <p>Desde el primer síntoma hasta el reporte de auditoría, cada actor opera en un solo flujo integrado.</p>
       </div>
-      <div class="orbit-node on-1"><div class="onode-planet"><div class="op-ico">🏥</div><div class="op-lbl">Aseguradora</div></div></div>
-      <div class="orbit-node on-2"><div class="onode-planet"><div class="op-ico">👤</div><div class="op-lbl">Asegurado</div></div></div>
-      <div class="orbit-node on-3"><div class="onode-planet"><div class="op-ico">👨‍⚕️</div><div class="op-lbl">Médico</div></div></div>
-      <div class="orbit-node on-4"><div class="onode-planet"><div class="op-ico">📊</div><div class="op-lbl">Auditoría</div></div></div>
-      <div class="orbit-node on-5"><div class="onode-planet"><div class="op-ico">📋</div><div class="op-lbl">Expediente</div></div></div>
+
+      <div class="eco-item vis-up" id="ei0">
+        <div class="eco-trigger" onclick="ecoToggle(0)">
+          <span class="eco-trigger-ico">🏥</span>
+          <span class="eco-trigger-title">Aseguradora cliente</span>
+          <span class="eco-trigger-arrow">▶</span>
+        </div>
+        <div class="eco-body"><div class="eco-body-inner">Accede a dashboards de uso, reportes de auditoría y métricas de siniestralidad en tiempo real. Visibilidad total sobre el portafolio de asegurados.</div></div>
+      </div>
+
+      <div class="eco-item vis-up" id="ei1">
+        <div class="eco-trigger" onclick="ecoToggle(1)">
+          <span class="eco-trigger-ico">👤</span>
+          <span class="eco-trigger-title">Asegurado</span>
+          <span class="eco-trigger-arrow">▶</span>
+        </div>
+        <div class="eco-body"><div class="eco-body-inner">Triaje, videoconsulta, seguimiento de tratamiento y recordatorios por WhatsApp. Sin apps, sin filas, sin desplazamiento.</div></div>
+      </div>
+
+      <div class="eco-item vis-up" id="ei2">
+        <div class="eco-trigger" onclick="ecoToggle(2)">
+          <span class="eco-trigger-ico">👨‍⚕️</span>
+          <span class="eco-trigger-title">Médico</span>
+          <span class="eco-trigger-arrow">▶</span>
+        </div>
+        <div class="eco-body"><div class="eco-body-inner">Recibe el historial clínico completo antes de cada consulta. Genera nota, diagnóstico y receta digital en el mismo flujo.</div></div>
+      </div>
+
+      <div class="eco-item vis-up" id="ei3">
+        <div class="eco-trigger" onclick="ecoToggle(3)">
+          <span class="eco-trigger-ico">📊</span>
+          <span class="eco-trigger-title">Auditoría médica</span>
+          <span class="eco-trigger-arrow">▶</span>
+        </div>
+        <div class="eco-body"><div class="eco-body-inner">Cada evento queda trazado: consulta, diagnóstico, receta, adherencia. El auditor valida pertinencia sin fricciones ni reprocesos.</div></div>
+      </div>
+
+      <div class="eco-item vis-up" id="ei4">
+        <div class="eco-trigger" onclick="ecoToggle(4)">
+          <span class="eco-trigger-ico">📋</span>
+          <span class="eco-trigger-title">TPA NESEC</span>
+          <span class="eco-trigger-arrow">▶</span>
+        </div>
+        <div class="eco-body"><div class="eco-body-inner">Opera la plataforma sin intervención manual: triaje automatizado, agendamiento coordinado y reportes listos para sus aseguradoras cliente.</div></div>
+      </div>
     </div>
   </div>
 </div>
@@ -996,7 +1081,20 @@ function anim7(){
   show('p7hd',80);show('p7grid',300);show('p7banner',700);
 }
 function anim8(){
-  show('p9hd',100);['ot1','ot2','ot3','ot4','ot5'].forEach((id,i)=>show(id,600+i*120));show('p9orb',300);
+  show('p8hub',80);
+  show('p8hd',200);
+  ['ei0','ei1','ei2','ei3','ei4'].forEach((id,i)=>show(id,380+i*100));
+}
+function ecoToggle(idx){
+  const items=document.querySelectorAll('#s8 .eco-item');
+  const nodes=document.querySelectorAll('#s8 .eco-node');
+  items.forEach((el,i)=>{
+    if(i===idx){ el.classList.toggle('open'); }
+    else{ el.classList.remove('open'); }
+  });
+  nodes.forEach((el,i)=>{
+    el.classList.toggle('active', i===idx && document.querySelectorAll('#s8 .eco-item')[idx].classList.contains('open'));
+  });
 }
 function anim9(){
   show('p10hd',80);['b1','b2','b3','b4'].forEach((id,i)=>show(id,300+i*180));

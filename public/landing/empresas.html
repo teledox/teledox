@@ -14,6 +14,10 @@
     }
     html{scroll-behavior:smooth;background:#fff}
     body{font-family:'Inter',sans-serif;color:var(--dark);background:transparent;overflow-x:hidden}
+    .sec-slide{opacity:0;transform:translateX(-90px);transition:opacity .9s ease,transform .95s cubic-bezier(.22,.7,.3,1);will-change:transform}
+    .sec-slide.from-right{transform:translateX(90px)}
+    .sec-slide.shown{opacity:1;transform:translateX(0)}
+    @media(max-width:768px){.sec-slide{transform:translateX(-36px)}.sec-slide.from-right{transform:translateX(36px)}.sec-slide.shown{transform:translateX(0)}}
 
     /* ── NAV ── */
     nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:space-between;padding:14px 52px;background:rgba(255,255,255,.96);backdrop-filter:blur(16px);border-bottom:1px solid rgba(0,0,0,.07)}
@@ -492,6 +496,12 @@
 </footer>
 
 <script>
+  (function(){
+    const secs=[...document.querySelectorAll('section')].filter(s=>!s.classList.contains('hero'));
+    secs.forEach((s,i)=>{s.classList.add('sec-slide');if(i%2)s.classList.add('from-right')});
+    const so=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('shown');so.unobserve(e.target)}}),{threshold:.12});
+    secs.forEach(s=>so.observe(s));
+  })();
   const io=new IntersectionObserver(e=>e.forEach(x=>{if(x.isIntersecting)x.target.classList.add('visible')}),{threshold:.1});
   document.querySelectorAll('.fade-up').forEach(el=>io.observe(el));
 </script>

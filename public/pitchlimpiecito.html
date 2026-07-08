@@ -253,7 +253,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
     </div>
   </div>
   <div id="slide-title-tag" class="slide-title-tag">Introducción</div>
-  <div class="slide-counter" id="counter">01 / 10</div>
+  <div class="slide-counter" id="counter">01 / 11</div>
 </div>
 
 <div class="progress-bar"><div class="progress-fill" id="prog" style="width:10%"></div></div>
@@ -306,51 +306,75 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="bubble-time">09:14</div>
       </div>
 
+      <!-- SLIDE 3: Siniestro -->
+      <div class="msg out" id="cs1m1" data-slide="3" style="display:none">
+        <div class="bubble">Me caí de la escalera en el piso 4. Me duele el tobillo izquierdo</div>
+        <div class="bubble-time">14:23</div>
+      </div>
+      <div class="typing-indicator" id="cs1t1" data-slide="3" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="cs1m2" data-slide="3" style="display:none">
+        <div class="bubble">🚨 <strong>Registrando incidente.</strong> ¿Puedes moverte? ¿Tienes dolor muy intenso?</div>
+        <div class="bubble-time">14:23</div>
+      </div>
+      <div class="msg out" id="cs1m3" data-slide="3" style="display:none">
+        <div class="bubble">No puedo apoyar bien el pie. Estoy sentada en el pasillo</div>
+        <div class="bubble-time">14:24</div>
+      </div>
+      <div class="typing-indicator" id="cs1t2" data-slide="3" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="cs1m4" data-slide="3" style="display:none">
+        <div class="bubble">✅ <strong>Siniestro registrado.</strong> Salud ocupacional notificada. Un médico te contacta en menos de 5 minutos. Quédate donde estás.</div>
+        <div class="bubble-time">14:24</div>
+      </div>
+
       <!-- SLIDE 4: Perfilamiento -->
-      <div class="msg in" id="c2m1" data-slide="4" style="display:none">
+      <div class="msg in" id="c2m1" data-slide="5" style="display:none">
         <div class="bubble">Ana, antes de tu consulta: ¿tienes alguna alergia conocida a medicamentos?</div>
         <div class="bubble-time">09:15</div>
       </div>
-      <div class="msg out" id="c2m2" data-slide="4" style="display:none">
+      <div class="msg out" id="c2m2" data-slide="5" style="display:none">
         <div class="bubble">No tengo alergias conocidas</div>
         <div class="bubble-time">09:15</div>
       </div>
-      <div class="typing-indicator" id="c2t1" data-slide="4" style="display:none">
+      <div class="typing-indicator" id="c2t1" data-slide="5" style="display:none">
         <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
       </div>
-      <div class="msg in" id="c2m3" data-slide="4" style="display:none">
+      <div class="msg in" id="c2m3" data-slide="5" style="display:none">
         <div class="bubble">¿Trabajas con productos químicos de limpieza a diario? ¿Tienes alguna condición crónica?</div>
         <div class="bubble-time">09:16</div>
       </div>
-      <div class="msg out" id="c2m4" data-slide="4" style="display:none">
+      <div class="msg out" id="c2m4" data-slide="5" style="display:none">
         <div class="bubble">Sí, uso desengrasantes y cloro todos los días. Tengo dermatitis leve.</div>
         <div class="bubble-time">09:16</div>
       </div>
-      <div class="msg in" id="c2m5" data-slide="4" style="display:none">
+      <div class="msg in" id="c2m5" data-slide="5" style="display:none">
         <div class="bubble">✅ <strong>Perfil actualizado.</strong> Exposición química y dermatitis registradas. El médico tiene acceso completo antes de la consulta.</div>
         <div class="bubble-time">09:17</div>
       </div>
 
       <!-- SLIDE 5: Seguimiento -->
-      <div class="msg in" id="c4m1" data-slide="5" style="display:none">
+      <div class="msg in" id="c4m1" data-slide="6" style="display:none">
         <div class="bubble">Recordatorio Ana 💊 <strong>Ibuprofeno 400mg</strong> — segunda toma del día, con el almuerzo.</div>
         <div class="bubble-time">13:00</div>
       </div>
-      <div class="msg out" id="c4m2" data-slide="5" style="display:none">
+      <div class="msg out" id="c4m2" data-slide="6" style="display:none">
         <div class="bubble">Listo, ya lo tomé ✓</div>
         <div class="bubble-time">13:04</div>
       </div>
-      <div class="msg in" id="c4m3" data-slide="5" style="display:none">
+      <div class="msg in" id="c4m3" data-slide="6" style="display:none">
         <div class="bubble">✅ Adherencia registrada. Completas las 3 tomas de hoy. Tu médico estará al tanto de tu evolución.</div>
         <div class="bubble-time">13:04</div>
       </div>
 
       <!-- SLIDE 6: Health Score -->
-      <div class="msg in" id="c3m1" data-slide="6" style="display:none">
+      <div class="msg in" id="c3m1" data-slide="7" style="display:none">
         <div class="bubble">Ana 📊 Tu resumen de bienestar de este mes.</div>
         <div class="bubble-time">hoy, 08:00</div>
       </div>
-      <div class="msg in" id="c3m2" data-slide="6" style="display:none">
+      <div class="msg in" id="c3m2" data-slide="7" style="display:none">
         <div class="score-img-bubble">
           <div class="score-circle-mini">
             <svg viewBox="0 0 88 88">
@@ -367,11 +391,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         </div>
         <div class="bubble-time">08:00</div>
       </div>
-      <div class="msg out" id="c3m3" data-slide="6" style="display:none">
+      <div class="msg out" id="c3m3" data-slide="7" style="display:none">
         <div class="bubble">¿Qué puedo mejorar?</div>
         <div class="bubble-time">08:03</div>
       </div>
-      <div class="msg in" id="c3m4" data-slide="6" style="display:none">
+      <div class="msg in" id="c3m4" data-slide="7" style="display:none">
         <div class="bubble">Tu control preventivo de dermatitis está pendiente. ¿Te agendo una videoconsulta esta semana?</div>
         <div class="bubble-time">08:04</div>
       </div>
@@ -485,19 +509,53 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
   </div>
 </div>
 
-<!-- SLIDE 3: VIDEOCONSULTA -->
-<div class="slide slide-full" id="s3">
-  <div class="panel-col" style="justify-content:center">
+<!-- SLIDE 3: ALERTA DE SINIESTRO -->
+<div class="slide" id="s3">
+  <div class="panel-col">
     <div class="panel-hd vis-up" id="p3hd">
+      <h2>Reporte de siniestro,<br><span class="c">desde WhatsApp, en segundos.</span></h2>
+      <p>El empleado notifica un accidente desde cualquier sitio de trabajo. MediLyft registra el caso, notifica a salud ocupacional y coordina atención médica — todo automáticamente, sin formularios ni llamadas.</p>
+    </div>
+    <div class="section-label vis-fade" id="p3lbl">Incidente en campo · Edificio Torre Norte</div>
+    <div class="card vis-up" id="p3case" style="border-left:4px solid var(--red)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:800;color:var(--text)">Ana R., 31 años · Contrato Torre Norte</div>
+        <div style="background:var(--red-light);color:var(--red-dark);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;border:1px solid rgba(240,82,82,0.25)">🚨 Siniestro</div>
+      </div>
+      <div class="tp-row"><span class="tp-label">Tipo de incidente</span><span class="tp-val">Caída · Tobillo izquierdo</span></div>
+      <div class="tp-row"><span class="tp-label">Hora del reporte</span><span class="tp-val">14:23 — Registrado automáticamente</span></div>
+      <div class="tp-row"><span class="tp-label">Sitio de trabajo</span><span class="tp-val">Edificio Torre Norte · Piso 4</span></div>
+      <div class="tp-row"><span class="tp-label">Estado</span><span class="tp-val" style="color:var(--green);font-weight:700">Médico en camino · &lt; 5 min</span></div>
+    </div>
+    <div class="derivation-box vis-up" id="p3deriv">
+      <div class="deriv-icon">🏥</div>
+      <div class="deriv-info">
+        <h4>Salud ocupacional notificada automáticamente</h4>
+        <p>Timestamp, ubicación y descripción del incidente quedan registrados para auditoría y seguro</p>
+      </div>
+      <div class="deriv-badge">&lt; 5 min</div>
+    </div>
+    <div class="stat-row vis-fade" id="p3stats">
+      <div class="stat-box"><div class="stat-val" style="color:var(--red)">🚨</div><div class="stat-lbl">Registro inmediato</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--gold)">Auto</div><div class="stat-lbl">Notif. salud ocup.</div></div>
+      <div class="stat-box"><div class="stat-val" style="color:var(--green)">100%</div><div class="stat-lbl">Trazabilidad del caso</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: VIDEOCONSULTA -->
+<div class="slide slide-full" id="s4">
+  <div class="panel-col" style="justify-content:center">
+    <div class="panel-hd vis-up" id="p4hd">
       <h2>Médico real en minutos,<br><span class="c">sin salir del turno.</span></h2>
       <p>El empleado conecta con un médico desde WhatsApp — sin desplazamiento, sin perder el turno, sin costo adicional por urgencia. El médico recibe el perfil clínico completo antes de iniciar la consulta.</p>
     </div>
-    <div class="stat-row vis-up" id="p3stats" style="animation-delay:.2s">
+    <div class="stat-row vis-up" id="p4stats" style="animation-delay:.2s">
       <div class="stat-box"><div class="stat-val" style="color:var(--green)">&lt;20'</div><div class="stat-lbl">Tiempo de espera</div></div>
       <div class="stat-box"><div class="stat-val" style="color:var(--red)">0</div><div class="stat-lbl">Días de ausencia requeridos</div></div>
       <div class="stat-box"><div class="stat-val" style="font-size:20px">🔒</div><div class="stat-lbl">Privacidad garantizada</div></div>
     </div>
-    <div class="vis-up" id="p3grid" style="animation-delay:.35s;display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <div class="vis-up" id="p4grid" style="animation-delay:.35s;display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div style="background:var(--surface);border-radius:14px;padding:18px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:6px;border-top:3px solid var(--red)">
         <div style="font-size:24px">📋</div>
         <div style="font-weight:700;font-size:14px">Perfil clínico previo</div>
@@ -520,7 +578,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       </div>
     </div>
   </div>
-  <div class="vcall-wrap vis-right" id="p3vcall">
+  <div class="vcall-wrap vis-right" id="p4vcall">
     <div class="vcall-card">
       <div class="vcall-main">
         <div class="vcall-doc">👨‍⚕️</div>
@@ -543,13 +601,13 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <!-- SLIDE 4: PERFILAMIENTO CLÍNICO -->
-<div class="slide" id="s4">
+<div class="slide" id="s5">
   <div class="panel-col">
-    <div class="panel-hd vis-up" id="p4hd">
+    <div class="panel-hd vis-up" id="p5hd">
       <h2>Perfil clínico del empleado,<br><span class="c">construido automáticamente.</span></h2>
       <p>Cada interacción enriquece el expediente del empleado: alergias, condiciones crónicas, medicación activa y antecedentes relevantes. El médico accede al historial completo en segundos — sin formularios, sin papeles.</p>
     </div>
-    <div class="extract-flow vis-up" id="p4flow">
+    <div class="extract-flow vis-up" id="p5flow">
       <span class="ef-tag">Alergias</span>
       <span class="ef-arrow">+</span>
       <span class="ef-tag">Crónicas</span>
@@ -560,7 +618,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <span class="ef-arrow">→</span>
       <span class="ef-tag out">Perfil clínico ✓</span>
     </div>
-    <div class="profile-grid vis-up" id="p4grid" style="animation-delay:.2s">
+    <div class="profile-grid vis-up" id="p5grid" style="animation-delay:.2s">
       <div class="prof-card highlight">
         <div class="prof-card-label">Alertas críticas</div>
         <div class="prof-card-val red">Siempre visibles</div>
@@ -582,7 +640,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <div class="prof-card-sub">Más completo con cada consulta o interacción</div>
       </div>
     </div>
-    <div class="risk-list vis-fade" id="p4risk" style="animation-delay:.35s">
+    <div class="risk-list vis-fade" id="p5risk" style="animation-delay:.35s">
       <div class="rf-item"><div class="rf-dot high"></div><span class="rf-label">Condiciones de riesgo</span><span class="rf-val">Protocolo activo y médico notificado</span></div>
       <div class="rf-item"><div class="rf-dot med"></div><span class="rf-label">Controles preventivos</span><span class="rf-val">Recordatorios automáticos al empleado</span></div>
       <div class="rf-item"><div class="rf-dot low"></div><span class="rf-label">Historial compartido</span><span class="rf-val">Médico y salud ocupacional alineados sin exponer datos personales</span></div>
@@ -591,14 +649,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <!-- SLIDE 5: SEGUIMIENTO Y ADHERENCIA -->
-<div class="slide" id="s5">
+<div class="slide" id="s6">
   <div class="panel-col">
-    <div class="panel-hd vis-up" id="p5hd">
+    <div class="panel-hd vis-up" id="p6hd">
       <h2>Adherencia al tratamiento,<br><span class="c">monitoreada automáticamente.</span></h2>
       <p>MediLyft recuerda al empleado su medicación diaria, registra cada confirmación y alerta al médico cuando hay falta de adherencia. Las notificaciones son individuales y privadas — las métricas de adherencia se presentan de forma agregada para proteger al empleado.</p>
     </div>
-    <div class="section-label vis-fade" id="p5lbl">Seguimiento activo de empleados · Limpiecito</div>
-    <div class="vis-up" id="p5table" style="animation-delay:.15s;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)">
+    <div class="section-label vis-fade" id="p6lbl">Seguimiento activo de empleados · Limpiecito</div>
+    <div class="vis-up" id="p6table" style="animation-delay:.15s;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow)">
       <table class="remind-table">
         <thead>
           <tr><th>Empleado</th><th>Condición</th><th>Medicación</th><th>Adherencia</th><th>Estado</th></tr>
@@ -611,26 +669,26 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         </tbody>
       </table>
     </div>
-    <div style="background:var(--blue-light);border:1px solid rgba(37,99,235,0.15);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--text-sub);line-height:1.6" class="vis-fade" id="p5note">
+    <div style="background:var(--blue-light);border:1px solid rgba(37,99,235,0.15);border-radius:12px;padding:14px 18px;font-size:13px;color:var(--text-sub);line-height:1.6" class="vis-fade" id="p6note">
       <strong style="color:var(--blue)">🔒 Privacidad del empleado:</strong> las notificaciones de medicación y recordatorios son únicamente para el trabajador. Las métricas de adherencia que llegan al departamento de salud ocupacional son siempre generales y agregadas.
     </div>
   </div>
 </div>
 
 <!-- SLIDE 6: HEALTH SCORE DEL EQUIPO -->
-<div class="slide" id="s6">
+<div class="slide" id="s7">
   <div class="panel-col">
-    <div class="panel-hd vis-up" id="p6hd">
+    <div class="panel-hd vis-up" id="p7hd">
       <h2>Health Score del empleado:<br><span class="c">bienestar</span>, en un número.</h2>
       <p>MediLyft consolida adherencia, controles realizados, videoconsultas y condiciones crónicas en un indicador mensual por empleado. El departamento de salud ocupacional obtiene una vista agregada por área, turno o contrato.</p>
     </div>
-    <div class="section-label vis-fade" id="p6lbl">Health Score · Ana R. · Torre Norte</div>
-    <div class="score-panel vis-up" id="p6score">
+    <div class="section-label vis-fade" id="p7lbl">Health Score · Ana R. · Torre Norte</div>
+    <div class="score-panel vis-up" id="p7score">
       <div class="score-left">
         <div class="score-ring-wrap">
           <svg viewBox="0 0 140 140">
             <circle class="arc-bg" cx="70" cy="70" r="58"/>
-            <circle class="arc-fill-g" id="arc6" cx="70" cy="70" r="58"/>
+            <circle class="arc-fill-g" id="arc7" cx="70" cy="70" r="58"/>
           </svg>
           <div class="score-ring-val">
             <div class="srv-num">82</div>
@@ -659,23 +717,23 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         </div>
       </div>
     </div>
-    <div class="cloud-badge vis-fade" id="p6cloud" style="animation-delay:.4s">
+    <div class="cloud-badge vis-fade" id="p7cloud" style="animation-delay:.4s">
       📈 &nbsp; Vista agregada para salud ocupacional: Health Score promedio por contrato, área y turno — sin exponer datos individuales
     </div>
   </div>
 </div>
 
 <!-- SLIDE 7: KPIs & REPORTES RRHH -->
-<div class="slide slide-full" id="s7">
+<div class="slide slide-full" id="s8">
   <div class="kpi-layout">
     <!-- LEFT -->
     <div class="kpi-left">
-      <div class="kpi-hd vis-up" id="p7hd">
+      <div class="kpi-hd vis-up" id="p8hd">
         <div class="orbit-eyebrow">Dashboard · Salud Ocupacional · Limpiecito</div>
         <h2>Indicadores clave<br><span class="c">de salud de tu equipo.</span></h2>
         <p>El departamento de salud ocupacional obtiene visibilidad total sobre el bienestar del personal en campo: seguimiento de casos, adherencia, pruebas psicosociales y tendencias — exportable y listo para el comité de gestión.</p>
       </div>
-      <div class="kpi-stat-grid vis-up" id="p7stats">
+      <div class="kpi-stat-grid vis-up" id="p8stats">
         <div class="kpi-stat">
           <div class="kpi-val" style="color:var(--gold)">81</div>
           <div class="kpi-lbl">Promedio de bienestar</div>
@@ -693,14 +751,14 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="kpi-lbl">Prueba psicosocial</div>
         </div>
       </div>
-      <div class="kpi-export vis-up" id="p7export">
+      <div class="kpi-export vis-up" id="p8export">
         <span style="font-size:18px">📊</span>
         <span>Reportería de casos atendidos · Exportable · Listo para salud ocupacional</span>
       </div>
     </div>
     <!-- RIGHT -->
     <div class="kpi-right">
-      <div class="kpi-bar-section vis-up" id="p7bars">
+      <div class="kpi-bar-section vis-up" id="p8bars">
         <h4>Indicadores del equipo · Dic 2024</h4>
         <div class="kpi-bar-row">
           <div class="kpi-bar-lbl"><span>Promedio de bienestar del equipo</span><span class="kpi-pill green">81 / 100</span></div>
@@ -719,7 +777,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
           <div class="kpi-track"><div class="kpi-fill" id="kb4" style="width:0;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:5px"></div></div>
         </div>
       </div>
-      <div style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.18);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px" class="vis-up" id="p7trends">
+      <div style="background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.18);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px" class="vis-up" id="p8trends">
         <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#7c3aed;margin-bottom:2px">🧠 Prueba psicosocial constante</div>
         <div style="font-size:13px;color:var(--text-sub);line-height:1.6">MediLyft aplica evaluaciones psicosociales periódicas por WhatsApp — estrés laboral, riesgo emocional y bienestar mental — para que salud ocupacional tenga visibilidad proactiva del estado del equipo.</div>
         <div style="display:flex;gap:8px;margin-top:4px;flex-wrap:wrap">
@@ -733,9 +791,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <!-- SLIDE 8: ECOSISTEMA -->
-<div class="slide slide-full" id="s8">
+<div class="slide slide-full" id="s9">
   <div class="orbit-layout">
-    <div class="orbit-hd vis-up" id="p8hd">
+    <div class="orbit-hd vis-up" id="p9hd">
       <div class="orbit-eyebrow">Integración · Limpiecito · MediLyft</div>
       <h2>Complementa lo que<br>ya tienes,<br><span class="c">sin reemplazarlo.</span></h2>
       <p>MediLyft es una herramienta que complementa e impulsa la prevención y proactividad en salud del personal de Limpiecito, en cualquier sitio de trabajo.</p>
@@ -747,7 +805,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
         <span class="otag vis-up" id="ot5">🧹 Limpiecito</span>
       </div>
     </div>
-    <div class="orbit-diagram vis-scale" id="p8orb">
+    <div class="orbit-diagram vis-scale" id="p9orb">
       <div class="orbit-ring ring-1"></div>
       <div class="orbit-ring ring-2"></div>
       <div class="orbit-center">
@@ -770,9 +828,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 </div>
 
 <!-- SLIDE 9: BENEFICIOS / ROI -->
-<div class="slide slide-full" id="s9">
+<div class="slide slide-full" id="s10">
   <div class="bfull-layout">
-    <div class="bfull-hd vis-up" id="p9hd">
+    <div class="bfull-hd vis-up" id="p10hd">
       <div class="orbit-eyebrow">Retorno medible · Limpiecito</div>
       <h2 style="text-transform:uppercase;letter-spacing:.04em">Lo que gana <span class="c">Limpiecito.</span></h2>
       <p style="font-size:15px;color:var(--text-sub);margin-top:6px;font-weight:400;max-width:600px">Beneficios concretos y medibles para la empresa, el departamento de salud ocupacional y cada miembro del equipo en campo.</p>
@@ -805,9 +863,9 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 </div><!-- /stage -->
 
 <script>
-const SLIDES = 10;
-const TITLES = ['Introducción','El Problema','Triaje & Orientación','Videoconsulta','Perfilamiento Clínico','Seguimiento','Health Score','KPIs & Reportes','Ecosistema Limpiecito','Beneficios'];
-const PHONE_SLIDES = new Set([2,4,5,6]);
+const SLIDES = 11;
+const TITLES = ['Introducción','El Problema','Triaje & Orientación','Alerta de Siniestro','Videoconsulta','Perfilamiento Clínico','Seguimiento','Health Score','KPIs & Reportes','Ecosistema Limpiecito','Beneficios'];
+const PHONE_SLIDES = new Set([2,3,5,6,7]);
 
 let cur = 0, busy = false;
 
@@ -895,7 +953,7 @@ function showTyping(id,delay,duration,thenId){
 function scrollChat(){const c=document.getElementById('shared-chat');if(c)c.scrollTop=c.scrollHeight;}
 
 function animSlide(n){
-  const fns=[anim0,anim1,anim2,anim3,anim4,anim5,anim6,anim7,anim8,anim9];
+  const fns=[anim0,anim1,anim2,anim3,anim4,anim5,anim6,anim7,anim8,anim9,anim10];
   fns[n]?.();
 }
 
@@ -916,26 +974,33 @@ function anim2(){
   showMsg('c1m6',5400);setTimeout(scrollChat,5500);
 }
 function anim3(){
-  show('p3hd',80);show('p3stats',300);show('p3grid',550);show('p3vcall',200);
+  ['p3hd','p3lbl','p3case','p3deriv','p3stats'].forEach((id,i)=>show(id,80+i*180));
+  showMsg('cs1m1',500);setTimeout(scrollChat,600);
+  showTyping('cs1t1',1300,900,'cs1m2');setTimeout(scrollChat,1400);
+  showMsg('cs1m3',2900);setTimeout(scrollChat,3000);
+  showTyping('cs1t2',3700,900,'cs1m4');setTimeout(scrollChat,3800);
 }
 function anim4(){
-  ['p4hd','p4flow','p4grid','p4risk'].forEach((id,i)=>show(id,80+i*180));
+  show('p4hd',80);show('p4stats',300);show('p4grid',550);show('p4vcall',200);
+}
+function anim5(){
+  ['p5hd','p5flow','p5grid','p5risk'].forEach((id,i)=>show(id,80+i*180));
   showMsg('c2m1',400);setTimeout(scrollChat,500);
   showMsg('c2m2',1600);setTimeout(scrollChat,1700);
   showTyping('c2t1',2400,900,'c2m3');setTimeout(scrollChat,2500);
   showMsg('c2m4',4000);setTimeout(scrollChat,4100);
   showMsg('c2m5',5200);setTimeout(scrollChat,5300);
 }
-function anim5(){
-  ['p5hd','p5lbl','p5table','p5note'].forEach((id,i)=>show(id,80+i*200));
+function anim6(){
+  ['p6hd','p6lbl','p6table','p6note'].forEach((id,i)=>show(id,80+i*200));
   showMsg('c4m1',400);setTimeout(scrollChat,500);
   showMsg('c4m2',1600);setTimeout(scrollChat,1700);
   showMsg('c4m3',2800);setTimeout(scrollChat,2900);
 }
-function anim6(){
-  ['p6hd','p6lbl','p6score','p6cloud'].forEach((id,i)=>show(id,80+i*200));
+function anim7(){
+  ['p7hd','p7lbl','p7score','p7cloud'].forEach((id,i)=>show(id,80+i*200));
   setTimeout(()=>{
-    const arc=document.getElementById('arc6');
+    const arc=document.getElementById('arc7');
     if(arc){const c=2*Math.PI*58;arc.style.strokeDasharray=c;arc.style.strokeDashoffset=c-(c*0.82);}
     const a=document.getElementById('wa-arc');
     if(a){const c=2*Math.PI*36;a.style.strokeDasharray=c;a.style.strokeDashoffset=c-(c*0.82);scrollChat();}
@@ -945,21 +1010,21 @@ function anim6(){
   showMsg('c3m3',3200);setTimeout(scrollChat,3300);
   showMsg('c3m4',4400);setTimeout(scrollChat,4500);
 }
-function anim7(){
-  show('p7hd',80);show('p7stats',280);show('p7export',600);
-  show('p7bars',300);show('p7trends',600);
+function anim8(){
+  show('p8hd',80);show('p8stats',280);show('p8export',600);
+  show('p8bars',300);show('p8trends',600);
   setTimeout(()=>{
     const vals=[['kb1','81%'],['kb2','87%'],['kb3','94%'],['kb4','78%']];
     vals.forEach(([id,w])=>{const el=document.getElementById(id);if(el)el.style.width=w;});
   },700);
 }
-function anim8(){
-  show('p8hd',100);
-  ['ot1','ot2','ot3','ot4','ot5'].forEach((id,i)=>show(id,600+i*120));
-  show('p8orb',300);
-}
 function anim9(){
-  show('p9hd',80);['b1','b2','b3','b4'].forEach((id,i)=>show(id,300+i*180));
+  show('p9hd',100);
+  ['ot1','ot2','ot3','ot4','ot5'].forEach((id,i)=>show(id,600+i*120));
+  show('p9orb',300);
+}
+function anim10(){
+  show('p10hd',80);['b1','b2','b3','b4'].forEach((id,i)=>show(id,300+i*180));
 }
 
 anim0();

@@ -303,6 +303,13 @@
         radial-gradient(ellipse 50% 40% at 10% 10%,rgba(13,148,136,.06),transparent),
         #fff
     }
+    .cta-doctora{
+      width:clamp(180px,24vw,260px);height:auto;margin:0 auto 20px;display:block;
+      border-radius:24px;
+      animation:doctoraFloat 3.5s ease-in-out infinite;
+      filter:drop-shadow(0 18px 30px rgba(240,82,82,.18))
+    }
+    @keyframes doctoraFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
     .final-section h2{font-size:clamp(28px,5vw,58px);font-weight:900;letter-spacing:-2px;max-width:720px;margin:0 auto;line-height:1.06}
     .final-section p{color:var(--gray);font-size:18px;margin-top:18px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.6}
 
@@ -467,7 +474,7 @@
   </style>
 </head>
 <body>
-<!-- BUILD-MARKER: v18-logo-gigante-giratorio-textos -->
+<!-- BUILD-MARKER: v19-testimonios-limpios-doctora-3d -->
 
 <!-- ── SPLASH INTRO ── -->
 <div class="splash" id="splash">
@@ -650,24 +657,21 @@
       <div class="testi-stars">★★★★★</div>
       <p class="testi-quote">"Tenía dudas de consultar por internet, pero me atendieron en minutos y el médico revisó mi historial completo. La receta me llegó al instante y la usé en la farmacia sin problema."</p>
       <div class="testi-author">
-        <div class="testi-avatar">MC</div>
-        <div><div class="testi-name">María Cevallos</div><div class="testi-loc">Quito</div></div>
+        <div class="testi-name">María Cevallos</div>
       </div>
     </div>
     <div class="testi-card fade-up d2">
       <div class="testi-stars">★★★★★</div>
       <p class="testi-quote">"Soy diabético y el seguimiento que hacen es lo que más valoro. No es solo la consulta: están pendientes de cómo voy y eso me da tranquilidad."</p>
       <div class="testi-author">
-        <div class="testi-avatar">JR</div>
-        <div><div class="testi-name">Jorge Ramírez</div><div class="testi-loc">Guayaquil</div></div>
+        <div class="testi-name">Jorge Ramírez</div>
       </div>
     </div>
     <div class="testi-card fade-up d3">
       <div class="testi-stars">★★★★★</div>
       <p class="testi-quote">"Trabajo todo el día y nunca tenía tiempo para el médico. Con MediLyft me atendí desde casa, sin filas y sin perder el día. Ojalá lo hubiera conocido antes."</p>
       <div class="testi-author">
-        <div class="testi-avatar">AT</div>
-        <div><div class="testi-name">Andrea Torres</div><div class="testi-loc">Cuenca</div></div>
+        <div class="testi-name">Andrea Torres</div>
       </div>
     </div>
   </div>
@@ -711,9 +715,7 @@
 <!-- ── CTA FINAL ── -->
 <section class="final-section">
   <div class="fade-up">
-    <div class="spline-slot spin" style="width:130px;height:130px;border-radius:50%;margin:0 auto 28px">
-      <img src="./logo.svg" alt="" class="ss-obj" style="width:70px;height:70px;animation:spin3d 9s linear infinite"/>
-    </div>
+    <img src="./mujer-3d.png" alt="Doctora MediLyft señalando el botón de agendar" class="cta-doctora"/>
     <h2>¿Y si nunca más te dejaran solo con un diagnóstico?</h2>
     <p>Estamos convencidos de que una consulta médica puede cambiar un diagnóstico, pero el acompañamiento continuo puede cambiar una vida.</p>
     <div class="hero-actions" style="margin-top:44px">

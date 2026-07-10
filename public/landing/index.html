@@ -306,20 +306,27 @@
     .cta-doctora{
       width:clamp(190px,25vw,280px);height:auto;margin:34px auto 4px;display:block;
       transform-origin:bottom center;
-      animation:doctoraPoint 2.6s ease-in-out infinite;
+      animation:doctoraVive 4.2s ease-in-out infinite;
       filter:drop-shadow(0 18px 30px rgba(240,82,82,.22))
     }
-    @keyframes doctoraPoint{
-      0%,55%,100%{transform:translateY(0) rotate(0)}
-      12%{transform:translateY(9px) rotate(-5deg)}
-      24%{transform:translateY(1px) rotate(-1deg)}
-      36%{transform:translateY(9px) rotate(-5deg)}
-      48%{transform:translateY(0) rotate(0)}
+    /* idle "viva": respira, se balancea y hace el gesto de señalar en secuencia */
+    @keyframes doctoraVive{
+      0%{transform:translateY(0) rotate(0) scale(1,1)}
+      8%{transform:translateY(-4px) rotate(1deg) scale(.995,1.008)}
+      16%{transform:translateY(0) rotate(0) scale(1,1)}
+      26%{transform:translateY(10px) rotate(-5deg) scale(1.01,.985)}
+      33%{transform:translateY(3px) rotate(-1.5deg) scale(1,1)}
+      40%{transform:translateY(10px) rotate(-5deg) scale(1.01,.985)}
+      48%{transform:translateY(0) rotate(0) scale(1,1)}
+      60%{transform:translateY(-3px) rotate(-1deg) scale(.996,1.006)}
+      72%{transform:translateY(0) rotate(.8deg) scale(1,1)}
+      86%{transform:translateY(-2px) rotate(0) scale(.997,1.004)}
+      100%{transform:translateY(0) rotate(0) scale(1,1)}
     }
-    .btn-invite{position:relative;animation:btnPulse 2.6s ease-in-out infinite}
+    .btn-invite{position:relative;animation:btnPulse 4.2s ease-in-out infinite}
     @keyframes btnPulse{
-      0%,55%,100%{box-shadow:0 10px 32px rgba(240,82,82,.3)}
-      18%,40%{box-shadow:0 10px 32px rgba(240,82,82,.3),0 0 0 14px rgba(240,82,82,.14)}
+      0%,20%,50%,100%{box-shadow:0 10px 32px rgba(240,82,82,.3)}
+      28%,42%{box-shadow:0 10px 32px rgba(240,82,82,.3),0 0 0 16px rgba(240,82,82,.15)}
     }
     .final-section h2{font-size:clamp(28px,5vw,58px);font-weight:900;letter-spacing:-2px;max-width:720px;margin:0 auto;line-height:1.06}
     .final-section p{color:var(--gray);font-size:18px;margin-top:18px;max-width:460px;margin-left:auto;margin-right:auto;line-height:1.6}

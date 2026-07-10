@@ -35,11 +35,11 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 .nav-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
 .nav-prev{right:74px;}
 .nav-next{right:24px}
-.stage{position:fixed;inset:52px 0 0 0;display:flex;overflow:hidden}
+.stage{position:fixed;inset:52px 0 0 0;display:flex;overflow:hidden;z-index:2}
 .slide{position:absolute;inset:0;display:flex;opacity:0;pointer-events:none}
 .slide.active{opacity:1;pointer-events:all}
 .slide.animating{transition:opacity .5s ease,transform .5s cubic-bezier(.4,0,.2,1)}
-.slide-hero{flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:40px;text-align:center}
+.slide-hero{flex-direction:column;align-items:center;justify-content:center;background:transparent;padding:40px;text-align:center}
 .hero-eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;justify-content:center}
 .hero-eyebrow::before,.hero-eyebrow::after{content:'';width:40px;height:1px;background:var(--red);opacity:.4}
 .hero-h1{font-size:52px;font-weight:800;line-height:1.12;margin-bottom:22px;letter-spacing:-.02em;color:var(--text)}
@@ -319,7 +319,7 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
 <body>
 
 <!-- WATERMARK BACKGROUND LOGO -->
-<div style="position:fixed;top:-180px;left:-180px;width:550px;height:550px;opacity:0.09;pointer-events:none;z-index:0">
+<div style="position:fixed;top:-180px;left:-180px;width:550px;height:550px;opacity:0.09;pointer-events:none;z-index:1">
   <svg viewBox="0 0 1024 1024" fill="none" style="width:100%;height:100%">
     <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
     <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>

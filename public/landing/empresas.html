@@ -123,34 +123,21 @@
     .a-title{color:var(--dark);font-size:15px;font-weight:700;margin-bottom:4px}
     .a-desc{color:var(--gray);font-size:13px;line-height:1.55}
 
-    /* ── BARRAS ESTADÍSTICAS 3D ── */
-    .bars3d-stage{
-      width:100%;max-width:440px;height:220px;margin-top:28px;
-      display:flex;align-items:flex-end;justify-content:center;
-      perspective:750px
+    /* ── LINE GRAPH 3D ── */
+    .line3d-stage{
+      width:100%;max-width:470px;height:240px;margin-top:28px;
+      display:flex;align-items:center;justify-content:center;
+      perspective:850px
     }
-    .bars3d{
-      display:flex;align-items:flex-end;gap:22px;
-      padding:0 26px 14px 14px;border-bottom:2.5px solid rgba(0,0,0,.1);
-      transform:rotateX(10deg) rotateY(-6deg);transform-style:preserve-3d
+    .line3d-tilt{
+      width:100%;
+      transform:rotateX(36deg) rotateY(-12deg) rotateZ(4deg);
+      transform-style:preserve-3d
     }
-    .bar3d{
-      position:relative;width:36px;height:var(--h);
-      background:linear-gradient(180deg,#FF8B8B,#F05252 55%,#D93333);
-      transform-origin:bottom;
-      filter:drop-shadow(6px 10px 12px rgba(240,82,82,.22))
+    .line3d-svg{
+      width:100%;height:210px;overflow:visible;display:block;
+      filter:drop-shadow(0 22px 26px rgba(240,82,82,.22))
     }
-    .bar3d::before{
-      content:'';position:absolute;top:-11px;left:5.5px;width:100%;height:11px;
-      background:#FFB0B0;transform:skewX(-45deg)
-    }
-    .bar3d::after{
-      content:'';position:absolute;top:-5.5px;right:-11px;width:11px;height:100%;
-      background:#C43D3D;transform:skewY(-45deg)
-    }
-    .bar3d:nth-child(even){background:linear-gradient(180deg,#5BD6C9,#0D9488 55%,#0B7A6E);filter:drop-shadow(6px 10px 12px rgba(13,148,136,.22))}
-    .bar3d:nth-child(even)::before{background:#8FE6DB}
-    .bar3d:nth-child(even)::after{background:#0A6B61}
 
     /* ── PLACEHOLDER SPLINE (MOCKUP) ── */
     .spline-slot{position:relative;border:2px dashed rgba(240,82,82,.45);border-radius:24px;background:radial-gradient(ellipse at center,rgba(240,82,82,.08),rgba(13,148,136,.06) 70%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden}
@@ -447,14 +434,31 @@
       <h2>Deja de gestionar la salud<br/>a ciegas.</h2>
       <p>MediLyft te da visibilidad real sobre lo que pasa con la salud de tu equipo. No agrupados, no genéricos: datos accionables por área, edad y tipo de diagnóstico.</p>
       <p style="margin-top:14px;color:var(--gray);font-size:17px;line-height:1.7">El PMPM (costo Per Miembro Por Mes) es predecible. Planificas. No reaccionas.</p>
-      <div class="bars3d-stage">
-        <div class="bars3d">
-          <div class="bar3d" style="--h:58px;--d:0s"></div>
-          <div class="bar3d" style="--h:88px;--d:.35s"></div>
-          <div class="bar3d" style="--h:70px;--d:.7s"></div>
-          <div class="bar3d" style="--h:118px;--d:1.05s"></div>
-          <div class="bar3d" style="--h:96px;--d:1.4s"></div>
-          <div class="bar3d" style="--h:148px;--d:1.75s"></div>
+      <div class="line3d-stage">
+        <div class="line3d-tilt">
+          <svg class="line3d-svg" viewBox="0 0 400 200">
+            <!-- rejilla -->
+            <line x1="20" y1="40" x2="385" y2="40" stroke="rgba(0,0,0,.06)" stroke-width="1.5"/>
+            <line x1="20" y1="85" x2="385" y2="85" stroke="rgba(0,0,0,.06)" stroke-width="1.5"/>
+            <line x1="20" y1="130" x2="385" y2="130" stroke="rgba(0,0,0,.06)" stroke-width="1.5"/>
+            <line x1="20" y1="175" x2="385" y2="175" stroke="rgba(0,0,0,.12)" stroke-width="2"/>
+            <!-- área bajo la curva -->
+            <path d="M20 168 L90 138 L150 148 L220 100 L290 112 L380 42 L380 175 L20 175 Z" fill="rgba(240,82,82,.1)"/>
+            <!-- línea de tendencia -->
+            <path d="M20 168 L90 138 L150 148 L220 100 L290 112 L380 42" fill="none" stroke="#F05252" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- puntos fijos en cada vértice -->
+            <circle cx="90" cy="138" r="4" fill="#fff" stroke="#F05252" stroke-width="2.5"/>
+            <circle cx="150" cy="148" r="4" fill="#fff" stroke="#F05252" stroke-width="2.5"/>
+            <circle cx="220" cy="100" r="4" fill="#fff" stroke="#F05252" stroke-width="2.5"/>
+            <circle cx="290" cy="112" r="4" fill="#fff" stroke="#F05252" stroke-width="2.5"/>
+            <!-- punto viajero ascendente (halo + punto coral) -->
+            <circle r="13" fill="rgba(240,82,82,.22)">
+              <animateMotion dur="4.5s" repeatCount="indefinite" path="M20 168 L90 138 L150 148 L220 100 L290 112 L380 42"/>
+            </circle>
+            <circle r="7" fill="#F05252" stroke="#fff" stroke-width="2.5">
+              <animateMotion dur="4.5s" repeatCount="indefinite" path="M20 168 L90 138 L150 148 L220 100 L290 112 L380 42"/>
+            </circle>
+          </svg>
         </div>
       </div>
     </div>

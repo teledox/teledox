@@ -138,7 +138,6 @@
       position:relative;width:36px;height:var(--h);
       background:linear-gradient(180deg,#FF8B8B,#F05252 55%,#D93333);
       transform-origin:bottom;
-      animation:barLive 3s var(--d) ease-in-out infinite;
       filter:drop-shadow(6px 10px 12px rgba(240,82,82,.22))
     }
     .bar3d::before{
@@ -152,7 +151,6 @@
     .bar3d:nth-child(even){background:linear-gradient(180deg,#5BD6C9,#0D9488 55%,#0B7A6E);filter:drop-shadow(6px 10px 12px rgba(13,148,136,.22))}
     .bar3d:nth-child(even)::before{background:#8FE6DB}
     .bar3d:nth-child(even)::after{background:#0A6B61}
-    @keyframes barLive{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.68)}}
 
     /* ── PLACEHOLDER SPLINE (MOCKUP) ── */
     .spline-slot{position:relative;border:2px dashed rgba(240,82,82,.45);border-radius:24px;background:radial-gradient(ellipse at center,rgba(240,82,82,.08),rgba(13,148,136,.06) 70%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;overflow:hidden}

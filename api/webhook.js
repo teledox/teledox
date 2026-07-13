@@ -49,6 +49,8 @@ function getFlows() {
     confirmarConsultaFueraHorario:   require('../src/flows/flujo-consulta').confirmarConsultaFueraHorario,
     confirmarMigracionFueraHorario:  require('../src/flows/flujo-tracking-consulta').confirmarMigracionFueraHorario,
     confirmarCallCenterFueraHorario: require('../src/flows/flujo-callcenter').confirmarCallCenterFueraHorario,
+    procesarOimOperador:             require('../src/flows/flujo-oim-operador').procesarOimOperador,
+    confirmarOimFueraHorario:        require('../src/flows/flujo-oim-operador').confirmarOimFueraHorario,
   };
 }
 
@@ -207,7 +209,8 @@ module.exports = async function handler(req, res) {
       procesarCallCenter, buscarEmpresaPorCodigo, procesarTracking, procesarRespuestaMed,
       procesarB2C, procesarSeguimientoPago, procesarMigracion, procesarPreguntaConsulta,
       procesarBiometricos, procesarPsicosocial,
-      confirmarConsultaFueraHorario, confirmarMigracionFueraHorario, confirmarCallCenterFueraHorario
+      confirmarConsultaFueraHorario, confirmarMigracionFueraHorario, confirmarCallCenterFueraHorario,
+      procesarOimOperador, confirmarOimFueraHorario
     } = getFlows();
 
     // Comando global de salida — funciona en cualquier paso de cualquier flujo
@@ -222,6 +225,15 @@ module.exports = async function handler(req, res) {
       } else {
         await enviar(telefono, `No tienes ningún proceso activo en este momento.\n\nEscribe *hola* para comenzar.`);
       }
+      return res.status(200).send('OK');
+    }
+
+    // Inicio de sesión de operador OIM
+    if (['oim', 'oimec'].includes(mensaje.toLowerCase())) {
+      await eliminar(telefono);
+      const oimResult = await procesarOimOperador('oim_inicio', '', {}, telefono);
+      await guardar(telefono, oimResult.paso, oimResult.datos, 'oim_operador');
+      await despachar(telefono, oimResult);
       return res.status(200).send('OK');
     }
 
@@ -546,6 +558,14 @@ module.exports = async function handler(req, res) {
           return res.status(200).send('OK');
         }
 
+        case 'oim_operador': {
+          const result = await procesarOimOperador(paso, mensaje, datos, telefono);
+          if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'oim_operador');
+          else await eliminar(telefono);
+          await despachar(telefono, result);
+          return res.status(200).send('OK');
+        }
+
         case 'antecedentes': {
           const result = await procesarAntecedentes(paso, mensaje, datos, telefono);
           if (!result.terminar) await guardar(telefono, result.paso, result.datos, 'antecedentes');
@@ -830,6 +850,8 @@ module.exports = async function handler(req, res) {
               };
             } else if (datos._pendingOrigen === 'callcenter') {
               result = await confirmarCallCenterFueraHorario(datos, telefono);
+            } else if (datos._pendingOrigen === 'oim_operador') {
+              result = await confirmarOimFueraHorario(datos, telefono);
             } else if (datos._pendingOrigen === 'tracking') {
               result = await confirmarMigracionFueraHorario(datos, telefono);
             } else {

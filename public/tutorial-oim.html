@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial del Flujo OIM — MediLyft</title>
+  
+  <!-- SEO Tags -->
+  <meta name="description" content="Tutorial guiado interactivo paso a paso para el flujo de teleconsulta asistida de la OIM con la plataforma MediLyft.">
+  <meta name="author" content="MediLyft">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      --color-bg-gradient: linear-gradient(135deg, #0a0e1a 0%, #121829 100%);
+      --color-primary: #0070f3;
+      --color-oim: #0033a0;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #ef4444;
+      --color-text-main: #f3f4f6;
+      --color-text-muted: #9ca3af;
+      --color-glass: rgba(255, 255, 255, 0.03);
+      --color-glass-border: rgba(255, 255, 255, 0.08);
+      --color-glass-hover: rgba(255, 255, 255, 0.06);
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg-gradient);
+      color: var(--color-text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Header corporativo */
+    header {
+      padding: 1.5rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--color-glass-border);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+    }
+    
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .brand-logo {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-oim) 100%);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 112, 243, 0.3);
+    }
+    
+    .brand-name {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 1.4rem;
+      background: linear-gradient(90deg, #ffffff 0%, #a5b4fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .client-tag {
+      background: rgba(0, 51, 160, 0.2);
+      border: 1px solid rgba(0, 51, 160, 0.4);
+      color: #93c5fd;
+      padding: 0.35rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    
+    /* Contenedor principal */
+    .tutorial-container {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1.1fr;
+      padding: 2rem 2.5rem;
+      gap: 2.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    /* Barra de progreso superior */
+    .steps-progress {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      padding: 0.5rem 0 1.5rem;
+    }
+    
+    .steps-progress::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 38%;
+      height: 2px;
+      background: var(--color-glass-border);
+      z-index: 1;
+    }
+    
+    .progress-bar-fill {
+      position: absolute;
+      left: 0;
+      top: 38%;
+      height: 2px;
+      background: var(--color-primary);
+      width: 0%;
+      z-index: 2;
+      transition: width 0.4s ease;
+    }
+    
+    .step-node {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      background: #0a0e1a;
+      padding: 0 0.5rem;
+    }
+    
+    .step-number {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1e293b;
+      border: 2px solid var(--color-glass-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--color-text-muted);
+      transition: all 0.3s ease;
+    }
+    
+    .step-node.active .step-number {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: white;
+      box-shadow: 0 0 15px rgba(0, 112, 243, 0.4);
+    }
+    
+    .step-node.completed .step-number {
+      background: var(--color-success);
+      border-color: var(--color-success);
+      color: white;
+    }
+    
+    .step-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+      transition: color 0.3s ease;
+    }
+    
+    .step-node.active .step-label {
+      color: white;
+      font-weight: 600;
+    }
+    
+    /* Columna Izquierda: Información Didáctica */
+    .info-pane {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: var(--color-glass);
+      border: 1px solid var(--color-glass-border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      backdrop-filter: blur(10px);
+    }
+    
+    .slide-content {
+      opacity: 0;
+      transform: translateY(15px);
+      transition: all 0.4s ease;
+      display: none;
+    }
+    
+    .slide-content.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .slide-step-badge {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--color-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+    
+    .slide-title {
+      font-family: var(--font-title);
+      font-size: 2rem;
+      font-weight: 800;
+      line-height: 1.25;
+      margin-bottom: 1.25rem;
+      background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .slide-desc {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: var(--color-text-muted);
+      margin-bottom: 2rem;
+    }
+    
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .feature-item {
+      display: flex;
+      gap: 1rem;
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      padding: 1.2rem;
+      border-radius: 12px;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    
+    .feature-item:hover {
+      transform: translateX(4px);
+      background: var(--color-glass-hover);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    
+    .feature-icon {
+      width: 24px;
+      height: 24px;
+      background: rgba(0, 112, 243, 0.1);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+      font-weight: bold;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+    
+    .feature-item.success .feature-icon {
+      background: rgba(16, 185, 129, 0.1);
+      color: var(--color-success);
+    }
+    
+    .feature-text-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.25rem;
+    }
+    
+    .feature-text-desc {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+    
+    /* Botonera de control */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--color-glass-border);
+      margin-top: auto;
+    }
+    
+    .btn {
+      font-family: var(--font-title);
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--color-glass-border);
+      color: var(--color-text-main);
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .btn-secondary:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+    
+    .btn-primary {
+      background: var(--color-primary);
+      color: white;
+      box-shadow: 0 4px 12px rgba(0, 112, 243, 0.2);
+    }
+    
+    .btn-primary:hover {
+      background: #0060df;
+      box-shadow: 0 4px 16px rgba(0, 112, 243, 0.35);
+    }
+    
+    /* Columna Derecha: Simulador Interactivo */
+    .simulator-pane {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--color-glass-border);
+      border-radius: 20px;
+      position: relative;
+      overflow: hidden;
+      min-height: 500px;
+    }
+    
+    .simulator-content {
+      width: 100%;
+      height: 100%;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .simulator-content.active {
+      display: flex;
+      opacity: 1;
+    }
+    
+    /* ── Simulador Celular (WhatsApp) ── */
+    .phone-wrapper {
+      width: 320px;
+      height: 600px;
+      background: #111;
+      border: 10px solid #222;
+      border-radius: 40px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .phone-notch {
+      width: 120px;
+      height: 20px;
+      background: #222;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
+      z-index: 50;
+    }
+    
+    .wa-header {
+      background: #075e54;
+      padding: 25px 15px 10px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+      z-index: 10;
+    }
+    
+    .wa-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #128c7e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 0.8rem;
+    }
+    
+    .wa-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    .wa-status {
+      font-size: 0.65rem;
+      opacity: 0.8;
+    }
+    
+    .wa-chat-area {
+      flex: 1;
+      background: #efe7dd;
+      padding: 1rem 0.75rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    
+    .wa-msg {
+      max-width: 80%;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      line-height: 1.4;
+      position: relative;
+      animation: msgPop 0.3s ease forwards;
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    
+    @keyframes msgPop {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .wa-msg.in {
+      background: white;
+      color: #333;
+      align-self: flex-start;
+      border-top-left-radius: 0;
+    }
+    
+    .wa-msg.out {
+      background: #dcf8c6;
+      color: #333;
+      align-self: flex-end;
+      border-top-right-radius: 0;
+    }
+    
+    .wa-msg-time {
+      font-size: 0.6rem;
+      color: #999;
+      text-align: right;
+      margin-top: 0.2rem;
+      display: block;
+    }
+    
+    /* ── Simulador Triaje (Paso 2) ── */
+    .triage-visualizer {
+      width: 85%;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 1.5rem;
+    }
+    
+    .triage-node-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--color-glass-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+    
+    .triage-icon-bubble {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+    
+    .triage-info-box {
+      flex: 1;
+    }
+    
+    .triage-card-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: white;
+      margin-bottom: 0.2rem;
+    }
+    
+    .triage-card-text {
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      line-height: 1.4;
+    }
+    
+    .triage-badge {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    
+    .triage-flow-line {
+      width: 2px;
+      height: 25px;
+      background: linear-gradient(to bottom, var(--color-primary) 0%, transparent 100%);
+      align-self: center;
+    }
+    
+    /* ── Simulador Notificación (Paso 3) ── */
+    .notification-alert {
+      position: absolute;
+      top: 50px;
+      left: 10px;
+      right: 10px;
+      background: rgba(20, 25, 40, 0.95);
+      border: 1px solid var(--color-primary);
+      border-radius: 16px;
+      padding: 1rem;
+      box-shadow: 0 10px 25px rgba(0, 112, 243, 0.2);
+      backdrop-filter: blur(15px);
+      z-index: 100;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      animation: alertSlideDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      opacity: 0;
+    }
+    
+    @keyframes alertSlideDown {
+      to {
+        top: 60px;
+        opacity: 1;
+      }
+    }
+    
+    .notification-bell {
+      width: 36px;
+      height: 36px;
+      background: rgba(0, 112, 243, 0.15);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-primary);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+    
+    .notification-content {
+      flex: 1;
+    }
+    
+    .notification-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.15rem;
+    }
+    
+    .notification-desc {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      line-height: 1.3;
+    }
+    
+    /* ── Simulador Panel Médico (Paso 4) ── */
+    .dashboard-mockup {
+      width: 90%;
+      height: 80%;
+      background: #0f172a;
+      border: 1px solid var(--color-glass-border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    
+    .db-header {
+      background: #1e293b;
+      padding: 0.75rem 1.25rem;
+      border-bottom: 1px solid var(--color-glass-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .db-logo {
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--color-primary);
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    
+    .db-user {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .db-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-success);
+      border-radius: 50%;
+      display: inline-block;
+    }
+    
+    .db-body {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      overflow: hidden;
+    }
+    
+    .db-sidebar {
+      background: #0b1121;
+      border-right: 1px solid var(--color-glass-border);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    
+    .db-nav-item {
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .db-nav-item.active {
+      background: rgba(0, 112, 243, 0.1);
+      color: white;
+      font-weight: 600;
+    }
+    
+    .db-main {
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+    
+    .patient-header-card {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 0.85rem 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .patient-meta-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .patient-meta-sub {
+      font-size: 0.75rem;
+      color: var(--color-text-muted);
+    }
+    
+    .db-grid-content {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 1rem;
+      flex: 1;
+    }
+    
+    .db-card-panel {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--color-glass-border);
+      border-radius: 8px;
+      padding: 0.85rem;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .db-card-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-text-muted);
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      padding-bottom: 0.35rem;
+    }
+    
+    .video-call-box {
+      flex: 1;
+      background: #1e293b;
+      border-radius: 6px;
+      position: relative;
+      overflow: hidden;
+      min-height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .video-avatar-mock {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--color-oim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      font-size: 1.5rem;
+    }
+    
+    .video-call-status {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.6);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.65rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    
+    .video-controls-mock {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      display: flex;
+      gap: 0.35rem;
+    }
+    
+    .video-btn-mock {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      color: white;
+    }
+    
+    .video-btn-mock.hangup {
+      background: var(--color-danger);
+    }
+    
+    .clinical-history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      font-size: 0.75rem;
+    }
+    
+    .clinical-item {
+      background: rgba(255,255,255,0.01);
+      padding: 0.5rem;
+      border-radius: 4px;
+      border-left: 3px solid var(--color-primary);
+    }
+    
+    .clinical-label {
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+    
+    /* Animación del pulso de video */
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      background: var(--color-danger);
+      border-radius: 50%;
+      animation: pulse 1s infinite alternate;
+    }
+    
+    @keyframes pulse {
+      from { transform: scale(0.8); opacity: 0.5; }
+      to { transform: scale(1.3); opacity: 1; }
+    }
+    
+    /* Footer */
+    footer {
+      padding: 1.5rem 2.5rem;
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--color-text-muted);
+      border-top: 1px solid var(--color-glass-border);
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Cabecera Corporativa -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">M</div>
+      <div class="brand-name">MediLyft</div>
+    </div>
+    <div class="client-tag">Organización Internacional para las Migraciones (OIM)</div>
+  </header>
+
+  <!-- Contenedor Principal del Tutorial -->
+  <main class="tutorial-container">
+    
+    <!-- Barra de progreso superior -->
+    <div class="steps-progress">
+      <div class="progress-bar-fill" id="progressFill"></div>
+      
+      <div class="step-node active" onclick="goToStep(1)">
+        <div class="step-number">1</div>
+        <div class="step-label">Solicitud</div>
+      </div>
+      <div class="step-node" onclick="goToStep(2)">
+        <div class="step-number">2</div>
+        <div class="step-label">Triaje</div>
+      </div>
+      <div class="step-node" onclick="goToStep(3)">
+        <div class="step-number">3</div>
+        <div class="step-label">Notificación</div>
+      </div>
+      <div class="step-node" onclick="goToStep(4)">
+        <div class="step-number">4</div>
+        <div class="step-label">Teleconsulta</div>
+      </div>
+      <div class="step-node" onclick="goToStep(5)">
+        <div class="step-number">5</div>
+        <div class="step-label">Adherencia</div>
+      </div>
+    </div>
+
+    <!-- Columna Izquierda: Información Didáctica -->
+    <div class="info-pane">
+      
+      <!-- Paso 1 -->
+      <div class="slide-content active" data-step="1">
+        <span class="slide-step-badge">Fase 1: Registro Asistido</span>
+        <h2 class="slide-title">El Operador de OIM Solicita el Servicio</h2>
+        <p class="slide-desc">
+          Para garantizar la accesibilidad de poblaciones migrantes que no disponen de smartphones avanzados o conectividad constante, el personal de enlace de OIM realiza la solicitud del servicio médico en nombre del beneficiario directamente desde un chat de WhatsApp corporativo.
+        </p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">1</div>
+            <div>
+              <p class="feature-text-title">Acceso Directo con Palabra Clave</p>
+              <p class="feature-text-desc">El operador escribe <b>"OIM"</b> y el bot inicia inmediatamente la sesión exclusiva de registro sin requerir credenciales complejas.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">2</div>
+            <div>
+              <p class="feature-text-title">Registro en menos de 2 Minutos</p>
+              <p class="feature-text-desc">El sistema solicita secuencialmente datos básicos: Cédula/Pasaporte, Nombre Completo, Edad, Teléfono del beneficiario y Síntomas.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">3</div>
+            <div>
+              <p class="feature-text-title">Autocompletado de Historial</p>
+              <p class="feature-text-desc">Si el beneficiario ya fue atendido anteriormente, el bot recupera de inmediato sus datos reduciendo el tiempo de digitación.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2 -->
+      <div class="slide-content" data-step="2">
+        <span class="slide-step-badge">Fase 2: Triage Clínico</span>
+        <h2 class="slide-title">Evaluación de Síntomas y Asignación de Prioridad</h2>
+        <p class="slide-desc">
+          Una vez que el operador ingresa los síntomas reportados por el beneficiario, el algoritmo inteligente de triaje de MediLyft analiza los términos clínicos ingresados para clasificar el nivel de riesgo en segundos.
+        </p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">Leve</div>
+            <div>
+              <p class="feature-text-title">Prioridad Baja (Atención General)</p>
+              <p class="feature-text-desc">Casos no urgentes que se derivan a la agenda de teleconsulta normal del día.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">Mod</div>
+            <div>
+              <p class="feature-text-title">Prioridad Media (Urgente)</p>
+              <p class="feature-text-desc">Asignación prioritaria en la lista de espera del médico. El caso es marcado con etiqueta roja en el panel.</p>
+            </div>
+          </div>
+          <div class="feature-item success">
+            <div class="feature-icon">🚨</div>
+            <div>
+              <p class="feature-text-title">Prioridad Crítica (Derivación 911)</p>
+              <p class="feature-text-desc">Si se detectan síntomas de riesgo de vida, el bot detiene el flujo, alerta de inmediato por Telegram al equipo de rescate y aconseja al operador derivar al 911.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3 -->
+      <div class="slide-content" data-step="3">
+        <span class="slide-step-badge">Fase 3: Comunicación Automatizada</span>
+        <h2 class="slide-title">Notificación y Despliegue al Celular del Paciente</h2>
+        <p class="slide-desc">
+          En el momento exacto en que el operador confirma los datos en el portal asistido, el sistema realiza el cruce y despacha de forma automatizada un mensaje saliente a través del canal oficial de WhatsApp del paciente.
+        </p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">📲</div>
+            <div>
+              <p class="feature-text-title">Cero Fricción para el Beneficiario</p>
+              <p class="feature-text-desc">El paciente recibe un mensaje con su nombre, indicando que OIM le ha financiado una teleconsulta.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🔗</div>
+            <div>
+              <p class="feature-text-title">Enlace Único de Conexión</p>
+              <p class="feature-text-desc">Se genera y adjunta un link seguro. El paciente solo debe dar un clic para unirse a la sala médica virtual desde cualquier navegador, sin instalar aplicaciones.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🏢</div>
+            <div>
+              <p class="feature-text-title">Control de Planillaje B2B</p>
+              <p class="feature-text-desc">El sistema registra en segundo plano esta consulta bajo la cuenta subvencionada de OIM, permitiendo facturación exacta por uso.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 4 -->
+      <div class="slide-content" data-step="4">
+        <span class="slide-step-badge">Fase 4: Atención Médica</span>
+        <h2 class="slide-title">Custodia del Caso en el Panel Clínico</h2>
+        <p class="slide-desc">
+          La consulta se hace visible en el Panel de Control Web de MediLyft para el personal médico de turno. El profesional médico asume el caso para iniciar la videollamada interactiva.
+        </p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">👨‍⚕️</div>
+            <div>
+              <p class="feature-text-title">Entorno Médico Integrado</p>
+              <p class="feature-text-desc">El médico ve la ficha clínica con la edad, lugar de residencia del paciente OIM y los síntomas previamente ingresados por el operador.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📹</div>
+            <div>
+              <p class="feature-text-title">Llamada WebRTC de Alta Calidad</p>
+              <p class="feature-text-desc">La teleconsulta se realiza dentro de la misma plataforma garantizando la privacidad de los datos bajo regulaciones médicas.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">💊</div>
+            <div>
+              <p class="feature-text-title">Receta Electrónica y Diagnóstico</p>
+              <p class="feature-text-desc">El médico redacta el diagnóstico y tratamiento, guardando la receta en formato PDF para el posterior envío automatizado al paciente.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 5 -->
+      <div class="slide-content" data-step="5">
+        <span class="slide-step-badge">Fase 5: Adherencia y Monitoreo</span>
+        <h2 class="slide-title">Seguimiento Post-Consulta de 72 Horas</h2>
+        <p class="slide-desc">
+          El servicio no termina al cerrar la videollamada. MediLyft despliega recordatorios automatizados de adherencia para garantizar la seguridad clínica del beneficiario en tránsito.
+        </p>
+        
+        <div class="feature-list">
+          <div class="feature-item">
+            <div class="feature-icon">⏰</div>
+            <div>
+              <p class="feature-text-title">Recordatorio de Medicamentos</p>
+              <p class="feature-text-desc">El bot interactúa con el paciente preguntándole en horarios específicos si pudo tomar el medicamento prescrito.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">📊</div>
+            <div>
+              <p class="feature-text-title">Monitoreo de Evolución de Salud</p>
+              <p class="feature-text-desc">Pregunta al paciente cómo se siente en escala de 1 a 5 estrellas para medir la evolución real de su salud.</p>
+            </div>
+          </div>
+          <div class="feature-item">
+            <div class="feature-icon">🚨</div>
+            <div>
+              <p class="feature-text-title">Alerta Roja por Falta de Mejoría</p>
+              <p class="feature-text-desc">Si el paciente reporta "Mal" o "Muy mal", o si indica que no mejoró, el sistema dispara automáticamente una alerta crítica al médico para reagendamiento.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botonera de control -->
+      <div class="controls">
+        <button class="btn btn-secondary" id="btnPrev" onclick="changeStep(-1)" disabled>
+          ← Atrás
+        </button>
+        <button class="btn btn-primary" id="btnNext" onclick="changeStep(1)">
+          Siguiente paso →
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Columna Derecha: Simulador Interactivo -->
+    <div class="simulator-pane">
+      
+      <!-- Paso 1 Simulator: WhatsApp del Operador -->
+      <div class="simulator-content active" id="sim-1">
+        <div class="phone-wrapper">
+          <div class="phone-notch"></div>
+          <div class="wa-header">
+            <div class="wa-avatar">OIM</div>
+            <div>
+              <div class="wa-title">Portal Operador OIM</div>
+              <div class="wa-status">en línea</div>
+            </div>
+          </div>
+          <div class="wa-chat-area" id="chat-area-1">
+            <!-- Mensajes de WhatsApp cargados por JS de manera animada -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 2 Simulator: Visualizador de Triaje -->
+      <div class="simulator-content" id="sim-2">
+        <div class="triage-visualizer">
+          <div class="triage-node-card" style="border-color: rgba(255,255,255,0.15)">
+            <div class="triage-icon-bubble" style="background: rgba(0, 112, 243, 0.15); color: var(--color-primary)">🩺</div>
+            <div class="triage-info-box">
+              <div class="triage-card-title">Síntomas Reportados</div>
+              <div class="triage-card-text">"Dolor abdominal agudo y fiebre persistente..."</div>
+            </div>
+          </div>
+          <div class="triage-flow-line"></div>
+          <div class="triage-node-card" style="background: rgba(0, 112, 243, 0.05); border-color: rgba(0, 112, 243, 0.3)">
+            <div class="triage-icon-bubble" style="background: rgba(0, 112, 243, 0.2); color: var(--color-primary)">⚙️</div>
+            <div class="triage-info-box">
+              <div class="triage-card-title">Motor de Triaje Clínico</div>
+              <div class="triage-card-text">Clasificación sintomática en progreso...</div>
+            </div>
+            <span class="triage-badge" style="background: var(--color-primary); color: white;">Procesando</span>
+          </div>
+          <div class="triage-flow-line"></div>
+          <div class="triage-node-card" id="triage-result-card" style="border-color: var(--color-warning); background: rgba(245, 158, 11, 0.05);">
+            <div class="triage-icon-bubble" id="triage-result-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--color-warning);">⚠️</div>
+            <div class="triage-info-box">
+              <div class="triage-card-title">Derivación y Categoría</div>
+              <div class="triage-card-text" id="triage-result-text">Prioridad: Moderada / Consulta Prioritaria</div>
+            </div>
+            <span class="triage-badge" id="triage-result-badge" style="background: var(--color-warning); color: black;">Moderado</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 3 Simulator: WhatsApp del Paciente Beneficiario -->
+      <div class="simulator-content" id="sim-3">
+        <div class="phone-wrapper" style="background: #0f172a;">
+          <div class="phone-notch"></div>
+          
+          <!-- Alerta de Notificación del Sistema -->
+          <div class="notification-alert" id="sim-3-alert" style="display: none;">
+            <div class="notification-bell">🔔</div>
+            <div class="notification-content">
+              <div class="notification-title">MediLyft Salud</div>
+              <div class="notification-desc">Hola Carlos, OIM ha programado tu consulta médica. Abre WhatsApp para ver tu enlace de acceso.</div>
+            </div>
+          </div>
+          
+          <div class="wa-header" style="margin-top: 15px;">
+            <div class="wa-avatar" style="background: var(--color-primary)">M</div>
+            <div>
+              <div class="wa-title">MediLyft Soporte</div>
+              <div class="wa-status">en línea</div>
+            </div>
+          </div>
+          <div class="wa-chat-area" id="chat-area-3">
+            <!-- Mensaje de notificación del paciente -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 4 Simulator: Panel del Médico -->
+      <div class="simulator-content" id="sim-4">
+        <div class="dashboard-mockup">
+          <div class="db-header">
+            <div class="db-logo">
+              <div class="brand-logo" style="width: 20px; height: 20px; font-size: 0.7rem; border-radius: 4px;">M</div>
+              <span>Panel Médico MediLyft</span>
+            </div>
+            <div class="db-user">
+              <span class="db-dot"></span>
+              <span>Dr. Alejandro Gómez (En línea)</span>
+            </div>
+          </div>
+          <div class="db-body">
+            <div class="db-sidebar">
+              <div class="db-nav-item active">🏥 Consultas Activas</div>
+              <div class="db-nav-item">👤 Pacientes</div>
+              <div class="db-nav-item">📋 Recetas Emitidas</div>
+              <div class="db-nav-item">📊 Reporte Mensual</div>
+            </div>
+            <div class="db-main">
+              <div class="patient-header-card">
+                <div>
+                  <div class="patient-meta-name">Carlos Mendoza</div>
+                  <div class="patient-meta-sub">Beneficiario OIM • Cédula: 1756283940 • Edad: 34 años</div>
+                </div>
+                <span class="triage-badge" style="background: var(--color-warning); color: black;">Moderado</span>
+              </div>
+              <div class="db-grid-content">
+                <div class="db-card-panel">
+                  <div class="db-card-title">Videollamada en Curso</div>
+                  <div class="video-call-box">
+                    <div class="video-avatar-mock">CM</div>
+                    <div class="video-call-status">
+                      <div class="pulse-dot"></div>
+                      <span>Conectado (03:14)</span>
+                    </div>
+                    <div class="video-controls-mock">
+                      <div class="video-btn-mock">🎤</div>
+                      <div class="video-btn-mock">📹</div>
+                      <div class="video-btn-mock hangup">📞</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="db-card-panel">
+                  <div class="db-card-title">Ficha Médica Rápida</div>
+                  <div class="clinical-history-list">
+                    <div class="clinical-item">
+                      <p class="clinical-label">Motivo de consulta</p>
+                      <p>Dolor abdominal agudo y náuseas.</p>
+                    </div>
+                    <div class="clinical-item" style="border-left-color: var(--color-success)">
+                      <p class="clinical-label">Diagnóstico Preliminar</p>
+                      <p>Gastroenteritis bacteriana leve.</p>
+                    </div>
+                    <div class="clinical-item" style="border-left-color: var(--color-warning)">
+                      <p class="clinical-label">Tratamiento prescrito</p>
+                      <p>Hidratación + Antiespasmódico por 3 días.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paso 5 Simulator: WhatsApp de Adherencia y Monitoreo -->
+      <div class="simulator-content" id="sim-5">
+        <div class="phone-wrapper">
+          <div class="phone-notch"></div>
+          <div class="wa-header">
+            <div class="wa-avatar" style="background: var(--color-primary)">M</div>
+            <div>
+              <div class="wa-title">MediLyft Monitoreo</div>
+              <div class="wa-status">en línea</div>
+            </div>
+          </div>
+          <div class="wa-chat-area" id="chat-area-5">
+            <!-- Flujo de chat de adherencia animado -->
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Pie de página -->
+  <footer>
+    &copy; 2026 MediLyft Inc. Plataforma de Telemedicina y Gestión de Salud Digital. Desarrollado de forma exclusiva para OIM Ecuador.
+  </footer>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    
+    // Configuración de los diálogos de los chats
+    const chatDialogs1 = [
+      { sender: 'out', text: 'OIM', delay: 1000 },
+      { sender: 'in', text: '🩺 *Portal de Operadores OIM — OIM Ecuador*\n\nBienvenido, operador de enlace. Ingrese el número de *cédula o documento* del beneficiario a registrar:', delay: 1800 },
+      { sender: 'out', text: '1756283940', delay: 1000 },
+      { sender: 'in', text: '📝 Nuevo beneficiario OIM. Ingrese el *nombre completo* del paciente:', delay: 1500 },
+      { sender: 'out', text: 'Carlos Mendoza', delay: 1200 },
+      { sender: 'in', text: '🎂 Ingrese la *edad* del beneficiario (años):', delay: 1400 },
+      { sender: 'out', text: '34', delay: 1000 },
+      { sender: 'in', text: '📱 Ingrese el *teléfono celular* del beneficiario (donde recibirá el link):', delay: 1500 },
+      { sender: 'out', text: '0991234567', delay: 1200 },
+      { sender: 'in', text: '🩺 Describa los *síntomas* o motivo de consulta:', delay: 1500 },
+      { sender: 'out', text: 'Dolor abdominal agudo y náuseas desde anoche', delay: 1500 },
+      { sender: 'in', text: '📋 *Resumen de Registro OIM:*\n\n👤 *Beneficiario:* Carlos Mendoza\n🪪 *Documento:* 1756283940\n🎂 *Edad:* 34\n📱 *Teléfono:* 0991234567\n🩺 *Motivo:* Dolor abdominal agudo y náuseas\n🏢 *Cobertura:* OIM B2B\n\n¿Confirma el registro y envío de acceso?', delay: 2000 },
+      { sender: 'out', text: 'Confirmar', delay: 1000 },
+      { sender: 'in', text: '✅ *¡Consulta OIM agendada con éxito!*\n\nBeneficiario: Carlos Mendoza\nSe ha enviado una notificación automática a su celular: *0991234567*.\n\n¿Desea registrar otra consulta médica?', delay: 1800 }
+    ];
+    
+    const chatDialogs3 = [
+      { sender: 'in', text: 'Hola Carlos Mendoza. 🩺 OIM ha coordinado una teleconsulta médica para ti hoy. Un médico de MediLyft te contactará por este chat en breve.', delay: 1000 },
+      { sender: 'in', text: '🔗 *Únete aquí a tu consulta virtual:*\nhttps://www.medilyft.app/consulta/carlos-mendoza-3829\n\n_Solo dale clic para iniciar desde tu navegador celular. Mantente atento._', delay: 1500 }
+    ];
+    
+    const chatDialogs5 = [
+      { sender: 'in', text: '🕒 *Control de las 24 horas* • Hola Carlos. ¿Pudiste tomar el medicamento para el dolor de estómago recetado por el médico?', delay: 1000 },
+      { sender: 'out', text: 'Sí, ya lo compré y me lo tomé hace una hora.', delay: 1500 },
+      { sender: 'in', text: '✅ ¡Excelente! Registro guardado. Continúe con las indicaciones de su médico. 💊', delay: 1200 },
+      { sender: 'in', text: '🕒 *Control de las 72 horas* • Hola Carlos. ¿Cómo te sientes hoy respecto al dolor de estómago?', delay: 2500 },
+      { sender: 'in', text: 'Selecciona una opción de bienestar del 1 al 5 estrellas.', delay: 1000 },
+      { sender: 'out', text: '⭐⭐⭐⭐⭐ Excelente, ya no tengo dolor.', delay: 1500 },
+      { sender: 'in', text: '🎉 ¡Nos alegra mucho saber que estás recuperado! Registramos el cierre de tu caso como exitoso. MediLyft está siempre contigo. 💙', delay: 1800 }
+    ];
+
+    let timerChat1 = null;
+    let timerChat3 = null;
+    let timerChat5 = null;
+    let triageTimeout = null;
+
+    // Cambiar de slide con botones atrás/siguiente
+    function changeStep(direction) {
+      const nextStep = currentStep + direction;
+      if (nextStep >= 1 && nextStep <= totalSteps) {
+        goToStep(nextStep);
+      }
+    }
+    
+    // Ir a un paso en específico
+    function goToStep(step) {
+      currentStep = step;
+      
+      // Limpiar timers para evitar superposiciones de diálogos
+      clearAllTimers();
+      
+      // Actualizar nodos visuales de progreso superior
+      const steps = document.querySelectorAll('.step-node');
+      steps.forEach((node, i) => {
+        const nodeNum = i + 1;
+        node.classList.remove('active', 'completed');
+        if (nodeNum === step) {
+          node.classList.add('active');
+        } else if (nodeNum < step) {
+          node.classList.add('completed');
+        }
+      });
+      
+      // Actualizar el ancho de la línea de progreso
+      const progressPercent = ((step - 1) / (totalSteps - 1)) * 100;
+      document.getElementById('progressFill').style.width = progressPercent + '%';
+      
+      // Actualizar columna izquierda (diapositivas didácticas)
+      const slides = document.querySelectorAll('.slide-content');
+      slides.forEach(slide => {
+        slide.classList.remove('active');
+        if (parseInt(slide.getAttribute('data-step')) === step) {
+          slide.classList.add('active');
+        }
+      });
+      
+      // Actualizar columna derecha (simuladores)
+      const simulators = document.querySelectorAll('.simulator-content');
+      simulators.forEach(sim => {
+        sim.classList.remove('active');
+      });
+      
+      const activeSim = document.getElementById(`sim-${step}`);
+      if (activeSim) {
+        activeSim.classList.add('active');
+      }
+      
+      // Habilitar/Deshabilitar botones de navegación
+      document.getElementById('btnPrev').disabled = (step === 1);
+      
+      const btnNext = document.getElementById('btnNext');
+      if (step === totalSteps) {
+        btnNext.textContent = '¡Tutorial Finalizado! 🎉';
+        btnNext.disabled = true;
+      } else {
+        btnNext.textContent = 'Siguiente paso →';
+        btnNext.disabled = false;
+      }
+      
+      // Inicializar simulación específica
+      initSimulator(step);
+    }
+    
+    function clearAllTimers() {
+      if (timerChat1) clearTimeout(timerChat1);
+      if (timerChat3) clearTimeout(timerChat3);
+      if (timerChat5) clearTimeout(timerChat5);
+      if (triageTimeout) clearTimeout(triageTimeout);
+      
+      document.getElementById('chat-area-1').innerHTML = '';
+      document.getElementById('chat-area-3').innerHTML = '';
+      document.getElementById('chat-area-5').innerHTML = '';
+      
+      // Esconder alerta del paso 3
+      document.getElementById('sim-3-alert').style.display = 'none';
+      
+      // Resetear tarjetas del paso 2
+      const resultCard = document.getElementById('triage-result-card');
+      const resultIcon = document.getElementById('triage-result-icon');
+      const resultText = document.getElementById('triage-result-text');
+      const resultBadge = document.getElementById('triage-result-badge');
+      
+      resultCard.style.borderColor = 'rgba(255,255,255,0.08)';
+      resultCard.style.background = 'rgba(255, 255, 255, 0.02)';
+      resultIcon.style.background = 'rgba(255,255,255,0.1)';
+      resultIcon.style.color = '#fff';
+      resultIcon.textContent = '🔍';
+      resultText.textContent = 'Analizando síntomas para clasificación médica...';
+      resultBadge.style.display = 'none';
+    }
+    
+    // Iniciar simulación de cada paso
+    function initSimulator(step) {
+      if (step === 1) {
+        simulateChat(document.getElementById('chat-area-1'), chatDialogs1, 0);
+      } else if (step === 2) {
+        simulateTriage();
+      } else if (step === 3) {
+        // Retrasar la alerta del celular para simular recepción
+        setTimeout(() => {
+          const alertBox = document.getElementById('sim-3-alert');
+          alertBox.style.display = 'flex';
+          
+          // Crear un sonido web de notificación sutil
+          playNotificationSound();
+          
+          // Mostrar mensaje de WhatsApp
+          simulateChat(document.getElementById('chat-area-3'), chatDialogs3, 0);
+        }, 1200);
+      } else if (step === 5) {
+        simulateChat(document.getElementById('chat-area-5'), chatDialogs5, 0);
+      }
+    }
+    
+    // Simular escritura y envío de chat paso a paso
+    function simulateChat(container, dialogs, index) {
+      if (index >= dialogs.length) return;
+      
+      const item = dialogs[index];
+      const delay = item.delay || 1500;
+      
+      const timer = setTimeout(() => {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `wa-msg ${item.sender}`;
+        
+        // Convertir saltos de línea y formatear asteriscos en negrita
+        let formattedText = item.text
+          .replace(/\n/g, '<br>')
+          .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+          .replace(/_([^_]+)_/g, '<em>$1</em>');
+          
+        msgDiv.innerHTML = formattedText;
+        
+        // Agregar hora
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'wa-msg-time';
+        const now = new Date();
+        timeSpan.textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        msgDiv.appendChild(timeSpan);
+        
+        container.appendChild(msgDiv);
+        container.scrollTop = container.scrollHeight;
+        
+        // Siguiente mensaje
+        simulateChat(container, dialogs, index + 1);
+      }, delay);
+      
+      // Asignar el timer correspondiente para poder cancelarlo si el usuario avanza
+      if (currentStep === 1) timerChat1 = timer;
+      if (currentStep === 3) timerChat3 = timer;
+      if (currentStep === 5) timerChat5 = timer;
+    }
+    
+    // Simular flujo visual de triaje (Paso 2)
+    function simulateTriage() {
+      const resultCard = document.getElementById('triage-result-card');
+      const resultIcon = document.getElementById('triage-result-icon');
+      const resultText = document.getElementById('triage-result-text');
+      const resultBadge = document.getElementById('triage-result-badge');
+      
+      triageTimeout = setTimeout(() => {
+        resultCard.style.borderColor = 'var(--color-warning)';
+        resultCard.style.background = 'rgba(245, 158, 11, 0.05)';
+        resultIcon.style.background = 'rgba(245, 158, 11, 0.2)';
+        resultIcon.style.color = 'var(--color-warning)';
+        resultIcon.textContent = '⚠️';
+        resultText.textContent = 'Prioridad: Moderada / Consulta Prioritaria asignada';
+        resultBadge.textContent = 'Moderado';
+        resultBadge.style.display = 'inline-block';
+      }, 3000);
+    }
+    
+    // Sonido sutil de notificación usando Web Audio API
+    function playNotificationSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Primera nota
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        gain1.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.15);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start();
+        osc1.stop(audioCtx.currentTime + 0.15);
+        
+        // Segunda nota
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+          gain2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.3);
+        }, 100);
+        
+      } catch (e) {
+        console.warn('El navegador bloqueó el AudioContext hasta que interactúes con la página.', e.message);
+      }
+    }
+    
+    // Iniciar con la primera diapositiva al cargar la página
+    window.addEventListener('load', () => {
+      goToStep(1);
+    });
+  </script>
+</body>
+</html>

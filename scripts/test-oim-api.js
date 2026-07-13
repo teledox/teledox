@@ -50,7 +50,7 @@ global.fetch = async (url, options) => {
   return { ok: true, json: async () => ({}) };
 };
 
-const handler = require('../api/oim-crear-consulta');
+const handler = require('../api/enviar-link');
 
 async function testApi() {
   console.log('=== INICIANDO PRUEBA DEL ENDPOINT DE LA API OIM ===\n');
@@ -58,6 +58,7 @@ async function testApi() {
   const req = {
     method: 'POST',
     body: {
+      accion: 'oim_crear_consulta',
       cedula: '1799999999',
       nombre_completo: 'Gabriela Pazmiño',
       telefono: '0998765432',

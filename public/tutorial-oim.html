@@ -69,16 +69,9 @@
     .brand-logo {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-weight: 800;
-      font-family: var(--font-title);
-      font-size: 1.4rem;
-      color: white;
-      box-shadow: 0 6px 16px rgba(240, 82, 82, 0.3);
     }
     
     .brand-name {
@@ -866,7 +859,6 @@
     <div class="brand">
       <div class="brand-logo" style="padding: 5px;">
         <svg viewBox="0 0 1024 1024" fill="none" style="width: 100%; height: 100%;">
-          <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="white" stroke-width="58" fill="none"/>
           <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="white"/>
           <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="white" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg>
@@ -889,18 +881,14 @@
       </div>
       <div class="step-node" onclick="goToStep(2)">
         <div class="step-number">2</div>
-        <div class="step-label">Triaje</div>
+        <div class="step-label">Notificación</div>
       </div>
       <div class="step-node" onclick="goToStep(3)">
         <div class="step-number">3</div>
-        <div class="step-label">Notificación</div>
+        <div class="step-label">Teleconsulta</div>
       </div>
       <div class="step-node" onclick="goToStep(4)">
         <div class="step-number">4</div>
-        <div class="step-label">Teleconsulta</div>
-      </div>
-      <div class="step-node" onclick="goToStep(5)">
-        <div class="step-number">5</div>
         <div class="step-label">Adherencia</div>
       </div>
     </div>
@@ -941,42 +929,9 @@
         </div>
       </div>
 
-      <!-- Paso 2 -->
+            <!-- Paso 2 -->
       <div class="slide-content" data-step="2">
-        <span class="slide-step-badge">Fase 2: Triaje Médico</span>
-        <h2 class="slide-title">Evaluación Humana y Asignación de Prioridad</h2>
-        <p class="slide-desc">
-          Una vez que el operador responde las preguntas clave sobre los síntomas e ingresa la necesidad del beneficiario, un médico de nuestro equipo evalúa de inmediato los datos clínicamente para clasificar el nivel de riesgo.
-        </p>
-        
-        <div class="feature-list">
-          <div class="feature-item">
-            <div class="feature-icon">Leve</div>
-            <div>
-              <p class="feature-text-title">Prioridad Baja</p>
-              <p class="feature-text-desc">El médico determina que no hay riesgo vital y agenda la teleconsulta general para el transcurso del día.</p>
-            </div>
-          </div>
-          <div class="feature-item">
-            <div class="feature-icon">Mod</div>
-            <div>
-              <p class="feature-text-title">Prioridad Media</p>
-              <p class="feature-text-desc">El médico identifica la necesidad de atención prioritaria. El caso se programa con urgencia en el panel médico.</p>
-            </div>
-          </div>
-          <div class="feature-item success">
-            <div class="feature-icon">🚨</div>
-            <div>
-              <p class="feature-text-title">Prioridad Crítica</p>
-              <p class="feature-text-desc">Si el médico detecta síntomas de alarma de riesgo vital, se cancela la teleconsulta y se instruye al operador activar el protocolo de emergencia 911.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Paso 3 -->
-      <div class="slide-content" data-step="3">
-        <span class="slide-step-badge">Fase 3: Comunicación Automatizada</span>
+        <span class="slide-step-badge">Fase 2: Comunicación Automatizada</span>
         <h2 class="slide-title">Notificación y Despliegue al Celular del Paciente</h2>
         <p class="slide-desc">
           En el momento exacto en que el operador confirma los datos en el portal asistido, el sistema realiza el cruce y despacha de forma automatizada un mensaje saliente a través del canal oficial de WhatsApp del paciente.
@@ -1007,9 +962,9 @@
         </div>
       </div>
 
-      <!-- Paso 4 -->
-      <div class="slide-content" data-step="4">
-        <span class="slide-step-badge">Fase 4: Atención Médica</span>
+      <!-- Paso 3 -->
+      <div class="slide-content" data-step="3">
+        <span class="slide-step-badge">Fase 3: Atención Médica</span>
         <h2 class="slide-title">Custodia del Caso y Videollamada</h2>
         <p class="slide-desc">
           La consulta se registra en el Panel de Control de MediLyft. El médico visualiza los antecedentes e inicia la videollamada de teleconsulta de forma segura.
@@ -1040,9 +995,9 @@
         </div>
       </div>
 
-      <!-- Paso 5 -->
-      <div class="slide-content" data-step="5">
-        <span class="slide-step-badge">Fase 5: Adherencia y Monitoreo</span>
+      <!-- Paso 4 -->
+      <div class="slide-content" data-step="4">
+        <span class="slide-step-badge">Fase 4: Adherencia y Monitoreo</span>
         <h2 class="slide-title">Seguimiento Post-Consulta</h2>
         <p class="slide-desc">
           El servicio no termina al cerrar la videollamada. MediLyft despliega recordatorios automatizados de adherencia para garantizar la seguridad clínica del beneficiario en tránsito.
@@ -1105,44 +1060,13 @@
         </div>
       </div>
 
-      <!-- Paso 2 Simulator: Visualizador de Triaje -->
+            <!-- Paso 2 Simulator: WhatsApp del Paciente Beneficiario -->
       <div class="simulator-content" id="sim-2">
-        <div class="triage-visualizer">
-          <div class="triage-node-card" style="border-color: rgba(255,255,255,0.15)">
-            <div class="triage-icon-bubble" style="background: rgba(0, 112, 243, 0.15); color: var(--color-primary)">🩺</div>
-            <div class="triage-info-box">
-              <div class="triage-card-title">Síntomas Reportados</div>
-              <div class="triage-card-text">"Dolor abdominal agudo y fiebre persistente..."</div>
-            </div>
-          </div>
-          <div class="triage-flow-line"></div>
-          <div class="triage-node-card" style="background: rgba(240, 82, 82, 0.05); border-color: rgba(240, 82, 82, 0.3)">
-            <div class="triage-icon-bubble" style="background: rgba(240, 82, 82, 0.2); color: var(--color-primary)">👨‍⚕️</div>
-            <div class="triage-info-box">
-              <div class="triage-card-title">Evaluación por Médico</div>
-              <div class="triage-card-text">Médico analizando síntomas del reporte...</div>
-            </div>
-            <span class="triage-badge" style="background: var(--color-primary); color: white;">Evaluando</span>
-          </div>
-          <div class="triage-flow-line"></div>
-          <div class="triage-node-card" id="triage-result-card" style="border-color: var(--color-warning); background: rgba(245, 158, 11, 0.05);">
-            <div class="triage-icon-bubble" id="triage-result-icon" style="background: rgba(245, 158, 11, 0.2); color: var(--color-warning);">⚠️</div>
-            <div class="triage-info-box">
-              <div class="triage-card-title">Derivación y Categoría</div>
-              <div class="triage-card-text" id="triage-result-text">Prioridad: Moderada / Consulta Prioritaria</div>
-            </div>
-            <span class="triage-badge" id="triage-result-badge" style="background: var(--color-warning); color: black;">Moderado</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Paso 3 Simulator: WhatsApp del Paciente Beneficiario -->
-      <div class="simulator-content" id="sim-3">
         <div class="phone-wrapper" style="background: #0f172a;">
           <div class="phone-notch"></div>
           
           <!-- Alerta de Notificación del Sistema -->
-          <div class="notification-alert" id="sim-3-alert" style="display: none;">
+          <div class="notification-alert" id="sim-2-alert" style="display: none;">
             <div class="notification-bell">🔔</div>
             <div class="notification-content">
               <div class="notification-title">MediLyft Salud</div>
@@ -1157,20 +1081,19 @@
               <div class="wa-status">en línea</div>
             </div>
           </div>
-          <div class="wa-chat-area" id="chat-area-3">
+          <div class="wa-chat-area" id="chat-area-2">
             <!-- Mensaje de notificación del paciente -->
           </div>
         </div>
       </div>
 
-      <!-- Paso 4 Simulator: Panel del Médico -->
-      <div class="simulator-content" id="sim-4">
+      <!-- Paso 3 Simulator: Panel del Médico -->
+      <div class="simulator-content" id="sim-3">
         <div class="dashboard-mockup">
           <div class="db-header">
             <div class="db-logo">
               <div class="brand-logo" style="width: 20px; height: 20px; border-radius: 4px; padding: 3px;">
                 <svg viewBox="0 0 1024 1024" fill="none" style="width: 100%; height: 100%;">
-                  <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="white" stroke-width="58" fill="none"/>
                   <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="white"/>
                   <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="white" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                 </svg>
@@ -1236,8 +1159,8 @@
         </div>
       </div>
 
-      <!-- Paso 5 Simulator: WhatsApp de Adherencia y Monitoreo -->
-      <div class="simulator-content" id="sim-5">
+      <!-- Paso 4 Simulator: WhatsApp de Adherencia y Monitoreo -->
+      <div class="simulator-content" id="sim-4">
         <div class="phone-wrapper">
           <div class="phone-notch"></div>
           <div class="wa-header">
@@ -1247,7 +1170,7 @@
               <div class="wa-status">en línea</div>
             </div>
           </div>
-          <div class="wa-chat-area" id="chat-area-5">
+          <div class="wa-chat-area" id="chat-area-4">
             <!-- Flujo de chat de adherencia animado -->
           </div>
         </div>
@@ -1264,7 +1187,7 @@
 
   <script>
     let currentStep = 1;
-    const totalSteps = 5;
+    const totalSteps = 4;
     
     // Configuración de los diálogos de los chats
     const chatDialogs1 = [
@@ -1284,12 +1207,12 @@
       { sender: 'in', text: '✅ *¡Consulta OIM agendada con éxito!*\n\nBeneficiario: Carlos Mendoza\nSe ha enviado una notificación automática a su celular: *0991234567*.\n\n¿Desea registrar otra consulta médica?', delay: 1800 }
     ];
     
-    const chatDialogs3 = [
+    const chatDialogs2 = [
       { sender: 'in', text: 'Hola Carlos Mendoza. 🩺 OIM ha coordinado una teleconsulta médica para ti hoy. Un médico de MediLyft te contactará por este chat en breve.', delay: 1000 },
       { sender: 'in', text: '🔗 *Únete aquí a tu consulta virtual:*\nhttps://www.medilyft.app/consulta/carlos-mendoza-3829\n\n_Solo dale clic para iniciar desde tu navegador celular. Mantente atento._', delay: 1500 }
     ];
     
-    const chatDialogs5 = [
+    const chatDialogs4 = [
       { sender: 'in', text: '🕒 *Control de las 24 horas* • Hola Carlos. ¿Pudiste tomar el medicamento para el dolor de estómago recetado por el médico?', delay: 1000 },
       { sender: 'out', text: 'Sí, ya lo compré y me lo tomé hace una hora.', delay: 1500 },
       { sender: 'in', text: '✅ ¡Excelente! Registro guardado. Continúe con las indicaciones de su médico. 💊', delay: 1200 },
@@ -1300,9 +1223,8 @@
     ];
 
     let timerChat1 = null;
-    let timerChat3 = null;
-    let timerChat5 = null;
-    let triageTimeout = null;
+    let timerChat2 = null;
+    let timerChat4 = null;
 
     // Cambiar de slide con botones atrás/siguiente
     function changeStep(direction) {
@@ -1373,111 +1295,83 @@
     
     function clearAllTimers() {
       if (timerChat1) clearTimeout(timerChat1);
-      if (timerChat3) clearTimeout(timerChat3);
-      if (timerChat5) clearTimeout(timerChat5);
-      if (triageTimeout) clearTimeout(triageTimeout);
+      if (timerChat2) clearTimeout(timerChat2);
+      if (timerChat4) clearTimeout(timerChat4);
       
-      document.getElementById('chat-area-1').innerHTML = '';
-      document.getElementById('chat-area-3').innerHTML = '';
-      document.getElementById('chat-area-5').innerHTML = '';
+      const chat1 = document.getElementById('chat-area-1');
+      const chat2 = document.getElementById('chat-area-2');
+      const chat4 = document.getElementById('chat-area-4');
+      if (chat1) chat1.innerHTML = '';
+      if (chat2) chat2.innerHTML = '';
+      if (chat4) chat4.innerHTML = '';
       
-      // Esconder alerta del paso 3
-      document.getElementById('sim-3-alert').style.display = 'none';
-      
-      // Resetear tarjetas del paso 2
-      const resultCard = document.getElementById('triage-result-card');
-      const resultIcon = document.getElementById('triage-result-icon');
-      const resultText = document.getElementById('triage-result-text');
-      const resultBadge = document.getElementById('triage-result-badge');
-      
-      resultCard.style.borderColor = 'rgba(255,255,255,0.08)';
-      resultCard.style.background = 'rgba(255, 255, 255, 0.02)';
-      resultIcon.style.background = 'rgba(255,255,255,0.1)';
-      resultIcon.style.color = '#fff';
-      resultIcon.textContent = '🔍';
-      resultText.textContent = 'Analizando síntomas para clasificación médica...';
-      resultBadge.style.display = 'none';
+      // Esconder alerta del paso 2
+      const alertBox = document.getElementById('sim-2-alert');
+      if (alertBox) alertBox.style.display = 'none';
     }
     
     // Iniciar simulación de cada paso
     function initSimulator(step) {
       if (step === 1) {
-        simulateChat(document.getElementById('chat-area-1'), chatDialogs1, 0);
+        simulateChat(document.getElementById('chat-area-1'), chatDialogs1, 1);
       } else if (step === 2) {
-        simulateTriage();
-      } else if (step === 3) {
         // Retrasar la alerta del celular para simular recepción
         setTimeout(() => {
-          const alertBox = document.getElementById('sim-3-alert');
-          alertBox.style.display = 'flex';
+          const alertBox = document.getElementById('sim-2-alert');
+          if (alertBox) alertBox.style.display = 'flex';
           
           // Crear un sonido web de notificación sutil
           playNotificationSound();
           
           // Mostrar mensaje de WhatsApp
-          simulateChat(document.getElementById('chat-area-3'), chatDialogs3, 0);
+          simulateChat(document.getElementById('chat-area-2'), chatDialogs2, 2);
         }, 1200);
-      } else if (step === 5) {
-        simulateChat(document.getElementById('chat-area-5'), chatDialogs5, 0);
+      } else if (step === 4) {
+        simulateChat(document.getElementById('chat-area-4'), chatDialogs4, 4);
       }
     }
     
     // Simular escritura y envío de chat paso a paso
-    function simulateChat(container, dialogs, index) {
-      if (index >= dialogs.length) return;
+    function simulateChat(container, dialogs, stepIndex) {
+      if (!container || !dialogs) return;
+      let index = 0;
       
-      const item = dialogs[index];
-      const delay = item.delay || 1500;
-      
-      const timer = setTimeout(() => {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `wa-msg ${item.sender}`;
+      function runNext() {
+        if (index >= dialogs.length || currentStep !== stepIndex) return;
+        const item = dialogs[index];
+        const delay = item.delay || 1500;
         
-        // Convertir saltos de línea y formatear asteriscos en negrita
-        let formattedText = item.text
-          .replace(/\n/g, '<br>')
-          .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
-          .replace(/_([^_]+)_/g, '<em>$1</em>');
+        const timer = setTimeout(() => {
+          if (currentStep !== stepIndex) return;
+          const msgDiv = document.createElement('div');
+          msgDiv.className = `wa-msg ${item.sender}`;
           
-        msgDiv.innerHTML = formattedText;
+          let formattedText = item.text
+            .replace(/\n/g, '<br>')
+            .replace(/\*([^*]+)\*/g, '<strong>$1</strong>')
+            .replace(/_([^_]+)_/g, '<em>$1</em>');
+            
+          msgDiv.innerHTML = formattedText;
+          
+          const timeSpan = document.createElement('span');
+          timeSpan.className = 'wa-msg-time';
+          const now = new Date();
+          timeSpan.textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+          msgDiv.appendChild(timeSpan);
+          
+          container.appendChild(msgDiv);
+          container.scrollTop = container.scrollHeight;
+          
+          index++;
+          runNext();
+        }, delay);
         
-        // Agregar hora
-        const timeSpan = document.createElement('span');
-        timeSpan.className = 'wa-msg-time';
-        const now = new Date();
-        timeSpan.textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        msgDiv.appendChild(timeSpan);
-        
-        container.appendChild(msgDiv);
-        container.scrollTop = container.scrollHeight;
-        
-        // Siguiente mensaje
-        simulateChat(container, dialogs, index + 1);
-      }, delay);
+        if (stepIndex === 1) timerChat1 = timer;
+        if (stepIndex === 2) timerChat2 = timer;
+        if (stepIndex === 4) timerChat4 = timer;
+      }
       
-      // Asignar el timer correspondiente para poder cancelarlo si el usuario avanza
-      if (currentStep === 1) timerChat1 = timer;
-      if (currentStep === 3) timerChat3 = timer;
-      if (currentStep === 5) timerChat5 = timer;
-    }
-    
-    // Simular flujo visual de triaje (Paso 2)
-    function simulateTriage() {
-      const resultCard = document.getElementById('triage-result-card');
-      const resultIcon = document.getElementById('triage-result-icon');
-      const resultText = document.getElementById('triage-result-text');
-      const resultBadge = document.getElementById('triage-result-badge');
-      
-      triageTimeout = setTimeout(() => {
-        resultCard.style.borderColor = 'var(--color-warning)';
-        resultCard.style.background = 'rgba(245, 158, 11, 0.05)';
-        resultIcon.style.background = 'rgba(245, 158, 11, 0.2)';
-        resultIcon.style.color = 'var(--color-warning)';
-        resultIcon.textContent = '⚠️';
-        resultText.textContent = 'Prioridad: Moderada / Consulta Prioritaria asignada';
-        resultBadge.textContent = 'Moderado';
-        resultBadge.style.display = 'inline-block';
-      }, 3000);
+      runNext();
     }
     
     // Sonido sutil de notificación usando Web Audio API

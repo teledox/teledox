@@ -67,24 +67,24 @@
     }
     
     .brand-logo {
-      width: 32px;
-      height: 32px;
+      width: 48px;
+      height: 48px;
       background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
-      border-radius: 8px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800;
       font-family: var(--font-title);
-      font-size: 1.2rem;
+      font-size: 1.4rem;
       color: white;
-      box-shadow: 0 4px 12px rgba(240, 82, 82, 0.3);
+      box-shadow: 0 6px 16px rgba(240, 82, 82, 0.3);
     }
     
     .brand-name {
       font-family: var(--font-title);
       font-weight: 700;
-      font-size: 1.4rem;
+      font-size: 1.7rem;
       color: var(--color-text-main);
     }
     
@@ -943,32 +943,32 @@
 
       <!-- Paso 2 -->
       <div class="slide-content" data-step="2">
-        <span class="slide-step-badge">Fase 2: Triage Clínico</span>
-        <h2 class="slide-title">Evaluación de Síntomas y Asignación de Prioridad</h2>
+        <span class="slide-step-badge">Fase 2: Triaje Médico</span>
+        <h2 class="slide-title">Evaluación Humana y Asignación de Prioridad</h2>
         <p class="slide-desc">
-          Una vez que el operador ingresa los síntomas reportados por el beneficiario, el algoritmo inteligente de triaje de MediLyft analiza los términos clínicos ingresados para clasificar el nivel de riesgo en segundos.
+          Una vez que el operador responde las preguntas clave sobre los síntomas e ingresa la necesidad del beneficiario, un médico de guardia de nuestro equipo evalúa de inmediato los datos clínicamente para clasificar el nivel de riesgo.
         </p>
         
         <div class="feature-list">
           <div class="feature-item">
             <div class="feature-icon">Leve</div>
             <div>
-              <p class="feature-text-title">Prioridad Baja (Atención General)</p>
-              <p class="feature-text-desc">Casos no urgentes que se derivan a la agenda de teleconsulta normal del día.</p>
+              <p class="feature-text-title">Prioridad Baja (Evaluada por el Médico)</p>
+              <p class="feature-text-desc">El médico determina que no hay riesgo vital y agenda la teleconsulta general para el transcurso del día.</p>
             </div>
           </div>
           <div class="feature-item">
             <div class="feature-icon">Mod</div>
             <div>
-              <p class="feature-text-title">Prioridad Media (Urgente)</p>
-              <p class="feature-text-desc">Asignación prioritaria en la lista de espera del médico. El caso es marcado con etiqueta roja en el panel.</p>
+              <p class="feature-text-title">Prioridad Media (Evaluada por el Médico)</p>
+              <p class="feature-text-desc">El médico identifica la necesidad de atención prioritaria. El caso se programa con urgencia en el panel de guardia.</p>
             </div>
           </div>
           <div class="feature-item success">
             <div class="feature-icon">🚨</div>
             <div>
-              <p class="feature-text-title">Prioridad Crítica (Derivación 911)</p>
-              <p class="feature-text-desc">Si se detectan síntomas de riesgo de vida, el bot detiene el flujo, alerta de inmediato por Telegram al equipo de rescate y aconseja al operador derivar al 911.</p>
+              <p class="feature-text-title">Prioridad Crítica (Derivación Inmediata)</p>
+              <p class="feature-text-desc">Si el médico de guardia detecta síntomas de alarma de riesgo vital, se cancela la teleconsulta y se instruye al operador activar el protocolo de emergencia 911.</p>
             </div>
           </div>
         </div>
@@ -1010,9 +1010,9 @@
       <!-- Paso 4 -->
       <div class="slide-content" data-step="4">
         <span class="slide-step-badge">Fase 4: Atención Médica</span>
-        <h2 class="slide-title">Custodia del Caso en el Panel Clínico</h2>
+        <h2 class="slide-title">Custodia del Caso y Contacto Directo</h2>
         <p class="slide-desc">
-          La consulta se hace visible en el Panel de Control Web de MediLyft para el personal médico de turno. El profesional médico asume el caso para iniciar la videollamada interactiva.
+          La consulta se registra en el Panel de Control de MediLyft. El médico de turno asume el caso, analiza los antecedentes y se comunica de inmediato con el paciente.
         </p>
         
         <div class="feature-list">
@@ -1020,21 +1020,21 @@
             <div class="feature-icon">👨‍⚕️</div>
             <div>
               <p class="feature-text-title">Entorno Médico Integrado</p>
-              <p class="feature-text-desc">El médico ve la ficha clínica con la edad, lugar de residencia del paciente OIM y los síntomas previamente ingresados por el operador.</p>
+              <p class="feature-text-desc">El médico visualiza la ficha clínica del beneficiario con su edad, residencia y síntomas para tener contexto clínico antes del contacto.</p>
             </div>
           </div>
           <div class="feature-item">
-            <div class="feature-icon">📹</div>
+            <div class="feature-icon">📞</div>
             <div>
-              <p class="feature-text-title">Llamada WebRTC de Alta Calidad</p>
-              <p class="feature-text-desc">La teleconsulta se realiza dentro de la misma plataforma garantizando la privacidad de los datos bajo regulaciones médicas.</p>
+              <p class="feature-text-title">Contacto Directo sin Fricciones</p>
+              <p class="feature-text-desc">El médico realiza la consulta llamando directamente al teléfono celular del paciente (vía WhatsApp o llamada telefónica convencional).</p>
             </div>
           </div>
           <div class="feature-item">
             <div class="feature-icon">💊</div>
             <div>
               <p class="feature-text-title">Receta Electrónica y Diagnóstico</p>
-              <p class="feature-text-desc">El médico redacta el diagnóstico y tratamiento, guardando la receta en formato PDF para el posterior envío automatizado al paciente.</p>
+              <p class="feature-text-desc">El médico redacta el diagnóstico y tratamiento, generando la receta en PDF en el panel para su envío inmediato y automático.</p>
             </div>
           </div>
         </div>
@@ -1116,13 +1116,13 @@
             </div>
           </div>
           <div class="triage-flow-line"></div>
-          <div class="triage-node-card" style="background: rgba(0, 112, 243, 0.05); border-color: rgba(0, 112, 243, 0.3)">
-            <div class="triage-icon-bubble" style="background: rgba(0, 112, 243, 0.2); color: var(--color-primary)">⚙️</div>
+          <div class="triage-node-card" style="background: rgba(240, 82, 82, 0.05); border-color: rgba(240, 82, 82, 0.3)">
+            <div class="triage-icon-bubble" style="background: rgba(240, 82, 82, 0.2); color: var(--color-primary)">👨‍⚕️</div>
             <div class="triage-info-box">
-              <div class="triage-card-title">Motor de Triaje Clínico</div>
-              <div class="triage-card-text">Clasificación sintomática en progreso...</div>
+              <div class="triage-card-title">Evaluación por Médico de Guardia</div>
+              <div class="triage-card-text">Médico de turno analizando síntomas del reporte...</div>
             </div>
-            <span class="triage-badge" style="background: var(--color-primary); color: white;">Procesando</span>
+            <span class="triage-badge" style="background: var(--color-primary); color: white;">Evaluando</span>
           </div>
           <div class="triage-flow-line"></div>
           <div class="triage-node-card" id="triage-result-card" style="border-color: var(--color-warning); background: rgba(245, 158, 11, 0.05);">
@@ -1199,16 +1199,16 @@
               </div>
               <div class="db-grid-content">
                 <div class="db-card-panel">
-                  <div class="db-card-title">Videollamada en Curso</div>
-                  <div class="video-call-box">
-                    <div class="video-avatar-mock">CM</div>
+                  <div class="db-card-title">Llamada de Teleconsulta</div>
+                  <div class="video-call-box" style="background: #1e293b;">
+                    <div class="video-avatar-mock" style="background: var(--color-success);">CM</div>
                     <div class="video-call-status">
                       <div class="pulse-dot"></div>
-                      <span>Conectado (03:14)</span>
+                      <span>Llamada de WhatsApp activa (03:14)</span>
                     </div>
                     <div class="video-controls-mock">
-                      <div class="video-btn-mock">🎤</div>
-                      <div class="video-btn-mock">📹</div>
+                      <div class="video-btn-mock" style="background: var(--color-success)">🔊</div>
+                      <div class="video-btn-mock">🎙️</div>
                       <div class="video-btn-mock hangup">📞</div>
                     </div>
                   </div>

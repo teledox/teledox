@@ -188,7 +188,7 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .stage.with-phone{left:42%}
 .bfull-layout{display:flex;flex-direction:column;width:100%;padding:44px 80px 36px;gap:28px}
 .bfull-hd h2{font-size:38px;font-weight:800;line-height:1.2}
-.bfull-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1}
+.bfull-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1;align-items:start}
 .bfull-item{background:#fff;border-radius:16px;padding:28px 30px 26px;box-shadow:var(--shadow);border-left:4px solid var(--red-light);display:flex;flex-direction:column;gap:8px;opacity:0}
 .bfull-item.vis{animation:fadeUp .5s forwards}
 .bfi-num{font-size:42px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
@@ -375,7 +375,9 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 <!-- SLIDE 0: HERO -->
 <div class="slide slide-hero active" id="s0">
   <div style="max-width:780px;width:100%;margin:auto;display:flex;flex-direction:column;align-items:center">
-    <div style="font-size:54px;font-weight:900;letter-spacing:.08em;color:#E02424;font-family:'Outfit',sans-serif;margin-bottom:12px;text-align:center">MAWDY</div>
+    <div style="display:flex;align-items:center;justify-content:center;margin-bottom:20px">
+      <img src="mawdy.jpg" style="height:64px;width:auto;object-fit:contain;border-radius:8px" alt="Mawdy">
+    </div>
     <h1 class="hero-h1 vis-up" id="h0h1" style="text-align:center">
       Prevenir siniestros,<br>cuidar pacientes,<br>proteger resultados
     </h1>

@@ -243,6 +243,63 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .vcall-stat{text-align:center}
 .vcall-stat-val{font-size:16px;font-weight:800}
 .vcall-stat-lbl{font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:.06em}
+
+/* ── TRIAGE VISUALIZER ── */
+.triage-visualizer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+.triage-node-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+.triage-icon-bubble {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.triage-info-box {
+  flex: 1;
+}
+.triage-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.triage-card-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+.triage-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.triage-flow-line {
+  width: 2px;
+  height: 16px;
+  background: linear-gradient(to bottom, var(--red) 0%, transparent 100%);
+  align-self: center;
+}
 </style>
 </head>
 <body>
@@ -403,15 +460,44 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
       <p>El asegurado o el operador del call center inicia la solicitud de triaje. Se ingresa la sintomatología y el sistema recopila los síntomas clave para clasificar el nivel de prioridad antes de conectar con el médico o derivar eficientemente.</p>
     </div>
     <div class="section-label vis-fade" id="p1lbl">Clasificación de riesgo en tiempo real</div>
-    <div class="card vis-up" id="p1case" style="animation-delay:.15s">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <div style="font-size:16px;font-weight:800;color:var(--text)">Verónica, 42 años · Póliza #TPA-0491</div>
-        <div class="sev-tag sev-mod">⚠ Moderado</div>
+    <div class="triage-visualizer vis-up" id="p1case" style="animation-delay:.15s">
+      <!-- Fase 1: Ingreso -->
+      <div class="triage-node-card">
+        <div class="triage-icon-bubble" style="background: rgba(0, 112, 243, 0.15); color: var(--blue)">💬</div>
+        <div class="triage-info-box">
+          <div class="triage-card-title">Fase 1: Ingreso de Sintomatología</div>
+          <div class="triage-card-text">
+            <strong>Verónica (42 años · Póliza #TPA-0491)</strong> reporta dolor de cabeza severo y fiebre (38.2°C). El bot extrae automáticamente antecedentes críticos (HTA y Alergia a ibuprofeno).
+          </div>
+        </div>
       </div>
-      <div class="tp-row"><span class="tp-label">Síntoma principal</span><span class="tp-val">Cefalea intensa · Fiebre 38.2°C</span></div>
-      <div class="tp-row"><span class="tp-label">Signos de alarma</span><span class="tp-val">No presenta</span></div>
-      <div class="tp-row"><span class="tp-label">Antecedentes cargados</span><span class="tp-val">HTA · Alergia ibuprofeno</span></div>
-      <div class="tp-row"><span class="tp-label">Acción recomendada</span><span class="tp-val">Videoconsulta Medicina General</span></div>
+      
+      <div class="triage-flow-line"></div>
+      
+      <!-- Fase 2: Análisis -->
+      <div class="triage-node-card" style="background: rgba(240, 82, 82, 0.03); border-color: rgba(240, 82, 82, 0.2)">
+        <div class="triage-icon-bubble" style="background: rgba(240, 82, 82, 0.12); color: var(--red)">👨‍⚕️</div>
+        <div class="triage-info-box">
+          <div class="triage-card-title">Fase 2: Análisis por Médico</div>
+          <div class="triage-card-text">
+            El médico de guardia evalúa el reporte inicial en base a preguntas clave de descarte sobre signos de alarma (rigidez de nuca, sensibilidad a la luz o náuseas).
+          </div>
+        </div>
+      </div>
+      
+      <div class="triage-flow-line"></div>
+      
+      <!-- Fase 3: Clasificación -->
+      <div class="triage-node-card" style="border-color: var(--gold); background: rgba(245, 158, 11, 0.03);">
+        <div class="triage-icon-bubble" style="background: rgba(245, 158, 11, 0.12); color: var(--gold)">⚠️</div>
+        <div class="triage-info-box">
+          <div class="triage-card-title">Fase 3: Clasificación de Urgencia y Derivación</div>
+          <div class="triage-card-text">
+            <strong>Prioridad Moderada.</strong> Se deriva de manera eficiente a Videoconsulta de Medicina General, resolviendo el caso sin costos de traslado o sala de emergencias.
+          </div>
+        </div>
+        <span class="triage-badge" style="background: var(--gold); color: black;">Moderado</span>
+      </div>
     </div>
     <div class="stat-row vis-fade" id="p1stats" style="animation-delay:.45s">
       <div class="stat-box"><div class="stat-val" style="color:var(--green)">8 seg</div><div class="stat-lbl">Triaje inicial</div></div>

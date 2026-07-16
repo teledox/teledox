@@ -327,7 +327,7 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
     <div class="wa-body" id="shared-chat">
 
       <!-- SLIDE 1: El Problema (Felipe) -->
-      <div class="msg out show" data-slide="1">
+      <div class="msg out" id="c1m1" data-slide="1" style="display:none">
         <div class="bubble">Hola, necesito consultar un médico. El centro de salud local está cerrado y no puedo viajar a Quito hoy por mi trabajo. ¿Me pueden ayudar?</div>
         <div class="bubble-time">09:41</div>
       </div>
@@ -817,9 +817,10 @@ function anim0(){
 function anim1(){
   ['p1hd','pf1','pf2','pf3','pf4','p1note'].forEach((id,i)=>show(id,80+i*180));
   show('p1lbl',300);
-  showTyping('c1t1',1000,1000,'c1m2');setTimeout(scrollChat,1100);
-  showMsg('c1m3',3000);setTimeout(scrollChat,3100);
-  showTyping('c1t2',3900,1000,'c1m4');setTimeout(scrollChat,4000);
+  showMsg('c1m1',400);setTimeout(scrollChat,500);
+  showTyping('c1t1',1200,1000,'c1m2');setTimeout(scrollChat,1300);
+  showMsg('c1m3',3200);setTimeout(scrollChat,3300);
+  showTyping('c1t2',4100,1000,'c1m4');setTimeout(scrollChat,4200);
 }
 function anim2(){
   show('p2hd',80);

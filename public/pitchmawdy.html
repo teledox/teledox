@@ -499,11 +499,7 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
         <span class="triage-badge" style="background: var(--gold); color: black;">Moderado</span>
       </div>
     </div>
-    <div class="stat-row vis-fade" id="p1stats" style="animation-delay:.45s">
-      <div class="stat-box"><div class="stat-val" style="color:var(--green)">8 seg</div><div class="stat-lbl">Triaje inicial</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:var(--blue)">96%</div><div class="stat-lbl">Pertinencia de desvío</div></div>
-      <div class="stat-box"><div class="stat-val" style="color:var(--red)">-35%</div><div class="stat-lbl">Urgencias evitadas</div></div>
-    </div>
+
   </div>
 </div>
 
@@ -861,7 +857,7 @@ function anim0(){
   ['h0h1','h0sub','h0pills','h0cta'].forEach((id,i)=>show(id,80+i*160));
 }
 function anim1(){
-  ['p1hd','p1case','p1stats'].forEach((id,i)=>show(id,80+i*200));
+  ['p1hd','p1case'].forEach((id,i)=>show(id,80+i*200));
   show('p1lbl',300);
   showMsg('c1m2',600);setTimeout(scrollChat,700);
   showTyping('c1t1',1400,900,'c1m3');setTimeout(scrollChat,1500);

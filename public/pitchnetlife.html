@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MEDILYFT · Salud Conectada · NETLIFE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f8fafc;
+  --surface:#ffffff;
+  --border:#e2e8f0;
+  --text:#0f172a;
+  --text-sub:#334155;
+  --text-muted:#64748b;
+  --red:#FF6600; /* Netlife Orange */
+  --red-light:#fff7ed;
+  --red-dark:#c2410c;
+  --green:#22c55e;
+  --green-light:#f0fdf4;
+  --blue:#3b82f6;
+  --blue-light:#eff6ff;
+  --gold:#f59e0b;
+  --gold-light:#fffbeb;
+  --shadow:0 1px 3px rgba(0,0,0,0.05),0 1px 2px rgba(0,0,0,0.02);
+  --shadow-lg:0 10px 15px -3px rgba(0,0,0,0.08),0 4px 6px -2px rgba(0,0,0,0.03);
+  --wa-bg:#0b1014;
+  --wa-in:#1f2c34;
+  --wa-out:#005c4b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif}
+.topbar{position:fixed;top:0;left:0;right:0;height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:100;background:rgba(247,243,243,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-svg{width:38px;height:38px}
+.logo-brand{font-size:20px;font-weight:800;letter-spacing:.06em;color:var(--text)}
+.logo-product{font-size:13px;letter-spacing:.14em;color:var(--red);text-transform:uppercase;font-weight:600}
+.logo-text{display:flex;flex-direction:column;line-height:1.25}
+.slide-counter{font-size:12px;color:var(--text-muted);letter-spacing:.06em;font-weight:500}
+.slide-title-tag{font-size:10px;letter-spacing:.14em;color:var(--text-muted);text-transform:uppercase;padding:5px 14px;border:1px solid var(--border);border-radius:20px;background:var(--surface);font-weight:500}
+.progress-bar{position:fixed;top:70px;left:0;right:0;height:3px;background:rgba(0,0,0,0.06);z-index:100}
+.progress-fill{height:100%;background:var(--red);transition:width .4s ease}
+.dots{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,0.15);cursor:pointer;transition:all .3s}
+.dot.active{background:var(--red);width:24px;border-radius:4px}
+.nav-btn{position:fixed;bottom:20px;z-index:100;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text-sub);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:var(--shadow)}
+.nav-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.nav-prev{right:74px}.nav-next{right:24px}
+.stage{position:fixed;inset:70px 0 0 0;display:flex;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;opacity:0;pointer-events:none}
+.slide.active{opacity:1;pointer-events:all}
+.slide.animating{transition:opacity .5s ease,transform .5s cubic-bezier(.4,0,.2,1)}
+.slide-hero{flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:40px;text-align:center}
+.hero-eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;justify-content:center}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';width:40px;height:1px;background:var(--red);opacity:.4}
+.hero-h1{font-size:46px;font-weight:800;line-height:1.15;margin-bottom:22px;letter-spacing:-.02em;color:var(--text);max-width:920px}
+.hero-h1 .c{color:var(--red)}
+.hero-sub{font-size:16px;color:var(--text-muted);max-width:680px;line-height:1.6;margin:0 auto 36px}
+.hero-pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
+.hero-pill{padding:8px 18px;border-radius:24px;font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--text-sub);box-shadow:var(--shadow)}
+.hero-pill.red{background:var(--red-light);border-color:rgba(255,102,0,0.2);color:var(--red-dark)}
+.hero-cta{font-size:12px;color:var(--text-muted);letter-spacing:.1em;display:flex;align-items:center;gap:8px}
+.hero-logo-big{width:80px;height:80px;margin:0 auto 24px;border-radius:10px;object-fit:contain}
+.panel-col{flex:1;padding:32px 44px 72px 40px;overflow:hidden;display:flex;flex-direction:column;gap:18px}
+.phone{width:340px;background:#111b21;border-radius:32px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15),var(--shadow-lg);display:flex;flex-direction:column;max-height:calc(100vh - 120px)}
+.phone-status{height:28px;background:#1f2c34;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:10px;color:rgba(255,255,255,0.35);flex-shrink:0}
+.wa-header{background:#1f2c34;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.wa-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#FF6600,#FF9F55);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.wa-contact-name{font-size:14px;font-weight:700;color:#fff}
+.wa-contact-sub{font-size:10px;color:#25d366}
+.wa-contact{display:flex;flex-direction:column;line-height:1.3}
+.wa-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:14px 14px 10px;background:var(--wa-bg);display:flex;flex-direction:column;gap:10px;scrollbar-width:none}
+.wa-body::-webkit-scrollbar{display:none}
+.wa-input-bar{background:#1f2c34;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.wa-input-field{flex:1;background:rgba(255,255,255,0.06);border-radius:22px;padding:8px 16px;font-size:12px;color:rgba(255,255,255,0.35)}
+.wa-send{width:36px;height:36px;border-radius:50%;background:#00a884;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.msg{max-width:84%;display:flex;flex-direction:column;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg.out{align-self:flex-end}.msg.in{align-self:flex-start}
+.bubble{padding:10px 14px;border-radius:12px;font-size:13px;line-height:1.55;color:#fff;position:relative}
+.msg.out .bubble{background:var(--wa-out);border-bottom-right-radius:3px}
+.msg.in .bubble{background:var(--wa-in);border-bottom-left-radius:3px}
+.bubble-time{font-size:9px;color:rgba(255,255,255,0.3);text-align:right;margin-top:3px;padding:0 3px}
+.msg.in .bubble-time{text-align:left}
+.typing-indicator{display:flex;align-items:center;gap:5px;padding:11px 14px;background:var(--wa-in);border-radius:12px;border-bottom-left-radius:3px;align-self:flex-start}
+.typing-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);animation:typingBounce 1.2s infinite}
+.typing-dot:nth-child(2){animation-delay:.2s}.typing-dot:nth-child(3){animation-delay:.4s}
+@keyframes typingBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}
+.panel-hd h2{font-size:28px;font-weight:800;line-height:1.25;margin-bottom:10px;color:var(--text)}
+.panel-hd p{font-size:14.5px;color:var(--text-muted);line-height:1.6}
+.c{color:var(--red)}.g{color:var(--green)}.gold{color:var(--gold)}.b{color:var(--blue)}
+.section-label{font-size:11px;letter-spacing:.16em;color:var(--text-muted);text-transform:uppercase;margin-bottom:10px;font-weight:700;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.card.green{background:var(--green-light);border-color:rgba(22,163,74,0.2)}
+.card.blue{background:var(--blue-light);border-color:rgba(37,99,235,0.2)}
+.stat-row{display:flex;gap:12px}
+.stat-box{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px;box-shadow:var(--shadow);text-align:center}
+.stat-val{font-size:30px;font-weight:800;line-height:1.1;margin-bottom:5px}
+.stat-lbl{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.tp-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.tp-row:last-child{border:none}
+.tp-label{color:var(--text-muted)}.tp-val{font-weight:600;color:var(--text)}
+
+.orbit-layout{display:flex;width:100%;height:100%;align-items:center;padding:0 80px;gap:72px}
+.orbit-hd{flex:0 0 380px}
+.orbit-eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--red);margin-bottom:10px}
+.orbit-hd h2{font-size:38px;font-weight:800;line-height:1.15;margin-bottom:14px}
+.orbit-hd p{font-size:15px;color:var(--text-sub);line-height:1.6;margin-bottom:24px}
+.orbit-tags{display:flex;flex-wrap:wrap;gap:8px}
+.otag{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;background:var(--red-light);color:var(--red-dark);opacity:0}
+.otag.vis{animation:fadeUp .4s forwards}
+.orbit-diagram{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:460px;opacity:0}
+.orbit-diagram.vis{animation:fadeIn .6s forwards}
+.orbit-ring{position:absolute;border-radius:50%;border:1.5px dashed rgba(255,102,0,0.2)}
+.ring-1{width:200px;height:200px}.ring-2{width:340px;height:340px}
+.orbit-center{position:absolute;z-index:4;width:110px;height:110px;border-radius:50%;background:#fff;box-shadow:0 4px 24px rgba(255,102,0,.18),0 0 0 3px rgba(255,102,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.oc-name{font-size:10px;font-weight:800;color:var(--text);letter-spacing:.04em}
+.oc-sub{font-size:9px;color:var(--text-muted)}
+.oc-score{font-size:13px;font-weight:800;color:var(--red)}
+@keyframes orbit1{from{transform:rotate(0deg) translateX(100px) rotate(0deg)}to{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+@keyframes orbit2{from{transform:rotate(72deg) translateX(170px) rotate(-72deg)}to{transform:rotate(432deg) translateX(170px) rotate(-432deg)}}
+@keyframes orbit3{from{transform:rotate(144deg) translateX(170px) rotate(-144deg)}to{transform:rotate(504deg) translateX(170px) rotate(-504deg)}}
+@keyframes orbit4{from{transform:rotate(216deg) translateX(170px) rotate(-216deg)}to{transform:rotate(576deg) translateX(170px) rotate(-576deg)}}
+@keyframes orbit5{from{transform:rotate(288deg) translateX(170px) rotate(-288deg)}to{transform:rotate(648deg) translateX(170px) rotate(-648deg)}}
+.orbit-node{position:absolute;z-index:3;animation-timing-function:linear;animation-iteration-count:infinite}
+.on-1{animation:orbit1 18s infinite linear}.on-2{animation:orbit2 22s infinite linear}
+.on-3{animation:orbit3 20s infinite linear}.on-4{animation:orbit4 24s infinite linear}
+.on-5{animation:orbit5 19s infinite linear}
+.onode-planet{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:var(--shadow-lg);border:2px solid rgba(255,102,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transform:translate(-50%,-50%)}
+.op-ico{font-size:20px}.op-lbl{font-size:9px;font-weight:700;color:var(--text-sub);letter-spacing:.03em}
+.shared-phone{position:fixed;top:54px;bottom:0;left:0;width:42%;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:5;opacity:0;pointer-events:none;transition:opacity .45s ease}
+.shared-phone.visible{opacity:1;pointer-events:all}
+.stage{transition:left .5s cubic-bezier(.4,0,.2,1);position:fixed;inset:70px 0 0 0;display:flex;overflow:hidden}
+.stage.with-phone{left:42%}
+.bfull-layout{display:flex;flex-direction:column;width:100%;padding:44px 80px 36px;gap:28px}
+.bfull-hd h2{font-size:38px;font-weight:800;line-height:1.2}
+.bfull-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1;align-items:start}
+.bfull-item{background:#fff;border-radius:16px;padding:28px 30px 26px;box-shadow:var(--shadow);border-left:4px solid var(--red-light);display:flex;flex-direction:column;gap:8px;opacity:0}
+.bfull-item.vis{animation:fadeUp .5s forwards}
+.bfi-num{font-size:42px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+.bfi-num.c{color:var(--red)}.bfi-num.g{color:var(--green)}.bfi-num.b{color:var(--blue)}.bfi-num.gold{color:var(--gold)}
+.bfi-ico{font-size:28px;margin-top:4px}
+.bfull-item h3{font-size:17px;font-weight:700;color:var(--text);margin-top:2px}
+.bfull-item p{font-size:13.5px;color:var(--text-sub);line-height:1.6;margin:0}
+.slide-full{display:flex;align-items:stretch}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeRight{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.vis-up{opacity:0}.vis-up.vis{animation:fadeUp .5s forwards}
+.vis-right{opacity:0}.vis-right.vis{animation:fadeRight .5s forwards}
+.vis-scale{opacity:0}.vis-scale.vis{animation:scaleIn .4s forwards}
+.vis-fade{opacity:0}.vis-fade.vis{animation:fadeIn .5s forwards}
+
+/* ── PROCESO FLOW (s4 Funcionamiento) ── */
+.pf-wrap{display:flex;align-items:stretch;gap:0;width:100%;margin-top:10px}
+.pf-step{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 20px;text-align:center;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0}
+.pf-step.vis{animation:fadeUp .5s forwards}
+.pf-step.accent{background:var(--red-light);border-color:rgba(255,102,0,0.2)}
+.pf-ico{font-size:32px}
+.pf-lbl{font-size:13.5px;font-weight:800;color:var(--text)}
+.pf-sub{font-size:12px;color:var(--text-muted);line-height:1.45}
+.pf-arrow{display:flex;align-items:center;justify-content:center;padding:0 8px;color:var(--red);font-size:22px;font-weight:700;flex-shrink:0}
+
+/* ── VIDEO CALL (s3 Solución) ── */
+.vcall-wrap{flex:0 0 380px;display:flex;align-items:center;justify-content:center;padding:32px 40px 72px 0}
+.vcall-card{width:340px;background:#0d1117;border-radius:20px;padding:16px;box-shadow:var(--shadow-lg)}
+.vcall-main{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#0f1c2c,#1a3454);border-radius:12px;position:relative;overflow:hidden;margin-bottom:10px;display:flex;align-items:center;justify-content:center}
+.vcall-doc{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FF6600,#FF9F55);display:flex;align-items:center;justify-content:center;font-size:30px}
+.vcall-nametag{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);color:#fff;padding:4px 10px;border-radius:20px;font-size:10px}
+.vcall-live{position:absolute;top:10px;right:10px;background:rgba(255,102,0,0.9);color:#fff;padding:3px 8px;border-radius:20px;font-size:9px;display:flex;align-items:center;gap:4px}
+.vcall-pip{position:absolute;bottom:10px;right:10px;width:72px;aspect-ratio:9/16;background:linear-gradient(135deg,#2d3748,#4a5568);border-radius:8px;border:2px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px}
+.vcall-controls{display:flex;justify-content:center;gap:12px;margin-top:4px}
+.vcall-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px}
+.vcall-btn.end{background:#dc2626}
+.vcall-stats{display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.1)}
+.vcall-stat{text-align:center}
+.vcall-stat-val{font-size:16px;font-weight:800}
+.vcall-stat-lbl{font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:.06em}
+
+/* ── TRIAGE VISUALIZER ── */
+.triage-visualizer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 16px 0;
+}
+.triage-node-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  box-shadow: var(--shadow);
+}
+.triage-icon-bubble {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.triage-info-box {
+  flex: 1;
+}
+.triage-card-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.triage-card-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+.triage-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+.triage-flow-line {
+  width: 2px;
+  height: 16px;
+  background: linear-gradient(to bottom, var(--red) 0%, transparent 100%);
+  align-self: center;
+}
+
+/* ── ESG TABLE ── */
+.esg-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+  box-shadow: var(--shadow);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.esg-table th {
+  background: #f1f5f9;
+  font-size: 11px;
+  letter-spacing: .08em;
+  color: var(--text-sub);
+  text-transform: uppercase;
+  padding: 14px 18px;
+  font-weight: 700;
+  text-align: left;
+  border-bottom: 2px solid var(--border);
+}
+.esg-table td {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text);
+}
+.esg-table tr:last-child td {
+  border: none;
+}
+.esg-badge {
+  background: var(--red-light);
+  color: var(--red-dark);
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  display: inline-block;
+}
+.esg-desc {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div id="slide-title-tag" class="slide-title-tag">Introducción</div>
+  <div class="slide-counter" id="counter">01 / 08</div>
+  <div class="logo-wrap">
+    <svg class="logo-svg" viewBox="0 0 1024 1024" fill="none">
+      <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#FF6600" stroke-width="58" fill="none"/>
+      <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#FF6600"/>
+      <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="#FF6600" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <div class="logo-text">
+      <span class="logo-brand">MEDILYFT</span>
+    </div>
+  </div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="prog" style="width:12.5%"></div></div>
+
+<!-- DOTS -->
+<div class="dots" id="dots"></div>
+
+<!-- NAV -->
+<button class="nav-btn nav-prev" onclick="goTo(cur-1)">←</button>
+<button class="nav-btn nav-next" onclick="goTo(cur+1)">→</button>
+
+<!-- SHARED PHONE -->
+<div class="shared-phone" id="shared-phone">
+  <div class="phone">
+    <div class="phone-status"><span>9:41 AM</span><span>📡 4G</span></div>
+    <div class="wa-header">
+      <div class="wa-avatar">📡</div>
+      <div class="wa-contact">
+        <div class="wa-contact-name">NETLIFE SALUD</div>
+        <div class="wa-contact-sub">● en línea</div>
+      </div>
+    </div>
+    <div class="wa-body" id="shared-chat">
+
+      <!-- SLIDE 1: El Problema (Felipe) -->
+      <div class="msg out show" data-slide="1">
+        <div class="bubble">Hola, necesito consultar un médico. El centro de salud local está cerrado y no puedo viajar a Quito hoy por mi trabajo. ¿Me pueden ayudar?</div>
+        <div class="bubble-time">09:41</div>
+      </div>
+      <div class="typing-indicator" id="c1t1" data-slide="1" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="c1m2" data-slide="1" style="display:none">
+        <div class="bubble">¡Hola Felipe! Claro que sí. A través del beneficio Netlife Salud, te conectamos con un médico general en menos de 2 minutos vía videollamada, sin que tengas que viajar.</div>
+        <div class="bubble-time">09:42</div>
+      </div>
+      <div class="msg out" id="c1m3" data-slide="1" style="display:none">
+        <div class="bubble">¡Excelente! Ya estoy conectado desde casa. ¿Qué debo hacer?</div>
+        <div class="bubble-time">09:42</div>
+      </div>
+      <div class="typing-indicator" id="c1t2" data-slide="1" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="c1m4" data-slide="1" style="display:none">
+        <div class="bubble">⚡ Generando enlace seguro de teleconsulta. Solo dale clic al link a continuación para abrir la videollamada desde tu navegador. ✓</div>
+        <div class="bubble-time">09:43</div>
+      </div>
+
+      <!-- SLIDE 5: Acompañamiento 24h & 72h -->
+      <div class="msg in" id="c5m1" data-slide="5" style="display:none">
+        <div class="bubble">🕒 *Control de Adherencia* • Hola Felipe. ¿Pudiste tomar el medicamento recetado por el médico para la fiebre y el dolor de cabeza?</div>
+        <div class="bubble-time">09:45</div>
+      </div>
+      <div class="msg out" id="c5m2" data-slide="5" style="display:none">
+        <div class="bubble">Sí, ya los compré y me tomé la primera dosis.</div>
+        <div class="bubble-time">09:46</div>
+      </div>
+      <div class="typing-indicator" id="c5t1" data-slide="5" style="display:none">
+        <div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>
+      </div>
+      <div class="msg in" id="c5m3" data-slide="5" style="display:none">
+        <div class="bubble">✅ ¡Excelente! Registro de toma guardado. Continúe con las indicaciones de su receta médica. 💊</div>
+        <div class="bubble-time">09:46</div>
+      </div>
+      <div class="msg in" id="c5m4" data-slide="5" style="display:none">
+        <div class="bubble">🕒 *Seguimiento Clínico* • Hola Felipe. ¿Cómo te sientes hoy respecto al síntoma reportado? Por favor, califica tu evolución de 1 a 5 estrellas.</div>
+        <div class="bubble-time">09:50</div>
+      </div>
+      <div class="msg out" id="c5m5" data-slide="5" style="display:none">
+        <div class="bubble">⭐⭐⭐⭐⭐ Excelente, ya no tengo dolor ni fiebre. Muchas gracias.</div>
+        <div class="bubble-time">09:51</div>
+      </div>
+
+    </div>
+    <div class="wa-input-bar">
+      <div class="wa-input-field">Escribe un mensaje...</div>
+      <div class="wa-send">💬</div>
+    </div>
+  </div>
+</div>
+
+<div class="stage" id="stage">
+
+<!-- SLIDE 0: HERO (PORTADA) -->
+<div class="slide slide-hero active" id="s0">
+  <div style="max-width:820px;width:100%;margin:auto;display:flex;flex-direction:column;align-items:center">
+    <div style="font-size:42px;font-weight:900;letter-spacing:.04em;color:var(--red);font-family:'Outfit',sans-serif;margin-bottom:16px;text-align:center">NETLIFE</div>
+    <h1 class="hero-h1 vis-up" id="h0h1" style="text-align:center">
+      Salud accesible sobre la red<br>que <span class="c">Netlife</span> ya construyó
+    </h1>
+    <p class="hero-sub vis-up" id="h0sub" style="text-align:center">
+      Netlife llevó conectividad a hogares en todo el país. Esa red es hoy la última milla que le falta a la salud en Ecuador. Donde hay conexión, hay acceso médico.
+    </p>
+    <div class="hero-pills vis-fade" id="h0pills">
+      <div class="hero-pill red">Última Milla</div>
+      <div class="hero-pill red">Videoconsulta Médica</div>
+      <div class="hero-pill red">Acompañamiento Continuo</div>
+      <div class="hero-pill red">Sostenibilidad ESG</div>
+      <div class="hero-pill red">Impacto Social</div>
+    </div>
+    <div class="hero-cta vis-fade" id="h0cta">Presiona → para comenzar</div>
+  </div>
+</div>
+
+<!-- SLIDE 1: EL PROBLEMA -->
+<div class="slide" id="s1">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p1hd">
+      <h2>El problema que se resuelve:<br><span class="c">Fricción en la atención primaria.</span></h2>
+      <p>El acceso oportuno a la salud en Ecuador no se obstaculiza por la falta de médicos, sino por barreras logísticas y de costos indirectos que experimenta el paciente al buscar asistencia.</p>
+    </div>
+    
+    <div class="section-label vis-fade" id="p1lbl">Barreras de Acceso Tradicionales</div>
+    
+    <div class="bfull-grid" id="p1grid" style="grid-template-columns: 1fr 1fr; gap: 14px; flex: none;">
+      <div class="bfull-item vis-up" id="pf1" style="padding: 16px 20px; border-left-color: var(--red); opacity: 1;">
+        <h3 style="font-size: 14px; font-weight: 700;">📍 Distancia y desplazamiento</h3>
+        <p style="font-size: 12px; line-height: 1.45;">Fuera de los grandes centros urbanos, una consulta médica de rutina obliga al paciente a emprender viajes largos y costosos.</p>
+      </div>
+      <div class="bfull-item vis-up" id="pf2" style="padding: 16px 20px; border-left-color: var(--red); opacity: 1; animation-delay: 0.1s;">
+        <h3 style="font-size: 14px; font-weight: 700;">⏱ Tiempo perdido</h3>
+        <p style="font-size: 12px; line-height: 1.45;">Consultar al médico implica perder un día laboral completo, solicitar permisos y solucionar el cuidado familiar.</p>
+      </div>
+      <div class="bfull-item vis-up" id="pf3" style="padding: 16px 20px; border-left-color: var(--red); opacity: 1; animation-delay: 0.2s;">
+        <h3 style="font-size: 14px; font-weight: 700;">💸 Costo de oportunidad</h3>
+        <p style="font-size: 12px; line-height: 1.45;">Para un gran porcentaje de la población, el impacto económico de un día de trabajo no percibido es más grave que tolerar el síntoma.</p>
+      </div>
+      <div class="bfull-item vis-up" id="pf4" style="padding: 16px 20px; border-left-color: var(--red); opacity: 1; animation-delay: 0.3s;">
+        <h3 style="font-size: 14px; font-weight: 700;">🏢 Concentración de la oferta</h3>
+        <p style="font-size: 12px; line-height: 1.45;">La mayor oferta de especialistas y centros avanzados está centralizada casi en su totalidad en Quito y Guayaquil.</p>
+      </div>
+    </div>
+
+    <div class="card green vis-up" id="p1note" style="animation-delay: 0.4s; font-size: 12.5px; line-height: 1.5; margin-top: 8px;">
+      💡 <strong>Consecuencia clínica:</strong> El paciente consulta tarde, abandona tratamientos y termina en emergencias médicas por cuadros que pudieron haberse resuelto de manera temprana y digital.
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 2: ALINEACIÓN ESTRATÉGICA -->
+<div class="slide slide-full" id="s2">
+  <div class="bfull-layout">
+    <div class="bfull-hd vis-up" id="p2hd">
+      <h2>Por qué Netlife <span class="c">y por qué ahora</span></h2>
+      <p style="font-size: 15px; color: var(--text-muted); max-width: 800px; margin-top: 4px;">
+        Habilitar telemedicina sobre la infraestructura de fibra óptica de Netlife alinea la sostenibilidad de impacto social directo con objetivos comerciales de alto valor.
+      </p>
+    </div>
+    
+    <div class="bfull-grid" style="grid-template-columns: repeat(3, 1fr) !important;" id="p2grid">
+      <div class="bfull-item vis-up" id="b1">
+        <div class="bfi-ico">🌱</div>
+        <h3>Agenda de Sostenibilidad (ESG)</h3>
+        <p>Aplica el activo tecnológico principal de Netlife (su red) a la salud. Genera un impacto social tangible sobre su base de clientes residenciales sin requerir inversiones físicas adicionales.</p>
+      </div>
+      
+      <div class="bfull-item vis-up" id="b2" style="animation-delay:.15s">
+        <div class="bfi-ico">📡</div>
+        <h3>Coherencia Narrativa</h3>
+        <p>La red de internet deja de ser el producto en sí mismo para convertirse en el vehículo de bienestar. Netlife no dona conectividad, sino que habilita el acceso médico donde antes no existía.</p>
+      </div>
+      
+      <div class="bfull-item vis-up" id="b3" style="animation-delay:.3s">
+        <div class="bfi-ico">📈</div>
+        <h3>Diferenciación Comercial</h3>
+        <p>El servicio residencial de internet incorpora valor de uso cotidiano en momentos de real necesidad, desmarcando a Netlife de la competencia centrada en anchos de banda y tarifas.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: LA SOLUCIÓN -->
+<div class="slide slide-full" id="s3">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p3hd">
+      <h2>La solución: <span class="c">MediLyft + Netlife</span></h2>
+      <p>Un servicio de bienestar y acceso que une a los médicos con los pacientes y los mantiene conectados proactivamente en el tiempo.</p>
+    </div>
+    
+    <div class="section-label vis-fade" id="p3lbl">Componentes del Beneficio</div>
+    
+    <div class="bfull-grid" id="p3grid" style="grid-template-columns: 1fr; gap: 16px; flex: none;">
+      <div class="bfull-item vis-up" id="psol1" style="border-left-color: var(--red); opacity: 1;">
+        <h3 style="font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">📹 Videoconsulta Médica</h3>
+        <p style="font-size: 12.5px; line-height: 1.55;">
+          Atención por video con médicos generales capacitados, sin agendamientos previos ni salas de espera. Accesible de forma inmediata desde cualquier dispositivo con internet en todo el Ecuador.
+        </p>
+      </div>
+      <div class="bfull-item vis-up" id="psol2" style="border-left-color: var(--red); opacity: 1; animation-delay: 0.15s;">
+        <h3 style="font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px;">🕒 Tracking y Acompañamiento Continuo</h3>
+        <p style="font-size: 12.5px; line-height: 1.55;">
+          La plataforma no finaliza el caso al cerrar la llamada. El bot automatizado de MediLyft realiza un seguimiento clínico del tratamiento prescrito hasta que la condición se resuelve. <em>El sistema busca al paciente proactivamente.</em>
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  <div class="vcall-wrap vis-right" id="p3vcall">
+    <div class="vcall-card">
+      <div class="vcall-main">
+        <div class="vcall-doc">👨‍⚕️</div>
+        <div class="vcall-nametag">Dr. Carlos Ortega · Medicina General</div>
+        <div class="vcall-live"><span style="width:6px;height:6px;border-radius:50%;background:#fff;animation:fadeIn 1s infinite alternate"></span>EN VIVO</div>
+        <div class="vcall-pip">🧑</div>
+      </div>
+      <div class="vcall-controls">
+        <div class="vcall-btn">🎤</div>
+        <div class="vcall-btn">📹</div>
+        <div class="vcall-btn end">📞</div>
+      </div>
+      <div class="vcall-stats">
+        <div class="vcall-stat"><div class="vcall-stat-val" style="color:var(--red)">HD</div><div class="vcall-stat-lbl">Calidad</div></div>
+        <div class="vcall-stat"><div class="vcall-stat-val" style="color:var(--green)">14 ms</div><div class="vcall-stat-lbl">Latencia</div></div>
+        <div class="vcall-stat"><div class="vcall-stat-val" style="color:var(--blue)">100%</div><div class="vcall-stat-lbl">Fibra</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: CÓMO FUNCIONA -->
+<div class="slide slide-full" id="s4">
+  <div class="bfull-layout">
+    <div class="bfull-hd vis-up" id="p4hd">
+      <h2>Cómo funciona para el beneficiario</h2>
+      <p style="font-size: 15px; color: var(--text-muted); max-width: 800px; margin-top: 4px;">
+        Un proceso simplificado al máximo para que la persona no deba aprender nada nuevo. Cuatro pasos directos soportados en la misma red de Netlife.
+      </p>
+    </div>
+    
+    <div class="pf-wrap" id="p4flow">
+      <!-- Paso 1 -->
+      <div class="pf-step vis-up" id="pa1">
+        <div class="pf-ico">🔑</div>
+        <div class="pf-lbl">1. Activación</div>
+        <div class="pf-sub">Habilitación inmediata del beneficiario vinculando su cuenta activa de Netlife.</div>
+      </div>
+      <div class="pf-arrow vis-fade" id="par1">→</div>
+      <!-- Paso 2 -->
+      <div class="pf-step vis-up" id="pa2" style="animation-delay:.15s">
+        <div class="pf-ico">📱</div>
+        <div class="pf-lbl">2. Solicitud</div>
+        <div class="pf-sub">El usuario solicita la asistencia en un clic desde WhatsApp o la aplicación.</div>
+      </div>
+      <div class="pf-arrow vis-fade" id="par2" style="animation-delay:.2s">→</div>
+      <!-- Paso 3 -->
+      <div class="pf-step vis-up" id="pa3" style="animation-delay:.3s">
+        <div class="pf-ico">👨‍⚕️</div>
+        <div class="pf-lbl">3. Videoconsulta</div>
+        <div class="pf-sub">Conexión con el médico general por video para diagnóstico e indicaciones.</div>
+      </div>
+      <div class="pf-arrow vis-fade" id="par3" style="animation-delay:.35s">→</div>
+      <!-- Paso 4 -->
+      <div class="pf-step vis-up accent" id="pa4" style="animation-delay:.45s">
+        <div class="pf-ico">🔄</div>
+        <div class="pf-lbl" style="color:var(--red-dark)">4. Seguimiento</div>
+        <div class="pf-sub">Acompañamiento del tratamiento vía bot hasta el cierre exitoso del caso.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: PREVENCIÓN Y ACOMPAÑAMIENTO -->
+<div class="slide" id="s5">
+  <div class="panel-col">
+    <div class="panel-hd vis-up" id="p5hd">
+      <h2>Modelo de proactividad <span class="c">y prevención</span></h2>
+      <p>La telemedicina convencional atiende eventos aislados. MediLyft opera sobre la continuidad del paciente, que es donde se afianzan los verdaderos resultados clínicos.</p>
+    </div>
+    
+    <div class="section-label vis-fade" id="p5lbl">Líneas de Acompañamiento Clínico</div>
+    
+    <div class="bfull-grid" id="p5grid" style="grid-template-columns: 1fr; gap: 12px; flex: none;">
+      <div class="bfull-item vis-up" id="pac1" style="border-left-color: var(--red); opacity: 1; padding: 16px 20px;">
+        <h3 style="font-size: 14px; font-weight: 700;">💊 Adherencia a la Prescripción</h3>
+        <p style="font-size: 12px; line-height: 1.45;">Verificación activa de que el tratamiento prescrito se está cumpliendo e intervención automatizada cuando hay desvíos.</p>
+      </div>
+      <div class="bfull-item vis-up" id="pac2" style="border-left-color: var(--red); opacity: 1; animation-delay: 0.1s; padding: 16px 20px;">
+        <h3 style="font-size: 14px; font-weight: 700;">🏥 Monitoreo de Condiciones Crónicas</h3>
+        <p style="font-size: 12px; line-height: 1.45;">Seguimiento sostenido del paciente con enfermedades crónicas, facilitando un canal de contacto frecuente y de bajo costo operativo.</p>
+      </div>
+      <div class="bfull-item vis-up" id="pac3" style="border-left-color: var(--red); opacity: 1; animation-delay: 0.2s; padding: 16px 20px;">
+        <h3 style="font-size: 14px; font-weight: 700;">🔄 Seguimiento de Casos Agudos</h3>
+        <p style="font-size: 12px; line-height: 1.45;">Acompañamiento en el periodo crítico post-consulta, previniendo recaídas y asegurando la evolución favorable del paciente.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 6: ALCANCE NACIONAL -->
+<div class="slide slide-full" id="s6">
+  <div class="orbit-layout">
+    <div class="orbit-hd">
+      <div class="orbit-eyebrow vis-fade" id="ot1">Cero Costo de Infraestructura</div>
+      <h2 class="vis-up" id="p6hd">Alcance y cobertura nacional inmediata</h2>
+      <p class="vis-up" id="p6desc" style="animation-delay:.15s">
+        La cobertura del beneficio de salud es exactamente la cobertura de red de Netlife. No hay sedes que abrir, logística que desplegar o expansión física que financiar.
+      </p>
+      <div class="orbit-tags">
+        <div class="otag vis-up" id="ot2" style="animation-delay:.3s">Escalabilidad Directa</div>
+        <div class="otag vis-up" id="ot3" style="animation-delay:.4s">Cero Fricción Geográfica</div>
+        <div class="otag vis-up" id="ot4" style="animation-delay:.5s">Uso de Fibra Existente</div>
+      </div>
+    </div>
+    
+    <div class="orbit-diagram vis-scale" id="p6orb" style="animation-delay:.2s">
+      <div class="orbit-ring ring-1"></div>
+      <div class="orbit-ring ring-2"></div>
+      
+      <!-- Central Node -->
+      <div class="orbit-center">
+        <div class="oc-name">RED NETLIFE</div>
+        <div class="oc-sub">Conectividad Nacional</div>
+        <div class="oc-score">HOGARES</div>
+      </div>
+      
+      <!-- Orbiting Planets -->
+      <div class="orbit-node on-1">
+        <div class="onode-planet"><span class="op-ico">🏥</span><span class="op-lbl">Consultas</span></div>
+      </div>
+      <div class="orbit-node on-2">
+        <div class="onode-planet"><span class="op-ico">📱</span><span class="op-lbl">Paciente</span></div>
+      </div>
+      <div class="orbit-node on-3">
+        <div class="onode-planet"><span class="op-ico">💊</span><span class="op-lbl">Recetas</span></div>
+      </div>
+      <div class="orbit-node on-4">
+        <div class="onode-planet"><span class="op-ico">📊</span><span class="op-lbl">Seguimiento</span></div>
+      </div>
+      <div class="orbit-node on-5">
+        <div class="onode-planet"><span class="op-ico">🩺</span><span class="op-lbl">Médico</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 7: REPORTE DE SOSTENIBILIDAD ESG -->
+<div class="slide slide-full" id="s7">
+  <div class="bfull-layout">
+    <div class="bfull-hd vis-up" id="p7hd">
+      <h2>Impacto social medible y reportable</h2>
+      <p style="font-size: 15px; color: var(--text-muted); max-width: 800px; margin-top: 4px;">
+        MediLyft entrega a Netlife reportes trimestrales estructurados con métricas reales operativas, listos para su Memoria de Sostenibilidad anual (ESG).
+      </p>
+    </div>
+    
+    <table class="esg-table vis-up" id="p7table" style="animation-delay: 0.2s;">
+      <thead>
+        <tr>
+          <th style="width: 30%;">Indicador ESG</th>
+          <th style="width: 70%;">Qué demuestra en la Memoria de Sostenibilidad</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="esg-badge">Alcance General</span></td>
+          <td class="esg-desc"><strong>Beneficiarios activados y tasa de uso:</strong> Cobertura real lograda sobre la base de clientes de Netlife.</td>
+        </tr>
+        <tr>
+          <td><span class="esg-badge">Efectividad Clínica</span></td>
+          <td class="esg-desc"><strong>Consultas resueltas en primer nivel:</strong> Porcentaje de resolución médica directa sin necesidad de derivar a traslados.</td>
+        </tr>
+        <tr>
+          <td><span class="esg-badge">Volumen de Atención</span></td>
+          <td class="esg-desc"><strong>Casos en seguimiento activo:</strong> Cuantificación del acompañamiento médico y soporte preventivo sostenido.</td>
+        </tr>
+        <tr>
+          <td><span class="esg-badge">Adherencia Terapéutica</span></td>
+          <td class="esg-desc"><strong>Tasa de adherencia al tratamiento:</strong> Éxito clínico real del paciente gracias al bot de seguimiento.</td>
+        </tr>
+        <tr>
+          <td><span class="esg-badge">Geografía del Impacto</span></td>
+          <td class="esg-desc"><strong>Cobertura territorial:</strong> Distribución a nivel nacional y acceso médico garantizado en provincias.</td>
+        </tr>
+        <tr>
+          <td><span class="esg-badge">Satisfacción (NPS)</span></td>
+          <td class="esg-desc"><strong>Satisfacción del beneficiario:</strong> Calificación y percepción de valor real por parte del cliente de Netlife.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div><!-- /stage -->
+
+<script>
+const SLIDES = 8;
+const TITLES = [
+  'Introducción',
+  'El Problema de Acceso',
+  'Alineación de Negocio',
+  'La Solución MediLyft',
+  'Cómo Funciona',
+  'Modelo de Prevención',
+  'Cobertura Nacional',
+  'Reporte de Sostenibilidad (ESG)'
+];
+const PHONE_SLIDES = new Set([1, 3, 5]);
+
+let cur = 0, busy = false;
+
+// Build dots
+const dotsEl = document.getElementById('dots');
+for(let i=0;i<SLIDES;i++){
+  const d = document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+}
+
+function updateUI(n){
+  document.getElementById('counter').textContent = String(n+1).padStart(2,'0')+' / '+String(SLIDES).padStart(2,'0');
+  document.getElementById('slide-title-tag').textContent = TITLES[n].toUpperCase();
+  document.getElementById('prog').style.width = ((n+1)/SLIDES*100)+'%';
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===n));
+  const ph = document.getElementById('shared-phone');
+  const st = document.getElementById('stage');
+  if(PHONE_SLIDES.has(n)){
+    ph.classList.add('visible');
+    st.classList.add('with-phone');
+    // filter chat messages
+    document.querySelectorAll('#shared-chat .msg, #shared-chat .typing-indicator').forEach(el=>{
+      const ds = parseInt(el.dataset.slide||'0');
+      if(ds!==n && ds!==0) el.classList.remove('show');
+    });
+  } else {
+    ph.classList.remove('visible');
+    st.classList.remove('with-phone');
+  }
+}
+
+function goTo(n){
+  if(n<0||n>=SLIDES||busy)return;
+  const fwd = n>cur;
+  const lv = document.getElementById('s'+cur);
+  const en = document.getElementById('s'+n);
+  busy=true;
+
+  // Reset vis elements in leaving slide
+  lv.querySelectorAll('.vis-up,.vis-fade,.vis-right,.vis-scale,.bfull-item,.pf-step').forEach(el=>{
+    el.classList.remove('vis');
+  });
+  // Reset msg in leaving slide
+  if(PHONE_SLIDES.has(cur)){
+    document.querySelectorAll('#shared-chat .msg[data-slide="'+cur+'"], #shared-chat .typing-indicator[data-slide="'+cur+'"]').forEach(el=>{
+      el.classList.remove('show');
+      if(el.id) el.style.display='none';
+    });
+  }
+
+  lv.classList.remove('animating','active');
+  en.classList.remove('animating','active');
+  lv.style.transform='translateY(0)';lv.style.opacity='1';
+  en.style.transform=fwd?'translateY(70px)':'translateY(-70px)';
+  en.style.opacity='0';
+  void en.offsetHeight;
+  lv.classList.add('animating');
+  en.classList.add('animating');
+  lv.style.transform=fwd?'translateY(-70px)':'translateY(70px)';
+  lv.style.opacity='0';
+  en.style.transform='translateY(0)';
+  en.style.opacity='1';
+  en.classList.add('active');
+  cur=n;updateUI(n);
+
+  setTimeout(()=>{
+    lv.classList.remove('active','animating');
+    lv.style.cssText='';
+    en.classList.remove('animating');
+    en.style.cssText='';
+    busy=false;
+    animSlide(n);
+  },560);
+}
+
+function show(id,delay){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.style.opacity='';
+  el.classList.remove('vis');
+  setTimeout(()=>el.classList.add('vis'),delay);
+}
+function showMsg(id,delay){
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.display='flex';
+    requestAnimationFrame(()=>el.classList.add('show'));
+  },delay);
+}
+function showTyping(id,delay,duration,thenId){
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.style.display='flex';
+    setTimeout(()=>{
+      el.style.display='none';
+      if(thenId) showMsg(thenId,0);
+    },duration);
+  },delay);
+}
+function scrollChat(){ const c=document.getElementById('shared-chat');if(c)c.scrollTop=c.scrollHeight; }
+
+function animSlide(n){
+  const fns=[anim0,anim1,anim2,anim3,anim4,anim5,anim6,anim7];
+  fns[n]?.();
+}
+
+function anim0(){
+  ['h0h1','h0sub','h0pills','h0cta'].forEach((id,i)=>show(id,80+i*160));
+}
+function anim1(){
+  ['p1hd','pf1','pf2','pf3','pf4','p1note'].forEach((id,i)=>show(id,80+i*180));
+  show('p1lbl',300);
+  showTyping('c1t1',1000,1000,'c1m2');setTimeout(scrollChat,1100);
+  showMsg('c1m3',3000);setTimeout(scrollChat,3100);
+  showTyping('c1t2',3900,1000,'c1m4');setTimeout(scrollChat,4000);
+}
+function anim2(){
+  show('p2hd',80);
+  ['b1','b2','b3'].forEach((id,i)=>show(id,300+i*180));
+}
+function anim3(){
+  show('p3hd',80);
+  ['psol1','psol2'].forEach((id,i)=>show(id,250+i*200));
+  show('p3vcall',300);
+}
+function anim4(){
+  show('p4hd',80);
+  ['pa1','pa2','pa3','pa4'].forEach((id,i)=>show(id,300+i*180));
+  ['par1','par2','par3'].forEach((id,i)=>show(id,400+i*180));
+}
+function anim5(){
+  show('p5hd',80);
+  ['pac1','pac2','pac3'].forEach((id,i)=>show(id,250+i*180));
+  showMsg('c5m1',600);setTimeout(scrollChat,700);
+  showMsg('c5m2',1800);setTimeout(scrollChat,1900);
+  showTyping('c5t1',2500,1000,'c5m3');setTimeout(scrollChat,2600);
+  showMsg('c5m4',4600);setTimeout(scrollChat,4700);
+  showMsg('c5m5',6200);setTimeout(scrollChat,6300);
+}
+function anim6(){
+  ['ot1','p6hd','p6desc','ot2','ot3','ot4'].forEach((id,i)=>show(id,100+i*120));
+  show('p6orb',300);
+}
+function anim7(){
+  show('p7hd',80);
+  show('p7table',300);
+}
+
+// Kick off slide 0
+anim0();
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();goTo(cur+1);}
+  if(e.key==='ArrowLeft'){e.preventDefault();goTo(cur-1);}
+});
+
+let wheelAcc=0,wheelTimer=null;
+document.addEventListener('wheel',e=>{
+  e.preventDefault();
+  wheelAcc+=e.deltaY;
+  clearTimeout(wheelTimer);
+  wheelTimer=setTimeout(()=>{
+    if(Math.abs(wheelAcc)>40){goTo(wheelAcc>0?cur+1:cur-1);}
+    wheelAcc=0;
+  },80);
+},{passive:false});
+</script>
+</body>
+</html>

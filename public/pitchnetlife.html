@@ -15,9 +15,9 @@
   --text:#0f172a;
   --text-sub:#334155;
   --text-muted:#64748b;
-  --red:#FF6600; /* Netlife Orange */
-  --red-light:#fff7ed;
-  --red-dark:#c2410c;
+  --red:#ef4444; /* Rojo MediLyft */
+  --red-light:#fef2f2;
+  --red-dark:#991b1b;
   --green:#22c55e;
   --green-light:#f0fdf4;
   --blue:#3b82f6;
@@ -61,14 +61,14 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .hero-sub{font-size:16px;color:var(--text-muted);max-width:680px;line-height:1.6;margin:0 auto 36px}
 .hero-pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:48px}
 .hero-pill{padding:8px 18px;border-radius:24px;font-size:12px;font-weight:600;background:var(--surface);border:1px solid var(--border);color:var(--text-sub);box-shadow:var(--shadow)}
-.hero-pill.red{background:var(--red-light);border-color:rgba(255,102,0,0.2);color:var(--red-dark)}
+.hero-pill.red{background:var(--red-light);border-color:rgba(240,82,82,0.25);color:var(--red-dark)}
 .hero-cta{font-size:12px;color:var(--text-muted);letter-spacing:.1em;display:flex;align-items:center;gap:8px}
 .hero-logo-big{width:80px;height:80px;margin:0 auto 24px;border-radius:10px;object-fit:contain}
 .panel-col{flex:1;padding:32px 44px 72px 40px;overflow:hidden;display:flex;flex-direction:column;gap:18px}
 .phone{width:340px;background:#111b21;border-radius:32px;overflow:hidden;box-shadow:0 0 0 1.5px rgba(0,0,0,0.15),var(--shadow-lg);display:flex;flex-direction:column;max-height:calc(100vh - 120px)}
 .phone-status{height:28px;background:#1f2c34;display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:10px;color:rgba(255,255,255,0.35);flex-shrink:0}
 .wa-header{background:#1f2c34;padding:10px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0;border-bottom:1px solid rgba(255,255,255,0.04)}
-.wa-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#FF6600,#FF9F55);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.wa-avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f87171);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .wa-contact-name{font-size:14px;font-weight:700;color:#fff}
 .wa-contact-sub{font-size:10px;color:#25d366}
 .wa-contact{display:flex;flex-direction:column;line-height:1.3}
@@ -115,9 +115,9 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .otag.vis{animation:fadeUp .4s forwards}
 .orbit-diagram{flex:1;position:relative;display:flex;align-items:center;justify-content:center;min-height:460px;opacity:0}
 .orbit-diagram.vis{animation:fadeIn .6s forwards}
-.orbit-ring{position:absolute;border-radius:50%;border:1.5px dashed rgba(255,102,0,0.2)}
+.orbit-ring{position:absolute;border-radius:50%;border:1.5px dashed rgba(240,82,82,0.2)}
 .ring-1{width:200px;height:200px}.ring-2{width:340px;height:340px}
-.orbit-center{position:absolute;z-index:4;width:110px;height:110px;border-radius:50%;background:#fff;box-shadow:0 4px 24px rgba(255,102,0,.18),0 0 0 3px rgba(255,102,0,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
+.orbit-center{position:absolute;z-index:4;width:110px;height:110px;border-radius:50%;background:#fff;box-shadow:0 4px 24px rgba(240,82,82,.18),0 0 0 3px rgba(240,82,82,.12);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:2px}
 .oc-name{font-size:10px;font-weight:800;color:var(--text);letter-spacing:.04em}
 .oc-sub{font-size:9px;color:var(--text-muted)}
 .oc-score{font-size:13px;font-weight:800;color:var(--red)}
@@ -130,7 +130,7 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .on-1{animation:orbit1 18s infinite linear}.on-2{animation:orbit2 22s infinite linear}
 .on-3{animation:orbit3 20s infinite linear}.on-4{animation:orbit4 24s infinite linear}
 .on-5{animation:orbit5 19s infinite linear}
-.onode-planet{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:var(--shadow-lg);border:2px solid rgba(255,102,0,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transform:translate(-50%,-50%)}
+.onode-planet{width:64px;height:64px;border-radius:50%;background:#fff;box-shadow:var(--shadow-lg);border:2px solid rgba(240,82,82,.15);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transform:translate(-50%,-50%)}
 .op-ico{font-size:20px}.op-lbl{font-size:9px;font-weight:700;color:var(--text-sub);letter-spacing:.03em}
 .shared-phone{position:fixed;top:54px;bottom:0;left:0;width:42%;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:5;opacity:0;pointer-events:none;transition:opacity .45s ease}
 .shared-phone.visible{opacity:1;pointer-events:all}
@@ -160,7 +160,7 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .pf-wrap{display:flex;align-items:stretch;gap:0;width:100%;margin-top:10px}
 .pf-step{flex:1;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px 20px;text-align:center;box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;gap:12px;opacity:0}
 .pf-step.vis{animation:fadeUp .5s forwards}
-.pf-step.accent{background:var(--red-light);border-color:rgba(255,102,0,0.2)}
+.pf-step.accent{background:var(--red-light);border-color:rgba(240,82,82,0.2)}
 .pf-ico{font-size:32px}
 .pf-lbl{font-size:13.5px;font-weight:800;color:var(--text)}
 .pf-sub{font-size:12px;color:var(--text-muted);line-height:1.45}
@@ -170,9 +170,9 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
 .vcall-wrap{flex:0 0 380px;display:flex;align-items:center;justify-content:center;padding:32px 40px 72px 0}
 .vcall-card{width:340px;background:#0d1117;border-radius:20px;padding:16px;box-shadow:var(--shadow-lg)}
 .vcall-main{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#0f1c2c,#1a3454);border-radius:12px;position:relative;overflow:hidden;margin-bottom:10px;display:flex;align-items:center;justify-content:center}
-.vcall-doc{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#FF6600,#FF9F55);display:flex;align-items:center;justify-content:center;font-size:30px}
+.vcall-doc{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#ef4444,#f87171);display:flex;align-items:center;justify-content:center;font-size:30px}
 .vcall-nametag{position:absolute;bottom:10px;left:10px;background:rgba(0,0,0,0.65);color:#fff;padding:4px 10px;border-radius:20px;font-size:10px}
-.vcall-live{position:absolute;top:10px;right:10px;background:rgba(255,102,0,0.9);color:#fff;padding:3px 8px;border-radius:20px;font-size:9px;display:flex;align-items:center;gap:4px}
+.vcall-live{position:absolute;top:10px;right:10px;background:rgba(240,82,82,0.9);color:#fff;padding:3px 8px;border-radius:20px;font-size:9px;display:flex;align-items:center;gap:4px}
 .vcall-pip{position:absolute;bottom:10px;right:10px;width:72px;aspect-ratio:9/16;background:linear-gradient(135deg,#2d3748,#4a5568);border-radius:8px;border:2px solid rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;font-size:18px}
 .vcall-controls{display:flex;justify-content:center;gap:12px;margin-top:4px}
 .vcall-btn{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:16px}
@@ -294,9 +294,9 @@ h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif
   <div class="slide-counter" id="counter">01 / 08</div>
   <div class="logo-wrap">
     <svg class="logo-svg" viewBox="0 0 1024 1024" fill="none">
-      <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#FF6600" stroke-width="58" fill="none"/>
-      <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#FF6600"/>
-      <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="#FF6600" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+      <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+      <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672" stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
     </svg>
     <div class="logo-text">
       <span class="logo-brand">MEDILYFT</span>

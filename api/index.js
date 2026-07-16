@@ -1,8 +1,8 @@
 /**
  * api/index.js
  * Router maestro de Vercel Serverless Functions para MediLyft.
- * Agrupa todas las rutas de /api/* en una sola función serverless,
- * respetando el límite de Vercel Hobby y manteniendo compatibilidad total.
+ * Agrupa todas las rutas de /api/* en una sola función serverless.
+ * Build v2.1.0 — 2026-07-17
  */
 
 const handlers = {

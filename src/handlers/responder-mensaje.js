@@ -1,6 +1,6 @@
-const { query } = require('../src/services/supabase');
-const { enviar } = require('../src/services/whatsapp');
-const { verificarUsuario } = require('../src/services/authVerify');
+const { query } = require('../services/supabase');
+const { enviar } = require('../services/whatsapp');
+const { verificarUsuario } = require('../services/authVerify');
 
 const SUPA_URL  = process.env.SUPABASE_URL;
 const SUPA_KEY  = process.env.SUPABASE_KEY;

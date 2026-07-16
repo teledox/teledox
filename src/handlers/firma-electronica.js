@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { SUPABASE_URL, SUPABASE_KEY } = require('../src/config');
+const { SUPABASE_URL, SUPABASE_KEY } = require('../config');
 
 // Endpoint consolidado de firma electrónica (para no exceder el límite de
 // funciones serverless del plan Hobby de Vercel). Combina 5 operaciones:

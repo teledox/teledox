@@ -4,11 +4,11 @@
  * Verifica que el solicitante sea médico o admin activo.
  */
 
-const { query } = require('../src/services/supabase');
-const { enviar } = require('../src/services/whatsapp');
-const { guardar, obtener } = require('../src/services/sesiones');
-const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
-const { verificarUsuario } = require('../src/services/authVerify');
+const { query } = require('../services/supabase');
+const { enviar } = require('../services/whatsapp');
+const { guardar, obtener } = require('../services/sesiones');
+const { ENFERMEDADES } = require('../flows/flujo-cronicas');
+const { verificarUsuario } = require('../services/authVerify');
 
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY;

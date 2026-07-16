@@ -50,7 +50,7 @@ global.fetch = async (url, options) => {
   return { ok: true, json: async () => ({}) };
 };
 
-const handler = require('../api/enviar-link');
+const handler = require('../src/handlers/enviar-link');
 
 async function testApi() {
   console.log('=== INICIANDO PRUEBA DEL ENDPOINT DE LA API OIM ===\n');

@@ -3,8 +3,8 @@
  * Envía un link de teleconsulta al WhatsApp del paciente.
  */
 
-const { WA_TOKEN, WA_PHONE_ID, SUPABASE_URL, SUPABASE_KEY } = require('../src/config');
-const { separarNombre } = require('../src/utils/validaciones');
+const { WA_TOKEN, WA_PHONE_ID, SUPABASE_URL, SUPABASE_KEY } = require('../config');
+const { separarNombre } = require('../utils/validaciones');
 
 // Avisa al paciente por WhatsApp que su consulta de seguimiento fue agendada/confirmada.
 async function notificarAgendamiento(req, res) {

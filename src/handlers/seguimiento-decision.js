@@ -9,9 +9,9 @@
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY;
 
-const { guardar }      = require('../src/services/sesiones');
-const { enviarBotones } = require('../src/services/whatsapp');
-const { verificarUsuario } = require('../src/services/authVerify');
+const { guardar }      = require('../services/sesiones');
+const { enviarBotones } = require('../services/whatsapp');
+const { verificarUsuario } = require('../services/authVerify');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

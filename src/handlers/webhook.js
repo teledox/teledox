@@ -1,14 +1,14 @@
 const crypto = require('crypto');
-const { WA_VERIFY_TOKEN } = require('../src/config');
+const { WA_VERIFY_TOKEN } = require('../config');
 
 function detectarCrisis(texto) {
   return /(suicid|matar(me|nos)|no quiero (vivir|seguir|estar|existir)|quiero (morir|no vivir)|acabar (con mi vida|conmigo|con todo)|hacerme daño|quitarme la vida|ya no quiero (vivir|seguir)|me quiero morir|pensamientos? de (muerte|daño|suicid))/i
     .test(String(texto || ''));
 }
-const { enviar, enviarBotones, enviarLista } = require('../src/services/whatsapp');
-const { alertar } = require('../src/services/telegram');
-const { registrarEvento, marcarProcesado } = require('../src/services/eventos');
-const { esSi } = require('../src/utils/validaciones');
+const { enviar, enviarBotones, enviarLista } = require('../services/whatsapp');
+const { alertar } = require('../services/telegram');
+const { registrarEvento, marcarProcesado } = require('../services/eventos');
+const { esSi } = require('../utils/validaciones');
 
 // ¿El mensaje es una respuesta plausible al recordatorio de seguimiento pendiente?
 // medicamento → Sí/No · fin_tratamiento → 1/2/3 · bienestar → 1/2/3/4/5
@@ -23,34 +23,34 @@ function esRespuestaSeguimiento(respuestaPendiente, mensaje) {
 
 function getFlows() {
   return {
-    obtener:                      require('../src/services/sesiones').obtener,
-    guardar:                      require('../src/services/sesiones').guardar,
-    eliminar:                     require('../src/services/sesiones').eliminar,
-    buscarRespuestaPendiente:     require('../src/services/seguimiento').buscarRespuestaPendiente,
-    buscarRespuestaLabPendiente:  require('../src/services/seguimiento').buscarRespuestaLabPendiente,
-    procesarRespuestaSeguimiento: require('../src/flows/flujo-seguimiento').procesarRespuestaSeguimiento,
-    procesarRespuestaLab:         require('../src/flows/flujo-seguimiento-laboratorio').procesarRespuestaLab,
-    procesarSubidaExamen:         require('../src/flows/flujo-seguimiento-laboratorio').procesarSubidaExamen,
-    esRespuestaLab:               require('../src/flows/flujo-seguimiento-laboratorio').esRespuestaLab,
-    procesarPaso:                 require('../src/flows/flujo-consulta').procesarPaso,
-    procesarReagendamiento:       require('../src/flows/flujo-reagendar').procesarReagendamiento,
-    procesarCronica:              require('../src/flows/flujo-cronicas').procesarCronica,
-    procesarAntecedentes:         require('../src/flows/flujo-antecedentes').procesarAntecedentes,
-    procesarCallCenter:           require('../src/flows/flujo-callcenter').procesarCallCenter,
-    buscarEmpresaPorCodigo:       require('../src/flows/flujo-callcenter').buscarEmpresaPorCodigo,
-    procesarTracking:             require('../src/flows/flujo-tracking').procesarTracking,
-    procesarRespuestaMed:         require('../src/flows/flujo-tracking').procesarRespuestaMed,
-    procesarMigracion:            require('../src/flows/flujo-tracking-consulta').procesarMigracion,
-    procesarB2C:                  require('../src/flows/flujo-b2c').procesarB2C,
-    procesarSeguimientoPago:      require('../src/flows/flujo-seguimiento-pago').procesarSeguimientoPago,
-    procesarPreguntaConsulta:     require('../src/flows/flujo-pregunta-consulta').procesarPreguntaConsulta,
-    procesarBiometricos:             require('../src/flows/flujo-biometricos').procesarBiometricos,
-    procesarPsicosocial:             require('../src/flows/flujo-psicosocial').procesarPsicosocial,
-    confirmarConsultaFueraHorario:   require('../src/flows/flujo-consulta').confirmarConsultaFueraHorario,
-    confirmarMigracionFueraHorario:  require('../src/flows/flujo-tracking-consulta').confirmarMigracionFueraHorario,
-    confirmarCallCenterFueraHorario: require('../src/flows/flujo-callcenter').confirmarCallCenterFueraHorario,
-    procesarOimOperador:             require('../src/flows/flujo-oim-operador').procesarOimOperador,
-    confirmarOimFueraHorario:        require('../src/flows/flujo-oim-operador').confirmarOimFueraHorario,
+    obtener:                      require('../services/sesiones').obtener,
+    guardar:                      require('../services/sesiones').guardar,
+    eliminar:                     require('../services/sesiones').eliminar,
+    buscarRespuestaPendiente:     require('../services/seguimiento').buscarRespuestaPendiente,
+    buscarRespuestaLabPendiente:  require('../services/seguimiento').buscarRespuestaLabPendiente,
+    procesarRespuestaSeguimiento: require('../flows/flujo-seguimiento').procesarRespuestaSeguimiento,
+    procesarRespuestaLab:         require('../flows/flujo-seguimiento-laboratorio').procesarRespuestaLab,
+    procesarSubidaExamen:         require('../flows/flujo-seguimiento-laboratorio').procesarSubidaExamen,
+    esRespuestaLab:               require('../flows/flujo-seguimiento-laboratorio').esRespuestaLab,
+    procesarPaso:                 require('../flows/flujo-consulta').procesarPaso,
+    procesarReagendamiento:       require('../flows/flujo-reagendar').procesarReagendamiento,
+    procesarCronica:              require('../flows/flujo-cronicas').procesarCronica,
+    procesarAntecedentes:         require('../flows/flujo-antecedentes').procesarAntecedentes,
+    procesarCallCenter:           require('../flows/flujo-callcenter').procesarCallCenter,
+    buscarEmpresaPorCodigo:       require('../flows/flujo-callcenter').buscarEmpresaPorCodigo,
+    procesarTracking:             require('../flows/flujo-tracking').procesarTracking,
+    procesarRespuestaMed:         require('../flows/flujo-tracking').procesarRespuestaMed,
+    procesarMigracion:            require('../flows/flujo-tracking-consulta').procesarMigracion,
+    procesarB2C:                  require('../flows/flujo-b2c').procesarB2C,
+    procesarSeguimientoPago:      require('../flows/flujo-seguimiento-pago').procesarSeguimientoPago,
+    procesarPreguntaConsulta:     require('../flows/flujo-pregunta-consulta').procesarPreguntaConsulta,
+    procesarBiometricos:             require('../flows/flujo-biometricos').procesarBiometricos,
+    procesarPsicosocial:             require('../flows/flujo-psicosocial').procesarPsicosocial,
+    confirmarConsultaFueraHorario:   require('../flows/flujo-consulta').confirmarConsultaFueraHorario,
+    confirmarMigracionFueraHorario:  require('../flows/flujo-tracking-consulta').confirmarMigracionFueraHorario,
+    confirmarCallCenterFueraHorario: require('../flows/flujo-callcenter').confirmarCallCenterFueraHorario,
+    procesarOimOperador:             require('../flows/flujo-oim-operador').procesarOimOperador,
+    confirmarOimFueraHorario:        require('../flows/flujo-oim-operador').confirmarOimFueraHorario,
   };
 }
 
@@ -244,7 +244,7 @@ module.exports = async function handler(req, res) {
       // Si el teléfono tiene un caso de tracking activo, arranca ese flujo
       // en vez del flujo de consulta normal — evita que el paciente derivado
       // de otra empresa entre por error al flujo B2C.
-      const { query: qTracking } = require('../src/services/supabase');
+      const { query: qTracking } = require('../services/supabase');
       const casosTracking = await qTracking('GET', 'tracking_casos', null,
         `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
       const casoT = casosTracking?.[0];
@@ -288,7 +288,7 @@ module.exports = async function handler(req, res) {
 
       // Si el paciente tiene una consulta completada en las últimas 72h, ofrecer
       // la opción de hacer una pregunta antes de iniciar un flujo nuevo.
-      const { query: qPQ } = require('../src/services/supabase');
+      const { query: qPQ } = require('../services/supabase');
       const pacPQ = await qPQ('GET', 'pacientes', null, `?telefono=eq.${telefono}&select=id,nombre&limit=1`);
       if (pacPQ?.[0]) {
         const limite72h = new Date(Date.now() - 72 * 3600000).toISOString();
@@ -321,7 +321,7 @@ module.exports = async function handler(req, res) {
 
     // Botón "¿Qué es esto?" de la plantilla de activación tracking
     if (mensaje === 'que_es_esto') {
-      const { query: qTk } = require('../src/services/supabase');
+      const { query: qTk } = require('../services/supabase');
       const casosTk = await qTk('GET', 'tracking_casos', null,
         `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
       if (casosTk?.[0]) {
@@ -349,7 +349,7 @@ module.exports = async function handler(req, res) {
 
     // Botón "Reporte de seguimiento" (desde el menú de hola con tracking activo)
     if (mensaje === 'tracking_reporte') {
-      const { query: qTr } = require('../src/services/supabase');
+      const { query: qTr } = require('../services/supabase');
       const casosTr = await qTr('GET', 'tracking_casos', null,
         `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
       const cTr = casosTr?.[0];
@@ -387,7 +387,7 @@ module.exports = async function handler(req, res) {
 
     // Propuesta de consulta — el paciente acepta (botón enviado por cron desde el panel)
     if (mensaje === 'propuesta_consulta_si') {
-      const { query: qPr } = require('../src/services/supabase');
+      const { query: qPr } = require('../services/supabase');
       const casosPr = await qPr('GET', 'tracking_casos', null,
         `?telefono=eq.${telefono}&estado=eq.activo&limit=1`);
       const cPr = casosPr?.[0];
@@ -594,9 +594,9 @@ module.exports = async function handler(req, res) {
           }
 
           if (mensaje === 'emergencia_consulta' || paso === 'em_cedula') {
-            const { query: qEm } = require('../src/services/supabase');
-            const { buscarPorCedula: buscarEm } = require('../src/services/pacientes');
-            const { BOTONES_PAGO: BOTONES_PAGOEm } = require('../src/flows/flujo-b2c');
+            const { query: qEm } = require('../services/supabase');
+            const { buscarPorCedula: buscarEm } = require('../services/pacientes');
+            const { BOTONES_PAGO: BOTONES_PAGOEm } = require('../flows/flujo-b2c');
 
             let pacienteId = datos.paciente_id || null;
 
@@ -713,7 +713,7 @@ module.exports = async function handler(req, res) {
             return res.status(200).send('OK');
           }
           const tomo = mensaje === 'seg_med_si';
-          const { query: qSegMed } = require('../src/services/supabase');
+          const { query: qSegMed } = require('../services/supabase');
           await qSegMed('PATCH', 'seguimiento_respuestas', {
             respuesta: tomo ? 'Sí' : 'No',
             tomo_medicamento: tomo
@@ -739,8 +739,8 @@ module.exports = async function handler(req, res) {
             ]);
             return res.status(200).send('OK');
           }
-          const { query: qFin } = require('../src/services/supabase');
-          const { crearNotificacion: notifFin } = require('../src/services/consultas');
+          const { query: qFin } = require('../services/supabase');
+          const { crearNotificacion: notifFin } = require('../services/consultas');
           if (mensaje === 'seg_fin_si') {
             if (srFinId) await qFin('PATCH', 'seguimiento_respuestas', { respuesta: 'curado', se_siente_mejor: true }, `?id=eq.${srFinId}`);
             await alertar(`✅ <b>Tratamiento exitoso</b>\nPaciente: ${nombreFin || telefono}\nMedicamento: ${medFin}`);
@@ -780,8 +780,8 @@ module.exports = async function handler(req, res) {
             ]}], 'Seleccionar');
             return res.status(200).send('OK');
           }
-          const { query: qBien } = require('../src/services/supabase');
-          const { crearNotificacion: notifBien } = require('../src/services/consultas');
+          const { query: qBien } = require('../services/supabase');
+          const { crearNotificacion: notifBien } = require('../services/consultas');
           if (srBienId) await qBien('PATCH', 'seguimiento_respuestas', { respuesta: String(nivel), nivel_bienestar: nivel }, `?id=eq.${srBienId}`);
           if (nivel === 4) {
             await notifBien('seguimiento', `💙 Bienestar bajo — ${nombreBien || telefono}`,
@@ -810,7 +810,7 @@ module.exports = async function handler(req, res) {
             ]);
             return res.status(200).send('OK');
           }
-          const { query: qLab } = require('../src/services/supabase');
+          const { query: qLab } = require('../services/supabase');
           if (mensaje === 'seg_lab_si') {
             if (srLabId) await qLab('PATCH', 'seguimiento_laboratorio_respuestas', { respuesta: 'si' }, `?id=eq.${srLabId}`);
             if (segLabId) await qLab('PATCH', 'seguimiento_laboratorio', { activo: false, estado: 'confirmado' }, `?id=eq.${segLabId}`);
@@ -840,7 +840,7 @@ module.exports = async function handler(req, res) {
           if (mensaje === 'fuera_horario_agendar') {
             let result;
             if (datos._pendingOrigen === 'b2c') {
-              const { BOTONES_PAGO: BP } = require('../src/flows/flujo-b2c');
+              const { BOTONES_PAGO: BP } = require('../flows/flujo-b2c');
               const b2cDatos = { ...datos, _flujo: 'b2c' };
               await guardar(telefono, 'pago', b2cDatos, 'b2c');
               result = {

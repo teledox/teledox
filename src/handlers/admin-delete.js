@@ -7,7 +7,7 @@
 
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY; // service_role en Vercel env vars
-const { verificarUsuario } = require('../src/services/authVerify');
+const { verificarUsuario } = require('../services/authVerify');
 
 async function q(method, table, query = '') {
   const r = await fetch(`${SUPA_URL}/rest/v1/${table}${query}`, {

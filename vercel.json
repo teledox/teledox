@@ -3,15 +3,13 @@
   "outputDirectory": "public",
   "installCommand": "npm install",
   "functions": {
-    "api/webhook.js":   { "maxDuration": 10, "includeFiles": "node_modules/pdf-lib/**,node_modules/@pdf-lib/**" },
-    "api/enviar-docs.js": { "maxDuration": 15 },
-    "api/cron.js":      { "maxDuration": 30 },
-    "api/compress.js":  { "maxDuration": 15 }
+    "api/index.js": { "maxDuration": 30, "includeFiles": "node_modules/pdf-lib/**,node_modules/@pdf-lib/**" }
   },
   "redirects": [
     { "source": "/", "destination": "/landing/", "permanent": true }
   ],
   "rewrites": [
-    { "source": "/plataforma", "destination": "/index.html" }
+    { "source": "/plataforma", "destination": "/index.html" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" }
   ]
 }

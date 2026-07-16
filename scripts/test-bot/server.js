@@ -40,7 +40,7 @@ require.cache[horarioPath] = {
   exports: { ...horarioReal, estaEnHorario: () => true },
 };
 
-const handler = require('../../api/webhook');
+const handler = require('../../src/handlers/webhook');
 
 function attachExpressLike(res) {
   res.status = (code) => { res.statusCode = code; return res; };

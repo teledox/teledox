@@ -1,14 +1,14 @@
-const { SUPABASE_URL, SUPABASE_KEY } = require('../src/config');
-const { query } = require('../src/services/supabase');
-const { enviar, enviarTemplate, enviarBotones, enviarLista } = require('../src/services/whatsapp');
-const { alertar } = require('../src/services/telegram');
-const { obtener, guardar } = require('../src/services/sesiones');
-const { ENFERMEDADES } = require('../src/flows/flujo-cronicas');
-const { enviarRecordatorioLab } = require('../src/services/seguimientoLaboratorio');
-const { procesarTracking: _procesarTracking } = require('../src/flows/flujo-tracking');
-const { getMsgPregunta: getPsiPregunta } = require('../src/flows/flujo-psicosocial');
-const { normalizePhone } = require('../src/utils/telefono');
-const { calcularYGuardarScorePaciente } = require('../src/services/healthScoreAdherencia');
+const { SUPABASE_URL, SUPABASE_KEY } = require('../config');
+const { query } = require('../services/supabase');
+const { enviar, enviarTemplate, enviarBotones, enviarLista } = require('../services/whatsapp');
+const { alertar } = require('../services/telegram');
+const { obtener, guardar } = require('../services/sesiones');
+const { ENFERMEDADES } = require('../flows/flujo-cronicas');
+const { enviarRecordatorioLab } = require('../services/seguimientoLaboratorio');
+const { procesarTracking: _procesarTracking } = require('../flows/flujo-tracking');
+const { getMsgPregunta: getPsiPregunta } = require('../flows/flujo-psicosocial');
+const { normalizePhone } = require('../utils/telefono');
+const { calcularYGuardarScorePaciente } = require('../services/healthScoreAdherencia');
 
 // Ecuador es UTC-5 sin horario de verano.
 // Convierte una fecha UTC al día de semana y hora local ecuatoriana.

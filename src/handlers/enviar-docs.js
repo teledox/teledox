@@ -1,5 +1,5 @@
-const { WA_TOKEN, WA_PHONE_ID, SUPABASE_URL, SUPABASE_KEY } = require('../src/config');
-const { crearSeguimientoLab } = require('../src/services/seguimientoLaboratorio');
+const { WA_TOKEN, WA_PHONE_ID, SUPABASE_URL, SUPABASE_KEY } = require('../config');
+const { crearSeguimientoLab } = require('../services/seguimientoLaboratorio');
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');

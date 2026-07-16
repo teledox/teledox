@@ -6,7 +6,7 @@
 
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY;
-const { verificarUsuario } = require('../src/services/authVerify');
+const { verificarUsuario } = require('../services/authVerify');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

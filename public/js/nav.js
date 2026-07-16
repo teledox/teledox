@@ -28,6 +28,7 @@ function buildNav() {
         items: [
           { id: 'operador', label: 'Centro de alertas', icon: 'bell' },
           { id: 'empresas', label: 'Empresas B2B', icon: 'briefcase' },
+          { id: 'auditoria-tpa', label: 'Auditoría TPA', icon: 'user-check' },
           { id: 'facturacion-b2c', label: 'Facturación B2C', icon: 'dollar' },
           { id: 'planillaje-b2b', label: 'Planillaje B2B', icon: 'file-text' }
         ]
@@ -36,6 +37,18 @@ function buildNav() {
         label: 'Admin',
         items: [
           { id: 'usuarios', label: 'Usuarios', icon: 'user-check' },
+          { id: 'metricas', label: 'Métricas KPI', icon: 'bar-chart' },
+          { id: 'perfil', label: 'Mi perfil', icon: 'user' }
+        ]
+      }
+    ],
+    auditor: [
+      {
+        label: 'Auditoría',
+        items: [
+          { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
+          { id: 'auditoria-tpa', label: 'Auditoría TPA', icon: 'user-check' },
+          { id: 'planillaje-b2b', label: 'Planillaje B2B', icon: 'file-text' },
           { id: 'metricas', label: 'Métricas KPI', icon: 'bar-chart' },
           { id: 'perfil', label: 'Mi perfil', icon: 'user' }
         ]
@@ -93,6 +106,7 @@ function showPage(id, el) {
     usuarios: 'Usuarios',
     metricas: 'Métricas KPI',
     empresas: 'Empresas B2B',
+    'auditoria-tpa': 'Auditoría Clínica de Pertinencia TPA',
     'paciente-detalle': 'Detalle del paciente',
     perfil: 'Mi perfil',
     receta: 'Emitir receta',
@@ -113,6 +127,7 @@ function showPage(id, el) {
   if (id === 'empresas') loadEmpresas();
   if (id === 'perfil') loadPerfil();
   if (id === 'alertas') loadAlertasServicio();
+  if (id === 'auditoria-tpa') loadAuditoriaTPA();
   if (id === 'facturacion-b2c') { initFiltrosB2C(); loadFacturacionB2C(); }
   if (id === 'planillaje-b2b') { initFiltrosB2B(); loadPlanillajeB2B(); }
 }

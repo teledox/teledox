@@ -1,12 +1,14 @@
 /**
- * api/b2b-admin.js
- * Operaciones admin B2B (antes empresa-codigo.js + empleados-b2b.js).
- * Requiere body.action: 'codigo' | 'empleados'
+ * api/b2b-admin.js -> src/handlers/b2b-admin.js
+ * Operaciones admin B2B, Auditoría TPA y Chatbot RAG IA.
+ * Actions: 'codigo' | 'empleados' | 'auditoria_listar' | 'auditoria_dictamen' | 'rag_kpi'
  */
 
 const SUPA_URL         = process.env.SUPABASE_URL;
 const SUPA_SERVICE_KEY = process.env.SUPABASE_KEY;
 const { verificarUsuario } = require('../services/authVerify');
+const { listarConsultasAuditoria, registrarDictamenAuditoria } = require('../services/auditoriaTPA');
+const { responderConsultaKPIRAG } = require('../services/geminiRAG');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,11 +16,40 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { token, action, empresa_id, codigo, cedulas } = req.body || {};
-  if (!empresa_id) return res.status(400).json({ error: 'Falta empresa_id' });
+  const { token, action, empresa_id, codigo, cedulas, estado_auditoria, consulta_id, notas_auditoria, pregunta } = req.body || {};
 
   try {
-    await verificarUsuario(token, ['admin']);
+    // Verificar permisos: 'admin' o 'auditor'
+    const user = await verificarUsuario(token, ['admin', 'auditor', 'medico']);
+
+    // 1. Auditoría TPA — Listar consultas
+    if (action === 'auditoria_listar') {
+      const consultas = await listarConsultasAuditoria({ empresa_id, estado_auditoria });
+      return res.status(200).json({ ok: true, consultas });
+    }
+
+    // 2. Auditoría TPA — Dictaminar pertinentes / observados / rechazados
+    if (action === 'auditoria_dictamen') {
+      const resultado = await registrarDictamenAuditoria({
+        consulta_id,
+        auditor_id: user.id,
+        estado_auditoria,
+        notas_auditoria
+      });
+      return res.status(200).json({ ok: true, resultado });
+    }
+
+    // 3. Chatbot IA RAG — Consulta de KPIs en lenguaje natural
+    if (action === 'rag_kpi') {
+      if (!pregunta || !pregunta.trim()) {
+        return res.status(400).json({ error: 'Falta pregunta' });
+      }
+      const resultadoRAG = await responderConsultaKPIRAG(pregunta, empresa_id);
+      return res.status(200).json({ ok: true, ...resultadoRAG });
+    }
+
+    // Para las acciones de gestión B2B clásicas ('codigo', 'empleados'), requerir empresa_id
+    if (!empresa_id) return res.status(400).json({ error: 'Falta empresa_id' });
 
     if (action === 'empleados') {
       if (!Array.isArray(cedulas) || !cedulas.length)

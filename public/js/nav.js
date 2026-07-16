@@ -12,7 +12,7 @@ const NAV_ICONS = {
 };
 
 function buildNav() {
-  const rol = currentUser.rol;
+  const rol = String(currentUser?.rol || 'operador').toLowerCase();
   const menus = {
     admin: [
       {
@@ -62,6 +62,7 @@ function buildNav() {
           { id: 'alertas', label: 'Alertas de servicio', icon: 'bell' },
           { id: 'pacientes', label: 'Pacientes', icon: 'users' },
           { id: 'consultas', label: 'Consultas', icon: 'activity' },
+          { id: 'auditoria-tpa', label: 'Auditoría TPA', icon: 'user-check' },
           { id: 'perfil', label: 'Mi perfil', icon: 'user' }
         ]
       }
@@ -73,6 +74,7 @@ function buildNav() {
           { id: 'dashboard', label: 'Dashboard', icon: 'grid' },
           { id: 'operador', label: 'Centro de alertas', icon: 'bell' },
           { id: 'pacientes', label: 'Pacientes', icon: 'users' },
+          { id: 'auditoria-tpa', label: 'Auditoría TPA', icon: 'user-check' },
           { id: 'facturacion-b2c', label: 'Facturación B2C', icon: 'dollar' },
           { id: 'planillaje-b2b', label: 'Planillaje B2B', icon: 'file-text' }
         ]
@@ -81,7 +83,7 @@ function buildNav() {
   };
 
   let html = '';
-  (menus[rol] || menus.operador).forEach(s => {
+  (menus[rol] || menus.admin).forEach(s => {
     html += `<div class="nav-section">${s.label}</div>`;
     s.items.forEach(i => {
       html += `<div class="nav-item" onclick="showPage('${i.id}',this)" data-page="${i.id}">${NAV_ICONS[i.icon] || ''}${i.label}</div>`;

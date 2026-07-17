@@ -19,7 +19,7 @@
   }
 
   body {
-    background-color: #f8fafc;
+    background-color: #f1f5f9;
     margin: 0;
     padding: 0;
     font-family: 'Inter', system-ui, sans-serif;
@@ -116,7 +116,7 @@
 
   .demo-step-chip {
     flex: 1;
-    min-width: 140px;
+    min-width: 130px;
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.1);
     border-radius: 6px;
@@ -181,18 +181,41 @@
     flex-shrink: 0;
   }
 
-  /* ── PESTAÑAS 1 A 4 ── */
-  .planos-tabs {
+  /* ── LAYOUT 2 COLUMNAS (SPLIT VIEW) ── */
+  .split-layout {
+    display: flex;
+    min-height: calc(100vh - 170px);
+  }
+
+  .col-left-wa {
+    width: 410px;
+    flex-shrink: 0;
+    background: #0f172a;
+    border-right: 2px solid #cbd5e1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .col-right-platform {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: #f8fafc;
+  }
+
+  /* ── PESTAÑAS DERECHAS ── */
+  .right-tabs {
     display: flex;
     background: #ffffff;
     border-bottom: 2px solid #e2e8f0;
-    padding: 0 24px;
+    padding: 0 20px;
     gap: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.02);
   }
 
-  .plano-tab {
-    padding: 14px 20px;
+  .right-tab {
+    padding: 14px 18px;
     font-size: 13px;
     font-weight: 700;
     color: #64748b;
@@ -204,18 +227,18 @@
     gap: 8px;
   }
 
-  .plano-tab:hover {
+  .right-tab:hover {
     color: #0f172a;
     background: #f1f5f9;
   }
 
-  .plano-tab.active {
+  .right-tab.active {
     color: #2563eb;
     border-bottom-color: #2563eb;
     background: #eff6ff;
   }
 
-  .plano-tab .tab-badge {
+  .right-tab .tab-badge {
     background: #e2e8f0;
     color: #475569;
     font-size: 10px;
@@ -224,19 +247,18 @@
     font-weight: 800;
   }
 
-  .plano-tab.active .tab-badge {
+  .right-tab.active .tab-badge {
     background: #2563eb;
     color: #ffffff;
   }
 
-  /* ── CONTENEDOR DE CONTENIDOS ── */
-  .tab-content {
+  .right-content {
     display: none;
     padding: 24px;
-    min-height: calc(100vh - 220px);
+    flex: 1;
   }
 
-  .tab-content.active {
+  .right-content.active {
     display: block;
     animation: fadeInTab 0.3s ease;
   }
@@ -246,15 +268,16 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* ── SIMULADOR WHATSAPP (Pestaña 1) ── */
-  .wa-sim-container {
-    max-width: 440px;
-    margin: 0 auto;
+  /* ── SIMULADOR WHATSAPP (COLUMNA IZQUIERDA) ── */
+  .wa-sim-card {
     background: #0b1014;
-    border-radius: 24px;
+    border-radius: 20px;
     overflow: hidden;
-    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
-    border: 8px solid #1e293b;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+    border: 4px solid #1e293b;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
   }
 
   .wa-sim-header {
@@ -267,18 +290,20 @@
   }
 
   .wa-avatar-img {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     background: #f05252;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .wa-sim-body {
-    height: 480px;
+    flex: 1;
+    min-height: 440px;
+    max-height: 520px;
     background-color: #0b1014;
     background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0);
     background-size: 16px 16px;
@@ -290,10 +315,10 @@
   }
 
   .wa-msg {
-    max-width: 82%;
+    max-width: 85%;
     padding: 10px 14px;
     border-radius: 12px;
-    font-size: 13px;
+    font-size: 12.5px;
     line-height: 1.45;
     position: relative;
   }
@@ -313,7 +338,7 @@
   }
 
   .wa-time {
-    font-size: 10px;
+    font-size: 9.5px;
     color: rgba(241,245,249,0.5);
     margin-top: 4px;
     text-align: right;
@@ -323,20 +348,21 @@
     background: #1f2c34;
     padding: 12px;
     display: flex;
+    flex-direction: column;
     gap: 8px;
-    flex-wrap: wrap;
   }
 
   .wa-chip-btn {
     background: rgba(0, 168, 132, 0.2);
     color: #00a884;
     border: 1px solid #00a884;
-    padding: 8px 12px;
-    border-radius: 16px;
+    padding: 9px 12px;
+    border-radius: 12px;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s ease;
+    text-align: left;
   }
 
   .wa-chip-btn:hover {
@@ -344,7 +370,7 @@
     color: #ffffff;
   }
 
-  /* ── MIRROR DE CONSOLA MÉDICA (Pestaña 2) ── */
+  /* ── MIRROR DE CONSOLA MÉDICA ── */
   .doctor-mirror-header {
     background: #ffffff;
     padding: 16px 20px;
@@ -370,21 +396,7 @@
     gap: 12px;
   }
 
-  /* ── MIRROR BACKEND & HEALTH SCORE (Pestaña 3) ── */
-  .backend-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
-  }
-
-  .flow-node-box {
-    background: #ffffff;
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-  }
-
+  /* ── HEALTH SCORE DIAL ── */
   .score-dial-big {
     width: 140px;
     height: 140px;
@@ -395,6 +407,7 @@
     justify-content: center;
     margin: 0 auto 16px;
     position: relative;
+    transition: background 0.5s ease;
   }
 
   .score-dial-inner {
@@ -406,6 +419,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+  }
+
+  .backend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
   }
 </style>
 </head>
@@ -426,7 +445,7 @@
       <button class="demo-btn" onclick="prevStep()">⏮ Anterior</button>
       <button class="demo-btn play" id="btnPlay" onclick="toggleAutoPlay()">▶ Auto-Play Demo</button>
       <button class="demo-btn" onclick="nextStep()">Siguiente ⏭</button>
-      <button class="demo-btn" onclick="resetDemo()" style="background:rgba(255,255,255,0.05)">🔄 Reiniciar</button>
+      <button class="demo-btn" onclick="resetDemoToZero()" style="background:rgba(240,82,82,0.2);border-color:#f05252">🔄 Iniciar desde Cero</button>
     </div>
   </div>
 
@@ -438,15 +457,15 @@
     </div>
     <div class="demo-step-chip" onclick="jumpToStep(2)">
       <div class="step-num">Paso 2</div>
-      <div class="step-name">🧠 Ruteo & Desvío</div>
+      <div class="step-name">🩺 Alerta & Atencion</div>
     </div>
     <div class="demo-step-chip" onclick="jumpToStep(3)">
       <div class="step-num">Paso 3</div>
-      <div class="step-name">🩺 Consulta Médica</div>
+      <div class="step-name">✍️ Receta & PDF</div>
     </div>
     <div class="demo-step-chip" onclick="jumpToStep(4)">
       <div class="step-num">Paso 4</div>
-      <div class="step-name">🛡️ Auditoría & RAG</div>
+      <div class="step-name">🛡️ Auditoría TPA</div>
     </div>
     <div class="demo-step-chip" onclick="jumpToStep(5)">
       <div class="step-num">Paso 5</div>
@@ -458,274 +477,261 @@
 <!-- NARRATIVA EN VIVO -->
 <div class="narrative-banner" id="narrativeBanner">
   <span class="narrative-badge" id="narrativeBadge">Guion de Voz</span>
-  <span id="narrativeText">Iniciando caso clínico de Verónica (42 años)... El paciente reporta síntomas por WhatsApp.</span>
+  <span id="narrativeText">Paso 0: Sistema MediLyft listo. Escriba un síntoma en el WhatsApp a la izquierda para iniciar el caso...</span>
 </div>
 
-<!-- PESTAÑAS 1 A 4 -->
-<div class="planos-tabs">
-  <div class="plano-tab active" id="tabHead1" onclick="switchTab(1)">
-    <span>📱 Plano 1: Paciente (WhatsApp)</span>
-    <span class="tab-badge">Canal Asegurado</span>
-  </div>
-  <div class="plano-tab" id="tabHead2" onclick="switchTab(2)">
-    <span>🩺 Plano 2: Consola Médica</span>
-    <span class="tab-badge">Panel Doctor</span>
-  </div>
-  <div class="plano-tab" id="tabHead3" onclick="switchTab(3)">
-    <span>🧠 Plano 3: Motor Backend</span>
-    <span class="tab-badge">Health Score</span>
-  </div>
-  <div class="plano-tab" id="tabHead4" onclick="switchTab(4)">
-    <span>🛡️ Plano 4: Consola TPA Mawdy</span>
-    <span class="tab-badge">Auditoría & RAG</span>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- PESTAÑA 1: WHATSAPP PACIENTE -->
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<div class="tab-content active" id="tab1">
-  <div class="wa-sim-container">
-    <div class="wa-sim-header">
-      <div class="wa-avatar-img">🩺</div>
-      <div>
-        <div style="font-weight:700;font-size:14px">MediLyft · Mawdy TPA</div>
-        <div style="font-size:11px;color:#25d366">● en línea</div>
+<!-- LAYOUT PRINCIPAL DE 2 COLUMNAS (WHATSAPP A LA IZQ + PLATAFORMA A LA DERECHA) -->
+<div class="split-layout">
+  
+  <!-- COLUMNA IZQUIERDA: WHATSAPP PACIENTE (FIJA) -->
+  <div class="col-left-wa">
+    <div style="font-size:11px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px">📱 Canal Asegurado — WhatsApp Web</div>
+    <div class="wa-sim-card">
+      <div class="wa-sim-header">
+        <div class="wa-avatar-img">🩺</div>
+        <div>
+          <div style="font-weight:700;font-size:13px">MEDILYFT · MAWDY TPA</div>
+          <div style="font-size:10px;color:#25d366">● en línea</div>
+        </div>
+      </div>
+      <div class="wa-sim-body" id="waChatBox">
+        <div class="wa-msg in">
+          ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
+          <div class="wa-time">09:15</div>
+        </div>
+      </div>
+      <div class="wa-actions" id="waActionBtns">
+        <button class="wa-chip-btn" id="btnSimSintomas" onclick="simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C')">
+          💬 Enviar Síntomas: Cefalea + Fiebre (38.2°C)
+        </button>
       </div>
     </div>
-    <div class="wa-sim-body" id="waChatBox">
-      <div class="wa-msg in">
-        ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
-        <div class="wa-time">09:15</div>
-      </div>
-    </div>
-    <div class="wa-actions" id="waActionBtns">
-      <button class="wa-chip-btn" onclick="simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C')">
-        💬 Cefalea severa y fiebre (38.2°C)
-      </button>
-    </div>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- PESTAÑA 2: CONSOLA MÉDICA (ESPEJO DE INDEX.HTML) -->
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<div class="tab-content" id="tab2">
-  <div style="max-width:1100px;margin:0 auto">
+  <!-- COLUMNA DERECHA: PLATAFORMA MEDILYFT (CON 3 PESTAÑAS) -->
+  <div class="col-right-platform">
     
-    <div class="doctor-mirror-header">
-      <div>
-        <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Portal Clínico del Médico Tratante</div>
-        <h2 style="font-size:20px;font-weight:800;margin:4px 0 0">Dr. Patricio Navarrete — Medicina General</h2>
+    <!-- PESTAÑAS LATERALES DE LA PLATAFORMA -->
+    <div class="right-tabs">
+      <div class="right-tab active" id="tabHead2" onclick="switchRightTab(2)">
+        <span>🩺 Plano 2: Consola Médica</span>
+        <span class="tab-badge" id="doctorTabBadge">0 Alertas</span>
       </div>
-      <span class="badge badge-green" style="font-size:12px;padding:6px 12px">● Médico de Guardia Disponible</span>
+      <div class="right-tab" id="tabHead3" onclick="switchRightTab(3)">
+        <span>🧠 Plano 3: Health Score</span>
+        <span class="tab-badge" id="hsTabBadge">76 pts</span>
+      </div>
+      <div class="right-tab" id="tabHead4" onclick="switchRightTab(4)">
+        <span>🛡️ Plano 4: Consola TPA Mawdy</span>
+        <span class="tab-badge" id="tpaTabBadge">0 Pendientes</span>
+      </div>
     </div>
 
-    <!-- ALERTA CRÍTICA DE ALERGIA -->
-    <div class="allergy-alert-banner" id="allergyBanner" style="display:none">
-      <span style="font-size:24px">⚠️</span>
-      <div>
-        <div style="font-size:14px;font-weight:800">ALERTA CLÍNICA AUTOMÁTICA: ALERGIA DETECTADA</div>
-        <div style="font-weight:500;margin-top:2px">La paciente Verónica registra alergia documentada a <strong>IBUPROFENO / AINEs</strong>. El sistema ha bloqueado su prescripción.</div>
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- PESTAÑA 2: CONSOLA MÉDICA (PLANO 2) -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <div class="right-content active" id="tab2">
+      <div class="doctor-mirror-header">
+        <div>
+          <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Portal Clínico del Médico Tratante</div>
+          <h2 style="font-size:20px;font-weight:800;margin:4px 0 0">Dr. Patricio Navarrete — Medicina General</h2>
+        </div>
+        <span class="badge badge-green" style="font-size:12px;padding:6px 12px">● Médico de Guardia Disponible</span>
       </div>
-    </div>
 
-    <div class="grid grid-2" style="gap:20px">
-      <!-- TARJETA PACIENTE -->
-      <div class="card">
-        <div class="card-title">Ficha Paciente en Espera</div>
-        
-        <div style="display:flex;align-items:center;gap:14px;margin:16px 0">
-          <div style="width:52px;height:52px;border-radius:50%;background:#dbeafe;color:#1e40af;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">VR</div>
-          <div>
-            <div style="font-size:16px;font-weight:800">Verónica Ruiz</div>
-            <div style="font-size:12px;color:#64748b">42 años · Cédula: 1701234567 · Póliza Mawdy #TPA-0491</div>
+      <!-- ALERTA CRÍTICA DE ALERGIA -->
+      <div class="allergy-alert-banner" id="allergyBanner" style="display:none">
+        <span style="font-size:24px">⚠️</span>
+        <div>
+          <div style="font-size:14px;font-weight:800">ALERTA CLÍNICA AUTOMÁTICA: ALERGIA DETECTADA</div>
+          <div style="font-weight:500;margin-top:2px">La paciente Verónica registra alergia documentada a <strong>IBUPROFENO / AINEs</strong>. El sistema ha bloqueado su prescripción.</div>
+        </div>
+      </div>
+
+      <!-- ESTADO VACÍO (PASO 0) -->
+      <div id="docEmptyState" style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:40px;text-align:center;color:#64748b">
+        <div style="font-size:32px;margin-bottom:8px">🩺</div>
+        <div style="font-size:15px;font-weight:700;color:#0f172a">Sin consultas activas en espera</div>
+        <div style="font-size:12px;margin-top:4px">Inicie el caso desde el chat de WhatsApp a la izquierda para simular la recepción de la alerta clínica.</div>
+      </div>
+
+      <div id="docActiveCard" class="grid grid-2" style="gap:20px;display:none">
+        <!-- TARJETA PACIENTE -->
+        <div class="card">
+          <div class="card-title">Ficha Paciente en Espera</div>
+          
+          <div style="display:flex;align-items:center;gap:14px;margin:16px 0">
+            <div style="width:52px;height:52px;border-radius:50%;background:#dbeafe;color:#1e40af;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">VR</div>
+            <div>
+              <div style="font-size:16px;font-weight:800">Verónica Ruiz</div>
+              <div style="font-size:12px;color:#64748b">42 años · Cédula: 1701234567 · Póliza Mawdy #TPA-0491</div>
+            </div>
+          </div>
+
+          <table class="table" style="font-size:12px">
+            <tr><th>Síntomas reportados</th><td><strong style="color:#ef4444">Cefalea intensa + Fiebre 38.2°C</strong></td></tr>
+            <tr><th>Triaje inicial</th><td><span class="badge badge-yellow">Prioridad Moderada</span></td></tr>
+            <tr><th>Antecedentes TPA</th><td>Hipertensión Arterial (HTA) · Alergia a Ibuprofeno</td></tr>
+          </table>
+
+          <div style="margin-top:16px;display:flex;gap:10px">
+            <button class="btn btn-primary" id="btnCallDoctor" onclick="iniciarVideollamadaDemo()" style="flex:1">📞 Iniciar Videoconsulta HD</button>
           </div>
         </div>
 
-        <table class="table" style="font-size:12px">
-          <tr><th>Síntomas reportados</th><td><strong style="color:#ef4444">Cefalea intensa + Fiebre 38.2°C</strong></td></tr>
-          <tr><th>Triaje inicial</th><td><span class="badge badge-yellow">Prioridad Moderada</span></td></tr>
-          <tr><th>Antecedentes TPA</th><td>Hipertensión Arterial (HTA) · Alergia a Ibuprofeno</td></tr>
-        </table>
+        <!-- FORMULARIO DE PRESCRIPCIÓN -->
+        <div class="card" id="recipeCard" style="opacity:0.6;pointer-events:none">
+          <div class="card-title">Prescripción y Diagnóstico Médico CIE-10</div>
+          
+          <div class="form-group" style="margin-top:12px">
+            <label>Diagnóstico Principal (CIE-10)</label>
+            <input type="text" class="input" value="R51 - Cefalea Vascular / Síndrome Febril" readonly>
+          </div>
 
-        <div style="margin-top:16px;display:flex;gap:10px">
-          <button class="btn btn-primary" id="btnCallDoctor" onclick="iniciarVideollamadaDemo()" style="flex:1">📞 Iniciar Videoconsulta HD</button>
-        </div>
-      </div>
-
-      <!-- FORMULARIO DE PRESCRIPCIÓN -->
-      <div class="card" id="recipeCard" style="opacity:0.6;pointer-events:none">
-        <div class="card-title">Prescripción y Diagnóstico Médico CIE-10</div>
-        
-        <div class="form-group" style="margin-top:12px">
-          <label>Diagnóstico Principal (CIE-10)</label>
-          <input type="text" class="input" value="R51 - Cefalea Vascular / Síndrome Febril" readonly>
-        </div>
-
-        <div class="form-group">
-          <label>Medicamentos Sugeridos (Seguro para Alérgicos a Ibuprofeno)</label>
-          <textarea class="input" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
+          <div class="form-group">
+            <label>Medicamentos Sugeridos (Seguro para Alérgicos a Ibuprofeno)</label>
+            <textarea class="input" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
 2. Enalapril 10mg — Mantener dosis diaria de tratamiento base HTA.</textarea>
-        </div>
+          </div>
 
-        <button class="btn btn-success" id="btnSignRecipe" onclick="firmarRecetaDemo()" style="width:100%">✍️ Firmar y Emitir Receta Digital (PDF)</button>
+          <button class="btn btn-success" id="btnSignRecipe" onclick="firmarRecetaDemo()" style="width:100%">✍️ Firmar y Emitir Receta Digital (PDF)</button>
+        </div>
       </div>
+
     </div>
 
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- PESTAÑA 3: MOTOR BACKEND — ENFOCADO EN HEALTH SCORE Y ALERTAS -->
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<div class="tab-content" id="tab3">
-  <div style="max-width:1100px;margin:0 auto" class="backend-grid">
-    
-    <!-- HEALTH SCORE GAUGE & DESGLOSE EN TIEMPO REAL -->
-    <div class="card">
-      <div class="card-title">🧠 Motor de Predictibilidad — Health Score Preventivo</div>
-      
-      <div class="score-dial-big" style="margin-top:20px" id="scoreDialBg">
-        <div class="score-dial-inner">
-          <div style="font-size:36px;font-weight:900;color:#16a34a" id="scoreNumVal">76</div>
-          <div style="font-size:10px;font-weight:800;color:#64748b">HEALTH SCORE</div>
-        </div>
-      </div>
-
-      <div style="text-align:center;margin-bottom:16px" id="scoreStatusBox">
-        <span class="badge badge-green" id="scoreStatusBadge" style="font-size:12px">Nivel: Estándar (76/100)</span>
-      </div>
-
-      <!-- DESGLOSE MATEMÁTICO CLINICO -->
-      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:12px;margin-top:12px">
-        <div style="font-weight:800;color:#0f172a;margin-bottom:8px">Descomposición del Score Clínico de Verónica:</div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span>+ Control HTA (Enalapril)</span><strong style="color:#16a34a">+30 pts</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span>+ Adherencia 30 días (28/30 días)</span><strong style="color:#16a34a">+32 pts</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px" id="scorePenaltyRow">
-          <span>- Impacto Síntomas Agudos (Fiebre/Cefalea)</span><strong style="color:#ef4444" id="scorePenaltyVal">-15 pts</strong>
-        </div>
-        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e2e8f0;font-weight:800">
-          <span>PUNTAJE GLOBAL CALCULADO</span><span style="color:#2563eb" id="scoreTotalVal">61 / 100</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- MONITOR DE ALERTAS PREVENTIVAS Y HISTORIAL HEALTH SCORE -->
-    <div class="card">
-      <div class="card-title">🚨 Generación de Alerta Preventiva en Vivo</div>
-
-      <!-- BANNER ALERTA PREVENTIVA -->
-      <div class="flow-node-box" id="hsAlertBox" style="margin-top:16px;border-left:4px solid #f59e0b;background:#fffbe6">
-        <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase">🚨 Alerta Preventiva de Salud Generada</div>
-        <div style="font-size:13px;font-weight:700;margin-top:4px" id="hsAlertTitle">Health Score en 76 pts — Nivel Estándar</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px" id="hsAlertDesc">Monitorización activa en tiempo real. Esperando reporte del paciente.</div>
-      </div>
-
-      <!-- HISTORIAL CLINICO DEL SCORE -->
-      <div style="margin-top:16px">
-        <div style="font-size:11px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Trazabilidad de Cambios del Health Score</div>
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- PESTAÑA 3: MOTOR BACKEND & HEALTH SCORE (PLANO 3) -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <div class="right-content" id="tab3">
+      <div style="max-width:1100px;margin:0 auto" class="backend-grid">
         
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
-            <div>
-              <strong style="color:#0f172a">09:15 AM — Estado Inicial</strong><br>
-              <span style="color:#64748b;font-size:11px">Póliza Mawdy · Tratamiento HTA al día</span>
+        <!-- HEALTH SCORE GAUGE & DESGLOSE EN TIEMPO REAL -->
+        <div class="card">
+          <div class="card-title">🧠 Motor de Predictibilidad — Health Score Preventivo</div>
+          
+          <div class="score-dial-big" style="margin-top:20px" id="scoreDialBg">
+            <div class="score-dial-inner">
+              <div style="font-size:36px;font-weight:900;color:#16a34a" id="scoreNumVal">76</div>
+              <div style="font-size:10px;font-weight:800;color:#64748b">HEALTH SCORE</div>
             </div>
-            <span class="badge badge-green" style="font-size:11px">76 pts</span>
           </div>
 
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px">
-            <div>
-              <strong style="color:#991b1b">09:16 AM — Evento Agudo (Fiebre/Cefalea)</strong><br>
-              <span style="color:#7f1d1d;font-size:11px">Caída repentina (-15 pts) · Alerta enviada a Médico</span>
-            </div>
-            <span class="badge badge-yellow" style="font-size:11px">61 pts</span>
+          <div style="text-align:center;margin-bottom:16px" id="scoreStatusBox">
+            <span class="badge badge-green" id="scoreStatusBadge" style="font-size:12px">Nivel: Estándar (76/100)</span>
           </div>
 
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px">
-            <div>
-              <strong style="color:#1e40af">09:25 AM — Prescripción Segura Emitida</strong><br>
-              <span style="color:#1d4ed8;font-size:11px">Paracetamol + Enalapril · Alergia Ibuprofeno bloqueada</span>
+          <!-- DESGLOSE MATEMÁTICO CLINICO -->
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:12px;margin-top:12px">
+            <div style="font-weight:800;color:#0f172a;margin-bottom:8px">Descomposición del Score Clínico de Verónica:</div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span>+ Control HTA (Enalapril)</span><strong style="color:#16a34a">+30 pts</strong>
             </div>
-            <span class="badge badge-blue" style="font-size:11px">72 pts</span>
-          </div>
-
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px">
-            <div>
-              <strong style="color:#166534">+24 Horas — Adherencia Confirmada</strong><br>
-              <span style="color:#15803d;font-size:11px">Confirmación por WhatsApp · Recuperación óptima</span>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+              <span>+ Adherencia 30 días (28/30 días)</span><strong style="color:#16a34a">+32 pts</strong>
             </div>
-            <span class="badge badge-green" style="font-size:11px">88 pts</span>
+            <div style="display:flex;justify-content:space-between;margin-bottom:4px" id="scorePenaltyRow">
+              <span>- Impacto Síntomas Agudos (Fiebre/Cefalea)</span><strong style="color:#ef4444" id="scorePenaltyVal">-0 pts</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e2e8f0;font-weight:800">
+              <span>PUNTAJE GLOBAL CALCULADO</span><span style="color:#2563eb" id="scoreTotalVal">76 / 100</span>
+            </div>
           </div>
         </div>
-      </div>
 
+        <!-- MONITOR DE ALERTAS PREVENTIVAS Y HISTORIAL HEALTH SCORE -->
+        <div class="card">
+          <div class="card-title">🚨 Generación de Alerta Preventiva en Vivo</div>
+
+          <div class="flow-node-box" id="hsAlertBox" style="margin-top:16px;border-left:4px solid #16a34a;background:#f0fdf4">
+            <div style="font-size:11px;font-weight:800;color:#16a34a;text-transform:uppercase">Estado del Sistema</div>
+            <div style="font-size:13px;font-weight:700;margin-top:4px" id="hsAlertTitle">Health Score en 76 pts — Nivel Estándar</div>
+            <div style="font-size:12px;color:#64748b;margin-top:2px" id="hsAlertDesc">Monitorización activa en tiempo real. Esperando reporte del paciente.</div>
+          </div>
+
+          <div style="margin-top:16px">
+            <div style="font-size:11px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Trazabilidad de Cambios del Health Score</div>
+            
+            <div style="display:flex;flex-direction:column;gap:8px" id="hsTimelineBox">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
+                <div>
+                  <strong style="color:#0f172a">09:15 AM — Estado Inicial Base</strong><br>
+                  <span style="color:#64748b;font-size:11px">Póliza Mawdy · Tratamiento HTA al día</span>
+                </div>
+                <span class="badge badge-green" style="font-size:11px">76 pts</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- PESTAÑA 4: CONSOLA TPA MAWDY (PLANO 4) -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <div class="right-content" id="tab4">
+      <div style="max-width:1200px;margin:0 auto" class="grid grid-2">
+        
+        <!-- PANEL AUDITORÍA -->
+        <div class="card">
+          <div class="card-title">🛡️ Expedientes para Auditoría de Pertinencia Médica</div>
+          
+          <div id="tpaEmptyState" style="padding:30px;text-align:center;color:#64748b">
+            No hay expedientes pendientes de auditoría. Inicie el caso desde WhatsApp.
+          </div>
+
+          <table class="table" id="tpaTable" style="font-size:12px;margin-top:12px;display:none">
+            <thead>
+              <tr>
+                <th>Paciente</th>
+                <th>Diagnóstico & Receta</th>
+                <th>Estado</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>
+                  <strong>Verónica Ruiz</strong><br>
+                  <span style="color:#64748b">Cédula: 1701234567</span>
+                </td>
+                <td>
+                  <div style="color:#1e40af;font-weight:700">R51 Cefalea Vascular</div>
+                  <div style="font-size:11px;color:#64748b">Paracetamol 500mg + Enalapril 10mg</div>
+                </td>
+                <td><span class="badge badge-yellow" id="auditStatusBadge">Pendiente</span></td>
+                <td>
+                  <button class="btn btn-sm btn-success" id="btnAuditApprove" onclick="dictaminarDemo('aprobado')">✅ Pertinente</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- CHATBOT IA RAG GEMINI 2.5 FLASH -->
+        <div class="card">
+          <div class="card-title">🤖 Asistente IA RAG — KPIs TPA Mawdy</div>
+          
+          <div id="chatBoxRAGDemo" style="height:280px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;overflow-y:auto;margin:12px 0;font-size:12px">
+            <div style="background:#ffffff;border:1px solid #cbd5e1;padding:10px;border-radius:8px;margin-bottom:8px">
+              👋 <strong>Hola. Soy tu Asistente de Analítica RAG con Gemini 2.5 Flash.</strong><br>
+              Puedes hacerme preguntas sobre la siniestralidad, médicos activos o volumen de atenciones en tiempo real.
+            </div>
+          </div>
+
+          <div style="display:flex;gap:6px">
+            <input type="text" id="inputRAGDemo" class="input" placeholder="Ej. ¿Cuántas consultas atendió el Dr. Patricio Navarrete?" style="font-size:12px">
+            <button class="btn btn-primary" onclick="preguntarRAGDemo()">Preguntar</button>
+          </div>
+        </div>
+
+      </div>
     </div>
 
   </div>
-</div>
 
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- PESTAÑA 4: CONSOLA TPA MAWDY (AUDITORÍA & RAG) -->
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<div class="tab-content" id="tab4">
-  <div style="max-width:1200px;margin:0 auto" class="grid grid-2">
-    
-    <!-- PANEL AUDITORÍA -->
-    <div class="card">
-      <div class="card-title">🛡️ Expedientes para Auditoría de Pertinencia Médica</div>
-      
-      <table class="table" style="font-size:12px;margin-top:12px">
-        <thead>
-          <tr>
-            <th>Paciente</th>
-            <th>Diagnóstico & Receta</th>
-            <th>Estado</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>
-              <strong>Verónica Ruiz</strong><br>
-              <span style="color:#64748b">Cédula: 1701234567</span>
-            </td>
-            <td>
-              <div style="color:#1e40af;font-weight:700">R51 Cefalea Vascular</div>
-              <div style="font-size:11px;color:#64748b">Paracetamol 500mg + Enalapril 10mg</div>
-            </td>
-            <td><span class="badge badge-yellow" id="auditStatusBadge">Pendiente</span></td>
-            <td>
-              <button class="btn btn-sm btn-success" onclick="dictaminarDemo('aprobado')">✅ Pertinente</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- CHATBOT IA RAG GEMINI 2.5 FLASH -->
-    <div class="card">
-      <div class="card-title">🤖 Asistente IA RAG — KPIs TPA Mawdy</div>
-      
-      <div id="chatBoxRAGDemo" style="height:280px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;overflow-y:auto;margin:12px 0;font-size:12px">
-        <div style="background:#ffffff;border:1px solid #cbd5e1;padding:10px;border-radius:8px;margin-bottom:8px">
-          👋 <strong>Hola. Soy tu Asistente de Analítica RAG con Gemini 2.5 Flash.</strong><br>
-          Puedes hacerme preguntas sobre la siniestralidad, médicos activos o volumen de atenciones en tiempo real.
-        </div>
-      </div>
-
-      <div style="display:flex;gap:6px">
-        <input type="text" id="inputRAGDemo" class="input" placeholder="Ej. ¿Cuántas consultas atendió el Dr. Patricio Navarrete?" style="font-size:12px">
-        <button class="btn btn-primary" onclick="preguntarRAGDemo()">Preguntar</button>
-      </div>
-    </div>
-
-  </div>
 </div>
 
 <script src="/js/demo4planos.js?v=20260717"></script>

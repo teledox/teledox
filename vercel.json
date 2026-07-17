@@ -3,6 +3,8 @@
   "outputDirectory": "public",
   "installCommand": "npm install",
   "functions": {
+    "api/webhook.js": { "maxDuration": 15 },
+    "api/cron.js": { "maxDuration": 30 },
     "api/index.js": { "maxDuration": 30, "includeFiles": "node_modules/pdf-lib/**,node_modules/@pdf-lib/**" }
   },
   "redirects": [

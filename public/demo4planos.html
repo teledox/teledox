@@ -557,7 +557,26 @@
       <!-- FORMULARIO DE PRESCRIPCIÓN -->
       <div class="card" id="recipeCard" style="opacity:0.6;pointer-events:none">
         <div class="card-title">Prescripción y Diagnóstico Médico CIE-10</div>
-   <!-- ══════════════════════════════════════════════════════════════════════════ -->
+        
+        <div class="form-group" style="margin-top:12px">
+          <label>Diagnóstico Principal (CIE-10)</label>
+          <input type="text" class="input" value="R51 - Cefalea Vascular / Síndrome Febril" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Medicamentos Sugeridos (Seguro para Alérgicos a Ibuprofeno)</label>
+          <textarea class="input" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
+2. Enalapril 10mg — Mantener dosis diaria de tratamiento base HTA.</textarea>
+        </div>
+
+        <button class="btn btn-success" id="btnSignRecipe" onclick="firmarRecetaDemo()" style="width:100%">✍️ Firmar y Emitir Receta Digital (PDF)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
 <!-- PESTAÑA 3: MOTOR BACKEND — ENFOCADO EN HEALTH SCORE Y ALERTAS -->
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 <div class="tab-content" id="tab3">
@@ -617,24 +636,6 @@
         <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase">Pronóstico de Adherencia (Cron 24h)</div>
         <div style="font-size:13px;font-weight:700;margin-top:4px">Disparador activo de seguimiento</div>
         <div style="font-size:12px;color:#64748b">Recuperación estimada de Health Score a 88/100 tras confirmar toma.</div>
-      </div>
-    </div>
-
-  </div>
-</div>ral</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Filtra la visita presencial a sala de emergencias.</div>
-      </div>
-
-      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #16a34a">
-        <div style="font-size:11px;font-weight:800;color:#16a34a;text-transform:uppercase">2. Impacto de Ahorro Directo</div>
-        <div style="font-size:24px;font-weight:900;color:#16a34a;margin-top:2px">$112.00 Evitados</div>
-        <div style="font-size:12px;color:#64748b">Costo presencial de guardia ($120) vs Telemedicina MediLyft ($8).</div>
-      </div>
-
-      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #f59e0b">
-        <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase">3. Cron Automatizado de Adherencia</div>
-        <div style="font-size:13px;font-weight:700;margin-top:4px">Disparador programado a 24 horas</div>
-        <div style="font-size:12px;color:#64748b">WhatsApp enviará el control de toma de Paracetamol y Enalapril.</div>
       </div>
     </div>
 

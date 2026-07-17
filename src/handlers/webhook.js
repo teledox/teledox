@@ -70,10 +70,9 @@ module.exports = async function handler(req, res) {
 
   // ── GET: verificación del webhook por Meta ──────────────────────────────
   if (req.method === 'GET') {
-    const urlObj    = new URL(req.url || '', 'http://localhost');
-    const mode      = req.query?.['hub.mode'] || urlObj.searchParams.get('hub.mode');
-    const token     = req.query?.['hub.verify_token'] || urlObj.searchParams.get('hub.verify_token');
-    const challenge = req.query?.['hub.challenge'] || urlObj.searchParams.get('hub.challenge');
+    const mode      = req.query['hub.mode'];
+    const token     = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
     if (mode === 'subscribe' && token === WA_VERIFY_TOKEN) {
       console.log('Webhook verificado por Meta ✅');
       return res.status(200).send(challenge);
@@ -83,49 +82,46 @@ module.exports = async function handler(req, res) {
 
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
-  // Obtener parsedBody y rawBody de forma robusta
-  let parsedBody = {};
-  let rawBody = '';
-
+  // Body crudo: si ya viene puesto en req.rawBody (nuestro harness de pruebas
+  // en scripts/test-bot/server.js lo hace), se usa tal cual. En producción
+  // (Vercel) nadie lo pone — Vercel expone req.body ya parseado vía un getter
+  // "lazy" que solo se dispara al accederlo, así que leemos el stream crudo
+  // nosotros mismos ANTES de tocar req.body en cualquier lugar del archivo.
+  // Antes se reconstruía con JSON.stringify(req.body), que no coincide byte
+  // a byte con lo que Meta firmó para payloads más complejos (botones,
+  // listas, multimedia) — solo texto simple pasaba la verificación por
+  // casualidad, y el resto se rechazaba con 401 en silencio.
+  let rawBody;
   if (typeof req.rawBody === 'string') {
     rawBody = req.rawBody;
-    try { parsedBody = JSON.parse(rawBody); } catch {}
-  } else if (Buffer.isBuffer(req.rawBody)) {
-    rawBody = req.rawBody.toString('utf8');
-    try { parsedBody = JSON.parse(rawBody); } catch {}
+  } else {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    rawBody = Buffer.concat(chunks).toString('utf8');
   }
 
-  if (!rawBody && req.body) {
-    if (typeof req.body === 'object') {
-      parsedBody = req.body;
-      try { rawBody = JSON.stringify(req.body); } catch {}
-    } else if (typeof req.body === 'string') {
-      rawBody = req.body;
-      try { parsedBody = JSON.parse(req.body); } catch {}
-    }
+  let parsedBody;
+  try {
+    parsedBody = rawBody ? JSON.parse(rawBody) : {};
+  } catch {
+    return res.status(400).send('Invalid JSON');
   }
 
-  if (!rawBody && !parsedBody.object) {
-    try {
-      const chunks = [];
-      for await (const chunk of req) chunks.push(chunk);
-      rawBody = Buffer.concat(chunks).toString('utf8');
-      if (rawBody) parsedBody = JSON.parse(rawBody);
-    } catch {}
-  }
-
-  // Verificación de firma Meta (X-Hub-Signature-256)
+  // Verificación de firma Meta (X-Hub-Signature-256) — fail-closed: sin
+  // secreto configurado o sin header, se rechaza (antes se dejaba pasar).
   const appSecret = process.env.WHATSAPP_APP_SECRET;
-  const sigHeader = req.headers['x-hub-signature-256'] || req.headers['X-Hub-Signature-256'] || '';
-  if (appSecret && sigHeader && rawBody) {
-    const expected  = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
-    const sigBuf = Buffer.from(sigHeader);
-    const expBuf = Buffer.from(expected);
-    const firmaValida = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
-    if (!firmaValida) {
-      console.warn('Firma Meta inválida — posible replay o spoofing:', sigHeader);
-      return res.status(401).send('Unauthorized');
-    }
+  if (!appSecret) {
+    console.error('WHATSAPP_APP_SECRET no configurado — rechazando webhook');
+    return res.status(401).send('Unauthorized');
+  }
+  const sigHeader = req.headers['x-hub-signature-256'] || '';
+  const expected  = 'sha256=' + crypto.createHmac('sha256', appSecret).update(rawBody).digest('hex');
+  const sigBuf = Buffer.from(sigHeader);
+  const expBuf = Buffer.from(expected);
+  const firmaValida = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+  if (!firmaValida) {
+    console.warn('Firma Meta inválida — posible replay o spoofing:', sigHeader);
+    return res.status(401).send('Unauthorized');
   }
 
   // Declarados fuera del try para poder reportarlos en el catch si algo falla

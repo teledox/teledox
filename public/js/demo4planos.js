@@ -282,31 +282,89 @@ function ejecutarAccionPaso(step) {
 }
 
 // ── ACCIONES INTERACTIVAS DEL USUARIO ──────────────────────────────────────
-function simularMensajeUsuario(texto) {
+async function enviarMensajeLibreWA() {
+  const inputEl = document.getElementById('waInputText');
   const waBox = document.getElementById('waChatBox');
-  if (!waBox) return;
+  if (!inputEl || !waBox) return;
+
+  const texto = inputEl.value.trim();
+  if (!texto) return;
+
+  inputEl.value = '';
+
+  const timeStr = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
 
   waBox.innerHTML += `
     <div class="wa-msg out">
       ${texto}
-      <div class="wa-time">09:16</div>
+      <div class="wa-time">${timeStr}</div>
     </div>
   `;
   waBox.scrollTop = waBox.scrollHeight;
 
-  setTimeout(() => {
+  const typingId = 'wa_typing_' + Date.now();
+  waBox.innerHTML += `
+    <div class="wa-msg in" id="${typingId}" style="color:#00a884;font-style:italic">
+      MediLyft está procesando el triaje real...
+    </div>
+  `;
+  waBox.scrollTop = waBox.scrollHeight;
+
+  try {
+    const res = await fetch('/api/b2b-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'simular_webhook',
+        mensaje: texto,
+        telefono: '593999999999'
+      })
+    });
+
+    const data = await res.json();
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    if (!res.ok) throw new Error(data.error || 'Error procesando webhook');
+
+    const respuestaBot = (data.respuesta || '').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+
     waBox.innerHTML += `
       <div class="wa-msg in">
-        ⚡ <strong>Caso Clasificado: Prioridad Moderada.</strong><br>
-        📊 <strong>Health Score Actualizado: 61/100 (Alerta Amarilla)</strong>.<br>
-        Antecedentes consultados: HTA · <strong style="color:#ef4444">Alergia a Ibuprofeno</strong>.<br>
-        Le conectamos de inmediato con un médico general de guardia.
-        <div class="wa-time">09:16</div>
+        ${respuestaBot}
+        <div class="wa-time">${timeStr}</div>
       </div>
     `;
     waBox.scrollTop = waBox.scrollHeight;
+
+    // Actualizar Health Score dinámico y datos reales devueltos por el backend
+    updateHealthScoreUI(
+      data.healthScore || 61,
+      `🚨 Prioridad ${data.prioridad || 'Moderada'} (${data.healthScore || 61}/100)`,
+      data.healthScore < 50 ? 'badge-red' : (data.healthScore < 70 ? 'badge-yellow' : 'badge-green'),
+      data.penalizacionText || '-15 pts',
+      `${data.healthScore || 61} / 100`
+    );
+
     setStep(2);
-  }, 1000);
+
+  } catch (err) {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    waBox.innerHTML += `
+      <div class="wa-msg in" style="border:1px solid #ef4444;color:#ef4444">
+        ⚠️ Error en conexión al webhook: ${err.message}
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+}
+
+function simularMensajeUsuario(texto) {
+  const inputEl = document.getElementById('waInputText');
+  if (inputEl) inputEl.value = texto;
+  enviarMensajeLibreWA();
 }
 
 function iniciarVideollamadaDemo() {

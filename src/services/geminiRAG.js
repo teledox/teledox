@@ -131,4 +131,55 @@ Pregunta del ejecutivo TPA: "${pregunta}"`;
   };
 }
 
-module.exports = { responderConsultaKPIRAG, recopilarContextoKpis };
+/**
+ * Simula el triaje inteligente e IA conversacional de MediLyft para el simulador de WhatsApp
+ */
+async function simularTriajeIA(mensajeUsuario) {
+  const promptSystem = `Eres el Motor Inteligente de Triaje Médico y Predictibilidad de MediLyft para la aseguradora Mawdy TPA.
+El usuario es la paciente Verónica Ruiz (42 años, Antecedentes: Hipertensión Arterial HTA, Alergia documentada a Ibuprofeno/AINEs).
+
+Analiza el siguiente mensaje escrito por el paciente: "${mensajeUsuario}"
+
+Devuelve EXCLUSIVAMENTE un objeto JSON con el siguiente formato exacto (sin bloques markdown de código ```json):
+{
+  "respuestaWhatsApp": "Mensaje amable en tono oficial de MediLyft confirmando la recepción del síntoma, indicando la prioridad asignada y la conexión con el médico de guardia. Usa emojis limpios.",
+  "prioridad": "Leve" | "Moderado" | "Grave",
+  "healthScore": número entero entre 35 y 90 (ej. 61 si reporta fiebre/síntomas agudos, 75 si es leve),
+  "penalizacionText": "Texto breve de variación (ej. '-15 pts (Síndrome Febril)' o '-6 pts (Leve)')",
+  "sintomaResumen": "Resumen médico breve de 3 a 7 palabras del síntoma para la ficha del doctor",
+  "alergiaBloqueada": true
+}`;
+
+  const res = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: promptSystem }] }]
+    })
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Gemini Triage Error: ${errText}`);
+  }
+
+  const data = await res.json();
+  let rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+  try {
+    const parsed = JSON.parse(rawText);
+    return parsed;
+  } catch (e) {
+    return {
+      respuestaWhatsApp: `⚡ **Caso Clasificado: Prioridad Moderada.**\nReporte registrado: "${mensajeUsuario}". Antecedentes: HTA · Alergia a Ibuprofeno. Le conectamos con un médico de guardia.`,
+      prioridad: "Moderado",
+      healthScore: 61,
+      penalizacionText: "-15 pts (Evento Agudo)",
+      sintomaResumen: mensajeUsuario.substring(0, 40),
+      alergiaBloqueada: true
+    };
+  }
+}
+
+module.exports = { responderConsultaKPIRAG, recopilarContextoKpis, simularTriajeIA };

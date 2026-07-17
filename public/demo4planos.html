@@ -501,9 +501,19 @@
         </div>
       </div>
       <div class="wa-actions" id="waActionBtns">
-        <button class="wa-chip-btn" id="btnSimSintomas" onclick="simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C')">
-          💬 Enviar Síntomas: Cefalea + Fiebre (38.2°C)
-        </button>
+        <div style="display:flex;gap:6px">
+          <input type="text" id="waInputText" placeholder="Escribe tus síntomas aquí..." style="flex:1;background:#202c33;color:#e9edef;border:1px solid #2a3942;border-radius:10px;padding:8px 12px;font-size:12px;outline:none" onkeydown="if(event.key==='Enter') enviarMensajeLibreWA()">
+          <button style="background:#00a884;color:#fff;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:700;cursor:pointer" onclick="enviarMensajeLibreWA()">Enviar</button>
+        </div>
+
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">
+          <button class="wa-chip-btn" style="font-size:11px;padding:4px 8px;border-radius:8px" onclick="simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C')">
+            💬 Cefalea + Fiebre (38.2°C)
+          </button>
+          <button class="wa-chip-btn" style="font-size:11px;padding:4px 8px;border-radius:8px" onclick="simularMensajeUsuario('Siento náuseas y dolor de estómago agudo')">
+            💬 Náuseas y Gastritis
+          </button>
+        </div>
       </div>
     </div>
   </div>

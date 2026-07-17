@@ -1,0 +1,309 @@
+/**
+ * public/js/demo4planos.js
+ * Lógica de sincronización interactiva y guiada para la Demo de 4 Planos (Mawdy TPA).
+ */
+
+let currentStep = 1;
+let currentTab = 1;
+let autoPlayInterval = null;
+let isPlaying = false;
+
+const NARRATIVES = {
+  1: "Paso 1 (Plano 1 - Paciente): Verónica (42 años) inicia la solicitud por WhatsApp. Reporta cefalea y fiebre (38.2°C). El bot consulta sus antecedentes: padece HTA y es Alérgica al Ibuprofeno.",
+  2: "Paso 2 (Plano 3 - Motor Backend): El software procesa la solicitud, clasifica la prioridad como MODERADA y aplica el algoritmo de desvío, evitando un costo de urgencia presencial de $120.",
+  3: "Paso 3 (Plano 2 - Consola Médica): El Dr. Patricio Navarrete recibe la alerta con la ficha pre-cargada. La consola advierte la alergia a ibuprofeno y el médico emite una receta segura con Paracetamol.",
+  4: "Paso 4 (Plano 4 - Consola TPA): El auditor de Mawdy verifica la pertinencia de la consulta en la lista. El director de Mawdy realiza una consulta RAG en vivo a la IA sobre métricas.",
+  5: "Paso 5 (Plano 1 & 3 - Seguimiento 24h): A las 24 horas, el bot consulta proactivamente a Verónica por su adherencia farmacológica, actualizando su Health Score preventivo a 76/100."
+};
+
+const STEP_TABS = {
+  1: 1, // Paciente WhatsApp
+  2: 3, // Motor Backend
+  3: 2, // Consola Médica
+  4: 4, // Consola TPA Mawdy
+  5: 1  // Paciente WhatsApp / Seguimiento
+};
+
+// ── NAVEGACIÓN DE PESTAÑAS ──────────────────────────────────────────────────
+function switchTab(tabNum) {
+  currentTab = tabNum;
+  document.querySelectorAll('.plano-tab').forEach((el, idx) => {
+    el.classList.toggle('active', (idx + 1) === tabNum);
+  });
+  document.querySelectorAll('.tab-content').forEach((el, idx) => {
+    el.classList.toggle('active', (idx + 1) === tabNum);
+  });
+}
+
+// ── NAVEGACIÓN Y AUTO-PLAY DE PASOS DEMO ────────────────────────────────────
+function setStep(stepNum) {
+  currentStep = Math.max(1, Math.min(5, stepNum));
+
+  // Actualizar chips en la barra de control
+  document.querySelectorAll('.demo-step-chip').forEach((chip, idx) => {
+    const s = idx + 1;
+    chip.classList.toggle('active', s === currentStep);
+    chip.classList.toggle('completed', s < currentStep);
+  });
+
+  // Actualizar texto del guión
+  const narrativeEl = document.getElementById('narrativeText');
+  if (narrativeEl) {
+    narrativeEl.textContent = NARRATIVES[currentStep] || '';
+  }
+
+  // Cambiar a la pestaña correspondiente del paso
+  switchTab(STEP_TABS[currentStep]);
+
+  // Ejecutar acciones del paso
+  ejecutarAccionPaso(currentStep);
+}
+
+function nextStep() {
+  if (currentStep < 5) {
+    setStep(currentStep + 1);
+  } else {
+    stopAutoPlay();
+  }
+}
+
+function prevStep() {
+  setStep(currentStep - 1);
+}
+
+function jumpToStep(stepNum) {
+  stopAutoPlay();
+  setStep(stepNum);
+}
+
+function toggleAutoPlay() {
+  if (isPlaying) {
+    stopAutoPlay();
+  } else {
+    startAutoPlay();
+  }
+}
+
+function startAutoPlay() {
+  isPlaying = true;
+  const btn = document.getElementById('btnPlay');
+  if (btn) btn.textContent = '⏸ Pausar Demo';
+
+  if (currentStep >= 5) setStep(1);
+
+  autoPlayInterval = setInterval(() => {
+    if (currentStep < 5) {
+      nextStep();
+    } else {
+      stopAutoPlay();
+    }
+  }, 7000); // 7 segundos por paso
+}
+
+function stopAutoPlay() {
+  isPlaying = false;
+  if (autoPlayInterval) clearInterval(autoPlayInterval);
+  const btn = document.getElementById('btnPlay');
+  if (btn) btn.textContent = '▶ Auto-Play Demo';
+}
+
+function resetDemo() {
+  stopAutoPlay();
+  setStep(1);
+  const waBox = document.getElementById('waChatBox');
+  if (waBox) {
+    waBox.innerHTML = `
+      <div class="wa-msg in">
+        ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
+        <div class="wa-time">09:15</div>
+      </div>
+    `;
+  }
+  const allergyBanner = document.getElementById('allergyBanner');
+  if (allergyBanner) allergyBanner.style.display = 'none';
+
+  const recipeCard = document.getElementById('recipeCard');
+  if (recipeCard) {
+    recipeCard.style.opacity = '0.6';
+    recipeCard.style.pointerEvents = 'none';
+  }
+
+  const auditBadge = document.getElementById('auditStatusBadge');
+  if (auditBadge) {
+    auditBadge.className = 'badge badge-yellow';
+    auditBadge.textContent = 'Pendiente';
+  }
+}
+
+// ── LÓGICA DE ACCIONES POR PASO ─────────────────────────────────────────────
+function ejecutarAccionPaso(step) {
+  if (step >= 2) {
+    const allergyBanner = document.getElementById('allergyBanner');
+    if (allergyBanner) allergyBanner.style.display = 'flex';
+  }
+
+  if (step >= 3) {
+    const recipeCard = document.getElementById('recipeCard');
+    if (recipeCard) {
+      recipeCard.style.opacity = '1';
+      recipeCard.style.pointerEvents = 'auto';
+    }
+  }
+
+  if (step === 5) {
+    const waBox = document.getElementById('waChatBox');
+    if (waBox && !document.getElementById('msgAdherence')) {
+      waBox.innerHTML += `
+        <div class="wa-msg in" id="msgAdherence" style="margin-top:12px;border:1px solid #16a34a">
+          💊 <strong>Recordatorio 24 horas MediLyft:</strong> Hola Verónica, ¿ya tomó su medicación (Paracetamol 500mg)?
+          <div class="wa-time">hace 1 min</div>
+        </div>
+        <div class="wa-msg out">
+          Sí, excelente. Ya no me duele la cabeza. Gracias. ✓
+          <div class="wa-time">ahora</div>
+        </div>
+      `;
+      waBox.scrollTop = waBox.scrollHeight;
+    }
+  }
+}
+
+// ── ACCIONES INTERACTIVAS DEL USUARIO ──────────────────────────────────────
+function simularMensajeUsuario(texto) {
+  const waBox = document.getElementById('waChatBox');
+  if (!waBox) return;
+
+  waBox.innerHTML += `
+    <div class="wa-msg out">
+      ${texto}
+      <div class="wa-time">09:16</div>
+    </div>
+  `;
+  waBox.scrollTop = waBox.scrollHeight;
+
+  setTimeout(() => {
+    waBox.innerHTML += `
+      <div class="wa-msg in">
+        ⚡ <strong>Caso Clasificado: Prioridad Moderada.</strong><br>
+        Antecedentes consultados: HTA · <strong style="color:#ef4444">Alergia a Ibuprofeno</strong>.<br>
+        Le conectamos de inmediato con un médico general de guardia.
+        <div class="wa-time">09:16</div>
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
+    setStep(2);
+  }, 1000);
+}
+
+function iniciarVideollamadaDemo() {
+  alert('📞 Videoconsulta HD Iniciada con la paciente Verónica Ruiz. Conectado al audio y video seguro.');
+  const recipeCard = document.getElementById('recipeCard');
+  if (recipeCard) {
+    recipeCard.style.opacity = '1';
+    recipeCard.style.pointerEvents = 'auto';
+  }
+  setStep(3);
+}
+
+function firmarRecetaDemo() {
+  alert('✍️ Receta emitida con éxito (Paracetamol + Enalapril). Se ha generado el PDF con firma digital.');
+  const waBox = document.getElementById('waChatBox');
+  if (waBox) {
+    waBox.innerHTML += `
+      <div class="wa-msg in" style="border-left:4px solid #2563eb">
+        📄 <strong>Receta Digital Emitida:</strong><br>
+        Dr. Patricio Navarrete ha emitido su receta digital (PDF).<br>
+        <span style="color:#2563eb;text-decoration:underline">Ver_Receta_Verónica_Ruiz.pdf</span>
+        <div class="wa-time">09:25</div>
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+  setStep(4);
+}
+
+function dictaminarDemo(estado) {
+  const auditBadge = document.getElementById('auditStatusBadge');
+  if (auditBadge) {
+    if (estado === 'aprobado') {
+      auditBadge.className = 'badge badge-green';
+      auditBadge.textContent = '✓ Pertinente';
+    }
+  }
+  alert(`Dictamen guardado como ${estado.toUpperCase()}. Expediente marcado para planillaje B2B.`);
+  setStep(5);
+}
+
+// ── CHATBOT IA RAG GEMINI 2.5 FLASH ─────────────────────────────────────────
+async function preguntarRAGDemo() {
+  const inputEl = document.getElementById('inputRAGDemo');
+  const chatBox = document.getElementById('chatBoxRAGDemo');
+  if (!inputEl || !chatBox) return;
+
+  const pregunta = inputEl.value.trim();
+  if (!pregunta) return;
+
+  inputEl.value = '';
+
+  chatBox.innerHTML += `
+    <div style="text-align:right;margin-bottom:8px">
+      <span style="background:#2563eb;color:#fff;padding:8px 12px;border-radius:10px;display:inline-block;max-width:85%">
+        ${pregunta}
+      </span>
+    </div>
+  `;
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  const typingId = 'typing_' + Date.now();
+  chatBox.innerHTML += `
+    <div id="${typingId}" style="color:#64748b;font-style:italic;margin-bottom:8px">
+      🤖 Gemini 2.5 Flash consultando la base de datos de MediLyft...
+    </div>
+  `;
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  try {
+    const res = await fetch('/api/b2b-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'rag_kpi',
+        pregunta
+      })
+    });
+
+    const data = await res.json();
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    if (!res.ok) throw new Error(data.error || 'Error procesando RAG');
+
+    const respuestaHtml = (data.respuesta || '')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+
+    chatBox.innerHTML += `
+      <div style="background:#ffffff;border:1px solid #cbd5e1;padding:10px 14px;border-radius:8px;margin-bottom:8px;line-height:1.5">
+        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:4px">💡 Respuesta RAG en Vivo:</div>
+        ${respuestaHtml}
+      </div>
+    `;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+  } catch (err) {
+    const typingEl = document.getElementById(typingId);
+    if (typingEl) typingEl.remove();
+
+    chatBox.innerHTML += `
+      <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:8px 12px;border-radius:8px;margin-bottom:8px">
+        ⚠️ Error: ${err.message}
+      </div>
+    `;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+}
+
+// Inicializar paso 1 al cargar
+document.addEventListener('DOMContentLoaded', () => {
+  setStep(1);
+});

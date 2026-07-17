@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MEDILYFT · Demo de 4 Planos Simultáneos (Mawdy TPA)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/styles.css?v=20260717">
+<style>
+  :root {
+    --demo-bg: #0f172a;
+    --demo-panel: #1e293b;
+    --demo-border: rgba(255,255,255,0.12);
+    --demo-accent: #2563eb;
+    --demo-red: #f05252;
+    --demo-green: #16a34a;
+  }
+
+  body {
+    background-color: #f8fafc;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    color: #0f172a;
+    overflow-x: hidden;
+  }
+
+  /* ── BARRA SUPERIOR DE CONTROL DEMO ── */
+  .demo-bar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 12px 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .demo-bar-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .demo-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .demo-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    color: #ffffff;
+  }
+
+  .demo-subtitle {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 600;
+  }
+
+  .demo-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .demo-btn {
+    background: rgba(255,255,255,0.1);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .demo-btn:hover {
+    background: #2563eb;
+    border-color: #2563eb;
+    color: #ffffff;
+  }
+
+  .demo-btn.play {
+    background: var(--demo-red);
+    border-color: var(--demo-red);
+  }
+
+  .demo-btn.play:hover {
+    background: #dc2626;
+  }
+
+  /* ── STEPS TRACKER ── */
+  .demo-steps {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    overflow-x: auto;
+  }
+
+  .demo-step-chip {
+    flex: 1;
+    min-width: 140px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 8px 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .demo-step-chip.active {
+    background: rgba(37, 99, 235, 0.25);
+    border-color: #3b82f6;
+  }
+
+  .demo-step-chip.completed {
+    background: rgba(22, 163, 74, 0.15);
+    border-color: rgba(22, 163, 74, 0.4);
+  }
+
+  .step-num {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+  }
+
+  .demo-step-chip.active .step-num {
+    color: #60a5fa;
+  }
+
+  .step-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── GUION / NARRATIVA BANNER ── */
+  .narrative-banner {
+    background: #1e293b;
+    border-bottom: 2px solid #3b82f6;
+    color: #e2e8f0;
+    padding: 12px 24px;
+    font-size: 13px;
+    line-height: 1.5;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .narrative-badge {
+    background: #3b82f6;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 4px 8px;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  /* ── PESTAÑAS 1 A 4 ── */
+  .planos-tabs {
+    display: flex;
+    background: #ffffff;
+    border-bottom: 2px solid #e2e8f0;
+    padding: 0 24px;
+    gap: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  .plano-tab {
+    padding: 14px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .plano-tab:hover {
+    color: #0f172a;
+    background: #f1f5f9;
+  }
+
+  .plano-tab.active {
+    color: #2563eb;
+    border-bottom-color: #2563eb;
+    background: #eff6ff;
+  }
+
+  .plano-tab .tab-badge {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 800;
+  }
+
+  .plano-tab.active .tab-badge {
+    background: #2563eb;
+    color: #ffffff;
+  }
+
+  /* ── CONTENEDOR DE CONTENIDOS ── */
+  .tab-content {
+    display: none;
+    padding: 24px;
+    min-height: calc(100vh - 220px);
+  }
+
+  .tab-content.active {
+    display: block;
+    animation: fadeInTab 0.3s ease;
+  }
+
+  @keyframes fadeInTab {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SIMULADOR WHATSAPP (Pestaña 1) ── */
+  .wa-sim-container {
+    max-width: 440px;
+    margin: 0 auto;
+    background: #0b1014;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.18);
+    border: 8px solid #1e293b;
+  }
+
+  .wa-sim-header {
+    background: #1f2c34;
+    color: #ffffff;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .wa-avatar-img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f05252;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .wa-sim-body {
+    height: 480px;
+    background-color: #0b1014;
+    background-image: radial-gradient(rgba(255,255,255,0.03) 1px, transparent 0);
+    background-size: 16px 16px;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .wa-msg {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.45;
+    position: relative;
+  }
+
+  .wa-msg.in {
+    background: #202c33;
+    color: #e9edef;
+    align-self: flex-start;
+    border-bottom-left-radius: 2px;
+  }
+
+  .wa-msg.out {
+    background: #005c4b;
+    color: #e9edef;
+    align-self: flex-end;
+    border-bottom-right-radius: 2px;
+  }
+
+  .wa-time {
+    font-size: 10px;
+    color: rgba(241,245,249,0.5);
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .wa-actions {
+    background: #1f2c34;
+    padding: 12px;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .wa-chip-btn {
+    background: rgba(0, 168, 132, 0.2);
+    color: #00a884;
+    border: 1px solid #00a884;
+    padding: 8px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .wa-chip-btn:hover {
+    background: #00a884;
+    color: #ffffff;
+  }
+
+  /* ── MIRROR DE CONSOLA MÉDICA (Pestaña 2) ── */
+  .doctor-mirror-header {
+    background: #ffffff;
+    padding: 16px 20px;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .allergy-alert-banner {
+    background: #fef2f2;
+    border: 2px solid #ef4444;
+    color: #991b1b;
+    padding: 14px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* ── MIRROR BACKEND & HEALTH SCORE (Pestaña 3) ── */
+  .backend-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .flow-node-box {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+  }
+
+  .score-dial-big {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: conic-gradient(#16a34a 0% 76%, #e2e8f0 76% 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    position: relative;
+  }
+
+  .score-dial-inner {
+    width: 112px;
+    height: 112px;
+    border-radius: 50%;
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+
+<!-- BARRA SUPERIOR DE CONTROL DEMO -->
+<div class="demo-bar">
+  <div class="demo-bar-top">
+    <div class="demo-brand">
+      <div style="width:36px;height:36px;border-radius:8px;background:#f05252;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:20px;color:#fff">M</div>
+      <div>
+        <div class="demo-title">MEDILYFT · Demo de 4 Planos (Mawdy TPA)</div>
+        <div class="demo-subtitle">Simulador Espejo de Plataforma en Tiempo Real</div>
+      </div>
+    </div>
+
+    <div class="demo-controls">
+      <button class="demo-btn" onclick="prevStep()">⏮ Anterior</button>
+      <button class="demo-btn play" id="btnPlay" onclick="toggleAutoPlay()">▶ Auto-Play Demo</button>
+      <button class="demo-btn" onclick="nextStep()">Siguiente ⏭</button>
+      <button class="demo-btn" onclick="resetDemo()" style="background:rgba(255,255,255,0.05)">🔄 Reiniciar</button>
+    </div>
+  </div>
+
+  <!-- TIMELINE DE PASOS -->
+  <div class="demo-steps" id="stepsBar">
+    <div class="demo-step-chip active" onclick="jumpToStep(1)">
+      <div class="step-num">Paso 1</div>
+      <div class="step-name">📱 Triaje WhatsApp</div>
+    </div>
+    <div class="demo-step-chip" onclick="jumpToStep(2)">
+      <div class="step-num">Paso 2</div>
+      <div class="step-name">🧠 Ruteo & Desvío</div>
+    </div>
+    <div class="demo-step-chip" onclick="jumpToStep(3)">
+      <div class="step-num">Paso 3</div>
+      <div class="step-name">🩺 Consulta Médica</div>
+    </div>
+    <div class="demo-step-chip" onclick="jumpToStep(4)">
+      <div class="step-num">Paso 4</div>
+      <div class="step-name">🛡️ Auditoría & RAG</div>
+    </div>
+    <div class="demo-step-chip" onclick="jumpToStep(5)">
+      <div class="step-num">Paso 5</div>
+      <div class="step-name">💊 Adherencia 24h</div>
+    </div>
+  </div>
+</div>
+
+<!-- NARRATIVA EN VIVO -->
+<div class="narrative-banner" id="narrativeBanner">
+  <span class="narrative-badge" id="narrativeBadge">Guion de Voz</span>
+  <span id="narrativeText">Iniciando caso clínico de Verónica (42 años)... El paciente reporta síntomas por WhatsApp.</span>
+</div>
+
+<!-- PESTAÑAS 1 A 4 -->
+<div class="planos-tabs">
+  <div class="plano-tab active" id="tabHead1" onclick="switchTab(1)">
+    <span>📱 Plano 1: Paciente (WhatsApp)</span>
+    <span class="tab-badge">Canal Asegurado</span>
+  </div>
+  <div class="plano-tab" id="tabHead2" onclick="switchTab(2)">
+    <span>🩺 Plano 2: Consola Médica</span>
+    <span class="tab-badge">Panel Doctor</span>
+  </div>
+  <div class="plano-tab" id="tabHead3" onclick="switchTab(3)">
+    <span>🧠 Plano 3: Motor Backend</span>
+    <span class="tab-badge">Health Score</span>
+  </div>
+  <div class="plano-tab" id="tabHead4" onclick="switchTab(4)">
+    <span>🛡️ Plano 4: Consola TPA Mawdy</span>
+    <span class="tab-badge">Auditoría & RAG</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- PESTAÑA 1: WHATSAPP PACIENTE -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content active" id="tab1">
+  <div class="wa-sim-container">
+    <div class="wa-sim-header">
+      <div class="wa-avatar-img">🩺</div>
+      <div>
+        <div style="font-weight:700;font-size:14px">MediLyft · Mawdy TPA</div>
+        <div style="font-size:11px;color:#25d366">● en línea</div>
+      </div>
+    </div>
+    <div class="wa-sim-body" id="waChatBox">
+      <div class="wa-msg in">
+        ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
+        <div class="wa-time">09:15</div>
+      </div>
+    </div>
+    <div class="wa-actions" id="waActionBtns">
+      <button class="wa-chip-btn" onclick="simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C')">
+        💬 Cefalea severa y fiebre (38.2°C)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- PESTAÑA 2: CONSOLA MÉDICA (ESPEJO DE INDEX.HTML) -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab2">
+  <div style="max-width:1100px;margin:0 auto">
+    
+    <div class="doctor-mirror-header">
+      <div>
+        <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase;letter-spacing:0.08em">Portal Clínico del Médico Tratante</div>
+        <h2 style="font-size:20px;font-weight:800;margin:4px 0 0">Dr. Patricio Navarrete — Medicina General</h2>
+      </div>
+      <span class="badge badge-green" style="font-size:12px;padding:6px 12px">● Médico de Guardia Disponible</span>
+    </div>
+
+    <!-- ALERTA CRÍTICA DE ALERGIA -->
+    <div class="allergy-alert-banner" id="allergyBanner" style="display:none">
+      <span style="font-size:24px">⚠️</span>
+      <div>
+        <div style="font-size:14px;font-weight:800">ALERTA CLÍNICA AUTOMÁTICA: ALERGIA DETECTADA</div>
+        <div style="font-weight:500;margin-top:2px">La paciente Verónica registra alergia documentada a <strong>IBUPROFENO / AINEs</strong>. El sistema ha bloqueado su prescripción.</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="gap:20px">
+      <!-- TARJETA PACIENTE -->
+      <div class="card">
+        <div class="card-title">Ficha Paciente en Espera</div>
+        
+        <div style="display:flex;align-items:center;gap:14px;margin:16px 0">
+          <div style="width:52px;height:52px;border-radius:50%;background:#dbeafe;color:#1e40af;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px">VR</div>
+          <div>
+            <div style="font-size:16px;font-weight:800">Verónica Ruiz</div>
+            <div style="font-size:12px;color:#64748b">42 años · Cédula: 1701234567 · Póliza Mawdy #TPA-0491</div>
+          </div>
+        </div>
+
+        <table class="table" style="font-size:12px">
+          <tr><th>Síntomas reportados</th><td><strong style="color:#ef4444">Cefalea intensa + Fiebre 38.2°C</strong></td></tr>
+          <tr><th>Triaje inicial</th><td><span class="badge badge-yellow">Prioridad Moderada</span></td></tr>
+          <tr><th>Antecedentes TPA</th><td>Hipertensión Arterial (HTA) · Alergia a Ibuprofeno</td></tr>
+        </table>
+
+        <div style="margin-top:16px;display:flex;gap:10px">
+          <button class="btn btn-primary" id="btnCallDoctor" onclick="iniciarVideollamadaDemo()" style="flex:1">📞 Iniciar Videoconsulta HD</button>
+        </div>
+      </div>
+
+      <!-- FORMULARIO DE PRESCRIPCIÓN -->
+      <div class="card" id="recipeCard" style="opacity:0.6;pointer-events:none">
+        <div class="card-title">Prescripción y Diagnóstico Médico CIE-10</div>
+        
+        <div class="form-group" style="margin-top:12px">
+          <label>Diagnóstico Principal (CIE-10)</label>
+          <input type="text" class="input" value="R51 - Cefalea Vascular / Síndrome Febril" readonly>
+        </div>
+
+        <div class="form-group">
+          <label>Medicamentos Sugeridos (Seguro para Alérgicos a Ibuprofeno)</label>
+          <textarea class="input" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
+2. Enalapril 10mg — Mantener dosis diaria de tratamiento base HTA.</textarea>
+        </div>
+
+        <button class="btn btn-success" id="btnSignRecipe" onclick="firmarRecetaDemo()" style="width:100%">✍️ Firmar y Emitir Receta Digital (PDF)</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- PESTAÑA 3: MOTOR BACKEND & HEALTH SCORE -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab3">
+  <div style="max-width:1100px;margin:0 auto" class="backend-grid">
+    
+    <!-- HEALTH SCORE GAUGE -->
+    <div class="card">
+      <div class="card-title">Health Score Preventivo — Algoritmo Clínico</div>
+      
+      <div class="score-dial-big" style="margin-top:20px">
+        <div class="score-dial-inner">
+          <div style="font-size:36px;font-weight:900;color:#16a34a">76</div>
+          <div style="font-size:10px;font-weight:800;color:#64748b">HEALTH SCORE</div>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-bottom:16px">
+        <span class="badge badge-green" style="font-size:12px">Nivel: Moderado / Estable</span>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-val" style="color:#16a34a">93%</div>
+          <div class="stat-lbl">Adherencia HTA</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" style="color:#2563eb">85%</div>
+          <div class="stat-lbl">Desvío Urgencia</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- METRICAS DE SINIESTRALIDAD Y RUTEO -->
+    <div class="card">
+      <div class="card-title">Métricas de Siniestralidad y Ruteo de Caso</div>
+
+      <div class="flow-node-box" style="margin-top:16px;border-left:4px solid #2563eb">
+        <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase">1. Algoritmo de Triaje Rápido</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px">Solicitud asignada a Telemedicina General</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Filtra la visita presencial a sala de emergencias.</div>
+      </div>
+
+      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #16a34a">
+        <div style="font-size:11px;font-weight:800;color:#16a34a;text-transform:uppercase">2. Impacto de Ahorro Directo</div>
+        <div style="font-size:24px;font-weight:900;color:#16a34a;margin-top:2px">$112.00 Evitados</div>
+        <div style="font-size:12px;color:#64748b">Costo presencial de guardia ($120) vs Telemedicina MediLyft ($8).</div>
+      </div>
+
+      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #f59e0b">
+        <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase">3. Cron Automatizado de Adherencia</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px">Disparador programado a 24 horas</div>
+        <div style="font-size:12px;color:#64748b">WhatsApp enviará el control de toma de Paracetamol y Enalapril.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- PESTAÑA 4: CONSOLA TPA MAWDY (AUDITORÍA & RAG) -->
+<!-- ══════════════════════════════════════════════════════════════════════════ -->
+<div class="tab-content" id="tab4">
+  <div style="max-width:1200px;margin:0 auto" class="grid grid-2">
+    
+    <!-- PANEL AUDITORÍA -->
+    <div class="card">
+      <div class="card-title">🛡️ Expedientes para Auditoría de Pertinencia Médica</div>
+      
+      <table class="table" style="font-size:12px;margin-top:12px">
+        <thead>
+          <tr>
+            <th>Paciente</th>
+            <th>Diagnóstico & Receta</th>
+            <th>Estado</th>
+            <th>Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>Verónica Ruiz</strong><br>
+              <span style="color:#64748b">Cédula: 1701234567</span>
+            </td>
+            <td>
+              <div style="color:#1e40af;font-weight:700">R51 Cefalea Vascular</div>
+              <div style="font-size:11px;color:#64748b">Paracetamol 500mg + Enalapril 10mg</div>
+            </td>
+            <td><span class="badge badge-yellow" id="auditStatusBadge">Pendiente</span></td>
+            <td>
+              <button class="btn btn-sm btn-success" onclick="dictaminarDemo('aprobado')">✅ Pertinente</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CHATBOT IA RAG GEMINI 2.5 FLASH -->
+    <div class="card">
+      <div class="card-title">🤖 Asistente IA RAG — KPIs TPA Mawdy</div>
+      
+      <div id="chatBoxRAGDemo" style="height:280px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;overflow-y:auto;margin:12px 0;font-size:12px">
+        <div style="background:#ffffff;border:1px solid #cbd5e1;padding:10px;border-radius:8px;margin-bottom:8px">
+          👋 <strong>Hola. Soy tu Asistente de Analítica RAG con Gemini 2.5 Flash.</strong><br>
+          Puedes hacerme preguntas sobre la siniestralidad, médicos activos o volumen de atenciones en tiempo real.
+        </div>
+      </div>
+
+      <div style="display:flex;gap:6px">
+        <input type="text" id="inputRAGDemo" class="input" placeholder="Ej. ¿Cuántas consultas atendió el Dr. Patricio Navarrete?" style="font-size:12px">
+        <button class="btn btn-primary" onclick="preguntarRAGDemo()">Preguntar</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="/js/demo4planos.js?v=20260717"></script>
+</body>
+</html>

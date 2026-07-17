@@ -5,6 +5,14 @@
 
 let auditoriaConsultasCache = [];
 
+async function getAuthToken() {
+  if (typeof supabaseClient !== 'undefined') {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (session?.access_token) return session.access_token;
+  }
+  return localStorage.getItem('token') || '';
+}
+
 async function loadAuditoriaTPA() {
   const container = document.getElementById('auditoriaTPAContainer');
   if (!container) return;
@@ -12,7 +20,7 @@ async function loadAuditoriaTPA() {
   container.innerHTML = '<div class="empty-state" style="padding:2rem">Cargando expediente de auditoría TPA...</div>';
 
   try {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const estadoAuditoria = document.getElementById('filterAuditoriaEstado')?.value || '';
     const empresaId = document.getElementById('filterAuditoriaEmpresa')?.value || '';
 
@@ -135,7 +143,7 @@ async function abrirModalDictamen(consultaId, estado) {
   if (notas === null) return; // cancelado
 
   try {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const res = await fetch('/api/b2b-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -189,7 +197,7 @@ async function enviarConsultaRAG(preguntaFija = null) {
   chatBox.scrollTop = chatBox.scrollHeight;
 
   try {
-    const token = localStorage.getItem('token');
+    const token = await getAuthToken();
     const res = await fetch('/api/b2b-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -207,7 +215,7 @@ async function enviarConsultaRAG(preguntaFija = null) {
     if (!res.ok) throw new Error(data.error || 'Error procesando consulta RAG');
 
     // Parse Markdown simple to HTML
-    const textoHtml = data.respuesta
+    const textoHtml = (data.respuesta || '')
       .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
       .replace(/\n/g, '<br>');
 

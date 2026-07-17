@@ -33,21 +33,43 @@ module.exports = async function handler(req, res) {
       const { obtener, guardar } = require('../services/sesiones');
       const { procesarPaso } = require('../flows/flujo-consulta');
       const { clasificarSintomas } = require('../utils/validaciones');
+      const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
 
       const tel = req.body.telefono || '593999999999';
       const msgTexto = (req.body.mensaje || '').trim();
 
-      let sesion = await obtener(tel);
+      // Asegurar que el paciente Verónica Ruiz existe con un UUID válido en Supabase
+      let paciente = await buscarPorCedula('1701234567').catch(() => null);
+      if (!paciente) {
+        paciente = await crearPaciente({
+          cedula: '1701234567',
+          nombre: 'Verónica',
+          apellidos: 'Ruiz',
+          telefono: tel,
+          correo: 'veronica.ruiz@mawdy.com',
+          lugar_residencia: 'Quito',
+          sexo: 'F',
+          edad: '42'
+        }).catch(() => null);
+      }
+
+      let sesion = await obtener(tel).catch(() => null);
       let pasoActual = sesion?.paso || 'sintomas';
       let datosActuales = sesion?.datos || {
         cedula: '1701234567',
+        paciente_id: paciente?.id || null,
+        nombre_paciente: 'Verónica Ruiz',
         nombreCompleto: 'Verónica Ruiz',
         empresa: 'Mawdy TPA',
-        alergias: 'Ibuprofeno'
+        empresa_id: paciente?.empresa_id || '9069d2d4-3ff3-4b68-80f0-c20e2ef5b0e5',
+        alergias: 'Ibuprofeno',
+        telefono: tel,
+        correo: 'veronica.ruiz@mawdy.com',
+        lugar_residencia: 'Quito'
       };
 
       const result = await procesarPaso(pasoActual, msgTexto, datosActuales, tel, 'Verónica Ruiz', {});
-      await guardar(tel, result.paso || pasoActual, result.datos || datosActuales);
+      await guardar(tel, result.paso || pasoActual, result.datos || datosActuales).catch(() => {});
 
       // Calcular Health Score en vivo según triaje real
       let healthScore = 76;

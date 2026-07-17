@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "$comment": "build-2026-07-17-v4",
   "outputDirectory": "public",
   "installCommand": "npm install",
   "functions": {

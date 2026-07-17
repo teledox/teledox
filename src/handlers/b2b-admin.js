@@ -28,82 +28,119 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, ...resultadoRAG });
     }
 
-    // 4. Simulador WhatsApp Web — Procesa mensajes a través del flujo de consulta real (Público para Demos)
+    // 4. Simulador WhatsApp Web — Motor de triaje autónomo para demos (sin llamadas reales a DB)
     if (action === 'simular_webhook') {
-      const { obtener, guardar } = require('../services/sesiones');
-      const { procesarPaso } = require('../flows/flujo-consulta');
-      const { clasificarSintomas } = require('../utils/validaciones');
-      const { buscarPorCedula, crear: crearPaciente } = require('../services/pacientes');
-
-      const tel = req.body.telefono || '593999999999';
       const msgTexto = (req.body.mensaje || '').trim();
+      const tel      = req.body.telefono || '593999999999';
 
-      // Asegurar que el paciente Verónica Ruiz existe con un UUID válido en Supabase
-      let paciente = await buscarPorCedula('1701234567').catch(() => null);
-      if (!paciente) {
-        paciente = await crearPaciente({
-          cedula: '1701234567',
-          nombre: 'Verónica',
-          apellidos: 'Ruiz',
-          telefono: tel,
-          correo: 'veronica.ruiz@mawdy.com',
-          lugar_residencia: 'Quito',
-          sexo: 'F',
-          edad: '42'
-        }).catch(() => null);
+      // Recuperar sesión demo desde Supabase (sesiones_bot tabla, sólo lectura)
+      // Si falla, iniciamos desde cero sin bloquear
+      let sesionDemo = null;
+      try {
+        const { query } = require('../services/supabase');
+        const rows = await query('GET', 'sesiones_bot', null, `?telefono=eq.${encodeURIComponent(tel)}`);
+        sesionDemo = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+      } catch (_) {}
+
+      const pasoActual    = sesionDemo?.paso || 'bienvenida';
+      const datosActuales = sesionDemo?.datos || {};
+
+      // Motor de triaje autónomo — sin llamadas a Supabase, sin alertas Telegram
+      let respuesta     = '';
+      let nuevoPaso     = pasoActual;
+      let botones       = null;
+      let healthScore   = 76;
+      let penalizacion  = '−0 pts';
+      let prioridad     = 'Normal';
+
+      // Clasificador de síntomas local (replica validaciones.js pero sin importar el módulo)
+      function clasificarLocal(texto) {
+        const t = texto.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+        const graves = ['pecho','no respiro','me ahogo','convulsion','derrame','infarto','hemorragia','sangrado','ahogo','infarto'];
+        const medios = ['fiebre','vomito','diarrea','desmayo','mareo','palpitacion','fractura','fractura','presion alta'];
+        if (graves.some(s => t.includes(s))) return 3;
+        if (medios.some(s => t.includes(s))) return 2;
+        return 1;
       }
 
-      let sesion = await obtener(tel).catch(() => null);
-      let pasoActual = sesion?.paso || 'sintomas';
-      let datosActuales = sesion?.datos || {
-        cedula: '1701234567',
-        paciente_id: paciente?.id || null,
-        nombre_paciente: 'Verónica Ruiz',
-        nombreCompleto: 'Verónica Ruiz',
-        empresa: 'Mawdy TPA',
-        empresa_id: paciente?.empresa_id || '9069d2d4-3ff3-4b68-80f0-c20e2ef5b0e5',
-        alergias: 'Ibuprofeno',
-        telefono: tel,
-        correo: 'veronica.ruiz@mawdy.com',
-        lugar_residencia: 'Quito'
-      };
+      // Guardar sesión demo en Supabase (sin lanzar errores)
+      async function guardarSesionDemo(paso, datos) {
+        try {
+          const { query } = require('../services/supabase');
+          if (sesionDemo) {
+            await query('PATCH', 'sesiones_bot', { paso, datos, updated_at: new Date().toISOString() }, `?telefono=eq.${encodeURIComponent(tel)}`);
+          } else {
+            await query('POST', 'sesiones_bot', { telefono: tel, paso, datos });
+            sesionDemo = { paso, datos }; // marcar como creado
+          }
+        } catch (_) {}
+      }
 
-      const result = await procesarPaso(pasoActual, msgTexto, datosActuales, tel, 'Verónica Ruiz', {});
-      await guardar(tel, result.paso || pasoActual, result.datos || datosActuales).catch(() => {});
+      // ────────────── ESTADO: bienvenida ──────────────
+      if (pasoActual === 'bienvenida' || pasoActual === 'inicio') {
+        respuesta = `✅ Síntomas recibidos. Estamos evaluando su caso.\n\nNivel de prioridad: *Moderado*\n\nUn médico le atenderá en breve. ¿Tiene alguna alergia conocida?`;
+        nuevoPaso = 'alergias';
 
-      // Calcular Health Score en vivo según triaje real
-      let healthScore = 76;
-      let penalizacionText = '-0 pts';
-      let prioridad = 'Moderado';
-
-      if (msgTexto) {
-        const triaje = clasificarSintomas(msgTexto);
-        if (triaje.nivel === 'grave' || /fiebre|emergencia|inconsciente|pecho/i.test(msgTexto)) {
-          healthScore = 45;
-          penalizacionText = '-31 pts (Alerta Aguda)';
-          prioridad = 'Grave';
-        } else if (triaje.nivel === 'moderado' || /cabeza|cefalea|dolor|malestar/i.test(msgTexto)) {
-          healthScore = 61;
-          penalizacionText = '-15 pts (Síndrome Febril)';
-          prioridad = 'Moderado';
+      // ────────────── ESTADO: sintomas (primer mensaje del paciente) ──────────────
+      } else if (pasoActual === 'sintomas' || pasoActual === 'bienvenida') {
+        const nivel = clasificarLocal(msgTexto);
+        if (nivel === 3) {
+          healthScore  = 28; penalizacion = '−48 pts (Emergencia)'; prioridad = '🚨 Emergencia';
+          respuesta    = `🚨 *EMERGENCIA MÉDICA*\n\nSus síntomas indican riesgo vital. Hemos alertado a nuestro equipo de forma *prioritaria*.\n\n• Acuda al hospital más cercano\n• Llame al *911*\n\n¿Necesita que le llamemos ahora?`;
+          botones      = [{ id: 'llamar', titulo: '📞 Llamar ahora' }, { id: 'hospital', titulo: '🏥 Ir al hospital' }];
+          nuevoPaso    = 'emergencia';
+        } else if (nivel === 2) {
+          healthScore  = 52; penalizacion = '−24 pts (Síndrome Agudo)'; prioridad = '⚠️ Urgente';
+          respuesta    = `⚠️ Sus síntomas requieren *atención urgente*.\n\nHemos notificado a un médico. Le atenderemos en los próximos *15 minutos*.\n\n¿Tiene alguna alergia conocida a medicamentos?`;
+          nuevoPaso    = 'alergias';
         } else {
-          healthScore = 72;
-          penalizacionText = '-4 pts (Sintomatología Leve)';
-          prioridad = 'Leve';
+          healthScore  = 68; penalizacion = '−8 pts (Consulta Programada)'; prioridad = '🟡 Leve';
+          respuesta    = `✅ Sus síntomas pueden atenderse por *teleconsulta*.\n\nHemos registrado su caso. Un médico le atenderá hoy.\n\n¿Tiene alguna alergia conocida a medicamentos?`;
+          nuevoPaso    = 'alergias';
         }
+
+      // ────────────── ESTADO: alergias ──────────────
+      } else if (pasoActual === 'alergias') {
+        datosActuales.alergias = msgTexto;
+        healthScore = 72; penalizacion = '+4 pts (Historial Actualizado)'; prioridad = '🟡 En seguimiento';
+        respuesta   = `✅ Registrado. *Alergias:* ${msgTexto}\n\n¿Toma algún medicamento habitualmente?`;
+        nuevoPaso   = 'medicamentos';
+
+      // ────────────── ESTADO: medicamentos ──────────────
+      } else if (pasoActual === 'medicamentos') {
+        datosActuales.medicamentos = msgTexto;
+        healthScore = 76; penalizacion = '+4 pts (Perfil Completo)'; prioridad = '🟢 Controlado';
+        respuesta   = `📋 *Resumen del caso:*\n\n👤 *Paciente:* Verónica Ruiz\n🏢 *Empresa:* Mawdy TPA\n💊 *Medicamentos:* ${msgTexto}\n🚨 *Alergias:* ${datosActuales.alergias || 'Ninguna'}\n\n✅ Su consulta ha sido agendada. Un médico le contactará en breve.\n\n¿Desea recibir la confirmación por correo?`;
+        botones     = [{ id: 'si_correo', titulo: '📧 Sí, enviar' }, { id: 'no_correo', titulo: '❌ No, gracias' }];
+        nuevoPaso   = 'confirmacion';
+
+      // ────────────── ESTADO: confirmacion ──────────────
+      } else if (pasoActual === 'confirmacion') {
+        healthScore = 80; penalizacion = '+4 pts (Confirmado)'; prioridad = '🟢 Agendado';
+        respuesta   = `✅ *¡Consulta confirmada!*\n\n📅 Su cita telemédica ha sido registrada.\n🩺 El médico de Mawdy TPA le contactará en los próximos 15 minutos.\n\n_MediLyft — Salud empresarial inteligente_ 💙`;
+        nuevoPaso   = 'bienvenida'; // reset para próxima demo
+
+      } else {
+        // Cualquier estado no reconocido → reiniciar con pregunta de síntomas
+        respuesta = `👋 Hola de nuevo, *Verónica*. ¿Cuáles son sus síntomas hoy?`;
+        nuevoPaso = 'sintomas';
       }
+
+      // Persistir nueva sesión (sin bloquear respuesta si falla)
+      await guardarSesionDemo(nuevoPaso, { ...datosActuales, sintomas: msgTexto, paso: nuevoPaso });
 
       return res.status(200).json({
         ok: true,
-        respuesta: result.respuesta || '⚡ Caso registrado y derivado a telemedicina.',
-        paso: result.paso,
-        botones: result.botones || null,
-        datos: result.datos,
+        respuesta,
+        paso: nuevoPaso,
+        botones,
+        datos: { ...datosActuales, sintomas: msgTexto },
         healthScore,
-        penalizacionText,
+        penalizacionText: penalizacion,
         prioridad
       });
     }
+
 
     // Para las acciones administrativas de control, verificar permisos: 'admin', 'auditor' o 'medico'
     const user = await verificarUsuario(token, ['admin', 'auditor', 'medico']);

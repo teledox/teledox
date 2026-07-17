@@ -557,65 +557,71 @@
       <!-- FORMULARIO DE PRESCRIPCIÓN -->
       <div class="card" id="recipeCard" style="opacity:0.6;pointer-events:none">
         <div class="card-title">Prescripción y Diagnóstico Médico CIE-10</div>
-        
-        <div class="form-group" style="margin-top:12px">
-          <label>Diagnóstico Principal (CIE-10)</label>
-          <input type="text" class="input" value="R51 - Cefalea Vascular / Síndrome Febril" readonly>
-        </div>
-
-        <div class="form-group">
-          <label>Medicamentos Sugeridos (Seguro para Alérgicos a Ibuprofeno)</label>
-          <textarea class="input" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
-2. Enalapril 10mg — Mantener dosis diaria de tratamiento base HTA.</textarea>
-        </div>
-
-        <button class="btn btn-success" id="btnSignRecipe" onclick="firmarRecetaDemo()" style="width:100%">✍️ Firmar y Emitir Receta Digital (PDF)</button>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════════════════════════════════════════ -->
-<!-- PESTAÑA 3: MOTOR BACKEND & HEALTH SCORE -->
+   <!-- ══════════════════════════════════════════════════════════════════════════ -->
+<!-- PESTAÑA 3: MOTOR BACKEND — ENFOCADO EN HEALTH SCORE Y ALERTAS -->
 <!-- ══════════════════════════════════════════════════════════════════════════ -->
 <div class="tab-content" id="tab3">
   <div style="max-width:1100px;margin:0 auto" class="backend-grid">
     
-    <!-- HEALTH SCORE GAUGE -->
+    <!-- HEALTH SCORE GAUGE & DESGLOSE EN TIEMPO REAL -->
     <div class="card">
-      <div class="card-title">Health Score Preventivo — Algoritmo Clínico</div>
+      <div class="card-title">🧠 Motor de Predictibilidad — Health Score Preventivo</div>
       
-      <div class="score-dial-big" style="margin-top:20px">
+      <div class="score-dial-big" style="margin-top:20px" id="scoreDialBg">
         <div class="score-dial-inner">
-          <div style="font-size:36px;font-weight:900;color:#16a34a">76</div>
+          <div style="font-size:36px;font-weight:900;color:#16a34a" id="scoreNumVal">76</div>
           <div style="font-size:10px;font-weight:800;color:#64748b">HEALTH SCORE</div>
         </div>
       </div>
 
-      <div style="text-align:center;margin-bottom:16px">
-        <span class="badge badge-green" style="font-size:12px">Nivel: Moderado / Estable</span>
+      <div style="text-align:center;margin-bottom:16px" id="scoreStatusBox">
+        <span class="badge badge-green" id="scoreStatusBadge" style="font-size:12px">Nivel: Estándar (76/100)</span>
       </div>
 
-      <div class="stat-row">
-        <div class="stat-box">
-          <div class="stat-val" style="color:#16a34a">93%</div>
-          <div class="stat-lbl">Adherencia HTA</div>
+      <!-- DESGLOSE MATEMÁTICO CLINICO -->
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:12px;margin-top:12px">
+        <div style="font-weight:800;color:#0f172a;margin-bottom:8px">Descomposición del Score Clínico de Verónica:</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>+ Control HTA (Enalapril)</span><strong style="color:#16a34a">+30 pts</strong>
         </div>
-        <div class="stat-box">
-          <div class="stat-val" style="color:#2563eb">85%</div>
-          <div class="stat-lbl">Desvío Urgencia</div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <span>+ Adherencia 30 días (28/30 días)</span><strong style="color:#16a34a">+32 pts</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px" id="scorePenaltyRow">
+          <span>- Impacto Síntomas Agudos (Fiebre/Cefalea)</span><strong style="color:#ef4444" id="scorePenaltyVal">-15 pts</strong>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e2e8f0;font-weight:800">
+          <span>PUNTAJE GLOBAL CALCULADO</span><span style="color:#2563eb" id="scoreTotalVal">61 / 100</span>
         </div>
       </div>
     </div>
 
-    <!-- METRICAS DE SINIESTRALIDAD Y RUTEO -->
+    <!-- MONITOR DE ALERTAS PREVENTIVAS Y RUTEO -->
     <div class="card">
-      <div class="card-title">Métricas de Siniestralidad y Ruteo de Caso</div>
+      <div class="card-title">🚨 Generación de Alerta Preventiva y Siniestralidad</div>
 
-      <div class="flow-node-box" style="margin-top:16px;border-left:4px solid #2563eb">
-        <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase">1. Algoritmo de Triaje Rápido</div>
-        <div style="font-size:13px;font-weight:700;margin-top:4px">Solicitud asignada a Telemedicina General</div>
+      <!-- BANNER ALERTA PREVENTIVA -->
+      <div class="flow-node-box" id="hsAlertBox" style="margin-top:16px;border-left:4px solid #f59e0b;background:#fffbe6">
+        <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase">🚨 Alerta Preventiva de Salud Generada</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px" id="hsAlertTitle">Health Score cayó a 61 puntos (Umbral &lt; 65)</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px" id="hsAlertDesc">El sistema notifica al médico de guardia y genera prioridad Moderada para evitar complicaciones.</div>
+      </div>
+
+      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #16a34a">
+        <div style="font-size:11px;font-weight:800;color:#16a34a;text-transform:uppercase">Impacto de Siniestralidad Evitada</div>
+        <div style="font-size:24px;font-weight:900;color:#16a34a;margin-top:2px">$112.00 Ahorrados por Desvío</div>
+        <div style="font-size:12px;color:#64748b">Costo presencial de emergencia ($120) vs Telemedicina ($8).</div>
+      </div>
+
+      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #2563eb">
+        <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase">Pronóstico de Adherencia (Cron 24h)</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px">Disparador activo de seguimiento</div>
+        <div style="font-size:12px;color:#64748b">Recuperación estimada de Health Score a 88/100 tras confirmar toma.</div>
+      </div>
+    </div>
+
+  </div>
+</div>ral</div>
         <div style="font-size:12px;color:#64748b;margin-top:2px">Filtra la visita presencial a sala de emergencias.</div>
       </div>
 

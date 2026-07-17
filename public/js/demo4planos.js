@@ -135,22 +135,74 @@ function resetDemo() {
   }
 }
 
-// ── LÓGICA DE ACCIONES POR PASO ─────────────────────────────────────────────
-function ejecutarAccionPaso(step) {
-  if (step >= 2) {
-    const allergyBanner = document.getElementById('allergyBanner');
-    if (allergyBanner) allergyBanner.style.display = 'flex';
+// ── ACTUALIZACIÓN DINÁMICA DEL HEALTH SCORE EN EL BACKEND ──────────────────
+function updateHealthScoreUI(score, statusText, badgeClass, penalty, totalText) {
+  const numVal = document.getElementById('scoreNumVal');
+  const badge = document.getElementById('scoreStatusBadge');
+  const penaltyVal = document.getElementById('scorePenaltyVal');
+  const totalVal = document.getElementById('scoreTotalVal');
+  const dialBg = document.getElementById('scoreDialBg');
+  const alertTitle = document.getElementById('hsAlertTitle');
+  const alertDesc = document.getElementById('hsAlertDesc');
+
+  if (numVal) numVal.textContent = score;
+  if (badge) {
+    badge.className = 'badge ' + badgeClass;
+    badge.textContent = statusText;
+  }
+  if (penaltyVal) penaltyVal.textContent = penalty;
+  if (totalVal) totalVal.textContent = totalText;
+
+  if (alertTitle) {
+    alertTitle.textContent = `Health Score en ${score} pts — ${statusText}`;
+  }
+  if (alertDesc) {
+    if (score < 65) {
+      alertDesc.textContent = '🚨 Alerta de Salud en Vivo: Caída repentina de score debido a Síndrome Febril. Notificado a médico y TPA.';
+    } else if (score >= 85) {
+      alertDesc.textContent = '✅ Nivel Óptimo: El paciente ha recuperado su estabilidad clínica tras confirmar adherencia farmacológica.';
+    } else {
+      alertDesc.textContent = '🔵 Estado Controlado: El médico tratante emitió la prescripción segura ajustando los antecedentes.';
+    }
   }
 
-  if (step >= 3) {
+  if (dialBg) {
+    let color = '#16a34a';
+    if (score < 70) color = '#f59e0b';
+    if (score < 50) color = '#ef4444';
+    if (score >= 80) color = '#2563eb';
+    dialBg.style.background = `conic-gradient(${color} 0% ${score}%, #e2e8f0 ${score}% 100%)`;
+  }
+}
+
+// ── LÓGICA DE ACCIONES POR PASO ─────────────────────────────────────────────
+function ejecutarAccionPaso(step) {
+  if (step === 1) {
+    updateHealthScoreUI(76, 'Nivel Estándar (76/100)', 'badge-green', '-0 pts', '76 / 100');
+  }
+
+  if (step === 2) {
+    const allergyBanner = document.getElementById('allergyBanner');
+    if (allergyBanner) allergyBanner.style.display = 'flex';
+    updateHealthScoreUI(61, '🚨 ALERTA CRÍTICA: Evento Agudo (61/100)', 'badge-yellow', '-15 pts (Febril)', '61 / 100');
+  }
+
+  if (step === 3) {
     const recipeCard = document.getElementById('recipeCard');
     if (recipeCard) {
       recipeCard.style.opacity = '1';
       recipeCard.style.pointerEvents = 'auto';
     }
+    updateHealthScoreUI(72, '🔵 Tratamiento Asignado (72/100)', 'badge-blue', '-8 pts (Recuperación)', '72 / 100');
+  }
+
+  if (step === 4) {
+    updateHealthScoreUI(76, '✓ Pertinencia Verificada (76/100)', 'badge-green', '-0 pts', '76 / 100');
   }
 
   if (step === 5) {
+    updateHealthScoreUI(88, '✅ Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100');
+
     const waBox = document.getElementById('waChatBox');
     if (waBox && !document.getElementById('msgAdherence')) {
       waBox.innerHTML += `
@@ -160,6 +212,11 @@ function ejecutarAccionPaso(step) {
         </div>
         <div class="wa-msg out">
           Sí, excelente. Ya no me duele la cabeza. Gracias. ✓
+          <div class="wa-time">ahora</div>
+        </div>
+        <div class="wa-msg in" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">
+          📈 <strong>Health Score Recuperado: 88/100</strong><br>
+          Se ha registrado excelente adherencia. Su historial médico en Mawdy TPA ha sido actualizado.
           <div class="wa-time">ahora</div>
         </div>
       `;
@@ -185,6 +242,7 @@ function simularMensajeUsuario(texto) {
     waBox.innerHTML += `
       <div class="wa-msg in">
         ⚡ <strong>Caso Clasificado: Prioridad Moderada.</strong><br>
+        📊 <strong>Health Score Actualizado: 61/100 (Alerta Amarilla)</strong>.<br>
         Antecedentes consultados: HTA · <strong style="color:#ef4444">Alergia a Ibuprofeno</strong>.<br>
         Le conectamos de inmediato con un médico general de guardia.
         <div class="wa-time">09:16</div>

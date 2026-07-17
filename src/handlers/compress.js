@@ -1,8 +1,8 @@
-const { PDFDocument } = require('pdf-lib');
-
+// pdf-lib se carga lazy — evita crashear el cold start de Vercel (includeFiles solo aplica a api/index.js)
 const MAX_BYTES = 5 * 1024 * 1024; // 5MB
 
 module.exports = async function handler(req, res) {
+  const { PDFDocument } = require('pdf-lib');
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
 
   try {

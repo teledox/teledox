@@ -1,6 +1,6 @@
-const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
-
+// pdf-lib se carga lazy — evita crashear el cold start de Vercel
 async function generarHistoriaMedica({ paciente, antecedentes, consulta }) {
+  const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
   const doc = await PDFDocument.create();
   const page = doc.addPage([595, 842]); // A4
   const { width, height } = page.getSize();

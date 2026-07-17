@@ -615,28 +615,56 @@
       </div>
     </div>
 
-    <!-- MONITOR DE ALERTAS PREVENTIVAS Y RUTEO -->
+    <!-- MONITOR DE ALERTAS PREVENTIVAS Y HISTORIAL HEALTH SCORE -->
     <div class="card">
-      <div class="card-title">🚨 Generación de Alerta Preventiva y Siniestralidad</div>
+      <div class="card-title">🚨 Generación de Alerta Preventiva en Vivo</div>
 
       <!-- BANNER ALERTA PREVENTIVA -->
       <div class="flow-node-box" id="hsAlertBox" style="margin-top:16px;border-left:4px solid #f59e0b;background:#fffbe6">
         <div style="font-size:11px;font-weight:800;color:#d97706;text-transform:uppercase">🚨 Alerta Preventiva de Salud Generada</div>
-        <div style="font-size:13px;font-weight:700;margin-top:4px" id="hsAlertTitle">Health Score cayó a 61 puntos (Umbral &lt; 65)</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px" id="hsAlertDesc">El sistema notifica al médico de guardia y genera prioridad Moderada para evitar complicaciones.</div>
+        <div style="font-size:13px;font-weight:700;margin-top:4px" id="hsAlertTitle">Health Score en 76 pts — Nivel Estándar</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px" id="hsAlertDesc">Monitorización activa en tiempo real. Esperando reporte del paciente.</div>
       </div>
 
-      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #16a34a">
-        <div style="font-size:11px;font-weight:800;color:#16a34a;text-transform:uppercase">Impacto de Siniestralidad Evitada</div>
-        <div style="font-size:24px;font-weight:900;color:#16a34a;margin-top:2px">$112.00 Ahorrados por Desvío</div>
-        <div style="font-size:12px;color:#64748b">Costo presencial de emergencia ($120) vs Telemedicina ($8).</div>
+      <!-- HISTORIAL CLINICO DEL SCORE -->
+      <div style="margin-top:16px">
+        <div style="font-size:11px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">Trazabilidad de Cambios del Health Score</div>
+        
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px">
+            <div>
+              <strong style="color:#0f172a">09:15 AM — Estado Inicial</strong><br>
+              <span style="color:#64748b;font-size:11px">Póliza Mawdy · Tratamiento HTA al día</span>
+            </div>
+            <span class="badge badge-green" style="font-size:11px">76 pts</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;font-size:12px">
+            <div>
+              <strong style="color:#991b1b">09:16 AM — Evento Agudo (Fiebre/Cefalea)</strong><br>
+              <span style="color:#7f1d1d;font-size:11px">Caída repentina (-15 pts) · Alerta enviada a Médico</span>
+            </div>
+            <span class="badge badge-yellow" style="font-size:11px">61 pts</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:12px">
+            <div>
+              <strong style="color:#1e40af">09:25 AM — Prescripción Segura Emitida</strong><br>
+              <span style="color:#1d4ed8;font-size:11px">Paracetamol + Enalapril · Alergia Ibuprofeno bloqueada</span>
+            </div>
+            <span class="badge badge-blue" style="font-size:11px">72 pts</span>
+          </div>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:12px">
+            <div>
+              <strong style="color:#166534">+24 Horas — Adherencia Confirmada</strong><br>
+              <span style="color:#15803d;font-size:11px">Confirmación por WhatsApp · Recuperación óptima</span>
+            </div>
+            <span class="badge badge-green" style="font-size:11px">88 pts</span>
+          </div>
+        </div>
       </div>
 
-      <div class="flow-node-box" style="margin-top:12px;border-left:4px solid #2563eb">
-        <div style="font-size:11px;font-weight:800;color:#2563eb;text-transform:uppercase">Pronóstico de Adherencia (Cron 24h)</div>
-        <div style="font-size:13px;font-weight:700;margin-top:4px">Disparador activo de seguimiento</div>
-        <div style="font-size:12px;color:#64748b">Recuperación estimada de Health Score a 88/100 tras confirmar toma.</div>
-      </div>
     </div>
 
   </div>

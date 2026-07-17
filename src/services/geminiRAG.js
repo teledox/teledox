@@ -140,7 +140,7 @@ El usuario es la paciente Verónica Ruiz (42 años, Antecedentes: Hipertensión 
 
 Analiza el siguiente mensaje escrito por el paciente: "${mensajeUsuario}"
 
-Devuelve EXCLUSIVAMENTE un objeto JSON con el siguiente formato exacto (sin bloques markdown de código ```json):
+Devuelve EXCLUSIVAMENTE un objeto JSON con el siguiente formato exacto (sin bloques markdown de código \`\`\`json):
 {
   "respuestaWhatsApp": "Mensaje amable en tono oficial de MediLyft confirmando la recepción del síntoma, indicando la prioridad asignada y la conexión con el médico de guardia. Usa emojis limpios.",
   "prioridad": "Leve" | "Moderado" | "Grave",

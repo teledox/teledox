@@ -2,7 +2,7 @@
  * api/index.js
  * Router maestro de Vercel Serverless Functions para MediLyft.
  * Agrupa todas las rutas de /api/* en una sola función serverless.
- * Build v2.1.0 — 2026-07-17
+ * Build v2.2.0 — 2026-07-17
  */
 
 const handlers = {
@@ -20,7 +20,26 @@ const handlers = {
   '/api/admin-delete':           require('../src/handlers/admin-delete')
 };
 
-module.exports = async function masterRouter(req, res) {
+async function masterRouter(req, res) {
+  // Desactivar bodyParser automático de Vercel para capturar el rawBody exacto de Meta (firmas HMAC)
+  if (!req.rawBody && req.method !== 'GET' && req.method !== 'HEAD') {
+    try {
+      const chunks = [];
+      for await (const chunk of req) chunks.push(chunk);
+      const buffer = Buffer.concat(chunks);
+      req.rawBody = buffer.toString('utf8');
+
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('application/json') && req.rawBody) {
+        try { req.body = JSON.parse(req.rawBody); } catch {}
+      } else if (contentType.includes('application/pdf')) {
+        req.body = buffer;
+      }
+    } catch (err) {
+      console.error('[masterRouter] Error leyendo rawBody:', err.message);
+    }
+  }
+
   const urlPath = (req.url || '').split('?')[0].replace(/\/$/, '');
 
   const handler = handlers[urlPath];
@@ -29,4 +48,11 @@ module.exports = async function masterRouter(req, res) {
   }
 
   return res.status(404).json({ error: `Ruta ${urlPath} no encontrada` });
+}
+
+module.exports = masterRouter;
+module.exports.config = {
+  api: {
+    bodyParser: false
+  }
 };

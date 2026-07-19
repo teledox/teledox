@@ -177,47 +177,103 @@ function resetDemoToZero() {
 }
 
 // ── ACTUALIZACIÓN DINÁMICA DEL HEALTH SCORE EN EL BACKEND ──────────────────
-function updateHealthScoreUI(score, statusText, badgeClass, penalty, totalText) {
-  const numVal = document.getElementById('scoreNumVal');
-  const badge = document.getElementById('scoreStatusBadge');
+function updateHealthScoreUI(score, statusText, badgeClass, penalty, totalText, sintomaLabel) {
+  const numVal     = document.getElementById('scoreNumVal');
+  const badge      = document.getElementById('scoreStatusBadge');
   const penaltyVal = document.getElementById('scorePenaltyVal');
-  const totalVal = document.getElementById('scoreTotalVal');
-  const dialBg = document.getElementById('scoreDialBg');
+  const totalVal   = document.getElementById('scoreTotalVal');
+  const dialBg     = document.getElementById('scoreDialBg');
   const alertTitle = document.getElementById('hsAlertTitle');
-  const alertDesc = document.getElementById('hsAlertDesc');
+  const alertDesc  = document.getElementById('hsAlertDesc');
+  const alertBox   = document.getElementById('hsAlertBox');
   const hsTabBadge = document.getElementById('hsTabBadge');
+  const penaltyRow = document.getElementById('scorePenaltyRow');
+  const timelineBox= document.getElementById('hsTimelineBox');
 
-  if (numVal) numVal.textContent = score;
+  // ── Número central del dial ──
+  if (numVal) {
+    numVal.textContent = score;
+    numVal.style.color = score < 50 ? '#ef4444' : score < 70 ? '#f59e0b' : score >= 85 ? '#2563eb' : '#16a34a';
+  }
   if (hsTabBadge) hsTabBadge.textContent = score + ' pts';
 
+  // ── Badge de estado ──
   if (badge) {
     badge.className = 'badge ' + badgeClass;
     badge.textContent = statusText;
   }
-  if (penaltyVal) penaltyVal.textContent = penalty;
-  if (totalVal) totalVal.textContent = totalText;
 
-  if (alertTitle) {
-    alertTitle.textContent = `Health Score en ${score} pts — ${statusText}`;
-  }
-  if (alertDesc) {
-    if (score < 65) {
-      alertDesc.textContent = '🚨 Alerta de Salud en Vivo: Caída repentina de score debido a Síndrome Febril. Notificado a médico y TPA.';
-    } else if (score >= 85) {
-      alertDesc.textContent = '✅ Nivel Óptimo: El paciente ha recuperado su estabilidad clínica tras confirmar adherencia farmacológica.';
-    } else {
-      alertDesc.textContent = '🔵 Estado Controlado: El médico tratante emitió la prescripción segura ajustando los antecedentes.';
-    }
-  }
+  // ── Penalización dinámica (fila síntomas agudos) ──
+  const penaltyNum = parseInt((penalty || '0').replace(/[^0-9\-]/g, '')) || 0;
+  const ptsBase    = 62; // HTA + adherencia base
+  const htaPts     = 30;
+  const adherPts   = ptsBase - htaPts;
 
+  // Calcular ajuste por síntoma para que la suma cuadre con el score total
+  const sintomaImpacto = score - htaPts - adherPts;
+  const sintomaLabel2  = sintomaLabel || 'Síntomas Agudos';
+  const sintomaSign    = sintomaImpacto >= 0 ? `+${sintomaImpacto}` : `${sintomaImpacto}`;
+  const sintomaColor   = sintomaImpacto >= 0 ? '#16a34a' : '#ef4444';
+
+  if (penaltyRow) {
+    penaltyRow.innerHTML = `
+      <span>- Impacto Síntomas Agudos (${sintomaLabel2})</span>
+      <strong style="color:${sintomaColor}" id="scorePenaltyVal">${sintomaSign} pts</strong>
+    `;
+  }
+  if (totalVal) totalVal.textContent = `${score} / 100`;
+
+  // ── Dial cónico ──
   if (dialBg) {
     let color = '#16a34a';
-    if (score < 70) color = '#f59e0b';
-    if (score < 50) color = '#ef4444';
-    if (score >= 80) color = '#2563eb';
+    if (score < 70)  color = '#f59e0b';
+    if (score < 50)  color = '#ef4444';
+    if (score >= 85) color = '#2563eb';
     dialBg.style.background = `conic-gradient(${color} 0% ${score}%, #e2e8f0 ${score}% 100%)`;
   }
+
+  // ── Caja de alerta preventiva ──
+  if (alertTitle) alertTitle.textContent = `Health Score en ${score} pts — ${statusText}`;
+  if (alertDesc) {
+    if (score < 50) {
+      alertDesc.textContent = '🚨 Alerta Crítica: Caída severa del score. Caso derivado urgente al médico de guardia y TPA notificado.';
+    } else if (score < 65) {
+      alertDesc.textContent = '⚠️ Alerta Activa: Síntoma agudo detectado. Prioridad elevada en cola de atención médica.';
+    } else if (score >= 85) {
+      alertDesc.textContent = '✅ Nivel Óptimo: Paciente con excelente adherencia farmacológica y estabilidad clínica.';
+    } else {
+      alertDesc.textContent = '🔵 Estado Controlado: Monitorización activa. El médico tratante está revisando el caso.';
+    }
+  }
+  if (alertBox) {
+    const borderColor = score < 50 ? '#ef4444' : score < 65 ? '#f59e0b' : score >= 85 ? '#2563eb' : '#16a34a';
+    const bgColor     = score < 50 ? '#fef2f2' : score < 65 ? '#fffbeb' : score >= 85 ? '#eff6ff' : '#f0fdf4';
+    alertBox.style.borderLeftColor = borderColor;
+    alertBox.style.background      = bgColor;
+  }
+
+  // ── Entrada en trazabilidad ──
+  if (timelineBox) {
+    const now = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+    const badgeColorClass = score < 50 ? 'badge-red' : score < 65 ? 'badge-yellow' : score >= 85 ? 'badge-blue' : 'badge-green';
+    const entryId = 'timeline_' + Date.now();
+    const entryHTML = `
+      <div id="${entryId}" style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;animation:fadeIn 0.4s ease">
+        <div>
+          <strong style="color:#0f172a">${now} — ${statusText}</strong><br>
+          <span style="color:#64748b;font-size:11px">${sintomaLabel2} · Póliza Mawdy TPA</span>
+        </div>
+        <span class="badge ${badgeColorClass}" style="font-size:11px">${score} pts</span>
+      </div>
+    `;
+    timelineBox.insertAdjacentHTML('afterbegin', entryHTML);
+
+    // Limitar a 5 entradas en timeline
+    const entries = timelineBox.querySelectorAll('[id^="timeline_"]');
+    if (entries.length > 5) entries[entries.length - 1].remove();
+  }
 }
+
 
 // ── LÓGICA DE ACCIONES POR PASO ─────────────────────────────────────────────
 function ejecutarAccionPaso(step) {
@@ -240,7 +296,7 @@ function ejecutarAccionPaso(step) {
   if (step >= 2) {
     const allergyBanner = document.getElementById('allergyBanner');
     if (allergyBanner) allergyBanner.style.display = 'flex';
-    updateHealthScoreUI(61, '🚨 ALERTA CRÍTICA: Evento Agudo (61/100)', 'badge-yellow', '-15 pts (Febril)', '61 / 100');
+    updateHealthScoreUI(61, 'ALERTA: Evento Agudo (61/100)', 'badge-yellow', '-15 pts (Febril)', '61 / 100', 'Síntoma agudo reportado');
   }
 
   if (step >= 3) {
@@ -249,15 +305,15 @@ function ejecutarAccionPaso(step) {
       recipeCard.style.opacity = '1';
       recipeCard.style.pointerEvents = 'auto';
     }
-    updateHealthScoreUI(72, '🔵 Tratamiento Asignado (72/100)', 'badge-blue', '-8 pts (Recuperación)', '72 / 100');
+    updateHealthScoreUI(72, 'Tratamiento Asignado (72/100)', 'badge-blue', '-8 pts (Recuperación)', '72 / 100', 'Receta emitida por médico');
   }
 
   if (step === 4) {
-    updateHealthScoreUI(76, '✓ Pertinencia Verificada (76/100)', 'badge-green', '-0 pts', '76 / 100');
+    updateHealthScoreUI(76, 'Pertinencia Verificada (76/100)', 'badge-green', '-0 pts', '76 / 100', 'Dictamen TPA aprobado');
   }
 
   if (step === 5) {
-    updateHealthScoreUI(88, '✅ Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100');
+    updateHealthScoreUI(88, 'Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100', 'Adherencia confirmada 24h');
 
     const waBox = document.getElementById('waChatBox');
     if (waBox && !document.getElementById('msgAdherence')) {
@@ -340,11 +396,13 @@ async function enviarMensajeLibreWA() {
     // Actualizar Health Score dinámico y datos reales devueltos por el backend
     updateHealthScoreUI(
       data.healthScore || 61,
-      `🚨 Prioridad ${data.prioridad || 'Moderada'} (${data.healthScore || 61}/100)`,
+      `Prioridad ${data.prioridad || 'Moderada'} (${data.healthScore || 61}/100)`,
       data.healthScore < 50 ? 'badge-red' : (data.healthScore < 70 ? 'badge-yellow' : 'badge-green'),
       data.penalizacionText || '-15 pts',
-      `${data.healthScore || 61} / 100`
+      `${data.healthScore || 61} / 100`,
+      mensaje  // ← síntoma real que escribió el usuario
     );
+
 
     setStep(2);
 

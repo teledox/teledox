@@ -9,56 +9,63 @@ const { query } = require('./supabase');
  * Obtiene las consultas registradas para revisión de auditoría clínica por TPA.
  */
 async function listarConsultasAuditoria({ empresa_id, estado_auditoria, limite = 50 }) {
-  // Usar columnas reales de la tabla consultas (sin clientes_b2b FK que no existe)
-  let params = `?order=created_at.desc&limit=${limite}&select=id,created_at,sintomas_descripcion,nivel_sintomas,estado,diagnostico,notas_medico,medico_id,paciente_id,pacientes(id,nombre,apellidos,cedula,telefono),usuarios!consultas_medico_id_fkey(nombre,apellidos,especialidad)`;
+  // Query plana — solo columnas reales, sin joins problemáticos de clientes_b2b
+  const params = `?order=created_at.desc&limit=${limite}&select=id,created_at,sintomas_descripcion,nivel_sintomas,estado,diagnostico,notas_medico,medico_id,paciente_id,pacientes(id,nombre,apellidos,cedula,telefono),usuarios!consultas_medico_id_fkey(nombre,apellidos,especialidad)`;
 
   const consultas = await query('GET', 'consultas', null, params) || [];
-
   if (!consultas.length) return [];
 
-  // Obtener planillaje_b2b para vincular empresa y estado de auditoría
-  const consultaIds = consultas.map(c => c.id);
-  let planillajeMap = {};
-  let documentosMap = {};
-
-  // Buscar planillaje por paciente_id (enlace entre consulta y empresa)
+  // 1. Obtener planillaje_b2b por paciente_id (plano, sin join a clientes_b2b)
   const pacienteIds = [...new Set(consultas.map(c => c.paciente_id).filter(Boolean))];
+  let planillajeMap = {};
   if (pacienteIds.length) {
-    const inPacientes = `(${pacienteIds.join(',')})`;  
     const planillas = await query('GET', 'planillaje_b2b', null,
-      `?paciente_id=in.${inPacientes}&select=paciente_id,empresa_id,estado_planillaje,nombre_paciente,clientes_b2b(id,nombre_empresa)`) || [];
+      `?paciente_id=in.(${pacienteIds.join(',')})&select=paciente_id,empresa_id,estado_planillaje,nombre_paciente`
+    ) || [];
     planillas.forEach(p => { planillajeMap[p.paciente_id] = p; });
   }
 
-  // Buscar documentos clínicos (receta, CIE-10) si la tabla existe
+  // 2. Obtener nombres de empresas por empresa_id (query separada)
+  const empresaIds = [...new Set(Object.values(planillajeMap).map(p => p.empresa_id).filter(Boolean))];
+  let empresaMap = {};
+  if (empresaIds.length) {
+    const empresas = await query('GET', 'clientes_b2b', null,
+      `?id=in.(${empresaIds.join(',')})&select=id,nombre_empresa`
+    ) || [];
+    empresas.forEach(e => { empresaMap[e.id] = e.nombre_empresa; });
+  }
+
+  // 3. Obtener documentos clínicos (receta, CIE-10) — silenciar error si tabla no existe
+  let documentosMap = {};
   try {
-    const inIds = `(${consultaIds.join(',')})`;  
+    const consultaIds = consultas.map(c => c.id);
     const docs = await query('GET', 'documentos_datos', null,
-      `?consulta_id=in.${inIds}&select=consulta_id,tipo,datos`) || [];
+      `?consulta_id=in.(${consultaIds.join(',')})&select=consulta_id,tipo,datos`
+    ) || [];
     docs.forEach(d => {
       if (!documentosMap[d.consulta_id]) documentosMap[d.consulta_id] = {};
       documentosMap[d.consulta_id][d.tipo] = d.datos;
     });
-  } catch (_) { /* tabla puede no existir */ }
+  } catch (_) {}
 
+  // 4. Ensamblar resultado con nombres mapeados al formato del frontend
   return consultas.map(c => {
     const planilla = planillajeMap[c.paciente_id] || {};
+    const nombreEmpresa = empresaMap[planilla.empresa_id] || 'Sin empresa';
     return {
       ...c,
-      // Mapear nombres de columnas al formato esperado por el frontend
       sintomas: c.sintomas_descripcion,
       nivel_prioridad: c.nivel_sintomas === 3 ? 'Grave' : c.nivel_sintomas === 2 ? 'Moderado' : 'Leve',
-      // Datos de empresa desde planillaje
-      clientes_b2b: planilla.clientes_b2b || { nombre: 'Sin empresa' },
+      clientes_b2b: { nombre: nombreEmpresa },
       empresa_id: planilla.empresa_id || null,
-      // Estado de auditoría desde planillaje (pendiente si no está dictaminado)
-      estado_auditoria: planilla.estado_planillaje === 'auditado' ? 'aprobado' : (estado_auditoria || 'pendiente'),
-      notas_auditoria: null,
+      estado_auditoria: 'pendiente',
+      notas_auditoria: c.notas_medico || null,
       auditado_at: null,
       documentos_clinicos: documentosMap[c.id] || {}
     };
   });
 }
+
 
 /**
  * Dictamina la pertinencia de una consulta médica por parte del auditor del TPA.

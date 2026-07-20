@@ -13,15 +13,13 @@ const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL
  * Recopila contexto de la BD para alimentar el RAG
  */
 async function recopilarContextoKpis(empresa_id = null) {
-  let paramsConsulta = '?select=id,fecha,sintomas,nivel_prioridad,estado,estado_auditoria,created_at,atendido_at,medico_id,empresa_id,pacientes(nombre,apellidos),usuarios!consultas_medico_id_fkey(nombre,apellidos,especialidad),clientes_b2b(nombre)&order=created_at.desc&limit=200';
-  
-  if (empresa_id) {
-    paramsConsulta += `&empresa_id=eq.${empresa_id}`;
-  }
+  // Query plana — columnas reales de la tabla consultas (sin clientes_b2b FK ni columnas inexistentes)
+  let paramsConsulta = '?select=id,created_at,sintomas_descripcion,nivel_sintomas,estado,diagnostico,medico_id,paciente_id,pacientes(nombre,apellidos),usuarios!consultas_medico_id_fkey(nombre,apellidos,especialidad)&order=created_at.desc&limit=200';
 
   const consultas = await query('GET', 'consultas', null, paramsConsulta) || [];
-  const empresas = await query('GET', 'clientes_b2b', null, '?select=id,nombre') || [];
-  const medicos = await query('GET', 'usuarios', null, '?rol=eq.medico&select=id,nombre,apellidos,especialidad') || [];
+  const empresas  = await query('GET', 'clientes_b2b', null, '?select=id,nombre_empresa') || [];
+  const medicos   = await query('GET', 'usuarios', null, '?rol=eq.medico&select=id,nombre,apellidos,especialidad') || [];
+
 
   // Cálculos estadísticos
   const totalConsultas = consultas.length;
@@ -29,10 +27,10 @@ async function recopilarContextoKpis(empresa_id = null) {
   const enAtencion = consultas.filter(c => c.estado === 'en_atencion').length;
   const pendientes = consultas.filter(c => c.estado === 'pendiente').length;
 
-  // Por nivel de prioridad
-  const leves = consultas.filter(c => c.nivel_prioridad === 'leve' || c.nivel_prioridad === 1).length;
-  const moderados = consultas.filter(c => c.nivel_prioridad === 'moderado' || c.nivel_prioridad === 2).length;
-  const graves = consultas.filter(c => c.nivel_prioridad === 'grave' || c.nivel_prioridad === 3).length;
+  // Por nivel de prioridad (nivel_sintomas: 1=Leve, 2=Moderado, 3=Grave)
+  const leves    = consultas.filter(c => c.nivel_sintomas === 1).length;
+  const moderados= consultas.filter(c => c.nivel_sintomas === 2).length;
+  const graves   = consultas.filter(c => c.nivel_sintomas === 3).length;
 
   // Por médico
   const conteoMedicos = {};
@@ -54,10 +52,10 @@ async function recopilarContextoKpis(empresa_id = null) {
     }
   });
 
-  // Auditados TPA
-  const auditadosAprobados = consultas.filter(c => c.estado_auditoria === 'aprobado').length;
-  const auditadosPendientes = consultas.filter(c => c.estado_auditoria === 'pendiente' || !c.estado_auditoria).length;
-  const auditadosRechazados = consultas.filter(c => c.estado_auditoria === 'rechazado').length;
+  // Auditoría TPA — columna no existe en el schema real, se asume todo pendiente
+  const auditadosAprobados  = 0;
+  const auditadosPendientes = consultas.length;
+  const auditadosRechazados = 0;
 
   return {
     resumen: {
@@ -71,7 +69,7 @@ async function recopilarContextoKpis(empresa_id = null) {
     },
     conteoPorMedico: conteoMedicos,
     distribuciónHoras,
-    empresas: empresas.map(e => e.nombre),
+    empresas: empresas.map(e => e.nombre_empresa || e.nombre),
     medicosActivos: medicos.map(m => `${m.nombre} ${m.apellidos} (${m.especialidad || 'General'})`)
   };
 }

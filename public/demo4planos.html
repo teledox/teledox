@@ -273,6 +273,16 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(60px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+
+  @keyframes typingDot {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+    30% { transform: translateY(-4px); opacity: 1; }
+  }
+
   /* ── SIMULADOR WHATSAPP (COLUMNA IZQUIERDA) ── */
   .wa-sim-card {
     background: #0b1014;
@@ -584,8 +594,8 @@
           </div>
 
           <table class="table" style="font-size:12px">
-            <tr><th>Síntomas reportados</th><td><strong style="color:#ef4444">Cefalea intensa + Fiebre 38.2°C</strong></td></tr>
-            <tr><th>Triaje inicial</th><td><span class="badge badge-yellow">Prioridad Moderada</span></td></tr>
+            <tr><th>Síntomas reportados</th><td id="trSintomas"><strong style="color:#ef4444">Cefalea intensa + Fiebre 38.2°C</strong></td></tr>
+            <tr><th>Triaje inicial</th><td id="trTriaje"><span class="badge badge-yellow">Prioridad Moderada</span></td></tr>
             <tr><th>Antecedentes TPA</th><td>Hipertensión Arterial (HTA) · Alergia a Ibuprofeno</td></tr>
           </table>
 
@@ -600,12 +610,12 @@
           
           <div class="form-group" style="margin-top:12px">
             <label>Diagnóstico Principal (CIE-10)</label>
-            <input type="text" class="input" value="R51 - Cefalea Vascular / Síndrome Febril" readonly>
+            <input type="text" class="input" id="inputCie10" value="R51 - Cefalea Vascular / Síndrome Febril" readonly style="transition:border-color 0.3s">
           </div>
 
           <div class="form-group">
             <label>Medicamentos Sugeridos (Seguro para Alérgicos a Ibuprofeno)</label>
-            <textarea class="input" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
+            <textarea class="input" id="textaMeds" style="height:70px" readonly>1. Paracetamol 500mg — Tomar 1 comprimido c/8h por 3 días.
 2. Enalapril 10mg — Mantener dosis diaria de tratamiento base HTA.</textarea>
           </div>
 
@@ -706,7 +716,7 @@
                 <th>Acción</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody id="tpaTableBody">
               <tr>
                 <td>
                   <strong>Verónica Ruiz</strong><br>
@@ -718,7 +728,7 @@
                 </td>
                 <td><span class="badge badge-yellow" id="auditStatusBadge">Pendiente</span></td>
                 <td>
-                  <button class="btn btn-sm btn-success" id="btnAuditApprove" onclick="dictaminarDemo('aprobado')">✅ Pertinente</button>
+                  <button class="btn btn-sm btn-success" id="btnAuditApprove" onclick="dictaminarDemo('aprobado')">✓ Pertinente</button>
                 </td>
               </tr>
             </tbody>
@@ -740,6 +750,7 @@
             <input type="text" id="inputRAGDemo" class="input" placeholder="Ej. ¿Cuántas consultas atendió el Dr. Patricio Navarrete?" style="font-size:12px">
             <button class="btn btn-primary" onclick="preguntarRAGDemo()">Preguntar</button>
           </div>
+          <div id="ragSuggestions" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px"></div>
         </div>
 
       </div>
@@ -749,6 +760,6 @@
 
 </div>
 
-<script src="/js/demo4planos.js?v=20260717"></script>
+<script src="/js/demo4planos.js?v=20260720"></script>
 </body>
 </html>

@@ -337,44 +337,233 @@ function ejecutarAccionPaso(step) {
   }
 }
 
+// ── MOTOR DE INTELIGENCIA DE SÍNTOMAS (Frontend) ────────────────────────────
+// Mapea síntomas a CIE-10, medicamentos, nivel de prioridad, color, etc.
+function analizarSintoma(texto) {
+  const t = texto.toLowerCase();
+  if (/dolor.*pecho|pecho|infarto|corazón|coronar|cardio/.test(t))
+    return { cie10:'I20 - Angina Pectoris', meds:'Aspirina 100mg + Nitroglicerina SL', prioridadLabel:'URGENTE', color:'#ef4444', badge:'badge-red', emoji:'🚨' };
+  if (/dificultad.*respi|falta.*aire|asma|bronq|disnea/.test(t))
+    return { cie10:'J45 - Asma Bronquial', meds:'Salbutamol Inhalador + Prednisolona 20mg', prioridadLabel:'URGENTE', color:'#ef4444', badge:'badge-red', emoji:'🚨' };
+  if (/fiebre|febr|temperatura|38|39|40/.test(t))
+    return { cie10:'R50.9 - Fiebre sin especificar', meds:'Paracetamol 500mg c/8h · NO usar Ibuprofeno (alergia)', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+  if (/cabeza|cefalea|migraña|jaqueca/.test(t))
+    return { cie10:'G43 - Migraña / Cefalea Tensional', meds:'Paracetamol 1g + Metoclopramida 10mg', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+  if (/náusea|vómito|estómago|gastri|colitis|diarrea|intestin/.test(t))
+    return { cie10:'K29 - Gastritis / Colitis Aguda', meds:'Omeprazol 20mg + Metoclopramida 10mg + Suero oral', prioridadLabel:'Leve', color:'#2563eb', badge:'badge-blue', emoji:'💊' };
+  if (/presión|hipertens|hta|mareo/.test(t))
+    return { cie10:'I10 - Hipertensión Esencial', meds:'Enalapril 10mg · Continuar tratamiento base', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+  if (/pie|rodilla|cadera|articulación|artritis|dolor.*hueso|espalda|lumbar/.test(t))
+    return { cie10:'M54.5 - Lumbago / Dolor Musculoesquelético', meds:'Paracetamol 500mg + Reposo relativo + Calor local', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'🟢' };
+  if (/alergi|sarpullido|urticaria|picazón|ronchas/.test(t))
+    return { cie10:'L50 - Urticaria Alérgica', meds:'Loratadina 10mg · Evitar AINEs (alergia documentada)', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'💊' };
+  if (/ansiedad|estrés|nervioso|angustia|pánico/.test(t))
+    return { cie10:'F41.1 - Trastorno de Ansiedad Generalizada', meds:'Técnicas de respiración + Alprazolam 0.25mg SOS', prioridadLabel:'Leve', color:'#2563eb', badge:'badge-blue', emoji:'🧠' };
+  if (/gripe|resfri|congestión|moco|tos|garganta/.test(t))
+    return { cie10:'J06.9 - Infección Respiratoria Alta', meds:'Paracetamol 500mg + Loratadina + Suero fisiológico nasal', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'🟢' };
+  // Default
+  return { cie10:'R68.8 - Síntoma General sin especificar', meds:'Evaluación médica en curso — esperando resultado del triaje', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+}
+
+// ── ANIMACIÓN DE CONTADOR NUMÉRICO ─────────────────────────────────────────
+function animarContador(el, desde, hasta, durMs = 800) {
+  if (!el) return;
+  const pasos = 30;
+  const diff  = hasta - desde;
+  const delay = durMs / pasos;
+  let i = 0;
+  const iv = setInterval(() => {
+    i++;
+    el.textContent = Math.round(desde + (diff * i / pasos));
+    if (i >= pasos) { el.textContent = hasta; clearInterval(iv); }
+  }, delay);
+}
+
+// ── FLASH / PULSE DE TABS ──────────────────────────────────────────────────
+function pulsarTab(tabNum) {
+  const head = document.getElementById('tabHead' + tabNum);
+  if (!head) return;
+  head.style.transition = 'background 0.2s';
+  head.style.background = '#2563eb22';
+  setTimeout(() => { head.style.background = ''; }, 600);
+}
+
+// ── ACTUALIZAR CONSOLA MÉDICA DINÁMICAMENTE ─────────────────────────────────
+function actualizarConsolaMedica(texto, sintomaData, score) {
+  const emptyState  = document.getElementById('docEmptyState');
+  const activeCard  = document.getElementById('docActiveCard');
+  const allergyBanner = document.getElementById('allergyBanner');
+  const docBadge    = document.getElementById('doctorTabBadge');
+
+  if (emptyState)  emptyState.style.display  = 'none';
+  if (activeCard)  activeCard.style.display  = 'grid';
+  if (allergyBanner) allergyBanner.style.display = 'flex';
+
+  // Badge del tab con pulso
+  if (docBadge) {
+    docBadge.textContent = '1 Alerta Activa';
+    docBadge.style.background = '#ef4444';
+    setTimeout(() => { docBadge.style.background = ''; }, 3000);
+  }
+  pulsarTab(2);
+
+  // Actualizar ficha paciente con síntoma real
+  const trSintomas = document.getElementById('trSintomas');
+  if (trSintomas) trSintomas.innerHTML = `<strong style="color:${sintomaData.color}">${sintomaData.emoji} ${texto}</strong>`;
+
+  const trTriaje = document.getElementById('trTriaje');
+  if (trTriaje)   trTriaje.innerHTML  = `<span class="badge ${sintomaData.badge}">Prioridad ${sintomaData.prioridadLabel}</span>`;
+
+  // Actualizar prescripción (CIE-10 y meds)
+  const inputCie10 = document.getElementById('inputCie10');
+  const textaMeds  = document.getElementById('textaMeds');
+  if (inputCie10) { inputCie10.value = sintomaData.cie10; inputCie10.style.borderColor = sintomaData.color; }
+  if (textaMeds)  { textaMeds.value  = sintomaData.meds; }
+
+  // Notificación flotante
+  mostrarNotificacion(`${sintomaData.emoji} Nueva consulta: ${texto.substring(0,40)}...`, sintomaData.color);
+}
+
+// ── ACTUALIZAR CONSOLA TPA DINÁMICAMENTE ─────────────────────────────────────
+function actualizarConsolaTPA(texto, sintomaData, score) {
+  const tpaEmpty  = document.getElementById('tpaEmptyState');
+  const tpaTable  = document.getElementById('tpaTable');
+  const auditBadge = document.getElementById('auditStatusBadge');
+  const tpaTabBadge = document.getElementById('tpaTabBadge');
+  const tpaBody   = document.getElementById('tpaTableBody');
+
+  if (tpaEmpty) tpaEmpty.style.display = 'none';
+  if (tpaTable) tpaTable.style.display = 'table';
+
+  if (tpaTabBadge) {
+    tpaTabBadge.textContent = '1 Pendiente';
+    tpaTabBadge.style.background = '#ef4444';
+    setTimeout(() => { tpaTabBadge.style.background = ''; }, 3000);
+  }
+  pulsarTab(4);
+
+  if (auditBadge) {
+    auditBadge.className = 'badge badge-yellow';
+    auditBadge.textContent = 'Pendiente';
+  }
+
+  // Actualizar fila dinámica de la tabla TPA
+  if (tpaBody) {
+    const now = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+    tpaBody.innerHTML = `
+      <tr>
+        <td>
+          <strong>Verónica Ruiz</strong><br>
+          <span style="color:#64748b;font-size:11px">Cédula: 1701234567 · ${now}</span>
+        </td>
+        <td>
+          <div style="color:#1e40af;font-weight:700;font-size:12px">${sintomaData.cie10}</div>
+          <div style="font-size:11px;color:#64748b;margin-top:2px">💊 ${sintomaData.meds.split('+')[0].trim()}</div>
+        </td>
+        <td><span class="badge badge-yellow" id="auditStatusBadge">Pendiente</span></td>
+        <td>
+          <button class="btn btn-sm btn-success" style="font-size:11px;padding:3px 8px" onclick="dictaminarDemo('aprobado')">✅ Pertinente</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Preguntas sugeridas en el RAG según síntoma
+  const ragSuggestions = document.getElementById('ragSuggestions');
+  if (ragSuggestions) {
+    const pregunta1 = `¿Cuántos casos de "${texto.split(' ').slice(0,3).join(' ')}" se han atendido este mes?`;
+    const pregunta2 = `¿Cuál es el costo promedio de una consulta urgente en Mawdy TPA?`;
+    ragSuggestions.innerHTML = `
+      <button class="wa-chip-btn" style="font-size:11px;padding:4px 8px;border-radius:8px;margin:2px" onclick="simularRAGPregunta('${pregunta1}')">${pregunta1.substring(0,50)}...</button>
+      <button class="wa-chip-btn" style="font-size:11px;padding:4px 8px;border-radius:8px;margin:2px" onclick="simularRAGPregunta('${pregunta2}')">${pregunta2.substring(0,50)}...</button>
+    `;
+  }
+}
+
+// ── NOTIFICACIÓN FLOTANTE ──────────────────────────────────────────────────
+function mostrarNotificacion(texto, color = '#2563eb') {
+  const id = 'notif_' + Date.now();
+  const div = document.createElement('div');
+  div.id = id;
+  div.style.cssText = `
+    position:fixed; top:80px; right:24px; z-index:9999;
+    background:#ffffff; border-left:4px solid ${color};
+    box-shadow:0 8px 24px rgba(0,0,0,0.15); border-radius:10px;
+    padding:12px 16px; font-size:12px; max-width:280px;
+    animation:slideInRight 0.4s ease; font-family:inherit;
+  `;
+  div.innerHTML = `<strong style="color:${color}">🔔 MediLyft Alerta</strong><br>${texto}`;
+  document.body.appendChild(div);
+  setTimeout(() => { div.style.opacity = '0'; div.style.transition = 'opacity 0.5s'; setTimeout(() => div.remove(), 500); }, 4000);
+}
+
+// ── ACTUALIZAR NARRATIVA ──────────────────────────────────────────────────
+function actualizarNarrativa(texto, sintomaData) {
+  const el = document.getElementById('narrativeText');
+  if (el) el.textContent = `🔴 EN VIVO: "${texto.substring(0,50)}${texto.length>50?'…':''}" — Triaje: ${sintomaData.prioridadLabel} · CIE-10: ${sintomaData.cie10.split(' ')[0]} · Score calculado por IA en tiempo real`;
+}
+
+// ── SIMULADOR DE PREGUNTA RAG ──────────────────────────────────────────────
+function simularRAGPregunta(pregunta) {
+  const inputEl = document.getElementById('inputRAGDemo');
+  if (inputEl) { inputEl.value = pregunta; preguntarRAGDemo(); }
+  switchRightTab(4);
+}
+
 // ── ACCIONES INTERACTIVAS DEL USUARIO ──────────────────────────────────────
 async function enviarMensajeLibreWA() {
   const inputEl = document.getElementById('waInputText');
-  const waBox = document.getElementById('waChatBox');
+  const waBox   = document.getElementById('waChatBox');
   if (!inputEl || !waBox) return;
 
   const texto = inputEl.value.trim();
   if (!texto) return;
-
   inputEl.value = '';
 
   const timeStr = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+  const sintomaData = analizarSintoma(texto);
 
+  // 1. Mensaje del usuario en el chat
   waBox.innerHTML += `
-    <div class="wa-msg out">
+    <div class="wa-msg out" style="animation:fadeIn 0.3s ease">
       ${texto}
       <div class="wa-time">${timeStr}</div>
     </div>
   `;
   waBox.scrollTop = waBox.scrollHeight;
 
+  // 2. "Verónica está escribiendo..." typing indicator
   const typingId = 'wa_typing_' + Date.now();
   waBox.innerHTML += `
-    <div class="wa-msg in" id="${typingId}" style="color:#00a884;font-style:italic">
-      MediLyft está procesando el triaje real...
+    <div class="wa-msg in" id="${typingId}" style="color:#25d366;font-style:italic;background:#202c33">
+      <span style="display:inline-flex;gap:4px;align-items:center">
+        <span style="width:6px;height:6px;background:#25d366;border-radius:50%;animation:typingDot 1s infinite 0s"></span>
+        <span style="width:6px;height:6px;background:#25d366;border-radius:50%;animation:typingDot 1s infinite 0.2s"></span>
+        <span style="width:6px;height:6px;background:#25d366;border-radius:50%;animation:typingDot 1s infinite 0.4s"></span>
+        &nbsp;MediLyft procesando triaje IA...
+      </span>
     </div>
   `;
   waBox.scrollTop = waBox.scrollHeight;
+
+  // 3. Reaccionar en los otros paneles INMEDIATAMENTE (sin esperar al API)
+  actualizarConsolaMedica(texto, sintomaData, 70);
+  actualizarConsolaTPA(texto, sintomaData, 70);
+  actualizarNarrativa(texto, sintomaData);
+  pulsarTab(3);
+
+  // Auto-switch al panel relevante según gravedad
+  if (sintomaData.badge === 'badge-red') {
+    switchRightTab(2); // Emergencia → Consola Médica
+  } else {
+    switchRightTab(3); // Normal → Health Score
+  }
 
   try {
     const res = await fetch('/api/b2b-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'simular_webhook',
-        mensaje: texto,
-        telefono: '593999999999'
-      })
+      body: JSON.stringify({ action: 'simular_webhook', mensaje: texto, telefono: '593999999999' })
     });
 
     const data = await res.json();
@@ -383,26 +572,34 @@ async function enviarMensajeLibreWA() {
 
     if (!res.ok) throw new Error(data.error || 'Error procesando webhook');
 
+    // 4. Respuesta del bot en WhatsApp
     const respuestaBot = (data.respuesta || '').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
-
     waBox.innerHTML += `
-      <div class="wa-msg in">
+      <div class="wa-msg in" style="animation:fadeIn 0.3s ease">
         ${respuestaBot}
         <div class="wa-time">${timeStr}</div>
       </div>
     `;
     waBox.scrollTop = waBox.scrollHeight;
 
-    // Actualizar Health Score dinámico y datos reales devueltos por el backend
+    const score = data.healthScore || 61;
+
+    // 5. Actualizar Health Score con animación de contador
+    const scoreNumEl = document.getElementById('scoreNumVal');
+    const scoreActual = parseInt(scoreNumEl?.textContent || '76');
+    animarContador(scoreNumEl, scoreActual, score, 900);
+
     updateHealthScoreUI(
-      data.healthScore || 61,
-      `Prioridad ${data.prioridad || 'Moderada'} (${data.healthScore || 61}/100)`,
-      data.healthScore < 50 ? 'badge-red' : (data.healthScore < 70 ? 'badge-yellow' : 'badge-green'),
-      data.penalizacionText || '-15 pts',
-      `${data.healthScore || 61} / 100`,
-      mensaje  // ← síntoma real que escribió el usuario
+      score,
+      `Prioridad ${data.prioridad || sintomaData.prioridadLabel} (${score}/100)`,
+      data.healthScore < 50 ? 'badge-red' : data.healthScore < 70 ? 'badge-yellow' : 'badge-green',
+      data.penalizacionText || '-0 pts',
+      `${score} / 100`,
+      texto
     );
 
+    // 6. Actualizar consola médica con score real
+    actualizarConsolaMedica(texto, sintomaData, score);
 
     setStep(2);
 
@@ -411,8 +608,8 @@ async function enviarMensajeLibreWA() {
     if (typingEl) typingEl.remove();
 
     waBox.innerHTML += `
-      <div class="wa-msg in" style="border:1px solid #ef4444;color:#ef4444">
-        ⚠️ Error en conexión al webhook: ${err.message}
+      <div class="wa-msg in" style="border:1px solid #ef4444;color:#ef4444;animation:fadeIn 0.3s ease">
+        ⚠️ ${err.message}
       </div>
     `;
     waBox.scrollTop = waBox.scrollHeight;
@@ -426,43 +623,55 @@ function simularMensajeUsuario(texto) {
 }
 
 function iniciarVideollamadaDemo() {
-  alert('📞 Videoconsulta HD Iniciada con la paciente Verónica Ruiz. Conectado al audio y video seguro.');
+  mostrarNotificacion('📞 Videoconsulta HD iniciada — Dr. Navarrete conectado', '#2563eb');
   const recipeCard = document.getElementById('recipeCard');
-  if (recipeCard) {
-    recipeCard.style.opacity = '1';
-    recipeCard.style.pointerEvents = 'auto';
-  }
-  setStep(3);
-}
-
-function firmarRecetaDemo() {
-  alert('✍️ Receta emitida con éxito (Paracetamol + Enalapril). Se ha generado el PDF con firma digital.');
+  if (recipeCard) { recipeCard.style.opacity = '1'; recipeCard.style.pointerEvents = 'auto'; }
   const waBox = document.getElementById('waChatBox');
   if (waBox) {
+    const timeStr = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
     waBox.innerHTML += `
-      <div class="wa-msg in" style="border-left:4px solid #2563eb">
-        📄 <strong>Receta Digital Emitida:</strong><br>
-        Dr. Patricio Navarrete ha emitido su receta digital (PDF).<br>
-        <span style="color:#2563eb;text-decoration:underline">Ver_Receta_Verónica_Ruiz.pdf</span>
-        <div class="wa-time">09:25</div>
+      <div class="wa-msg in" style="border-left:4px solid #2563eb;animation:fadeIn 0.3s ease">
+        📞 <strong>Videoconsulta iniciada</strong><br>El Dr. Patricio Navarrete le está atendiendo ahora. La llamada es segura y cifrada.
+        <div class="wa-time">${timeStr}</div>
       </div>
     `;
     waBox.scrollTop = waBox.scrollHeight;
   }
+  switchRightTab(2);
+  setStep(3);
+}
+
+function firmarRecetaDemo() {
+  const waBox = document.getElementById('waChatBox');
+  const timeStr = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+  if (waBox) {
+    waBox.innerHTML += `
+      <div class="wa-msg in" style="border-left:4px solid #2563eb;animation:fadeIn 0.3s ease">
+        📄 <strong>Receta Digital Emitida:</strong><br>
+        Dr. Patricio Navarrete ha emitido su receta digital (PDF firmado electrónicamente).<br>
+        <span style="color:#2563eb;text-decoration:underline;cursor:pointer">Ver_Receta_Verónica_Ruiz.pdf</span>
+        <div class="wa-time">${timeStr}</div>
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+  mostrarNotificacion('✍️ Receta digital emitida y enviada al paciente', '#16a34a');
+  updateHealthScoreUI(72, 'Tratamiento Asignado (72/100)', 'badge-blue', '-8 pts (Recuperación)', '72 / 100', 'Receta emitida por médico');
+  switchRightTab(4);
   setStep(4);
 }
 
 function dictaminarDemo(estado) {
-  const auditBadge = document.getElementById('auditStatusBadge');
+  const auditBadge  = document.getElementById('auditStatusBadge');
   const tpaTabBadge = document.getElementById('tpaTabBadge');
   if (auditBadge) {
-    if (estado === 'aprobado') {
-      auditBadge.className = 'badge badge-green';
-      auditBadge.textContent = '✓ Pertinente';
-    }
+    auditBadge.className = estado === 'aprobado' ? 'badge badge-green' : 'badge badge-red';
+    auditBadge.textContent = estado === 'aprobado' ? '✓ Pertinente' : '✕ No Pertinente';
   }
   if (tpaTabBadge) tpaTabBadge.textContent = '0 Pendientes';
-  alert(`Dictamen guardado como ${estado.toUpperCase()}. Expediente marcado para planillaje B2B.`);
+
+  mostrarNotificacion(`Dictamen registrado: ${estado.toUpperCase()} ✅`, estado === 'aprobado' ? '#16a34a' : '#ef4444');
+  updateHealthScoreUI(76, 'Pertinencia Verificada (76/100)', 'badge-green', '-0 pts', '76 / 100', 'Dictamen TPA aprobado');
   setStep(5);
 }
 
@@ -474,12 +683,11 @@ async function preguntarRAGDemo() {
 
   const pregunta = inputEl.value.trim();
   if (!pregunta) return;
-
   inputEl.value = '';
 
   chatBox.innerHTML += `
-    <div style="text-align:right;margin-bottom:8px">
-      <span style="background:#2563eb;color:#fff;padding:8px 12px;border-radius:10px;display:inline-block;max-width:85%">
+    <div style="text-align:right;margin-bottom:8px;animation:fadeIn 0.3s ease">
+      <span style="background:#2563eb;color:#fff;padding:8px 12px;border-radius:10px;border-bottom-right-radius:2px;display:inline-block;max-width:85%;font-size:12px">
         ${pregunta}
       </span>
     </div>
@@ -488,7 +696,7 @@ async function preguntarRAGDemo() {
 
   const typingId = 'typing_' + Date.now();
   chatBox.innerHTML += `
-    <div id="${typingId}" style="color:#64748b;font-style:italic;margin-bottom:8px">
+    <div id="${typingId}" style="color:#64748b;font-style:italic;margin-bottom:8px;font-size:12px;animation:fadeIn 0.3s ease">
       🤖 Gemini 2.5 Flash consultando la base de datos de MediLyft...
     </div>
   `;
@@ -498,26 +706,19 @@ async function preguntarRAGDemo() {
     const res = await fetch('/api/b2b-admin', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        action: 'rag_kpi',
-        pregunta
-      })
+      body: JSON.stringify({ action: 'rag_kpi', pregunta })
     });
 
-    const data = await res.json();
+    const data  = await res.json();
     const typingEl = document.getElementById(typingId);
     if (typingEl) typingEl.remove();
-
     if (!res.ok) throw new Error(data.error || 'Error procesando RAG');
 
-    const respuestaHtml = (data.respuesta || '')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-
+    const respuestaHtml = (data.respuesta || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
     chatBox.innerHTML += `
-      <div style="background:#ffffff;border:1px solid #cbd5e1;padding:10px 14px;border-radius:8px;margin-bottom:8px;line-height:1.5">
-        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:4px">💡 Respuesta RAG en Vivo:</div>
-        ${respuestaHtml}
+      <div style="background:#ffffff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:10px;border-bottom-left-radius:2px;margin-bottom:8px;line-height:1.55;animation:fadeIn 0.3s ease">
+        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:6px">💡 Respuesta RAG · Gemini 2.5 Flash</div>
+        <div style="font-size:12px">${respuestaHtml}</div>
       </div>
     `;
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -525,10 +726,9 @@ async function preguntarRAGDemo() {
   } catch (err) {
     const typingEl = document.getElementById(typingId);
     if (typingEl) typingEl.remove();
-
     chatBox.innerHTML += `
-      <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:8px 12px;border-radius:8px;margin-bottom:8px">
-        ⚠️ Error: ${err.message}
+      <div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:8px 12px;border-radius:8px;margin-bottom:8px;font-size:12px">
+        ⚠️ ${err.message}
       </div>
     `;
     chatBox.scrollTop = chatBox.scrollHeight;

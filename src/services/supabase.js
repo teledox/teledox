@@ -1,8 +1,13 @@
 const { SUPABASE_URL, SUPABASE_KEY } = require('../config');
 
 async function query(method, table, body, params = '', prefer = null) {
+  if (!SUPABASE_URL || !SUPABASE_URL.startsWith('http')) {
+    console.error(`[Supabase] SUPABASE_URL is invalid: "${SUPABASE_URL}"`);
+    throw new Error(`SUPABASE_URL no configurada o inválida`);
+  }
+  const url = `${SUPABASE_URL}/rest/v1/${table}${params}`;
   const defaultPrefer = method === 'POST' ? 'return=representation' : '';
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}${params}`, {
+  const res = await fetch(url, {
     method,
     headers: {
       'apikey': SUPABASE_KEY,

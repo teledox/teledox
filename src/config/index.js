@@ -1,6 +1,7 @@
 module.exports = {
-  SUPABASE_URL:    process.env.SUPABASE_URL,
-  SUPABASE_KEY:    process.env.SUPABASE_KEY,
+  // Strip accidental quotes/trailing slashes from env vars (Vercel dashboard can add them)
+  SUPABASE_URL:    (process.env.SUPABASE_URL || '').replace(/^["']|["']$/g, '').replace(/\/+$/, ''),
+  SUPABASE_KEY:    (process.env.SUPABASE_KEY || '').replace(/^["']|["']$/g, ''),
   TELEGRAM_TOKEN:  process.env.TELEGRAM_TOKEN,
   TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
   // WhatsApp Business API (Meta Cloud API)

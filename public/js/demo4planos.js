@@ -203,6 +203,16 @@ function updateHealthScoreUI(score, statusText, badgeClass, penalty, totalText, 
     badge.textContent = statusText;
   }
 
+  // ── Badge de Alta Médica (Threshold 80 pts) ──
+  const altaBadge = document.getElementById('altaStatusBadge');
+  if (altaBadge) {
+    if (score >= 80) {
+      altaBadge.innerHTML = '<span class="badge badge-green" style="font-size:11px;padding:5px 10px;animation:fadeIn 0.3s">🎉 ALTA MÉDICA OTORGADA (&gt;80 pts)</span>';
+    } else {
+      altaBadge.innerHTML = '<span class="badge badge-yellow" style="font-size:10px;padding:4px 8px">En Tratamiento (&lt;80 pts)</span>';
+    }
+  }
+
   // ── Penalización dinámica (fila síntomas agudos) ──
   const penaltyNum = parseInt((penalty || '0').replace(/[^0-9\-]/g, '')) || 0;
   const ptsBase    = 62; // HTA + adherencia base

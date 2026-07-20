@@ -679,23 +679,106 @@
             <span class="badge badge-green" id="scoreStatusBadge" style="font-size:12px">Nivel: Estándar (76/100)</span>
           </div>
 
-          <!-- DESGLOSE MATEMÁTICO CLINICO -->
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;font-size:12px;margin-top:12px">
-            <div style="font-weight:800;color:#0f172a;margin-bottom:8px">Descomposición del Score Clínico de Verónica:</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span>+ Control HTA (Enalapril)</span><strong style="color:#16a34a">+30 pts</strong>
+          <!-- GRÁFICO HISTÓRICO DE EVOLUCIÓN CLÍNICA & UMBRAL DE ALTA (80/100) -->
+          <div style="background:#ffffff;border:1px solid #cbd5e1;border-radius:12px;padding:16px;margin-top:16px;box-shadow:0 2px 8px rgba(0,0,0,0.02)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+              <div>
+                <div style="font-weight:800;font-size:13px;color:#0f172a;display:flex;align-items:center;gap:6px">
+                  📈 Gráfico Histórico de Evolución del Health Score
+                </div>
+                <div style="font-size:11px;color:#64748b;margin-top:2px">
+                  Curva clínica de Verónica (30 → 88 pts) · Umbral de Alta Médica: <strong>80 / 100 pts</strong>
+                </div>
+              </div>
+              <div id="altaStatusBadge">
+                <span class="badge badge-yellow" style="font-size:10px;padding:4px 8px">En Tratamiento (&lt;80 pts)</span>
+              </div>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-              <span>+ Adherencia 30 días (28/30 días)</span><strong style="color:#16a34a">+32 pts</strong>
+
+            <!-- SVG CHART -->
+            <div style="position:relative;width:100%;height:185px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:8px">
+              <svg viewBox="0 0 460 160" style="width:100%;height:100%;overflow:visible">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stop-color="#2563eb" stop-opacity="0.22"/>
+                    <stop offset="100%" stop-color="#2563eb" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+
+                <!-- LÍNEA DE UMBRAL DE ALTA (THRESHOLD 80 PTS) -->
+                <line x1="25" y1="40" x2="445" y2="40" stroke="#16a34a" stroke-width="1.5" stroke-dasharray="4 4"/>
+                <rect x="310" y="26" width="135" height="18" rx="4" fill="#16a34a" opacity="0.15"/>
+                <text x="377" y="39" font-size="9" font-weight="800" fill="#166534" text-anchor="middle">🎯 UMBRAL DE ALTA (80 pts)</text>
+
+                <!-- LÍNEAS DE GUÍA HORIZONTALES (50 y 30 pts) -->
+                <line x1="25" y1="85" x2="445" y2="85" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 2"/>
+                <text x="20" y="88" font-size="8" fill="#94a3b8" text-anchor="end">50 pts</text>
+
+                <line x1="25" y1="115" x2="445" y2="115" stroke="#cbd5e1" stroke-width="1" stroke-dasharray="2 2"/>
+                <text x="20" y="118" font-size="8" fill="#94a3b8" text-anchor="end">30 pts</text>
+
+                <text x="20" y="43" font-size="8" fill="#16a34a" font-weight="700" text-anchor="end">80 pts</text>
+
+                <!-- ÁREA DE RELLENO -->
+                <polygon points="30,115 90,88 150,68 210,85 270,52 330,46 390,28 390,145 30,145" fill="url(#chartGrad)"/>
+
+                <!-- TRAZO CURVO DE EVOLUCIÓN -->
+                <path d="M 30,115 L 90,88 L 150,68 L 210,85 L 270,52 L 330,46 L 390,28" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <!-- PUNTOS CLAVE EN EL TIEMPO -->
+                <!-- P1: Inicio 30 pts -->
+                <circle cx="30" cy="115" r="4.5" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+                <text x="30" y="132" font-size="8.5" font-weight="700" fill="#64748b" text-anchor="middle">Inicio (30)</text>
+
+                <!-- P2: Día 1 (48 pts) -->
+                <circle cx="90" cy="88" r="4" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+                <text x="90" y="103" font-size="8" font-weight="600" fill="#64748b" text-anchor="middle">Día 1 (48)</text>
+
+                <!-- P3: Día 2 Síntoma 3/5 (61 pts) -->
+                <circle cx="150" cy="68" r="4.5" fill="#f59e0b" stroke="#fff" stroke-width="2"/>
+                <text x="150" y="60" font-size="8" font-weight="700" fill="#d97706" text-anchor="middle">61 pts</text>
+                <text x="150" y="132" font-size="8" fill="#64748b" text-anchor="middle">Día 2 (3/5)</text>
+
+                <!-- P4: Día 2 Empeoró 2/5 (50 pts) -->
+                <circle cx="210" cy="85" r="4.5" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+                <text x="210" y="99" font-size="8" font-weight="700" fill="#dc2626" text-anchor="middle">50 pts</text>
+                <text x="210" y="132" font-size="8" fill="#ef4444" font-weight="700" text-anchor="middle">Agudizó (2/5)</text>
+
+                <!-- P5: Día 3 Receta (72 pts) -->
+                <circle cx="270" cy="52" r="4" fill="#2563eb" stroke="#fff" stroke-width="2"/>
+                <text x="270" y="44" font-size="8" font-weight="700" fill="#2563eb" text-anchor="middle">72 pts</text>
+                <text x="270" y="132" font-size="8" fill="#64748b" text-anchor="middle">Día 3 Receta</text>
+
+                <!-- P6: Día 3 TPA (76 pts) -->
+                <circle cx="330" cy="46" r="4" fill="#16a34a" stroke="#fff" stroke-width="2"/>
+                <text x="330" y="38" font-size="8" font-weight="700" fill="#16a34a" text-anchor="middle">76 pts</text>
+                <text x="330" y="132" font-size="8" fill="#64748b" text-anchor="middle">TPA OK</text>
+
+                <!-- P7: Día 3 Adherencia (88 pts) -->
+                <circle cx="390" cy="28" r="6" fill="#16a34a" stroke="#fff" stroke-width="2.5" id="p7Dot"/>
+                <text x="390" y="18" font-size="9" font-weight="900" fill="#16a34a" text-anchor="middle" id="p7Text">88 pts 🎉</text>
+                <text x="390" y="132" font-size="8" font-weight="800" fill="#16a34a" text-anchor="middle">Alta (5/5)</text>
+              </svg>
             </div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:4px" id="scorePenaltyRow">
-              <span>- Impacto Síntomas Agudos (Fiebre/Cefalea)</span><strong style="color:#ef4444" id="scorePenaltyVal">-0 pts</strong>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding-top:6px;border-top:1px solid #e2e8f0;font-weight:800">
-              <span>PUNTAJE GLOBAL CALCULADO</span><span style="color:#2563eb" id="scoreTotalVal">76 / 100</span>
+
+            <!-- LEYENDA CLÍNICA DE ETAPAS -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;font-size:11px">
+              <div style="background:#fef2f2;border:1px solid #fecaca;padding:8px;border-radius:6px">
+                <strong style="color:#991b1b">1. Estado Inicial (30 pts)</strong><br>
+                <span style="color:#7f1d1d;font-size:10px">Mujer 42a · HTA · Alergia Ibuprofeno · Intervenciones previas</span>
+              </div>
+              <div style="background:#fffbeb;border:1px solid #fde68a;padding:8px;border-radius:6px">
+                <strong style="color:#92400e">2. Evaluación Aguda (50–61 pts)</strong><br>
+                <span style="color:#78350f;font-size:10px">Cefalea/Fiebre (síntoma 2/5) · Triaje seguro por IA</span>
+              </div>
+              <div style="background:#f0fdf4;border:1px solid #bbf7d0;padding:8px;border-radius:6px">
+                <strong style="color:#166534">3. Alta Otorgada (88 pts)</strong><br>
+                <span style="color:#14532d;font-size:10px">Receta emitida + Adherencia 24h (5/5) · Superó threshold 80</span>
+              </div>
             </div>
           </div>
         </div>
+
 
         <!-- MONITOR DE ALERTAS PREVENTIVAS Y HISTORIAL HEALTH SCORE -->
         <div class="card">

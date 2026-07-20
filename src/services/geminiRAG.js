@@ -57,6 +57,26 @@ async function recopilarContextoKpis(empresa_id = null) {
   const auditadosPendientes = consultas.length;
   const auditadosRechazados = 0;
 
+  // Historial mock de 10 auditorías TPA — datos reales de la demo para que el RAG pueda responder
+  const historialAuditoriasDemo = [
+    { paciente:'Carlos Mendoza',   empresa:'CORIS',  cie10:'J06.9', diagnostico:'Infección Respiratoria Alta',      tratamiento:'Amoxicilina 500mg + Paracetamol',       costo:42.00,  fecha:'2026-07-18', dictamen:'aprobado'  },
+    { paciente:'Diana Saltos',     empresa:'Mawdy',  cie10:'I10',   diagnostico:'Hipertensión Esencial',            tratamiento:'Enalapril 10mg + Control presión',       costo:65.00,  fecha:'2026-07-16', dictamen:'aprobado'  },
+    { paciente:'Roberto Vásquez',  empresa:'CORIS',  cie10:'M54.5', diagnostico:'Lumbago / Dolor Musculoesquelético', tratamiento:'Paracetamol + Fisioterapia 5 sesiones', costo:180.00, fecha:'2026-07-14', dictamen:'observado' },
+    { paciente:'Lucía Andrade',    empresa:'Mawdy',  cie10:'K29',   diagnostico:'Gastritis Aguda',                  tratamiento:'Omeprazol 20mg + Metoclopramida',        costo:38.50,  fecha:'2026-07-12', dictamen:'aprobado'  },
+    { paciente:'Andrés Torres',    empresa:'CORIS',  cie10:'Z76.0', diagnostico:'Consulta sin causa justificada',   tratamiento:'Sin tratamiento prescrito',              costo:25.00,  fecha:'2026-07-10', dictamen:'rechazado' },
+    { paciente:'Mariana Espín',    empresa:'Mawdy',  cie10:'R50.9', diagnostico:'Fiebre',                           tratamiento:'Paracetamol 500mg (Ibuprofeno bloqueado)', costo:55.00, fecha:'2026-07-08', dictamen:'aprobado'  },
+    { paciente:'Felipe Quiroz',    empresa:'CORIS',  cie10:'G43',   diagnostico:'Migraña',                          tratamiento:'Sumatriptán 50mg + Reposo',               costo:92.00,  fecha:'2026-07-05', dictamen:'observado' },
+    { paciente:'Isabel Mora',      empresa:'Mawdy',  cie10:'J45',   diagnostico:'Asma Bronquial',                   tratamiento:'Salbutamol inhalador + Prednisona',      costo:78.00,  fecha:'2026-07-02', dictamen:'aprobado'  },
+    { paciente:'Hugo Benítez',     empresa:'CORIS',  cie10:'F41.1', diagnostico:'Trastorno de Ansiedad General',   tratamiento:'Alprazolam 0.25mg + Psicoterapia',       costo:110.00, fecha:'2026-06-28', dictamen:'aprobado'  },
+    { paciente:'Patricia Lema',    empresa:'Mawdy',  cie10:'L50',   diagnostico:'Urticaria Alérgica',              tratamiento:'Loratadina + Prednisona + Derivación esp.', costo:340.00, fecha:'2026-06-25', dictamen:'rechazado' }
+  ];
+
+  const totalCostoHistorial = historialAuditoriasDemo.reduce((s,a) => s + a.costo, 0);
+  const aprobadosHist  = historialAuditoriasDemo.filter(a => a.dictamen === 'aprobado').length;
+  const observadosHist = historialAuditoriasDemo.filter(a => a.dictamen === 'observado').length;
+  const rechazadosHist = historialAuditoriasDemo.filter(a => a.dictamen === 'rechazado').length;
+  const costoPromHist  = (totalCostoHistorial / historialAuditoriasDemo.length).toFixed(2);
+
   return {
     resumen: {
       totalConsultas,
@@ -70,7 +90,20 @@ async function recopilarContextoKpis(empresa_id = null) {
     conteoPorMedico: conteoMedicos,
     distribuciónHoras,
     empresas: empresas.map(e => e.nombre_empresa || e.nombre),
-    medicosActivos: medicos.map(m => `${m.nombre} ${m.apellidos} (${m.especialidad || 'General'})`)
+    medicosActivos: medicos.map(m => `${m.nombre} ${m.apellidos} (${m.especialidad || 'General'})`),
+    historialAuditoriasDemo,
+    resumenAuditoriasTPA: {
+      periodo: 'Últimos 90 días (25 Jun – 20 Jul 2026)',
+      totalExpedientes: historialAuditoriasDemo.length,
+      aprobados: aprobadosHist,
+      observados: observadosHist,
+      rechazados: rechazadosHist,
+      tasaAprobacion: `${Math.round((aprobadosHist / historialAuditoriasDemo.length) * 100)}%`,
+      costoTotalUSD: totalCostoHistorial.toFixed(2),
+      costoPromedioUSD: costoPromHist,
+      casoMasCostoso: 'Patricia Lema — L50 Urticaria Alérgica — $340.00 — Rechazado',
+      empresas: { CORIS: historialAuditoriasDemo.filter(a => a.empresa === 'CORIS').length, Mawdy: historialAuditoriasDemo.filter(a => a.empresa === 'Mawdy').length }
+    }
   };
 }
 

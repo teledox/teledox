@@ -23,34 +23,45 @@ Responde ÚNICAMENTE con un JSON (sin texto adicional, sin markdown) con estos c
 }`;
 }
 
+const MODELS_TO_TRY = ['gemini-1.5-flash', 'gemini-2.0-flash'];
+
 // Analiza una imagen de comprobante con Gemini Vision y devuelve el JSON estructurado.
 async function analizarComprobante(buffer, mimeType) {
   if (!GEMINI_API_KEY) throw new Error('GEMINI_API_KEY no configurada');
 
-  const res = await fetch(`${API_URL}?key=${GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{
-        parts: [
-          { text: construirPrompt() },
-          { inline_data: { mime_type: mimeType || 'image/jpeg', data: buffer.toString('base64') } }
-        ]
-      }],
-      generationConfig: { response_mime_type: 'application/json' }
-    })
-  });
+  let lastError = null;
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini API error: ${err}`);
+  for (const model of MODELS_TO_TRY) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: construirPrompt() },
+              { inline_data: { mime_type: mimeType || 'image/jpeg', data: buffer.toString('base64') } }
+            ]
+          }],
+          generationConfig: { response_mime_type: 'application/json' }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (texto) return JSON.parse(texto);
+      } else {
+        lastError = await res.text();
+      }
+    } catch (e) {
+      lastError = e.message;
+    }
   }
 
-  const data = await res.json();
-  const texto = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!texto) throw new Error('Gemini no devolvió contenido');
-
-  return JSON.parse(texto);
+  throw new Error(`Gemini API error: ${lastError}`);
 }
+
 
 module.exports = { analizarComprobante };

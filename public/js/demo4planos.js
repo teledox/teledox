@@ -338,31 +338,31 @@ function ejecutarAccionPaso(step) {
 }
 
 // ── MOTOR DE INTELIGENCIA DE SÍNTOMAS (Frontend) ────────────────────────────
-// Mapea síntomas a CIE-10, medicamentos, nivel de prioridad, color, etc.
+// alertaAlergia = true solo si el tratamiento habitual implica un AINE (Ibuprofeno)
 function analizarSintoma(texto) {
   const t = texto.toLowerCase();
   if (/dolor.*pecho|pecho|infarto|corazón|coronar|cardio/.test(t))
-    return { cie10:'I20 - Angina Pectoris', meds:'Aspirina 100mg + Nitroglicerina SL', prioridadLabel:'URGENTE', color:'#ef4444', badge:'badge-red', emoji:'🚨' };
+    return { cie10:'I20 - Angina Pectoris', meds:'Aspirina 100mg + Nitroglicerina SL', prioridadLabel:'URGENTE', color:'#ef4444', badge:'badge-red', emoji:'🚨', alertaAlergia: false };
   if (/dificultad.*respi|falta.*aire|asma|bronq|disnea/.test(t))
-    return { cie10:'J45 - Asma Bronquial', meds:'Salbutamol Inhalador + Prednisolona 20mg', prioridadLabel:'URGENTE', color:'#ef4444', badge:'badge-red', emoji:'🚨' };
+    return { cie10:'J45 - Asma Bronquial', meds:'Salbutamol Inhalador + Prednisolona 20mg', prioridadLabel:'URGENTE', color:'#ef4444', badge:'badge-red', emoji:'🚨', alertaAlergia: false };
   if (/fiebre|febr|temperatura|38|39|40/.test(t))
-    return { cie10:'R50.9 - Fiebre sin especificar', meds:'Paracetamol 500mg c/8h · NO usar Ibuprofeno (alergia)', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+    return { cie10:'R50.9 - Fiebre sin especificar', meds:'Paracetamol 500mg c/8h · Ibuprofeno BLOQUEADO (alergia)', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️', alertaAlergia: true };
   if (/cabeza|cefalea|migraña|jaqueca/.test(t))
-    return { cie10:'G43 - Migraña / Cefalea Tensional', meds:'Paracetamol 1g + Metoclopramida 10mg', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+    return { cie10:'G43 - Migraña / Cefalea Tensional', meds:'Paracetamol 1g + Metoclopramida 10mg · Ibuprofeno BLOQUEADO', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️', alertaAlergia: true };
   if (/náusea|vómito|estómago|gastri|colitis|diarrea|intestin/.test(t))
-    return { cie10:'K29 - Gastritis / Colitis Aguda', meds:'Omeprazol 20mg + Metoclopramida 10mg + Suero oral', prioridadLabel:'Leve', color:'#2563eb', badge:'badge-blue', emoji:'💊' };
+    return { cie10:'K29 - Gastritis / Colitis Aguda', meds:'Omeprazol 20mg + Metoclopramida 10mg + Suero oral', prioridadLabel:'Leve', color:'#2563eb', badge:'badge-blue', emoji:'💊', alertaAlergia: false };
   if (/presión|hipertens|hta|mareo/.test(t))
-    return { cie10:'I10 - Hipertensión Esencial', meds:'Enalapril 10mg · Continuar tratamiento base', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+    return { cie10:'I10 - Hipertensión Esencial', meds:'Enalapril 10mg · Continuar tratamiento base', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️', alertaAlergia: false };
   if (/pie|rodilla|cadera|articulación|artritis|dolor.*hueso|espalda|lumbar/.test(t))
-    return { cie10:'M54.5 - Lumbago / Dolor Musculoesquelético', meds:'Paracetamol 500mg + Reposo relativo + Calor local', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'🟢' };
+    return { cie10:'M54.5 - Lumbago / Dolor Musculoesquelético', meds:'Paracetamol 500mg + Reposo · Ibuprofeno BLOQUEADO (alergia)', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'🟢', alertaAlergia: true };
   if (/alergi|sarpullido|urticaria|picazón|ronchas/.test(t))
-    return { cie10:'L50 - Urticaria Alérgica', meds:'Loratadina 10mg · Evitar AINEs (alergia documentada)', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'💊' };
+    return { cie10:'L50 - Urticaria Alérgica', meds:'Loratadina 10mg · Evitar AINEs (alergia documentada)', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'💊', alertaAlergia: true };
   if (/ansiedad|estrés|nervioso|angustia|pánico/.test(t))
-    return { cie10:'F41.1 - Trastorno de Ansiedad Generalizada', meds:'Técnicas de respiración + Alprazolam 0.25mg SOS', prioridadLabel:'Leve', color:'#2563eb', badge:'badge-blue', emoji:'🧠' };
+    return { cie10:'F41.1 - Trastorno de Ansiedad Generalizada', meds:'Técnicas de respiración + Alprazolam 0.25mg SOS', prioridadLabel:'Leve', color:'#2563eb', badge:'badge-blue', emoji:'🧠', alertaAlergia: false };
   if (/gripe|resfri|congestión|moco|tos|garganta/.test(t))
-    return { cie10:'J06.9 - Infección Respiratoria Alta', meds:'Paracetamol 500mg + Loratadina + Suero fisiológico nasal', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'🟢' };
+    return { cie10:'J06.9 - Infección Respiratoria Alta', meds:'Paracetamol 500mg + Loratadina + Suero fisiológico nasal', prioridadLabel:'Leve', color:'#16a34a', badge:'badge-green', emoji:'🟢', alertaAlergia: false };
   // Default
-  return { cie10:'R68.8 - Síntoma General sin especificar', meds:'Evaluación médica en curso — esperando resultado del triaje', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️' };
+  return { cie10:'R68.8 - Síntoma General sin especificar', meds:'Evaluación médica en curso — esperando resultado del triaje', prioridadLabel:'Moderada', color:'#f59e0b', badge:'badge-yellow', emoji:'⚠️', alertaAlergia: false };
 }
 
 // ── ANIMACIÓN DE CONTADOR NUMÉRICO ─────────────────────────────────────────
@@ -390,14 +390,18 @@ function pulsarTab(tabNum) {
 
 // ── ACTUALIZAR CONSOLA MÉDICA DINÁMICAMENTE ─────────────────────────────────
 function actualizarConsolaMedica(texto, sintomaData, score) {
-  const emptyState  = document.getElementById('docEmptyState');
-  const activeCard  = document.getElementById('docActiveCard');
+  const emptyState    = document.getElementById('docEmptyState');
+  const activeCard    = document.getElementById('docActiveCard');
   const allergyBanner = document.getElementById('allergyBanner');
-  const docBadge    = document.getElementById('doctorTabBadge');
+  const docBadge      = document.getElementById('doctorTabBadge');
 
-  if (emptyState)  emptyState.style.display  = 'none';
-  if (activeCard)  activeCard.style.display  = 'grid';
-  if (allergyBanner) allergyBanner.style.display = 'flex';
+  if (emptyState) emptyState.style.display = 'none';
+  if (activeCard) activeCard.style.display = 'grid';
+
+  // Mostrar alerta de alergia SOLO si el síntoma implica un AINE/Ibuprofeno
+  if (allergyBanner) {
+    allergyBanner.style.display = sintomaData.alertaAlergia ? 'flex' : 'none';
+  }
 
   // Badge del tab con pulso
   if (docBadge) {
@@ -412,7 +416,7 @@ function actualizarConsolaMedica(texto, sintomaData, score) {
   if (trSintomas) trSintomas.innerHTML = `<strong style="color:${sintomaData.color}">${sintomaData.emoji} ${texto}</strong>`;
 
   const trTriaje = document.getElementById('trTriaje');
-  if (trTriaje)   trTriaje.innerHTML  = `<span class="badge ${sintomaData.badge}">Prioridad ${sintomaData.prioridadLabel}</span>`;
+  if (trTriaje) trTriaje.innerHTML = `<span class="badge ${sintomaData.badge}">Prioridad ${sintomaData.prioridadLabel}</span>`;
 
   // Actualizar prescripción (CIE-10 y meds)
   const inputCie10 = document.getElementById('inputCie10');

@@ -323,28 +323,12 @@ function ejecutarAccionPaso(step) {
   }
 
   if (step === 5) {
-    updateHealthScoreUI(88, 'Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100', 'Adherencia confirmada 24h');
-
-    const waBox = document.getElementById('waChatBox');
-    if (waBox && !document.getElementById('msgAdherence')) {
-      waBox.innerHTML += `
-        <div class="wa-msg in" id="msgAdherence" style="margin-top:12px;border-left:4px solid #a855f7;background:#231b2e;color:#e9edef">
-          💊 <strong style="color:#d8b4fe">Recordatorio 24 horas MediLyft:</strong><br>Hola Verónica, ¿ya tomó su medicación (Paracetamol 500mg)?
-          <div class="wa-time" style="color:rgba(233,237,239,0.6)">hace 1 min</div>
-        </div>
-        <div class="wa-msg out">
-          Sí, excelente. Ya no me duele la cabeza. Gracias. ✓
-          <div class="wa-time" style="color:rgba(233,237,239,0.6)">ahora</div>
-        </div>
-        <div class="wa-msg in" style="border-left:4px solid #22c55e;background:#132a1e;color:#e9edef">
-          📈 <strong style="color:#4ade80">Health Score Recuperado: 88/100</strong><br>
-          Se ha registrado excelente adherencia. Su historial médico en Mawdy TPA ha sido actualizado.
-          <div class="wa-time" style="color:rgba(233,237,239,0.6)">ahora</div>
-        </div>
-      `;
-      waBox.scrollTop = waBox.scrollHeight;
+    // Si aún no se ha enviado la tarjeta de seguimiento interactiva, enviarla automáticamente al WhatsApp
+    if (!document.querySelector('[id^="seg_"]')) {
+      enviarSeguimientoMedicamentosDemo('Doc');
     }
   }
+
 }
 
 // ── MOTOR DE INTELIGENCIA DE SÍNTOMAS (Frontend) ────────────────────────────

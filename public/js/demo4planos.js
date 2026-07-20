@@ -679,6 +679,74 @@ function dictaminarDemo(estado) {
   setStep(5);
 }
 
+// ── SEGUIMIENTO DE MEDICAMENTOS & ADHERENCIA 24H ───────────────────────────
+function enviarSeguimientoMedicamentosDemo(origen = 'Doc') {
+  const selectEl = document.getElementById(origen === 'HS' ? 'selectSeguimientoMedHS' : 'selectSeguimientoMedDoc');
+  const medSelected = selectEl ? selectEl.value : 'Paracetamol 500mg';
+
+  const waBox = document.getElementById('waChatBox');
+  const now = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+
+  if (waBox) {
+    const msgId = 'seg_' + Date.now();
+    waBox.innerHTML += `
+      <div class="wa-msg in" id="${msgId}" style="border-left:4px solid #7c3aed;background:#faf5ff;animation:fadeIn 0.3s ease">
+        💊 <strong>Seguimiento de Adherencia MediLyft (24h):</strong><br>
+        Hola Verónica, ¿ha tomado su medicamento <strong>${medSelected}</strong> prescrito por el Dr. Navarrete?<br>
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
+          <button class="wa-chip-btn" style="font-size:11px;padding:5px 10px;background:#16a34a;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="confirmarAdherenciaDemo(true, '${medSelected}')">✅ Sí, medicación tomada</button>
+          <button class="wa-chip-btn" style="font-size:11px;padding:5px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="confirmarAdherenciaDemo(false, '${medSelected}')">⚠️ Olvidé tomarla</button>
+        </div>
+        <div class="wa-time">${now}</div>
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+
+  mostrarNotificacion(`📲 Seguimiento de "${medSelected}" enviado al WhatsApp`, '#7c3aed');
+}
+
+function confirmarAdherenciaDemo(cumplido, medNombre) {
+  const waBox = document.getElementById('waChatBox');
+  const now = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+
+  if (waBox) {
+    if (cumplido) {
+      waBox.innerHTML += `
+        <div class="wa-msg out" style="animation:fadeIn 0.3s ease">
+          Sí, ya tomé mi medicación (${medNombre}) a la hora indicada. Me siento mucho mejor.
+          <div class="wa-time">${now}</div>
+        </div>
+        <div class="wa-msg in" style="border-left:4px solid #16a34a;background:#f0fdf4;color:#166534;animation:fadeIn 0.3s ease">
+          📈 <strong>Adherencia Confirmada · Health Score: 88/100</strong><br>
+          ¡Excelente noticia! Registro de adherencia 24h guardado en la póliza Mawdy TPA.
+          <div class="wa-time">${now}</div>
+        </div>
+      `;
+      updateHealthScoreUI(88, 'Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100', `Adherencia confirmada (${medNombre})`);
+      mostrarNotificacion('🏆 Health Score recuperado a 88 pts (Excelente Adherencia)', '#16a34a');
+      switchRightTab(3); // Mostrar pestaña Health Score al instante
+    } else {
+      waBox.innerHTML += `
+        <div class="wa-msg out" style="animation:fadeIn 0.3s ease">
+          Olvidé tomar la dosis de la mañana de ${medNombre}.
+          <div class="wa-time">${now}</div>
+        </div>
+        <div class="wa-msg in" style="border-left:4px solid #f59e0b;background:#fffbeb;color:#92400e;animation:fadeIn 0.3s ease">
+          ⚠️ <strong>Alerta de Seguridad Farmacéutica:</strong><br>
+          Por favor tome su dosis lo antes posible sin duplicar la siguiente toma. El médico tratante ha sido notificado.
+          <div class="wa-time">${now}</div>
+        </div>
+      `;
+      updateHealthScoreUI(65, 'Alerta: Dosis Omitida (65/100)', 'badge-yellow', '-11 pts (Dosis Omitida)', '65 / 100', `Omisión de dosis (${medNombre})`);
+      mostrarNotificacion('⚠️ Omisión de medicamento reportada — Score bajó a 65 pts', '#f59e0b');
+      switchRightTab(3); // Mostrar pestaña Health Score al instante
+    }
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+}
+
+
 // ── CHATBOT IA RAG GEMINI 2.0 FLASH ─────────────────────────────────────────
 async function preguntarRAGDemo() {
   const inputEl = document.getElementById('inputRAGDemo');

@@ -82,6 +82,13 @@ function jumpToStep(stepNum) {
   setStep(stepNum);
 }
 
+let autoPlayTimeouts = [];
+
+function clearAutoPlayTimeouts() {
+  autoPlayTimeouts.forEach(t => clearTimeout(t));
+  autoPlayTimeouts = [];
+}
+
 function toggleAutoPlay() {
   if (isPlaying) {
     stopAutoPlay();
@@ -95,23 +102,57 @@ function startAutoPlay() {
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '⏸ Pausar Demo';
 
-  if (currentStep >= 5) resetDemoToZero();
+  resetDemoToZero();
+  clearAutoPlayTimeouts();
 
-  autoPlayInterval = setInterval(() => {
-    if (currentStep < 5) {
-      nextStep();
-    } else {
-      stopAutoPlay();
-    }
-  }, 7000); // 7 segundos por paso
+  // Paso 1: Enviar síntoma del paciente a WhatsApp (t = 1.2s)
+  autoPlayTimeouts.push(setTimeout(() => {
+    if (!isPlaying) return;
+    setStep(1);
+    simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C');
+  }, 1200));
+
+  // Paso 2: Conmutar a Consola Médica y Emitir Receta Digital (t = 6.5s)
+  autoPlayTimeouts.push(setTimeout(() => {
+    if (!isPlaying) return;
+    setStep(2);
+    firmarRecetaDemo();
+  }, 6500));
+
+  // Paso 3: Conmutar a Consola TPA Mawdy y Dictaminar Pertinente (t = 11.5s)
+  autoPlayTimeouts.push(setTimeout(() => {
+    if (!isPlaying) return;
+    setStep(4);
+    dictaminarDemo('aprobado');
+  }, 11500));
+
+  // Paso 4: Disparar Seguimiento de Medicamentos 24h & Confirmar Adherencia (t = 16.5s)
+  autoPlayTimeouts.push(setTimeout(() => {
+    if (!isPlaying) return;
+    setStep(5);
+    autoPlayTimeouts.push(setTimeout(() => {
+      if (!isPlaying) return;
+      confirmarAdherenciaDemo(true, 'Paracetamol 500mg');
+    }, 2800));
+  }, 16500));
+
+  // Paso 5: Conmutar a Health Score para mostrar Alta Médica (>80 pts) (t = 22.5s)
+  autoPlayTimeouts.push(setTimeout(() => {
+    if (!isPlaying) return;
+    switchRightTab(3); // Pestaña Health Score & Gráfico Histórico
+    stopAutoPlay();
+    mostrarNotificacion('🏆 Demo completada: Alta médica otorgada a Verónica (>80 pts)', '#16a34a');
+  }, 22500));
 }
 
 function stopAutoPlay() {
   isPlaying = false;
+  clearAutoPlayTimeouts();
   if (autoPlayInterval) clearInterval(autoPlayInterval);
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '▶ Auto-Play Demo';
 }
+
 
 // ── REINICIALIZAR DESDE CERO (ESTADO 0) ─────────────────────────────────────
 function resetDemoToZero() {

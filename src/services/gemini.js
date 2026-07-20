@@ -1,6 +1,6 @@
 const { GEMINI_API_KEY } = require('../config');
 
-const MODEL = 'gemini-2.5-flash';
+const MODEL = 'gemini-2.0-flash';
 const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`;
 
 function construirPrompt() {

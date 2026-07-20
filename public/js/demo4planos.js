@@ -679,7 +679,7 @@ function dictaminarDemo(estado) {
   setStep(5);
 }
 
-// ── CHATBOT IA RAG GEMINI 2.5 FLASH ─────────────────────────────────────────
+// ── CHATBOT IA RAG GEMINI 2.0 FLASH ─────────────────────────────────────────
 async function preguntarRAGDemo() {
   const inputEl = document.getElementById('inputRAGDemo');
   const chatBox = document.getElementById('chatBoxRAGDemo');
@@ -701,7 +701,7 @@ async function preguntarRAGDemo() {
   const typingId = 'typing_' + Date.now();
   chatBox.innerHTML += `
     <div id="${typingId}" style="color:#64748b;font-style:italic;margin-bottom:8px;font-size:12px;animation:fadeIn 0.3s ease">
-      🤖 Gemini 2.5 Flash consultando la base de datos de MediLyft...
+      🤖 Gemini 2.0 Flash consultando la base de datos de MediLyft...
     </div>
   `;
   chatBox.scrollTop = chatBox.scrollHeight;
@@ -721,7 +721,7 @@ async function preguntarRAGDemo() {
     const respuestaHtml = (data.respuesta || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
     chatBox.innerHTML += `
       <div style="background:#ffffff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:10px;border-bottom-left-radius:2px;margin-bottom:8px;line-height:1.55;animation:fadeIn 0.3s ease">
-        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:6px">💡 Respuesta RAG · Gemini 2.5 Flash</div>
+        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:6px">💡 Respuesta RAG · Gemini 2.0 Flash</div>
         <div style="font-size:12px">${respuestaHtml}</div>
       </div>
     `;

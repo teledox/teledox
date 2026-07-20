@@ -200,30 +200,39 @@
   .col-right-platform {
     flex: 1;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     background: #f8fafc;
+    border-radius: 16px;
+    border: 1px solid #cbd5e1;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
   }
 
-  /* ── PESTAÑAS DERECHAS ── */
+  /* ── PESTAÑAS LATERALES DE LA PLATAFORMA ── */
   .right-tabs {
-    display: flex;
+    width: 220px;
+    min-width: 220px;
     background: #ffffff;
-    border-bottom: 2px solid #e2e8f0;
-    padding: 0 20px;
-    gap: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    padding: 16px 10px;
+    gap: 6px;
+    box-shadow: 2px 0 6px rgba(0,0,0,0.01);
   }
 
   .right-tab {
-    padding: 14px 18px;
-    font-size: 13px;
+    padding: 12px 14px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #64748b;
     cursor: pointer;
-    border-bottom: 3px solid transparent;
+    border-radius: 10px;
+    border-left: 4px solid transparent;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 8px;
   }
 
@@ -234,7 +243,7 @@
 
   .right-tab.active {
     color: #2563eb;
-    border-bottom-color: #2563eb;
+    border-left-color: #2563eb;
     background: #eff6ff;
   }
 
@@ -252,10 +261,14 @@
     color: #ffffff;
   }
 
+  .right-content-wrapper {
+    flex: 1;
+    overflow-y: auto;
+  }
+
   .right-content {
     display: none;
     padding: 24px;
-    flex: 1;
   }
 
   .right-content.active {
@@ -489,12 +502,6 @@
   </div>
 </div>
 
-<!-- NARRATIVA EN VIVO -->
-<div class="narrative-banner" id="narrativeBanner">
-  <span class="narrative-badge" id="narrativeBadge">Guion de Voz</span>
-  <span id="narrativeText">Paso 0: Sistema MediLyft listo. Escriba un síntoma en el WhatsApp a la izquierda para iniciar el caso...</span>
-</div>
-
 <!-- LAYOUT PRINCIPAL DE 2 COLUMNAS (WHATSAPP A LA IZQ + PLATAFORMA A LA DERECHA) -->
 <div class="split-layout">
   
@@ -533,24 +540,28 @@
     </div>
   </div>
 
-  <!-- COLUMNA DERECHA: PLATAFORMA MEDILYFT (CON 3 PESTAÑAS) -->
+  <!-- COLUMNA DERECHA: PLATAFORMA MEDILYFT (CON PESTAÑAS LATERALES) -->
   <div class="col-right-platform">
     
     <!-- PESTAÑAS LATERALES DE LA PLATAFORMA -->
     <div class="right-tabs">
+      <div style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;padding:4px 8px;margin-bottom:4px">Plataforma MediLyft</div>
       <div class="right-tab active" id="tabHead2" onclick="switchRightTab(2)">
-        <span>🩺 Plano 2: Consola Médica</span>
+        <span>🩺 Consola Médica</span>
         <span class="tab-badge" id="doctorTabBadge">0 Alertas</span>
       </div>
       <div class="right-tab" id="tabHead3" onclick="switchRightTab(3)">
-        <span>🧠 Plano 3: Health Score</span>
+        <span>🧠 Health Score &amp; Perfilamiento</span>
         <span class="tab-badge" id="hsTabBadge">76 pts</span>
       </div>
       <div class="right-tab" id="tabHead4" onclick="switchRightTab(4)">
-        <span>🛡️ Plano 4: Consola TPA Mawdy</span>
+        <span>🛡️ Consola TPA Mawdy</span>
         <span class="tab-badge" id="tpaTabBadge">0 Pendientes</span>
       </div>
     </div>
+
+    <!-- WRAPPER SCROLLABLE DE CONTENIDOS -->
+    <div class="right-content-wrapper">
 
     <!-- ══════════════════════════════════════════════════════════════════════ -->
     <!-- PESTAÑA 2: CONSOLA MÉDICA (PLANO 2) -->
@@ -897,11 +908,12 @@
 
       </div>
     </div>
+    </div> <!-- /right-content-wrapper -->
 
   </div>
 
 </div>
 
-<script src="/js/demo4planos.js?v=20260720"></script>
+<script src="/js/demo4planos.js?v=20260720_2"></script>
 </body>
 </html>

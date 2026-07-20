@@ -318,18 +318,18 @@ function ejecutarAccionPaso(step) {
     const waBox = document.getElementById('waChatBox');
     if (waBox && !document.getElementById('msgAdherence')) {
       waBox.innerHTML += `
-        <div class="wa-msg in" id="msgAdherence" style="margin-top:12px;border:1px solid #16a34a">
-          💊 <strong>Recordatorio 24 horas MediLyft:</strong> Hola Verónica, ¿ya tomó su medicación (Paracetamol 500mg)?
-          <div class="wa-time">hace 1 min</div>
+        <div class="wa-msg in" id="msgAdherence" style="margin-top:12px;border-left:4px solid #a855f7;background:#231b2e;color:#e9edef">
+          💊 <strong style="color:#d8b4fe">Recordatorio 24 horas MediLyft:</strong><br>Hola Verónica, ¿ya tomó su medicación (Paracetamol 500mg)?
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">hace 1 min</div>
         </div>
         <div class="wa-msg out">
           Sí, excelente. Ya no me duele la cabeza. Gracias. ✓
-          <div class="wa-time">ahora</div>
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">ahora</div>
         </div>
-        <div class="wa-msg in" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0">
-          📈 <strong>Health Score Recuperado: 88/100</strong><br>
+        <div class="wa-msg in" style="border-left:4px solid #22c55e;background:#132a1e;color:#e9edef">
+          📈 <strong style="color:#4ade80">Health Score Recuperado: 88/100</strong><br>
           Se ha registrado excelente adherencia. Su historial médico en Mawdy TPA ha sido actualizado.
-          <div class="wa-time">ahora</div>
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">ahora</div>
         </div>
       `;
       waBox.scrollTop = waBox.scrollHeight;
@@ -690,14 +690,14 @@ function enviarSeguimientoMedicamentosDemo(origen = 'Doc') {
   if (waBox) {
     const msgId = 'seg_' + Date.now();
     waBox.innerHTML += `
-      <div class="wa-msg in" id="${msgId}" style="border-left:4px solid #7c3aed;background:#faf5ff;animation:fadeIn 0.3s ease">
-        💊 <strong>Seguimiento de Adherencia MediLyft (24h):</strong><br>
+      <div class="wa-msg in" id="${msgId}" style="border-left:4px solid #a855f7;background:#231b2e;color:#e9edef;animation:fadeIn 0.3s ease">
+        💊 <strong style="color:#d8b4fe">Seguimiento de Adherencia MediLyft (24h):</strong><br>
         Hola Verónica, ¿ha tomado su medicamento <strong>${medSelected}</strong> prescrito por el Dr. Navarrete?<br>
         <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
-          <button class="wa-chip-btn" style="font-size:11px;padding:5px 10px;background:#16a34a;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="confirmarAdherenciaDemo(true, '${medSelected}')">✅ Sí, medicación tomada</button>
-          <button class="wa-chip-btn" style="font-size:11px;padding:5px 10px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer" onclick="confirmarAdherenciaDemo(false, '${medSelected}')">⚠️ Olvidé tomarla</button>
+          <button class="wa-chip-btn" style="font-size:11px;padding:6px 10px;background:#16a34a;color:#ffffff;border:none;border-radius:6px;cursor:pointer;font-weight:700" onclick="confirmarAdherenciaDemo(true, '${medSelected}')">✅ Sí, medicación tomada</button>
+          <button class="wa-chip-btn" style="font-size:11px;padding:6px 10px;background:#dc2626;color:#ffffff;border:none;border-radius:6px;cursor:pointer;font-weight:700" onclick="confirmarAdherenciaDemo(false, '${medSelected}')">⚠️ Olvidé tomarla</button>
         </div>
-        <div class="wa-time">${now}</div>
+        <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>
       </div>
     `;
     waBox.scrollTop = waBox.scrollHeight;
@@ -715,12 +715,12 @@ function confirmarAdherenciaDemo(cumplido, medNombre) {
       waBox.innerHTML += `
         <div class="wa-msg out" style="animation:fadeIn 0.3s ease">
           Sí, ya tomé mi medicación (${medNombre}) a la hora indicada. Me siento mucho mejor.
-          <div class="wa-time">${now}</div>
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>
         </div>
-        <div class="wa-msg in" style="border-left:4px solid #16a34a;background:#f0fdf4;color:#166534;animation:fadeIn 0.3s ease">
-          📈 <strong>Adherencia Confirmada · Health Score: 88/100</strong><br>
+        <div class="wa-msg in" style="border-left:4px solid #22c55e;background:#132a1e;color:#e9edef;animation:fadeIn 0.3s ease">
+          📈 <strong style="color:#4ade80">Adherencia Confirmada · Health Score: 88/100</strong><br>
           ¡Excelente noticia! Registro de adherencia 24h guardado en la póliza Mawdy TPA.
-          <div class="wa-time">${now}</div>
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>
         </div>
       `;
       updateHealthScoreUI(88, 'Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100', `Adherencia confirmada (${medNombre})`);
@@ -730,12 +730,12 @@ function confirmarAdherenciaDemo(cumplido, medNombre) {
       waBox.innerHTML += `
         <div class="wa-msg out" style="animation:fadeIn 0.3s ease">
           Olvidé tomar la dosis de la mañana de ${medNombre}.
-          <div class="wa-time">${now}</div>
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>
         </div>
-        <div class="wa-msg in" style="border-left:4px solid #f59e0b;background:#fffbeb;color:#92400e;animation:fadeIn 0.3s ease">
-          ⚠️ <strong>Alerta de Seguridad Farmacéutica:</strong><br>
+        <div class="wa-msg in" style="border-left:4px solid #f59e0b;background:#2d2312;color:#e9edef;animation:fadeIn 0.3s ease">
+          ⚠️ <strong style="color:#fbbf24">Alerta de Seguridad Farmacéutica:</strong><br>
           Por favor tome su dosis lo antes posible sin duplicar la siguiente toma. El médico tratante ha sido notificado.
-          <div class="wa-time">${now}</div>
+          <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>
         </div>
       `;
       updateHealthScoreUI(65, 'Alerta: Dosis Omitida (65/100)', 'badge-yellow', '-11 pts (Dosis Omitida)', '65 / 100', `Omisión de dosis (${medNombre})`);
@@ -745,6 +745,7 @@ function confirmarAdherenciaDemo(cumplido, medNombre) {
     waBox.scrollTop = waBox.scrollHeight;
   }
 }
+
 
 
 // ── CHATBOT IA RAG GEMINI 2.0 FLASH ─────────────────────────────────────────

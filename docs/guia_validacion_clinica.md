@@ -435,86 +435,11 @@ Se dispara automáticamente **2 horas después de concluida la última dosis del
 
 ---
 
-### Módulo 9: Triaje por IA Generativa (Solo Demo)
-
-**Archivo**: [geminiRAG.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/services/geminiRAG.js)
-**Función**: `simularTriajeIA(mensajeUsuario)`
-
-#### Estado Actual
-
-| Aspecto | Implementación |
-|---------|---------------|
-| Motor | Gemini 2.0 Flash |
-| Prompt | Instruye a la IA asignar Health Score entre 35 y 90 (ej. "61 si reporta fiebre") |
-| Validación clínica | ❌ Ninguna |
-| Uso actual | Solo demos y presentaciones |
-| Base de datos | No escribe en BD de producción |
-
-> [!CAUTION]
-> **NO APTO PARA PRODUCCIÓN.** El LLM asigna scores clínicos sin reglas validadas. Si se activa en producción, representa un riesgo regulatorio y clínico grave. Requiere un protocolo de validación completo antes de cualquier uso real.
-
----
-
-### Módulo 10: Auditoría TPA
-
-**Archivo**: [auditoriaTPA.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/services/auditoriaTPA.js)
-
-#### Flujo Actual
-1. Cada consulta completada genera un registro pendiente de auditoría
-2. El auditor TPA revisa manualmente en el panel
-3. Dictamen posible: `aprobado` | `observado` | `rechazado`
-4. Asistente RAG (Gemini) disponible para consultas de KPIs en lenguaje natural
-
-> [!NOTE]
-> La columna de auditoría TPA no existe aún en el schema real de BD. Actualmente se simula como "todo pendiente" para demos.
-
----
-
-### Módulo 11: Documentos Clínicos Generados
-
-**Archivo**: [flujo-antecedentes.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-antecedentes.js)
-**Librería**: `pdf-lib`
-
-#### Tipos de Documento
-
-| Documento | Generación | Envío | Firma Digital |
-|-----------|-----------|-------|---------------|
-| Historia Clínica | Automática desde antecedentes | WhatsApp del paciente | No implementada |
-| Receta Médica | Médico completa formulario en panel | WhatsApp del paciente | No implementada |
-| Certificado Médico | Médico completa formulario en panel | WhatsApp del paciente | No implementada |
-| Pedido de Laboratorio | Médico completa formulario en panel | WhatsApp del paciente | No implementada |
-| Interconsulta | Médico completa formulario en panel | WhatsApp del paciente | No implementada |
-
-#### Puntos a Validar con la Doctora
-- [ ] ¿Se requiere firma electrónica avanzada para recetas?
-- [ ] ¿Las plantillas PDF cumplen con requisitos regulatorios locales?
-- [ ] ¿La Historia Clínica autogenerada incluye todos los campos requeridos?
-
----
-
-## 3. Esquema de Base de Datos Clínica
-
-### Tablas con Datos Clínicos
-
-| Tabla | Datos que Almacena | Campos Clave |
-|-------|--------------------|-------------|
-| `antecedentes` | Historial clínico del paciente | `alergias`, `hipertension`, `diabetes`, `cirugias`, `otros` (todos TEXT libre) |
-| `paciente_health_score` | Score calculado y etiqueta | `score_calculado`, `etiqueta` (controlado/en_riesgo/alerta), `adherencia_tratamiento_pct`, `bienestar_promedio` |
-| `tracking_biometricos` | Valores vitales reportados | `presion_sistolica`, `presion_diastolica`, `glucosa`, `colesterol`, `peso`, `score_calculado`, `etiqueta` |
-| `tracking_psicosocial` | Evaluación psicosocial MRL | `dim_carga`, `dim_autonomia`, `dim_apoyo`, `dim_relaciones`, `dim_doble_pres` (escalas 0-100) |
-| `documentos_datos` | JSON de documentos generados | Payload completo del documento (receta, certificado, etc.) |
-
-> [!WARNING]
-> **Alergias y antecedentes son campos de texto libre.** No hay catálogo estandarizado. Esto impide la verificación automática de interacciones fármaco-alergia. Se necesita un catálogo estructurado para automatizar bloqueos de seguridad farmacéutica.
-
----
-
-## 4. Lo que NO Existe Aún (Brechas Identificadas)
+## 3. Lo que NO Existe Aún (Brechas Identificadas)
 
 | Funcionalidad | Estado | Impacto |
 |---------------|--------|---------|
 | Health Score en producción real | Solo existe en demo (`simularTriajeIA`) | No se calcula Health Score real de síntomas agudos |
-
 | Perfilamiento de riesgo del paciente | ❌ No implementado | No hay scoring predictivo basado en historial completo |
 | Interacción fármaco-alergia automática | ❌ No implementado | Alergias son texto libre, no se cruzan con medicamentos |
 | Firma electrónica en documentos | ❌ No implementado | PDFs se generan sin firma digital validada |
@@ -523,6 +448,7 @@ Se dispara automáticamente **2 horas después de concluida la última dosis del
 | Ajuste de umbrales por edad/sexo | ❌ No implementado | Umbrales fijos para toda la población |
 | Estándares HL7/FHIR | ❌ No implementado | Sin interoperabilidad con sistemas de salud externos |
 | Validación de rango de PA al ingreso | ❌ No implementado | Paciente puede ingresar valores imposibles |
+
 
 ---
 

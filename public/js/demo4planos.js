@@ -104,38 +104,50 @@ function moverCursorYClick(targetSelector, callback, delayAfterClick = 400) {
     return;
   }
 
-  const rect = targetEl.getBoundingClientRect();
-  const clickX = rect.left + rect.width / 2;
-  const clickY = rect.top + rect.height / 2;
+  // Auto-scroll para traer el elemento a la vista suavemente antes del movimiento del cursor
+  try {
+    targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  } catch (e) {}
 
-  // 1. Mostrar cursor y deslizarlo suavemente
-  cursor.style.opacity = '1';
-  cursor.style.left = clickX + 'px';
-  cursor.style.top = clickY + 'px';
-
-  // 2. Esperar desplazamiento de cursor (0.75s) y luego hacer pulsación visual
-  const t1 = setTimeout(() => {
+  // Esperar 300ms a que el scroll se posicione
+  const t0 = setTimeout(() => {
     if (!isPlaying) return;
-    cursor.classList.add('clicking');
 
-    // Onda expansiva de click
-    const ripple = document.createElement('div');
-    ripple.className = 'virtual-click-ripple';
-    ripple.style.left = clickX + 'px';
-    ripple.style.top = clickY + 'px';
-    document.body.appendChild(ripple);
-    setTimeout(() => ripple.remove(), 600);
+    const rect = targetEl.getBoundingClientRect();
+    const clickX = rect.left + rect.width / 2;
+    const clickY = rect.top + rect.height / 2;
 
-    // 3. Liberar pulsación y ejecutar acción
-    const t2 = setTimeout(() => {
-      cursor.classList.remove('clicking');
-      if (callback && isPlaying) callback();
-    }, delayAfterClick);
+    // 1. Mostrar cursor y deslizarlo suavemente
+    cursor.style.opacity = '1';
+    cursor.style.left = clickX + 'px';
+    cursor.style.top = clickY + 'px';
 
-    autoPlayTimeouts.push(t2);
-  }, 750);
+    // 2. Esperar desplazamiento de cursor (0.75s) y luego hacer pulsación visual
+    const t1 = setTimeout(() => {
+      if (!isPlaying) return;
+      cursor.classList.add('clicking');
 
-  autoPlayTimeouts.push(t1);
+      // Onda expansiva de click
+      const ripple = document.createElement('div');
+      ripple.className = 'virtual-click-ripple';
+      ripple.style.left = clickX + 'px';
+      ripple.style.top = clickY + 'px';
+      document.body.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+
+      // 3. Liberar pulsación y ejecutar acción
+      const t2 = setTimeout(() => {
+        cursor.classList.remove('clicking');
+        if (callback && isPlaying) callback();
+      }, delayAfterClick);
+
+      autoPlayTimeouts.push(t2);
+    }, 750);
+
+    autoPlayTimeouts.push(t1);
+  }, 300);
+
+  autoPlayTimeouts.push(t0);
 }
 
 function ocultarCursorVirtual() {
@@ -159,14 +171,14 @@ function startAutoPlay() {
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '⏸ Pausar Demo';
 
-  // Paso 1: Mover cursor a chip de WhatsApp y hacer click (t = 1.5s)
+  // Paso 1: Mover cursor a chip de WhatsApp y hacer click (t = 1.2s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(1);
     moverCursorYClick('.wa-chip-btn', () => {
       simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C');
     });
-  }, 1500));
+  }, 1200));
 
   // Paso 2: Ir a Consola Médica tab y hacer click en Emitir Receta (t = 8.5s)
   autoPlayTimeouts.push(setTimeout(() => {
@@ -178,7 +190,7 @@ function startAutoPlay() {
         moverCursorYClick('#btnSignRecipe', () => {
           firmarRecetaDemo();
         });
-      }, 1400));
+      }, 1500));
     });
   }, 8500));
 
@@ -192,7 +204,7 @@ function startAutoPlay() {
         moverCursorYClick('#tpaTableBody .btn-success', () => {
           dictaminarDemo('aprobado');
         });
-      }, 1400));
+      }, 1500));
     });
   }, 16500));
 
@@ -215,6 +227,7 @@ function startAutoPlay() {
     });
   }, 31500));
 }
+
 
 function stopAutoPlay() {
   isPlaying = false;
@@ -817,8 +830,10 @@ function firmarRecetaDemo() {
   }
   mostrarNotificacion('✍️ Receta digital emitida y enviada al paciente', '#16a34a');
   updateHealthScoreUI(72, 'Tratamiento Asignado (72/100)', 'badge-blue', '-8 pts (Recuperación)', '72 / 100', 'Receta emitida por médico');
-  switchRightTab(4);
-  setStep(4);
+  if (!isPlaying) {
+    switchRightTab(4);
+    setStep(4);
+  }
 }
 
 function dictaminarDemo(estado) {
@@ -832,7 +847,7 @@ function dictaminarDemo(estado) {
 
   mostrarNotificacion(`Dictamen registrado: ${estado.toUpperCase()} ✅`, estado === 'aprobado' ? '#16a34a' : '#ef4444');
   updateHealthScoreUI(76, 'Pertinencia Verificada (76/100)', 'badge-green', '-0 pts', '76 / 100', 'Dictamen TPA aprobado');
-  setStep(5);
+  if (!isPlaying) setStep(5);
 }
 
 // ── SEGUIMIENTO DE MEDICAMENTOS & ADHERENCIA 24H ───────────────────────────
@@ -881,9 +896,10 @@ function confirmarAdherenciaDemo(cumplido, medNombre) {
       `;
       updateHealthScoreUI(88, 'Adherencia Excelente (88/100)', 'badge-green', '+12 pts (Bono Adherencia 24h)', '88 / 100', `Adherencia confirmada (${medNombre})`);
       mostrarNotificacion('🏆 Health Score recuperado a 88 pts (Excelente Adherencia)', '#16a34a');
-      switchRightTab(3); // Mostrar pestaña Health Score al instante
+      if (!isPlaying) switchRightTab(3); // Mostrar pestaña Health Score al instante en modo manual
     } else {
       waBox.innerHTML += `
+
         <div class="wa-msg out" style="animation:fadeIn 0.3s ease">
           Olvidé tomar la dosis de la mañana de ${medNombre}.
           <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>

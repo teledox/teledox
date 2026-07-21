@@ -9,7 +9,7 @@
 
 | # | Flujo | Entrada del Paciente | Regla / Algoritmo Actual | Acción Automática | Requiere Validación Médica |
 |---|-------|----------------------|--------------------------|-------------------|---------------------------|
-| 1 | **Triaje por Síntomas** | Texto libre WhatsApp | `clasificarSintomas()` busca palabras clave en 3 niveles | Clasifica Leve/Moderado/Grave, envía alerta Telegram si Grave | **Sí: Definir palabras clave y niveles** |
+| 1 | **Triaje por Síntomas** | Texto libre WhatsApp | `clasificarSintomas()` busca palabras clave en 3 niveles | Clasifica Leve/Moderado/Grave, genera notificación panel prioridad ALTA si Grave | **Sí: Definir palabras clave y niveles** |
 | 2 | **Detección de Crisis** | Texto libre WhatsApp | `detectarCrisis()` busca keywords de autolesión/suicidio | Interrumpe flujo, mensaje empático, alerta inmediata al médico | **Sí: Validar protocolo de crisis** |
 | 3 | **Scoring Biométrico** | Valores numéricos (PA, glucosa, colesterol, peso, talla) | `calcularScore()` con umbrales fijos, escala 0-100 pts | Asigna etiqueta: controlado / en_riesgo / alerta | **Sí: Validar todos los umbrales** |
 | 4 | **Scoring de Adherencia** | Respuestas del paciente en seguimiento | `calcularScoreAdherencia()` con 4 dimensiones, ventana 30 días | Asigna etiqueta: controlado / en_riesgo / alerta | **Sí: Validar pesos y ventana temporal** |
@@ -35,8 +35,8 @@
 
 | Nivel | Etiqueta | Criterio en Código | Acción Automática |
 |-------|----------|-------------------|-------------------|
-| 3 | **Grave** | Palabras clave: dolor intenso, dificultad para respirar, sangrado, pérdida de conciencia | 🚨 Alerta Telegram + Notificación Panel prioridad ALTA |
-| 2 | **Moderado** | Palabras clave: fiebre persistente, dolor moderado, mareo | ⚠️ Alerta Telegram + Ruta a teleconsulta prioritaria ($8 USD) |
+| 3 | **Grave** | Palabras clave: dolor intenso, dificultad para respirar, sangrado, pérdida de conciencia | 🚨 Notificación Panel prioridad ALTA |
+| 2 | **Moderado** | Palabras clave: fiebre persistente, dolor moderado, mareo | ⚠️ Notificación Panel + Ruta a teleconsulta prioritaria ($8 USD) |
 | 1 | **Leve** | Todo lo que no cae en Nivel 2 o 3 | Ruta estándar de atención |
 
 #### Puntos a Validar con la Doctora
@@ -58,8 +58,7 @@
 3. Si detecta coincidencia:
    - Interrumpe toda automatización
    - Envía el **mensaje empático automático** al paciente
-   - Alerta inmediata al médico vía Telegram
-   - Crea notificación de máxima prioridad en el panel
+   - Notificación de máxima prioridad en el panel médico tratante
 
 #### 💬 Mensaje Empático Enviado por WhatsApp:
 > 🆘 Gracias por contarnos cómo te sientes. Eso toma mucho valor.
@@ -253,7 +252,7 @@ Si un paciente no tiene órdenes de laboratorio asignadas en los últimos 30 dí
 | PA Sistólica baja | < 90 (Hipotensión 🚨) | — | — |
 | PA Diastólica baja | < 60 (Hipotensión 🚨) | — | — |
 
-**Acción Nivel 3**: Mensaje "Acuda a urgencias inmediatamente" + alerta Telegram
+**Acción Nivel 3**: Mensaje "Acuda a urgencias inmediatamente" + notificación panel prioridad ALTA
 **Acción Nivel 2**: Mensaje "Contacte a su médico hoy" + alerta al panel
 
 #### 5.2 Diabetes Tipo 1 (`diabetes_tipo1`)
@@ -379,8 +378,8 @@ Si un paciente no tiene órdenes de laboratorio asignadas en los últimos 30 dí
 
 | Nivel | Mensaje al Paciente | Alerta al Equipo | Acción en Sistema |
 |-------|--------------------|--------------------|-------------------|
-| 3 (Emergencia) | "🚨 Acuda a urgencias o llame al 911 inmediatamente" | Telegram urgente + notificación panel prioridad ALTA | Estado: `alerta` |
-| 2 (Atención) | "⚠️ Contacte a su médico hoy" | Telegram medio + notificación panel | Ruta a teleconsulta ($8 USD si B2C) |
+| 3 (Emergencia) | "🚨 Acuda a urgencias o llame al 911 inmediatamente" | Notificación panel prioridad ALTA | Estado: `alerta` |
+| 2 (Atención) | "⚠️ Contacte a su médico hoy" | Notificación panel prioridad media | Ruta a teleconsulta ($8 USD si B2C) |
 | 1 (Normal) | "✅ Sus valores están dentro del rango" | Ninguna | Registro normal |
 
 #### Puntos a Validar con la Doctora
@@ -411,9 +410,9 @@ Se dispara automáticamente **2 horas después de concluida la última dosis del
 
 | Botón Seleccionado | Categoría | Respuesta Automatizada del Bot | Acción en el Sistema |
 |---------------------|-----------|--------------------------------|----------------------|
-| `[ 😊 Me siento mejor ]` | `exitoso` | *"🎉 ¡Nos alegra mucho que se sienta mejor! Su caso fue registrado como exitoso..."* | Cierra el caso en BD (`cierres_casos`) y notifica resolución positiva al médico vía Telegram. |
+| `[ 😊 Me siento mejor ]` | `exitoso` | *"🎉 ¡Nos alegra mucho que se sienta mejor! Su caso fue registrado como exitoso..."* | Cierra el caso en BD (`cierres_casos`) y notifica resolución positiva al médico en el panel. |
 | `[ 😐 Sigo con síntomas ]` | `parcial` | *"👨‍⚕️ Gracias por contarnos. Hemos registrado que aún presenta síntomas. Un médico revisará su caso..."* | Registra resultado parcial y genera **Notificación de Prioridad Media** en la bandeja del panel médico. |
-| `[ 😟 No mejoré ]` | `sin_mejoria` | *"😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad..."* | Dispara **Alerta Roja de Telegram** urgente al médico de guardia y **Notificación de Alta Prioridad** en panel. |
+| `[ 😟 No mejoré ]` | `sin_mejoria` | *"😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad..."* | Genera **Notificación de Alta Prioridad / Alerta Roja** en el panel médico. |
 
 #### Puntos a Validar con la Doctora
 - [ ] ¿El retraso de 2 horas tras la última dosis es adecuado para todas las familias de medicamentos?
@@ -444,7 +443,7 @@ La puntuación global de riesgo combina 3 dimensiones ponderadas:
 | **0 - 24 pts** | **Riesgo Bajo** | 🟢 Verde | Monitoreo estándar por WhatsApp (check-in de rutina semanal/mensual). |
 | **25 - 49 pts** | **Riesgo Medio** | 🟡 Amarillo | Recordatorios intensificados + sugerencia automática de agendar consulta de control trimestral. |
 | **50 - 74 pts** | **Riesgo Alto** | 🔴 Rojo | Notificación prioritaria en el panel del médico tratante + llamada/gestión de enfermería B2B. |
-| **≥ 75 pts** | **Riesgo Crítico** | 🚨 Alerta | Alerta roja en Telegram + agendamiento de teleconsulta prioritaria sin costo / derivación presencial. |
+| **≥ 75 pts** | **Riesgo Crítico** | 🚨 Alerta | Alerta roja en panel médico + agendamiento de teleconsulta prioritaria sin costo / derivación presencial. |
 
 #### Puntos a Validar con la Doctora
 - [ ] ¿Los pesos relativos (30% Antecedentes/Edad, 40% Biométricos, 30% Adherencia) reflejan la vulnerabilidad médica real?

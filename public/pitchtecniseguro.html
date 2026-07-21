@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MEDILYFT · Control de Siniestralidad · TECNISEGURO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#F05252; --red-dark:#C0392B; --red-light:#fde8e8;
+  --blue:#0F2B5C; --blue-accent:#1E40AF; --blue-light:#dbeafe;
+  --green:#16a34a; --green-light:#dcfce7;
+  --gold:#d97706; --gold-light:#fef3c7;
+  --bg:#f7f3f3; --surface:#ffffff; --surface2:#faf7f7;
+  --border:rgba(0,0,0,0.08); --border-r:rgba(240,82,82,0.2);
+  --text:#111111; --text-sub:#374151; --text-muted:#6b7280;
+  --shadow:0 2px 12px rgba(0,0,0,0.07); --shadow-lg:0 8px 32px rgba(0,0,0,0.1);
+  --wa-bg:#0b1014; --wa-in:#1f2c34; --wa-out:#005c4b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+h1,h2,h3,.logo-brand,.srv-num,.bfi-num{font-family:'Outfit',system-ui,sans-serif}
+
+.topbar{position:fixed;top:0;left:0;right:0;height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 32px;z-index:100;background:rgba(247,243,243,0.92);backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-svg{width:42px;height:42px}
+.logo-brand{font-size:18px;font-weight:800;letter-spacing:.06em;color:var(--text)}
+.logo-product{font-size:12px;letter-spacing:.14em;color:var(--red);text-transform:uppercase;font-weight:700}
+.logo-client-badge{padding:3px 10px;border-radius:12px;background:var(--blue);color:#fff;font-size:11px;font-weight:800;letter-spacing:.06em}
+.logo-text{display:flex;flex-direction:column;line-height:1.2}
+
+.slide-counter{font-size:12px;color:var(--text-muted);letter-spacing:.06em;font-weight:500}
+.slide-title-tag{font-size:10px;letter-spacing:.14em;color:var(--text-muted);text-transform:uppercase;padding:5px 14px;border:1px solid var(--border);border-radius:20px;background:var(--surface);font-weight:600}
+
+.progress-bar{position:fixed;top:70px;left:0;right:0;height:3px;background:rgba(0,0,0,0.06);z-index:100}
+.progress-fill{height:100%;background:linear-gradient(90deg, var(--blue), var(--red));transition:width .4s ease}
+
+.dots{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100}
+.dot{width:7px;height:7px;border-radius:50%;background:rgba(0,0,0,0.15);cursor:pointer;transition:all .3s}
+.dot.active{background:var(--red);width:24px;border-radius:4px}
+
+.nav-btn{position:fixed;bottom:20px;z-index:100;width:42px;height:42px;border-radius:50%;border:1px solid var(--border);background:var(--surface);color:var(--text-sub);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;box-shadow:var(--shadow)}
+.nav-btn:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.nav-prev{right:74px}.nav-next{right:24px}
+
+.stage{position:fixed;inset:70px 0 0 0;display:flex;overflow:hidden}
+.slide{position:absolute;inset:0;display:flex;opacity:0;pointer-events:none}
+.slide.active{opacity:1;pointer-events:all}
+.slide.animating{transition:opacity .5s ease,transform .5s cubic-bezier(.4,0,.2,1)}
+
+/* Slide 0 Hero */
+.slide-hero{flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:40px;text-align:center}
+.hero-eyebrow{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--red);font-weight:700;margin-bottom:20px;display:flex;align-items:center;gap:10px;justify-content:center}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';width:40px;height:1px;background:var(--red);opacity:.4}
+.hero-h1{font-size:50px;font-weight:800;line-height:1.12;margin-bottom:22px;letter-spacing:-.02em;color:var(--text)}
+.hero-h1 .c{color:var(--red)}
+.hero-h1 .b{color:var(--blue-accent)}
+.hero-sub{font-size:17px;color:var(--text-muted);max-width:680px;line-height:1.6;margin:0 auto 36px}
+
+.hero-pills{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:36px}
+.pill{display:flex;align-items:center;gap:8px;padding:8px 18px;border-radius:30px;background:var(--surface);border:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-sub);box-shadow:var(--shadow)}
+.pill-ico{font-size:15px}
+
+.btn-primary{display:inline-flex;align-items:center;gap:10px;padding:16px 36px;border-radius:40px;background:linear-gradient(135deg,var(--red),var(--red-dark));color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;box-shadow:0 6px 20px rgba(240,82,82,0.35);transition:all .2s}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(240,82,82,0.45)}
+
+/* Shared Layout Phone + Panel */
+.slide-grid{flex:1;display:grid;grid-template-columns:340px 1fr;gap:36px;padding:40px 48px;align-items:center;max-width:1400px;margin:0 auto;width:100%}
+.phone-mock{width:320px;height:560px;background:#0d1117;border-radius:36px;border:10px solid #1f2937;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;position:relative;margin:0 auto}
+.phone-notch{height:24px;background:#1f2937;display:flex;justify-content:center;align-items:center;padding-top:4px}
+.phone-speaker{width:50px;height:4px;background:#374151;border-radius:2px}
+.phone-header{background:#161e2e;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.phone-avatar{width:34px;height:34px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:14px}
+.phone-name{color:#fff;font-size:13px;font-weight:700}
+.phone-status{color:#4ade80;font-size:10px}
+.phone-body{flex:1;background:var(--wa-bg);padding:14px;display:flex;flex-direction:column;gap:10px;overflow-y:auto}
+
+.msg{max-width:85%;padding:10px 14px;border-radius:14px;font-size:12px;line-height:1.45;opacity:0;transform:translateY(10px);transition:all .3s ease}
+.msg.show{opacity:1;transform:translateY(0)}
+.msg-in{background:var(--wa-in);color:#fff;align-self:flex-start;border-bottom-left-radius:2px}
+.msg-out{background:var(--wa-out);color:#fff;align-self:flex-end;border-bottom-right-radius:2px}
+
+.panel-col{display:flex;flex-direction:column;gap:24px}
+.panel-hd h2{font-size:32px;font-weight:800;line-height:1.2;margin-bottom:10px;color:var(--text)}
+.panel-hd p{font-size:15px;color:var(--text-sub);line-height:1.6}
+
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:var(--shadow)}
+.card-ico{font-size:24px;margin-bottom:10px}
+.card h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:6px}
+.card p{font-size:13px;color:var(--text-sub);line-height:1.5}
+
+/* Slide Full */
+.slide-full{flex-direction:column;padding:40px 48px;max-width:1300px;margin:0 auto;width:100%;justify-content:center}
+.bfull-layout{display:flex;flex-direction:column;gap:20px;width:100%}
+.bfull-hd h2{font-size:28px;font-weight:800;color:var(--text)}
+.bfull-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.bfull-item{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;box-shadow:var(--shadow)}
+.bfi-ico{font-size:26px;margin-bottom:8px}
+.bfull-item h3{font-size:15px;font-weight:700;margin-bottom:6px;color:var(--text)}
+.bfull-item p{font-size:12.5px;color:var(--text-sub);line-height:1.5}
+
+/* Animations */
+.vis-up{opacity:0;transform:translateY(20px);transition:all .5s ease}
+.vis-up.vis{opacity:1;transform:translateY(0)}
+
+.c{color:var(--red)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-wrap">
+    <svg class="logo-svg" viewBox="0 0 1024 1024" fill="none">
+      <rect x="290" y="235" width="440" height="440" rx="112" ry="112" stroke="#F05252" stroke-width="58" fill="none"/>
+      <path d="M428 666 L428 748 Q428 770 448 756 L560 666 Z" fill="#F05252"/>
+      <path d="M 468 332 C 528 326, 574 354, 589 398 C 599 428, 612 448, 630 466 Q 641 477, 628 483 Q 614 489, 619 503 Q 628 514, 616 526 Q 603 538, 608 550 C 601 562, 583 571, 570 574 C 549 601, 542 638, 549 672"
+        stroke="#F05252" stroke-width="50" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <div class="logo-text">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="logo-brand">MEDILYFT</span>
+        <span class="logo-client-badge">TECNISEGURO</span>
+      </div>
+      <span class="logo-product">Teledox Telemedicina & Siniestralidad</span>
+    </div>
+  </div>
+  <div class="slide-title-tag" id="slide-title-tag">INTRODUCCIÓN</div>
+  <div class="slide-counter" id="counter">01 / 06</div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="prog"></div></div>
+
+<div class="stage" id="stage">
+
+  <!-- SLIDE 0: HERO -->
+  <div class="slide slide-hero active" id="s0">
+    <div class="hero-eyebrow vis-up" id="h0eyebrow">Solución Estratégica para Tecniseguro</div>
+    <h1 class="hero-h1 vis-up" id="h0h1">
+      La salud de los asegurados de <span class="c">Tecniseguro</span>,<br>redefinida con <span class="b">IA y Telemedicina</span>.
+    </h1>
+    <p class="hero-sub vis-up" id="h0sub">
+      Teledox by MediLyft es la plataforma de atención primaria y seguimiento omnicanal que controla la siniestralidad, optimiza el costo por consulta y mejora el Nivel de Servicio clínico.
+    </p>
+
+    <div class="hero-pills vis-up" id="h0pills">
+      <div class="pill"><span class="pill-ico">🩺</span> Triaje Automatizado</div>
+      <div class="pill"><span class="pill-ico">📊</span> Health Score Biométrico</div>
+      <div class="pill"><span class="pill-ico">📱</span> WhatsApp 24/7</div>
+      <div class="pill"><span class="pill-ico">📋</span> Recetas con Firma Digital</div>
+      <div class="pill"><span class="pill-ico">📉</span> Control de Siniestralidad TPA</div>
+    </div>
+
+    <div class="vis-up" id="h0cta">
+      <button class="btn-primary" onclick="goTo(1)">Ver la Experiencia de Tecniseguro &rarr;</button>
+    </div>
+  </div>
+
+  <!-- SLIDE 1: TRIAJE Y CANAL OMNICANAL -->
+  <div class="slide" id="s1">
+    <div class="slide-grid">
+      <div class="phone-mock">
+        <div class="phone-notch"><div class="phone-speaker"></div></div>
+        <div class="phone-header">
+          <div class="phone-avatar">T</div>
+          <div>
+            <div class="phone-name">Tecniseguro Salud Bot</div>
+            <div class="phone-status">● En línea ahora</div>
+          </div>
+        </div>
+        <div class="phone-body" id="chat-s1">
+          <div class="msg msg-in" id="c1m1">Hola, tengo fiebre y me duele la garganta desde ayer.</div>
+          <div class="msg msg-out" id="c1m2">¡Hola Carlos! Te atiende el bot de Tecniseguro Salud 🩺. Voy a registrar tus síntomas para coordinar tu atención.</div>
+          <div class="msg msg-in" id="c1m3">Mi temperatura está en 38.5 °C y soy hipertenso.</div>
+          <div class="msg msg-out" id="c1m4">Entendido. Conectando inmediatamente con el Dr. Morales (Medicina General) sin costo adicional por tu póliza Tecniseguro.</div>
+        </div>
+      </div>
+
+      <div class="panel-col">
+        <div class="panel-hd vis-up" id="p1hd">
+          <h2>El asegurado consulta.<br><span class="c">Tecniseguro responde en segundos.</span></h2>
+          <p>Atención primaria directa vía WhatsApp sin esperas en centros asistenciales ni trámites burocráticos de autorización.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card vis-up" id="c1a">
+            <div class="card-ico">⚡</div>
+            <h3>Triaje Instantáneo</h3>
+            <p>Clasificación de riesgo en 3 niveles (Leve, Moderado, Grave) al instante.</p>
+          </div>
+          <div class="card vis-up" id="c1b">
+            <div class="card-ico">🏥</div>
+            <h3>Derivación Directa</h3>
+            <p>Conexión directa con médico general o especialista según protocolo Tecniseguro.</p>
+          </div>
+          <div class="card vis-up" id="c1c">
+            <div class="card-ico">📲</div>
+            <h3>Recetas en WhatsApp</h3>
+            <p>Envío automático de receta en PDF con código QR y validez farmacéutica.</p>
+          </div>
+          <div class="card vis-up" id="c1d">
+            <div class="card-ico">🔒</div>
+            <h3>Expediente Seguro</h3>
+            <p>Historial médico unificado y disponible para auditorías clínicas en tiempo real.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 2: HEALTH SCORE Y BIOMÉTRICOS -->
+  <div class="slide" id="s2">
+    <div class="slide-grid">
+      <div class="phone-mock">
+        <div class="phone-notch"><div class="phone-speaker"></div></div>
+        <div class="phone-header">
+          <div class="phone-avatar">T</div>
+          <div>
+            <div class="phone-name">Monitoreo Tecniseguro</div>
+            <div class="phone-status">● Reporte Diario Biométrico</div>
+          </div>
+        </div>
+        <div class="phone-body" id="chat-s2">
+          <div class="msg msg-out" id="c2m1">🩺 Hora de tu reporte diario. ¿Cuál fue tu presión arterial hoy?</div>
+          <div class="msg msg-in" id="c2m2">PA: 125/82, Glucosa: 98 mg/dL.</div>
+          <div class="msg msg-out" id="c2m3">✅ ¡Excelente! Tu Health Score actual es **88/100 (Estado Controlado)**. Tu aseguradora Tecniseguro premia tu constancia.</div>
+        </div>
+      </div>
+
+      <div class="panel-col">
+        <div class="panel-hd vis-up" id="p2hd">
+          <h2>Health Score Biométrico:<br><span class="c">Salud Preventiva Medible</span></h2>
+          <p>Algoritmo clínico de 0 a 100 puntos que evalúa la presión, glucosa, colesterol, IMC y bienestar reportado por los afiliados de Tecniseguro.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card vis-up" id="c2a">
+            <div class="card-ico">📊</div>
+            <h3>Score de 0 a 100 pts</h3>
+            <p>Categorización automática: Controlado (🟢 ≥70), En Riesgo (🟡 40-69), Alerta (🔴 &lt;40).</p>
+          </div>
+          <div class="card vis-up" id="c2b">
+            <div class="card-ico">💊</div>
+            <h3>Adherencia al Tratamiento</h3>
+            <p>Recordatorios automáticos de tomas de fármacos con reporte proactivo en WhatsApp.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: MONITOREO DE CRÓNICOS -->
+  <div class="slide" id="s3">
+    <div class="slide-grid">
+      <div class="phone-mock">
+        <div class="phone-notch"><div class="phone-speaker"></div></div>
+        <div class="phone-header">
+          <div class="phone-avatar">T</div>
+          <div>
+            <div class="phone-name">Programa Crónicos Tecniseguro</div>
+            <div class="phone-status">● Seguimiento Hipertensión</div>
+          </div>
+        </div>
+        <div class="phone-body" id="chat-s3">
+          <div class="msg msg-out" id="c3m1">⚠️ Alerta Tecniseguro: Registramos Presión 165/102 (Nivel 2 - Elevada).</div>
+          <div class="msg msg-out" id="c3m2">Generando notificación inmediata al médico tratante y agendando contacto prioritario.</div>
+        </div>
+      </div>
+
+      <div class="panel-col">
+        <div class="panel-hd vis-up" id="p3hd">
+          <h2>Monitoreo de 17 Enfermedades Crónicas<br><span class="c">Protección Continua</span></h2>
+          <p>Módulos de alerta temprana automatizados para Hipertensión, Diabetes, EPOC, Asma, Insuficiencia Cardíaca, Renal y más.</p>
+        </div>
+        <div class="card-grid">
+          <div class="card vis-up" id="c3a">
+            <div class="card-ico">🚨</div>
+            <h3>Detención de Emergencias</h3>
+            <p>Nivel 3 (Peligro Vital) instruye llamada inmediata al 911 o centro de urgencias.</p>
+          </div>
+          <div class="card vis-up" id="c3b">
+            <div class="card-ico">🩺</div>
+            <h3>Prevención de Complicaciones</h3>
+            <p>Evita descompensaciones agudas mediante intervención oportuna de profesionales.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: AUDITORÍA Y TRAZABILIDAD -->
+  <div class="slide slide-full" id="s4">
+    <div class="bfull-layout">
+      <div class="bfull-hd vis-up" id="p4hd">
+        <h2>Panel TPA & Auditoría para Tecniseguro</h2>
+        <p>Control total de consultas, recetas emitidas y diagnósticos CIE-10 con trazabilidad legal y analítica en tiempo real.</p>
+      </div>
+      <div class="bfull-grid">
+        <div class="bfull-item vis-up" id="b4a">
+          <div class="bfi-ico">📂</div>
+          <h3>Auditoría de Consultas</h3>
+          <p>Dictamen manual o asistido por IA (Aprobado / Observado / Rechazado) sobre cada liquidación.</p>
+        </div>
+        <div class="bfull-item vis-up" id="b4b">
+          <div class="bfi-ico">🤖</div>
+          <h3>Consultas IA RAG (Gemini)</h3>
+          <p>Consulta en lenguaje natural sobre métricas de la cartera de Tecniseguro en milisegundos.</p>
+        </div>
+        <div class="bfull-item vis-up" id="b4c">
+          <div class="bfi-ico">📜</div>
+          <h3>Trazabilidad Firmada</h3>
+          <p>Cada consulta genera historial clínico PDF sellado con ID del profesional y timestamp.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: ROI Y SIMULADOR DE AHORRO -->
+  <div class="slide slide-full" id="s5">
+    <div class="bfull-layout">
+      <div class="bfull-hd vis-up" id="p5hd">
+        <h2>Simulador de Ahorro Directo en Siniestralidad (Tecniseguro)</h2>
+        <p>Proyección de reducción de costos mediante el desvío eficiente de urgencias presenciales a telemedicina Teledox.</p>
+      </div>
+
+      <div class="card vis-up" id="roiCalcBox" style="padding:24px;display:flex;gap:24px;align-items:center;background:var(--surface);border:1px solid rgba(22,163,74,0.3);border-radius:16px;box-shadow:var(--shadow-lg)">
+        <div style="flex:1">
+          <div style="display:flex;gap:20px;margin-bottom:14px">
+            <div style="flex:1">
+              <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Vidas Cubiertas en Tecniseguro: <span id="lblVidas" style="color:var(--red);font-size:14px">20,000</span></label>
+              <input type="range" id="sliderVidas" min="1000" max="100000" step="1000" value="20000" oninput="calcularROI()" style="width:100%;accent-color:var(--red)">
+            </div>
+            <div style="flex:1">
+              <label style="font-size:12px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Costo Medio Urgencia Presencial: <span id="lblCostoUrg" style="color:var(--red);font-size:14px">$130</span></label>
+              <input type="range" id="sliderCostoUrg" min="50" max="250" step="5" value="130" oninput="calcularROI()" style="width:100%;accent-color:var(--red)">
+            </div>
+          </div>
+        </div>
+        <div style="background:var(--green-light);border:1px solid rgba(22,163,74,0.3);border-radius:14px;padding:20px 28px;text-align:center;min-width:260px">
+          <div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:.08em;text-transform:uppercase">Ahorro Anual Proyectado</div>
+          <div id="lblAhorroTotal" style="font-size:34px;font-weight:900;color:var(--green);margin:4px 0">$2,269,600</div>
+          <div style="font-size:11px;color:var(--text-sub);font-weight:500">Desvío del 78% hacia Telemedicina Teledox</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /stage -->
+
+<div class="dots" id="dots"></div>
+<button class="nav-btn nav-prev" onclick="goTo(cur-1)">&larr;</button>
+<button class="nav-btn nav-next" onclick="goTo(cur+1)">&rarr;</button>
+
+<script>
+const SLIDES = 6;
+const TITLES = ['Introducción','Triaje y Canal','Health Score','Enfermedades Crónicas','Auditoría TPA','Simulador ROI'];
+let cur = 0, busy = false;
+
+// Build dots
+const dotsEl = document.getElementById('dots');
+for(let i=0;i<SLIDES;i++){
+  const d = document.createElement('div');
+  d.className='dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+}
+
+function updateUI(n){
+  document.getElementById('counter').textContent = String(n+1).padStart(2,'0')+' / '+String(SLIDES).padStart(2,'0');
+  document.getElementById('slide-title-tag').textContent = TITLES[n].toUpperCase();
+  document.getElementById('prog').style.width = ((n+1)/SLIDES*100)+'%';
+  document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===n));
+}
+
+function goTo(n){
+  if(n<0||n>=SLIDES||busy)return;
+  const fwd = n>cur;
+  const lv = document.getElementById('s'+cur);
+  const en = document.getElementById('s'+n);
+  busy=true;
+
+  lv.querySelectorAll('.vis-up').forEach(el=>el.classList.remove('vis'));
+
+  lv.classList.remove('animating','active');
+  en.classList.remove('animating','active');
+  lv.style.transform='translateY(0)';lv.style.opacity='1';
+  en.style.transform=fwd?'translateY(60px)':'translateY(-60px)';
+  en.style.opacity='0';
+  void en.offsetHeight;
+  lv.classList.add('animating');
+  en.classList.add('animating');
+  lv.style.transform=fwd?'translateY(-60px)':'translateY(60px)';
+  lv.style.opacity='0';
+  en.style.transform='translateY(0)';
+  en.style.opacity='1';
+  en.classList.add('active');
+  cur=n;updateUI(n);
+
+  setTimeout(()=>{
+    lv.classList.remove('active','animating');
+    lv.style.cssText='';
+    en.classList.remove('animating');
+    en.style.cssText='';
+    busy=false;
+    animSlide(n);
+  },500);
+}
+
+function show(id,delay){
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.add('vis');
+  },delay);
+}
+
+function showMsg(id,delay){
+  setTimeout(()=>{
+    const el=document.getElementById(id);
+    if(el) el.classList.add('show');
+  },delay);
+}
+
+function animSlide(n){
+  if(n===0){
+    ['h0eyebrow','h0h1','h0sub','h0pills','h0cta'].forEach((id,i)=>show(id,80+i*140));
+  } else if(n===1){
+    ['p1hd','c1a','c1b','c1c','c1d'].forEach((id,i)=>show(id,80+i*140));
+    ['c1m1','c1m2','c1m3','c1m4'].forEach((id,i)=>showMsg(id,300+i*600));
+  } else if(n===2){
+    ['p2hd','c2a','c2b'].forEach((id,i)=>show(id,80+i*160));
+    ['c2m1','c2m2','c2m3'].forEach((id,i)=>showMsg(id,300+i*600));
+  } else if(n===3){
+    ['p3hd','c3a','c3b'].forEach((id,i)=>show(id,80+i*160));
+    ['c3m1','c3m2'].forEach((id,i)=>showMsg(id,300+i*600));
+  } else if(n===4){
+    ['p4hd','b4a','b4b','b4c'].forEach((id,i)=>show(id,80+i*160));
+  } else if(n===5){
+    ['p5hd','roiCalcBox'].forEach((id,i)=>show(id,80+i*160));
+    calcularROI();
+  }
+}
+
+function calcularROI(){
+  const vidas = parseInt(document.getElementById('sliderVidas')?.value||'20000');
+  const costoUrg = parseInt(document.getElementById('sliderCostoUrg')?.value||'130');
+  
+  if(document.getElementById('lblVidas')) document.getElementById('lblVidas').textContent = vidas.toLocaleString();
+  if(document.getElementById('lblCostoUrg')) document.getElementById('lblCostoUrg').textContent = '$'+costoUrg;
+  
+  // Asumiendo 15% de siniestralidad presencial evitable desviada al 78% a telemedicina ($8)
+  const eventosUrg = vidas * 0.15;
+  const evEvitados = eventosUrg * 0.78;
+  const ahorroNeto = Math.round(evEvitados * (costoUrg - 8));
+  
+  if(document.getElementById('lblAhorroTotal')) {
+    document.getElementById('lblAhorroTotal').textContent = '$' + ahorroNeto.toLocaleString();
+  }
+}
+
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight',' '].includes(e.key)){e.preventDefault();goTo(cur+1);}
+  if(e.key==='ArrowLeft'){e.preventDefault();goTo(cur-1);}
+});
+
+updateUI(0);
+setTimeout(()=>animSlide(0),200);
+</script>
+</body>
+</html>

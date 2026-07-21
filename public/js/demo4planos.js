@@ -620,26 +620,28 @@ function actualizarConsolaTPA(texto, sintomaData, score) {
     auditBadge.textContent = 'Pendiente';
   }
 
-  // Actualizar fila dinámica de la tabla TPA
+  // Actualizar fila dinámica de la tabla TPA (5 columnas exactas)
   if (tpaBody) {
     const now = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
     tpaBody.innerHTML = `
       <tr>
         <td>
           <strong>Verónica Ruiz</strong><br>
-          <span style="color:#64748b;font-size:11px">Cédula: 1701234567 · ${now}</span>
+          <span style="color:#64748b;font-size:11px">Cédula: 1701234567</span>
         </td>
         <td>
           <div style="color:#1e40af;font-weight:700;font-size:12px">${sintomaData.cie10}</div>
           <div style="font-size:11px;color:#64748b;margin-top:2px">💊 ${sintomaData.meds.split('+')[0].trim()}</div>
         </td>
-        <td><span class="badge badge-yellow" id="auditStatusBadge">Pendiente</span></td>
+        <td style="color:#475569;font-weight:600;font-size:11px">Hoy, ${now}</td>
+        <td><span class="badge badge-yellow" id="auditStatusBadge">⏳ Pendiente Auditoría</span></td>
         <td>
-          <button class="btn btn-sm btn-success" style="font-size:11px;padding:3px 8px" onclick="dictaminarDemo('aprobado')">✅ Pertinente</button>
+          <button class="btn btn-sm btn-success" id="btnAuditApprove" style="font-size:11px;padding:4px 10px" onclick="dictaminarDemo('aprobado')">✓ Aprobar Cobertura</button>
         </td>
       </tr>
     `;
   }
+
 
   // Preguntas sugeridas en el RAG según síntoma
   const ragSuggestions = document.getElementById('ragSuggestions');
@@ -837,18 +839,33 @@ function firmarRecetaDemo() {
 }
 
 function dictaminarDemo(estado) {
-  const auditBadge  = document.getElementById('auditStatusBadge');
-  const tpaTabBadge = document.getElementById('tpaTabBadge');
+  const auditBadge   = document.getElementById('auditStatusBadge');
+  const tpaTabBadge  = document.getElementById('tpaTabBadge');
+  const auditApprove = document.getElementById('btnAuditApprove');
+  const countPending = document.getElementById('tpaCountPending');
+
   if (auditBadge) {
     auditBadge.className = estado === 'aprobado' ? 'badge badge-green' : 'badge badge-red';
-    auditBadge.textContent = estado === 'aprobado' ? '✓ Pertinente' : '✕ No Pertinente';
+    auditBadge.textContent = estado === 'aprobado' ? '✓ Pertinente (Aprobado)' : '✕ No Pertinente';
   }
+
+  if (auditApprove) {
+    auditApprove.disabled = true;
+    auditApprove.style.opacity = '0.65';
+    auditApprove.innerHTML = '✓ Dictaminado';
+  }
+
   if (tpaTabBadge) tpaTabBadge.textContent = '0 Pendientes';
+  if (countPending) {
+    countPending.className = 'badge badge-green';
+    countPending.textContent = '0 Pendientes';
+  }
 
   mostrarNotificacion(`Dictamen registrado: ${estado.toUpperCase()} ✅`, estado === 'aprobado' ? '#16a34a' : '#ef4444');
   updateHealthScoreUI(76, 'Pertinencia Verificada (76/100)', 'badge-green', '-0 pts', '76 / 100', 'Dictamen TPA aprobado');
   if (!isPlaying) setStep(5);
 }
+
 
 // ── SEGUIMIENTO DE MEDICAMENTOS & ADHERENCIA 24H ───────────────────────────
 function enviarSeguimientoMedicamentosDemo(origen = 'Doc') {

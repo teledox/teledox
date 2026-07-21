@@ -149,6 +149,18 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 | ≥ 40 | `en_riesgo` | 🟡 Amarillo |
 | < 40 | `alerta` | 🔴 Rojo |
 
+#### 🛡️ Filtro de Seguridad: Rangos de Ingreso en WhatsApp ([flujo-biometricos.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-biometricos.js))
+
+Antes de ingresar los datos al cálculo del score, el bot intercepta los mensajes para prevenir errores de tipeo en el teclado del celular:
+
+| Parámetro Biométrico | Mínimo Aceptado | Máximo Aceptado | Unidad | Acción del Bot si el número está fuera de rango |
+|----------------------|-----------------|-----------------|--------|------------------------------------------------|
+| **Altura** | 100 | 220 | cm | Rechaza el dato y solicita re-ingreso |
+| **Peso** | 20 | 350 | kg | Rechaza el dato y solicita re-ingreso |
+| **Glucosa** | 40 | 600 | mg/dL | Rechaza el dato y solicita re-ingreso |
+| **Colesterol** | 100 | 500 | mg/dL | Rechaza el dato y solicita re-ingreso |
+| **PA Sistólica / Diastólica** | *(Propuesta: 60)* | *(Propuesta: 300)* | mmHg | Acepta número tipeado *(Pendiente definir max/min)* |
+
 #### Puntos a Validar con la Doctora
 - [ ] ¿Los pesos activos (30 PA / 25 Glucosa / 20 Colesterol / 15 IMC / 10 Bienestar) son adecuados?
 - [ ] ¿Los umbrales de PA siguen guías AHA/ESC actualizadas?
@@ -156,6 +168,7 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 - [ ] ¿El IMC es suficiente o se necesita circunferencia de cintura?
 - [ ] ¿Los cortes 70/40 para etiquetas finales son adecuados?
 - [ ] ¿Se necesitan ajustes por edad, sexo o antecedentes?
+
 
 
 ---
@@ -408,30 +421,8 @@ Se dispara automáticamente **2 horas después de concluida la última dosis del
 - [ ] ¿Se requiere un segundo control a las 48 horas si la respuesta fue `parcial`?
 
 
----
 
-### Módulo 8: Validación de Rangos Biométricos (Ingreso de Datos)
 
-**Archivo**: [flujo-biometricos.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-biometricos.js)
-
-#### Rangos de Aceptación Actual
-
-| Parámetro | Mínimo Aceptado | Máximo Aceptado | Unidad |
-|-----------|-----------------|-----------------|--------|
-| Altura | 100 | 220 | cm |
-| Peso | 20 | 350 | kg |
-| Glucosa | 40 | 600 | mg/dL |
-| Colesterol | 100 | 500 | mg/dL |
-| PA Sistólica | (no validado) | (no validado) | mmHg |
-| PA Diastólica | (no validado) | (no validado) | mmHg |
-
-> [!CAUTION]
-> La presión arterial NO tiene validación de rango de ingreso. Un paciente podría reportar valores imposibles (ej. "PA 500/300") sin que el sistema los rechace.
-
-#### Puntos a Validar con la Doctora
-- [ ] ¿Los rangos de aceptación son correctos?
-- [ ] ¿Se deben agregar rangos para PA? Propuesta: Sistólica 60-300, Diastólica 30-200
-- [ ] ¿Se necesitan validaciones para SpO2 (0-100%), FC (20-250 bpm)?
 
 
 

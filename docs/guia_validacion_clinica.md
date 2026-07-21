@@ -102,39 +102,36 @@
 | ≥ 200 | 10 pts | Límite |
 | < 200 | 20 pts | Normal |
 
-##### IMC (20 pts máximo)
+##### IMC (15 pts máximo)
 
 | Rango IMC | Puntos | Etiqueta Asignada |
 |-----------|--------|-------------------|
-| < 18.5 o ≥ 30 | 5 pts | Bajo Peso / Obesidad |
-| ≥ 25 | 12 pts | Sobrepeso |
-| 18.5 - 24.9 | 20 pts | Normal |
+| < 18.5 o ≥ 30 | 3 pts | Bajo Peso / Obesidad |
+| ≥ 25 | 8 pts | Sobrepeso |
+| 18.5 - 24.9 | 15 pts | Normal |
 
-##### Bienestar Auto-reportado (25 pts máximo en código actual, escala invertida)
+##### Bienestar Auto-reportado (10 pts máximo, escala invertida)
 
-| Likert | Puntos Obtenidos |
-|--------|------------------|
-| 1 (Excelente) | 25 pts |
-| 2 (Bien) | 18 pts |
-| 3 (Regular) | 10 pts |
-| 4 (Mal) | 5 pts |
+| Likert | Puntos |
+|--------|--------|
+| 1 (Excelente) | 10 pts |
+| 2 (Bien) | 8 pts |
+| 3 (Regular) | 5 pts |
+| 4 (Mal) | 2 pts |
 | 5 (Muy mal) | 0 pts |
 
-> [!NOTE]
-> En la implementación actual, la suma total del pool es de **120 pts** (30+25+20+20+25), y el sistema escala la nota final dividiendo `(totalObtenido / totalMaximo) * 100`. Sin embargo, esto otorga al Bienestar Subjetivo un peso del 20.8% en el total, igualando a la Glucosa y superando al Colesterol o IMC (16.6%).
+#### 📊 Distribución Activa del Score (Base 100 Puntos Fijos)
 
-#### 💡 Propuesta de Redistribución Clínica (Base 100 Puntos Fijos)
+El score suma **exactamente 100 puntos en base directa**, asignando el peso correspondiente a cada marcador según su relevancia cardiovascular y metabólica:
 
-Para que el score sume **exactamente 100 puntos** sin necesidad de normalización y otorgue el peso apropiado a cada marcador según su relevancia cardiovascular y metabólica:
-
-| Componente | Puntos Actuales | Puntos Propuestos | Justificación Médica |
-|------------|-----------------|-------------------|----------------------|
-| **Presión Arterial** | 30 pts | **30 pts** | Principal indicador de riesgo cardiovascular agudo/crónico |
-| **Glucosa en Ayunas** | 25 pts | **25 pts** | Marcador clave metabólico y de diabetes |
-| **Colesterol Total** | 20 pts | **20 pts** | Indicador de dislipidemia y riesgo aterogénico |
-| **IMC (Peso / Talla)** | 20 pts | **15 pts** | Indicador de composición antropométrica (sobrepeso/obesidad) |
-| **Bienestar Subjetivo** | 25 pts | **10 pts** | Acompañamiento del estado percibido (1=10p, 2=8p, 3=5p, 4=2p, 5=0p) |
-| **TOTAL POOL** | **120 pts** | **100 pts** | **Suma exacta de 100 pts en base directa** |
+| Componente | Máximo Puntos | Justificación Médica |
+|------------|---------------|----------------------|
+| **Presión Arterial** | **30 pts** | Principal indicador de riesgo cardiovascular agudo/crónico |
+| **Glucosa en Ayunas** | **25 pts** | Marcador clave metabólico y de diabetes |
+| **Colesterol Total** | **20 pts** | Indicador de dislipidemia y riesgo aterogénico |
+| **IMC (Peso / Talla)** | **15 pts** | Indicador de composición antropométrica (sobrepeso/obesidad) |
+| **Bienestar Subjetivo** | **10 pts** | Acompañamiento del estado percibido (1=10p, 2=8p, 3=5p, 4=2p, 5=0p) |
+| **TOTAL POOL** | **100 pts** | **Base fija de 100 puntos sin escalamiento** |
 
 ##### Etiquetas Finales del Score
 
@@ -149,13 +146,12 @@ Para que el score sume **exactamente 100 puntos** sin necesidad de normalizació
 > En el panel principal del médico, en la ficha del paciente ([pacientes.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/public/js/pacientes.js)) y en la tarjeta de consulta ([receta.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/public/js/receta.js)), el médico puede **visualizar** el widget del Health Score para orientar su prescripción, **pero NO tiene un botón o switch para activar, pausar o configurar los recordatorios automáticos por WhatsApp**. Ese control actualmente solo existe en la interfaz separada `/tracking/index.html` (Salud Ocupacional B2B) y no posee un endpoint dedicado en `api/`.
 
 #### Puntos a Validar con la Doctora
-- [ ] ¿Acepta la redistribución propuesta a base 100 pts (30 PA / 25 Glucosa / 20 Colesterol / 15 IMC / 10 Bienestar)?
+- [ ] ¿Los pesos activos (30 PA / 25 Glucosa / 20 Colesterol / 15 IMC / 10 Bienestar) son adecuados?
 - [ ] ¿Los umbrales de PA siguen guías AHA/ESC actualizadas?
 - [ ] ¿Glucosa: se mide en ayunas? ¿Se debe diferenciar glucosa casual vs. ayunas?
 - [ ] ¿El IMC es suficiente o se necesita circunferencia de cintura?
 - [ ] ¿Los cortes 70/40 para etiquetas finales son adecuados?
 - [ ] ¿Se necesitan ajustes por edad, sexo o antecedentes?
-
 
 ---
 

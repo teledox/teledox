@@ -10,16 +10,18 @@
 <link rel="stylesheet" href="/css/styles.css?v=20260717">
 <style>
   :root {
-    --demo-bg: #0f172a;
-    --demo-panel: #1e293b;
-    --demo-border: rgba(255,255,255,0.12);
+    --demo-bg: #090d16;
+    --demo-panel: #111723;
+    --demo-border: rgba(255,255,255,0.08);
     --demo-accent: #f05252;
     --demo-red: #f05252;
     --demo-green: #16a34a;
   }
 
   body {
-    background-color: #f1f5f9;
+    background-color: #f1f4f8;
+    background-image: radial-gradient(circle at 20% 10%, rgba(240, 82, 82, 0.03) 0%, transparent 40%),
+                      radial-gradient(circle at 80% 90%, rgba(15, 23, 42, 0.03) 0%, transparent 40%);
     margin: 0;
     padding: 0;
     font-family: 'Inter', system-ui, sans-serif;
@@ -46,8 +48,9 @@
 
   /* ── BARRA DE EXPLICACIÓN DINÁMICA DE PRESENTACIÓN ── */
   .presenter-bar {
-    background: #0f172a;
-    border-top: 1px solid rgba(255,255,255,0.12);
+    background: #0b0f19;
+    background-image: linear-gradient(180deg, #0f1422 0%, #080b13 100%);
+    border-top: 1px solid rgba(240, 82, 82, 0.25);
     padding: 10px 24px;
     display: flex;
     flex-direction: column;
@@ -84,10 +87,11 @@
     position: sticky;
     top: 0;
     z-index: 1000;
-    background: #0f172a;
+    background: #090d16;
+    background-image: linear-gradient(180deg, #0f1422 0%, #070a11 100%);
     color: #ffffff;
     padding: 0;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.4);
   }
 
   .demo-bar-top {
@@ -127,9 +131,9 @@
   }
 
   .demo-btn {
-    background: rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.08);
     color: #ffffff;
-    border: 1px solid rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.12);
     padding: 8px 16px;
     border-radius: 8px;
     font-size: 12px;
@@ -157,8 +161,8 @@
   }
 
   .narrative-banner {
-    background: #1e293b;
-    border-bottom: 2px solid #3b82f6;
+    background: #111723;
+    border-bottom: 2px solid #f05252;
     color: #e2e8f0;
     padding: 12px 24px;
     font-size: 13px;
@@ -169,7 +173,7 @@
   }
 
   .narrative-badge {
-    background: #3b82f6;
+    background: #f05252;
     color: #ffffff;
     font-size: 10px;
     font-weight: 800;
@@ -188,12 +192,14 @@
   .col-left-wa {
     width: 410px;
     flex-shrink: 0;
-    background: #0f172a;
-    border-right: 2px solid #cbd5e1;
+    background: #090d16;
+    background-image: radial-gradient(circle at 10% 20%, rgba(240, 82, 82, 0.05) 0%, transparent 50%);
+    border-right: 1px solid #cbd5e1;
     padding: 20px;
     display: flex;
     flex-direction: column;
   }
+
 
   .col-right-platform {
     flex: 1;

@@ -358,9 +358,10 @@ function resetDemoToZeroQuiet() {
   if (waBox) {
     waBox.innerHTML = `
       <div class="wa-msg in">
-        ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
+        ¡Hola Verónica! 👋 Bienvenida a <strong>MediLyft</strong>. Por favor cuéntenos cuáles son sus síntomas principales hoy.
         <div class="wa-time">09:15</div>
       </div>
+
     `;
     waBox.scrollTop = waBox.scrollHeight;
   }
@@ -437,9 +438,10 @@ function resetDemoToZeroQuiet() {
   if (waBox) {
     waBox.innerHTML = `
       <div class="wa-msg in">
-        ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
+        ¡Hola Verónica! 👋 Bienvenida a <strong>MediLyft</strong>. Por favor cuéntenos cuáles son sus síntomas principales hoy.
         <div class="wa-time">09:15</div>
       </div>
+
     `;
     waBox.scrollTop = waBox.scrollHeight;
   }

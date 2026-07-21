@@ -238,17 +238,25 @@ function startAutoPlay() {
     });
   }, 33000));
 
-  // Paso 6: Volver a Health Score para celebrar Alta Médica (>80 pts) (t = 39.5s)
+  // Paso 6: Mover a Pestaña Health Score para ver estado APTO PARA ALTA (>80 pts) (t = 39.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead3', () => {
       switchRightTab(3);
-      ocultarCursorVirtual();
-      stopAutoPlay();
-      mostrarNotificacion('🏆 Demo completada: Alta médica otorgada a Verónica (>80 pts)', '#16a34a');
+      // Mover cursor a botón Firmar Alta Médica (t = +1.8s)
+      autoPlayTimeouts.push(setTimeout(() => {
+        if (!isPlaying) return;
+        moverCursorYClick('#btnSignAlta', () => {
+          firmarAltaMedicaDemo();
+          ocultarCursorVirtual();
+          stopAutoPlay();
+          mostrarNotificacion('🏆 Demo completada: Alta Médica oficial otorgada por el médico tratante', '#16a34a');
+        });
+      }, 1800));
     });
   }, 39500));
 }
+
 
 
 
@@ -303,10 +311,43 @@ function resetDemoToZeroQuiet() {
   if (tpaTable) tpaTable.style.display = 'none';
 
   switchRightTab(2);
+let altaMedicaFirmada = false;
+
+function firmarAltaMedicaDemo() {
+  altaMedicaFirmada = true;
+  const altaBadge = document.getElementById('altaStatusBadge');
+  if (altaBadge) {
+    altaBadge.innerHTML = '<span class="badge badge-green" style="font-size:11px;padding:6px 12px;font-weight:800;animation:fadeIn 0.3s">🎉 ALTA MÉDICA FIRMADA Y OTORGADA (88/100)</span>';
+  }
+
+  const btnSign = document.getElementById('btnSignAlta');
+  if (btnSign) {
+    btnSign.disabled = true;
+    btnSign.style.opacity = '0.5';
+    btnSign.textContent = '✓ Alta Firmada';
+  }
+
+  const waBox = document.getElementById('waChatBox');
+  const now = new Date().toLocaleTimeString('es-EC', { hour: '2-digit', minute: '2-digit' });
+  if (waBox) {
+    waBox.innerHTML += `
+      <div class="wa-msg in" style="border-left:4px solid #16a34a;background:#132a1e;color:#e9edef;animation:fadeIn 0.3s ease">
+        🎓 <strong style="color:#4ade80">Certificado de Alta Médica Oficial:</strong><br>
+        El Dr. Patricio Navarrete ha evaluado la recuperación clínica (Health Score 88/100) y firmado formalmente el <strong>Alta Médica Definitiva</strong> para Verónica Ruiz.<br>
+        <span style="color:#4ade80;text-decoration:underline;cursor:pointer;font-size:11px">Certificado_Alta_Verónica_Ruiz.pdf</span>
+        <div class="wa-time" style="color:rgba(233,237,239,0.6)">${now}</div>
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+
+  mostrarNotificacion('🎓 Alta Médica Oficial firmada por el Dr. Navarrete y notificada al paciente', '#16a34a');
 }
 
 function resetDemoToZeroQuiet() {
+  altaMedicaFirmada = false;
   currentStep = 1;
+
 
   // Reset chips
   document.querySelectorAll('.demo-step-chip').forEach((chip, idx) => {
@@ -404,12 +445,15 @@ function updateHealthScoreUI(score, statusText, badgeClass, penalty, totalText, 
   // ── Badge de Alta Médica (Threshold 80 pts) ──
   const altaBadge = document.getElementById('altaStatusBadge');
   if (altaBadge) {
-    if (score >= 80) {
-      altaBadge.innerHTML = '<span class="badge badge-green" style="font-size:11px;padding:5px 10px;animation:fadeIn 0.3s">🎉 ALTA MÉDICA OTORGADA (&gt;80 pts)</span>';
+    if (altaMedicaFirmada) {
+      altaBadge.innerHTML = '<span class="badge badge-green" style="font-size:11px;padding:6px 12px;font-weight:800">🎉 ALTA MÉDICA FIRMADA Y OTORGADA (' + score + '/100)</span>';
+    } else if (score >= 80) {
+      altaBadge.innerHTML = '<span class="badge badge-blue" style="font-size:10px;padding:4px 8px;margin-right:6px">🟢 APTO PARA ALTA (&gt;80 pts)</span> <button class="btn btn-sm btn-success" id="btnSignAlta" onclick="firmarAltaMedicaDemo()" style="font-size:11px;padding:4px 10px;font-weight:800">📋 Firmar Alta Médica</button>';
     } else {
       altaBadge.innerHTML = '<span class="badge badge-yellow" style="font-size:10px;padding:4px 8px">En Tratamiento (&lt;80 pts)</span>';
     }
   }
+
 
   // ── Penalización dinámica (fila síntomas agudos) ──
   const penaltyNum = parseInt((penalty || '0').replace(/[^0-9\-]/g, '')) || 0;

@@ -433,22 +433,5 @@ Se dispara automáticamente **2 horas después de concluida la última dosis del
 - [ ] ¿Se deben agregar rangos para PA? Propuesta: Sistólica 60-300, Diastólica 30-200
 - [ ] ¿Se necesitan validaciones para SpO2 (0-100%), FC (20-250 bpm)?
 
----
 
-## 3. Lo que NO Existe Aún (Brechas Identificadas)
-
-| Funcionalidad | Estado | Impacto |
-|---------------|--------|---------|
-| Health Score en producción real | Solo existe en demo (`simularTriajeIA`) | No se calcula Health Score real de síntomas agudos |
-| Perfilamiento de riesgo del paciente | ❌ No implementado | No hay scoring predictivo basado en historial completo |
-| Interacción fármaco-alergia automática | ❌ No implementado | Alergias son texto libre, no se cruzan con medicamentos |
-| Firma electrónica en documentos | ❌ No implementado | PDFs se generan sin firma digital validada |
-| CIE-10 validado contra servidor | ❌ Solo búsqueda local en frontend | Sin validación contra terminología estándar |
-| Auditoría TPA en BD real | ❌ Columna no existe en schema | Se simula todo como "pendiente" |
-| Ajuste de umbrales por edad/sexo | ❌ No implementado | Umbrales fijos para toda la población |
-| Estándares HL7/FHIR | ❌ No implementado | Sin interoperabilidad con sistemas de salud externos |
-| Validación de rango de PA al ingreso | ❌ No implementado | Paciente puede ingresar valores imposibles |
-
-
----
 

@@ -171,7 +171,7 @@ function startAutoPlay() {
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '⏸ Pausar Demo';
 
-  // Paso 1: Mover cursor a chip de WhatsApp y hacer click (t = 1.2s)
+  // Paso 1: Mover cursor a chip de WhatsApp y enviar síntoma agudo (t = 1.2s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(1);
@@ -180,43 +180,65 @@ function startAutoPlay() {
     });
   }, 1200));
 
-  // Paso 2: Ir a Consola Médica tab y hacer click en Emitir Receta (t = 8.5s)
+  // Paso 2: Mover a Consola Médica -> Iniciar Teleconsulta -> Firmar Receta PDF (t = 8.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead2', () => {
       switchRightTab(2);
+      // Iniciar Teleconsulta HD (t = +1.4s)
       autoPlayTimeouts.push(setTimeout(() => {
         if (!isPlaying) return;
-        moverCursorYClick('#btnSignRecipe', () => {
-          firmarRecetaDemo();
+        moverCursorYClick('#btnCallDoctor', () => {
+          iniciarVideollamadaDemo();
+          // Firmar Receta Digital PDF (t = +2.5s)
+          autoPlayTimeouts.push(setTimeout(() => {
+            if (!isPlaying) return;
+            moverCursorYClick('#btnSignRecipe', () => {
+              firmarRecetaDemo();
+            });
+          }, 2500));
         });
-      }, 1500));
+      }, 1400));
     });
   }, 8500));
 
-  // Paso 3: Ir a Consola TPA Mawdy tab y hacer click en Aprobar (t = 16.5s)
+  // Paso 3: Mover a Consola TPA Mawdy -> Dictaminar Aprobar Cobertura (t = 18.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead4', () => {
       switchRightTab(4);
       autoPlayTimeouts.push(setTimeout(() => {
         if (!isPlaying) return;
-        moverCursorYClick('#tpaTableBody .btn-success', () => {
+        moverCursorYClick('#btnAuditApprove', () => {
           dictaminarDemo('aprobado');
         });
       }, 1500));
     });
-  }, 16500));
+  }, 18000));
 
-  // Paso 4: Mover a botón de confirmación de adherencia en WhatsApp (t = 24.5s)
+  // Paso 4: Mover a Pestaña Health Score -> Disparar Seguimiento de Medicamentos 24h (t = 25.5s)
+  autoPlayTimeouts.push(setTimeout(() => {
+    if (!isPlaying) return;
+    moverCursorYClick('#tabHead3', () => {
+      switchRightTab(3);
+      autoPlayTimeouts.push(setTimeout(() => {
+        if (!isPlaying) return;
+        moverCursorYClick('#tab3 button[onclick*="enviarSeguimientoMedicamentosDemo"]', () => {
+          enviarSeguimientoMedicamentosDemo('HS');
+        });
+      }, 1600));
+    });
+  }, 25500));
+
+  // Paso 5: Mover a WhatsApp -> Hacer click en [✅ Sí, medicación tomada] (t = 33.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     moverCursorYClick('[onclick*="confirmarAdherenciaDemo(true"]', () => {
       confirmarAdherenciaDemo(true, 'Paracetamol 500mg');
     });
-  }, 24500));
+  }, 33000));
 
-  // Paso 5: Mover a pestaña Health Score y mostrar Alta Médica (>80 pts) (t = 31.5s)
+  // Paso 6: Volver a Health Score para celebrar Alta Médica (>80 pts) (t = 39.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead3', () => {
@@ -225,8 +247,9 @@ function startAutoPlay() {
       stopAutoPlay();
       mostrarNotificacion('🏆 Demo completada: Alta médica otorgada a Verónica (>80 pts)', '#16a34a');
     });
-  }, 31500));
+  }, 39500));
 }
+
 
 
 function stopAutoPlay() {

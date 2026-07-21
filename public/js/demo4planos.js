@@ -89,6 +89,60 @@ function clearAutoPlayTimeouts() {
   autoPlayTimeouts = [];
 }
 
+function moverCursorYClick(targetSelector, callback, delayAfterClick = 400) {
+  const cursor = document.getElementById('virtualCursor');
+  let targetEl = null;
+
+  if (typeof targetSelector === 'string') {
+    targetEl = document.querySelector(targetSelector) || document.getElementById(targetSelector);
+  } else {
+    targetEl = targetSelector;
+  }
+
+  if (!cursor || !targetEl || !isPlaying) {
+    if (callback && isPlaying) callback();
+    return;
+  }
+
+  const rect = targetEl.getBoundingClientRect();
+  const clickX = rect.left + rect.width / 2;
+  const clickY = rect.top + rect.height / 2;
+
+  // 1. Mostrar cursor y deslizarlo suavemente
+  cursor.style.opacity = '1';
+  cursor.style.left = clickX + 'px';
+  cursor.style.top = clickY + 'px';
+
+  // 2. Esperar desplazamiento de cursor (0.75s) y luego hacer pulsación visual
+  const t1 = setTimeout(() => {
+    if (!isPlaying) return;
+    cursor.classList.add('clicking');
+
+    // Onda expansiva de click
+    const ripple = document.createElement('div');
+    ripple.className = 'virtual-click-ripple';
+    ripple.style.left = clickX + 'px';
+    ripple.style.top = clickY + 'px';
+    document.body.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+
+    // 3. Liberar pulsación y ejecutar acción
+    const t2 = setTimeout(() => {
+      cursor.classList.remove('clicking');
+      if (callback && isPlaying) callback();
+    }, delayAfterClick);
+
+    autoPlayTimeouts.push(t2);
+  }, 750);
+
+  autoPlayTimeouts.push(t1);
+}
+
+function ocultarCursorVirtual() {
+  const cursor = document.getElementById('virtualCursor');
+  if (cursor) cursor.style.opacity = '0';
+}
+
 function toggleAutoPlay() {
   if (isPlaying) {
     stopAutoPlay();
@@ -105,53 +159,72 @@ function startAutoPlay() {
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '⏸ Pausar Demo';
 
-  // Paso 1: Enviar síntoma del paciente a WhatsApp (t = 1.0s)
+  // Paso 1: Mover cursor a chip de WhatsApp y hacer click (t = 1.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(1);
-    simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C');
-  }, 1000));
+    moverCursorYClick('.wa-chip-btn', () => {
+      simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C');
+    });
+  }, 1500));
 
-  // Paso 2: Conmutar a Consola Médica y Emitir Receta Digital (t = 6.0s)
+  // Paso 2: Ir a Consola Médica tab y hacer click en Emitir Receta (t = 8.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
-    setStep(2);
-    firmarRecetaDemo();
-  }, 6000));
+    moverCursorYClick('#tabHead2', () => {
+      switchRightTab(2);
+      autoPlayTimeouts.push(setTimeout(() => {
+        if (!isPlaying) return;
+        moverCursorYClick('#btnSignRecipe', () => {
+          firmarRecetaDemo();
+        });
+      }, 1400));
+    });
+  }, 8500));
 
-  // Paso 3: Conmutar a Consola TPA Mawdy y Dictaminar Pertinente (t = 11.0s)
+  // Paso 3: Ir a Consola TPA Mawdy tab y hacer click en Aprobar (t = 16.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
-    setStep(4);
-    dictaminarDemo('aprobado');
-  }, 11000));
+    moverCursorYClick('#tabHead4', () => {
+      switchRightTab(4);
+      autoPlayTimeouts.push(setTimeout(() => {
+        if (!isPlaying) return;
+        moverCursorYClick('#tpaTableBody .btn-success', () => {
+          dictaminarDemo('aprobado');
+        });
+      }, 1400));
+    });
+  }, 16500));
 
-  // Paso 4: Disparar Seguimiento de Medicamentos 24h & Confirmar Adherencia (t = 16.0s)
+  // Paso 4: Mover a botón de confirmación de adherencia en WhatsApp (t = 24.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
-    setStep(5);
-    autoPlayTimeouts.push(setTimeout(() => {
-      if (!isPlaying) return;
+    moverCursorYClick('[onclick*="confirmarAdherenciaDemo(true"]', () => {
       confirmarAdherenciaDemo(true, 'Paracetamol 500mg');
-    }, 2500));
-  }, 16000));
+    });
+  }, 24500));
 
-  // Paso 5: Conmutar a Health Score para mostrar Alta Médica (>80 pts) (t = 22.0s)
+  // Paso 5: Mover a pestaña Health Score y mostrar Alta Médica (>80 pts) (t = 31.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
-    switchRightTab(3); // Pestaña Health Score & Gráfico Histórico
-    stopAutoPlay();
-    mostrarNotificacion('🏆 Demo completada: Alta médica otorgada a Verónica (>80 pts)', '#16a34a');
-  }, 22000));
+    moverCursorYClick('#tabHead3', () => {
+      switchRightTab(3);
+      ocultarCursorVirtual();
+      stopAutoPlay();
+      mostrarNotificacion('🏆 Demo completada: Alta médica otorgada a Verónica (>80 pts)', '#16a34a');
+    });
+  }, 31500));
 }
 
 function stopAutoPlay() {
   isPlaying = false;
+  ocultarCursorVirtual();
   clearAutoPlayTimeouts();
   if (autoPlayInterval) clearInterval(autoPlayInterval);
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '▶ Auto-Play Demo';
 }
+
 
 function resetDemoToZeroQuiet() {
   currentStep = 1;

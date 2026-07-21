@@ -454,9 +454,54 @@
     grid-template-columns: 1fr 1fr;
     gap: 20px;
   }
+
+  /* ── CURSOR VIRTUAL Y RIPPLE CLICK PARA AUTO-PLAY ── */
+  #virtualCursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(240, 82, 82, 0.9);
+    border: 2px solid #ffffff;
+    box-shadow: 0 4px 16px rgba(240, 82, 82, 0.6);
+    pointer-events: none;
+    z-index: 999999;
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1);
+    transition: left 0.7s cubic-bezier(0.16, 1, 0.3, 1), top 0.7s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, transform 0.2s ease;
+  }
+
+  #virtualCursor.clicking {
+    transform: translate(-50%, -50%) scale(0.65);
+    background: #2563eb;
+  }
+
+  .virtual-click-ripple {
+    position: fixed;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #f05252;
+    background: rgba(240, 82, 82, 0.35);
+    pointer-events: none;
+    z-index: 999998;
+    transform: translate(-50%, -50%) scale(0.2);
+    animation: rippleAnim 0.6s ease-out forwards;
+  }
+
+  @keyframes rippleAnim {
+    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.9); opacity: 0; }
+  }
 </style>
 </head>
 <body>
+
+<!-- CURSOR VIRTUAL AUTO-PLAY -->
+<div id="virtualCursor"></div>
+
 
 <!-- BARRA SUPERIOR DE CONTROL DEMO -->
 <div class="demo-bar">

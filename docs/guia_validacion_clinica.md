@@ -57,15 +57,23 @@
 2. Busca keywords relacionados con autolesión o ideación suicida
 3. Si detecta coincidencia:
    - Interrumpe toda automatización
-   - Envía mensaje empático predefinido al paciente
+   - Envía el **mensaje empático automático** al paciente
    - Alerta inmediata al médico vía Telegram
    - Crea notificación de máxima prioridad en el panel
+
+#### 💬 Mensaje Empático Enviado por WhatsApp:
+> 🆘 Gracias por contarnos cómo te sientes. Eso toma mucho valor.
+> 
+> Si estás pensando en hacerte daño, por favor llama al **911** ahora o ve a la sala de emergencias más cercana.
+> 
+> Tu equipo médico fue notificado y se comunicará contigo muy pronto. No estás solo/a. 💙
 
 #### Puntos a Validar con la Doctora
 - [ ] ¿Las palabras clave de detección son adecuadas y suficientes?
 - [ ] ¿El mensaje empático cumple con protocolos de salud mental vigentes?
-- [ ] ¿Se debe incluir número de línea de emergencia psicológica local?
+- [ ] ¿Se debe incluir número de línea de emergencia psicológica local (ej. 171 Opción 6)?
 - [ ] ¿Se requiere escalamiento a un especialista en salud mental?
+
 
 ---
 
@@ -152,35 +160,68 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 
 ---
 
-### Módulo 4: Health Score de Adherencia
+### Módulo 4: Health Score de Adherencia (Behavioral Engagement)
 
-**Archivo**: [calcularScoreAdherencia.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/utils/calcularScoreAdherencia.js)
-**Función**: `calcularScoreAdherencia(args)`
-**Ventana de evaluación**: 30 días (`VENTANA_DIAS = 30`)
+**Archivo**: [calcularScoreAdherencia.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/utils/calcularScoreAdherencia.js) y [healthScoreAdherencia.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/services/healthScoreAdherencia.js)
+**Ventana de evaluación**: Últimos 30 días (`VENTANA_DIAS = 30`)
 **Escala**: 0 a 100 puntos
 
-#### Componentes (25 pts cada uno)
+A diferencia del Score Biométrico (signos físicos), este score mide la **adherencia farmacológica y el comportamiento del paciente en el canal de WhatsApp**.
 
-| Dimensión | Fuente de Datos | Cálculo |
-|-----------|----------------|---------|
-| Adherencia al Tratamiento | % de tomas confirmadas vía WhatsApp | Proporcional hasta 25 pts |
-| Bienestar Promedio | Respuestas Likert 1-5 en seguimientos | Proporcional hasta 25 pts |
-| Controles Preventivos | Asistencia a controles agendados | Proporcional hasta 25 pts |
-| Participación Activa | Respuestas a mensajes de seguimiento | Proporcional hasta 25 pts |
+#### 📌 Los 4 Pilares de Evaluación (25 pts cada uno)
+
+##### 1. Adherencia al Tratamiento (25 pts)
+* **¿Qué evalúa?**: % de tomas confirmadas sobre los recordatorios de medicamentos enviados.
+* **Mensaje enviado por WhatsApp**:
+  > *"Hola [Nombre]. ¿Te tomaste tu medicamento **[Nombre del Fármaco]** indicado por el médico?"*
+* **Opciones de respuesta**: Botones `[ Sí, lo tomé ]` / `[ No ]`.
+* **Fórmula**: $(\text{Respuestas "Sí"} / \text{Total recordatorios de medicina respondidos}) \times 25\text{ pts}$.
+
+##### 2. Bienestar Promedio y Alertas Inmediatas (25 pts)
+* **¿Qué evalúa?**: El nivel promedio de bienestar o mejoría percibida reportado en WhatsApp.
+* **Mensaje enviado por WhatsApp**:
+  > *"🩺 **Seguimiento MediLyft**\n\nHora de tu reporte diario. ¿Cómo te sientes hoy?"*
+* **Menú de opciones (Escala Likert 1-5)**:
+  1. `Muy bien` (😊) $\rightarrow$ 1.0
+  2. `Bien` (🙂) $\rightarrow$ 2.0
+  3. `Regular` (😐) $\rightarrow$ 3.0 *(Dispara notificación media al médico)*
+  4. `Mal` (😞) $\rightarrow$ 4.0 *(Dispara alerta alta al médico)*
+  5. `Muy mal` (😢) $\rightarrow$ 5.0 *(Dispara alerta alta al médico)*
+* **Fórmula**: $((5 - \text{Promedio Likert}) / 4) \times 25\text{ pts}$.
+
+##### 3. Controles Preventivos / Laboratorio (25 pts)
+* **¿Qué evalúa?**: Cumplimiento y carga de exámenes clínicos u órdenes de laboratorio indicados por el médico.
+* **Mensaje enviado por WhatsApp**:
+  > *"📋 ¿Ya te realizaste el examen de **[Tipo de Examen]** indicado en tu consulta?"*
+* **Opciones de respuesta**: Botones `[ Sí ]` / `[ No ]`. Si responde "Sí", el bot solicita la foto/PDF del resultado.
+* **Fórmula**: $(\text{Exámenes con resultado subido y confirmado} / \text{Total órdenes emitidas}) \times 25\text{ pts}$.
+
+##### 4. Participación Activa / Engagement (25 pts)
+* **¿Qué evalúa?**: La tasa de respuesta del paciente a todas las notificaciones interactivas enviadas por el bot.
+* **Fórmula**: $(\text{Mensajes respondidos por el paciente} / \text{Total mensajes de seguimiento enviados por el bot}) \times 25\text{ pts}$.
+
+> [!NOTE]
+> **Diferencia entre Pilar 1 y Pilar 4**:
+> * **Pilar 1 (Adherencia Farmacológica)**: Evalúa el **CONTENIDO** de la respuesta. Solo da puntos si el paciente seleccionó *"Sí, me tomé la medicina"*.
+> * **Pilar 4 (Participación Activa)**: Evalúa el **COMPROMISO CON EL CANAL**. Suma puntos simplemente por responder al WhatsApp, sin importar si dijo *"Sí"* o *"No"*.
+
+#### ⚖️ Regla de Reescalado Proporcional (Módulos Omitidos)
+Si un paciente no tiene órdenes de laboratorio asignadas en los últimos 30 días (`controlesPreventivosPct == null`), el sistema excluye ese componente y el total máximo pasa de 100 a **75 pts**. La nota final se reescala dividiendo `(totalObtenido / 75) * 100`, haciendo que **cada uno de los 3 pilares restantes valga automáticamente el 33.33% de la nota final (33.33 pts)**.
 
 ##### Etiquetas Finales
 
-| Score | Etiqueta |
-|-------|----------|
-| ≥ 70 | `controlado` |
-| ≥ 40 | `en_riesgo` |
-| < 40 | `alerta` |
+| Score | Etiqueta | Significado Clínico |
+|-------|----------|---------------------|
+| ≥ 70 | `controlado` 🟢 | Paciente constante, cumple tratamiento y responde al canal |
+| ≥ 40 | `en_riesgo` 🟡 | Adherencia irregular u omisión de dosis |
+| < 40 | `alerta` 🔴 | Abandono potencial de tratamiento o nula respuesta en WhatsApp |
 
 #### Puntos a Validar con la Doctora
 - [ ] ¿La ventana de 30 días es apropiada para todas las patologías?
 - [ ] ¿Los 4 componentes deben tener el mismo peso (25% cada uno)?
 - [ ] ¿Qué acción clínica se toma cuando un paciente cae a `alerta`?
 - [ ] ¿Se requiere ajustar la ventana según tipo de enfermedad crónica?
+
 
 ---
 
@@ -339,43 +380,33 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 
 ---
 
-### Módulo 6: Seguimiento Post-Consulta
+### Módulo 6: Seguimiento Post-Consulta (Fin de Tratamiento)
 
-**Archivo**: [flujo-seguimiento.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-seguimiento.js)
+**Archivo**: [flujo-seguimiento.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-seguimiento.js) y [cron.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/handlers/cron.js)
 
-#### Clasificación de Evolución
+#### ⏱️ Momento de Disparo
+Se dispara automáticamente **2 horas después de concluida la última dosis del tratamiento prescrito** (al vencer la `fecha_fin` calculada a partir de los días de receta indicados por el médico).
 
-| Respuesta del Paciente | Categoría | Acción Automática |
-|------------------------|-----------|-------------------|
-| "Me curé" / "Estoy bien" | `exitoso` | Cierra caso, mensaje de cierre positivo |
-| "Sigo con síntomas" / "Regular" | `parcial` | Notificación al médico para revisión |
-| "No mejoré" / "Estoy mal" | `sin_mejoria` | Notificación al médico + alerta de seguimiento |
+#### 💬 Mensaje Enviado por WhatsApp:
+> 🏥 **Seguimiento MediLyft**
+> 
+> ¡Hola **[Nombre del Paciente]**! Su tratamiento con **[Medicamento Prescrito]** ha finalizado.
+> 
+> ¿Cómo se siente ahora?
 
-#### Puntos a Validar con la Doctora
-- [ ] ¿Cuántas horas/días después de la consulta se envía el seguimiento?
-- [ ] ¿`sin_mejoria` debería generar teleconsulta inmediata o solo notificación?
-- [ ] ¿Se requiere un segundo seguimiento si la respuesta fue `parcial`?
+#### 🔘 Clasificación de Respuestas y Acciones Automáticas
 
----
-
-### Módulo 7: Seguimiento de Bienestar Periódico
-
-**Archivo**: [flujo-tracking.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-tracking.js)
-
-#### Escala Likert y Niveles
-
-| Valor Likert | Interpretación | Nivel Asignado | Acción |
-|--------------|----------------|----------------|--------|
-| 1 (Excelente) | Óptimo | Nivel 1 | Ninguna |
-| 2 (Bien) | Aceptable | Nivel 1 | Ninguna |
-| 3 (Regular) | Atención | Nivel 2 | Alerta media al médico |
-| 4 (Mal) | Preocupante | Nivel 3 | Alerta alta al médico |
-| 5 (Muy mal) | Crítico | Nivel 3 | Alerta alta al médico |
+| Botón Seleccionado | Categoría | Respuesta Automatizada del Bot | Acción en el Sistema |
+|---------------------|-----------|--------------------------------|----------------------|
+| `[ 😊 Me siento mejor ]` | `exitoso` | *"🎉 ¡Nos alegra mucho que se sienta mejor! Su caso fue registrado como exitoso..."* | Cierra el caso en BD (`cierres_casos`) y notifica resolución positiva al médico vía Telegram. |
+| `[ 😐 Sigo con síntomas ]` | `parcial` | *"👨‍⚕️ Gracias por contarnos. Hemos registrado que aún presenta síntomas. Un médico revisará su caso..."* | Registra resultado parcial y genera **Notificación de Prioridad Media** en la bandeja del panel médico. |
+| `[ 😟 No mejoré ]` | `sin_mejoria` | *"😟 Lamentamos que no se sienta mejor. Hemos alertado a un médico para revisar su caso con prioridad..."* | Dispara **Alerta Roja de Telegram** urgente al médico de guardia y **Notificación de Alta Prioridad** en panel. |
 
 #### Puntos a Validar con la Doctora
-- [ ] ¿La escala 1-5 es suficiente o se necesitan dimensiones adicionales (dolor, sueño, ánimo)?
-- [ ] ¿Con qué frecuencia se envía la encuesta de bienestar?
-- [ ] ¿Likert 3 (Regular) justifica alerta médica o solo registro?
+- [ ] ¿El retraso de 2 horas tras la última dosis es adecuado para todas las familias de medicamentos?
+- [ ] ¿La categoría `sin_mejoria` debe incluir un enlace directo para reagendar teleconsulta sin costo adicional?
+- [ ] ¿Se requiere un segundo control a las 48 horas si la respuesta fue `parcial`?
+
 
 ---
 

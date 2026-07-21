@@ -979,7 +979,7 @@ async function preguntarRAGDemo() {
     const respuestaHtml = (data.respuesta || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
     chatBox.innerHTML += `
       <div style="background:#ffffff;border:1px solid #e2e8f0;padding:12px 14px;border-radius:10px;border-bottom-left-radius:2px;margin-bottom:8px;line-height:1.55;animation:fadeIn 0.3s ease">
-        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:6px">💡 Respuesta RAG · Gemini 2.0 Flash</div>
+        <div style="font-size:10px;font-weight:800;color:#2563eb;text-transform:uppercase;margin-bottom:6px">💡 Respuesta Asistente Analítico IA</div>
         <div style="font-size:12px">${respuestaHtml}</div>
       </div>
     `;

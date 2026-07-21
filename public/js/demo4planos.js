@@ -157,64 +157,60 @@ function ocultarCursorVirtual() {
 }
 
 const SLIDES = {
-
   1: {
-    tag: 'SLIDE 1 DE 7 · CANAL WHATSAPP & TRIAJE INTELIGENTE',
+    tag: 'CANAL WHATSAPP & TRIAJE INTELIGENTE',
     title: 'Verónica reporta cefalea y fiebre. La IA analiza su historial y bloquea Ibuprofeno por alergia a AINEs.',
     metric: '🛡️ Gobernanza Médica: 0% riesgo de error farmacéutico · Health Score ajustado a 61 pts'
   },
   2: {
-    tag: 'SLIDE 2 DE 7 · CONSOLA MÉDICA & TELECONSULTA HD',
-    title: 'El Dr. Patricio Navarrete atiende mediante Teleconsulta HD cifrada para evaluar el síntoma agudo.',
-    metric: '📞 Resolución Digital: Atención médica inmediata en vivo sin esperas en sala urgencias'
+    tag: 'CONSOLA MÉDICA & TELECONSULTA HD',
+    title: 'El Dr. Patricio Navarrete atiende mediante Teleconsulta HD cifrada para evaluar el síntoma febril agudo.',
+    metric: '📞 Resolución Digital: Atención médica inmediata en vivo sin esperas en sala de urgencias'
   },
   3: {
-    tag: 'SLIDE 3 DE 7 · PRESCRIPCIÓN SEGURA & PDF',
+    tag: 'PRESCRIPCIÓN SEGURA & PDF',
     title: 'El médico emite la Receta Digital con Paracetamol 500mg (tratamiento analgésico seguro).',
     metric: '📄 Firma Electrónica: Documento oficial firmado entregado al WhatsApp del paciente'
   },
   4: {
-    tag: 'SLIDE 4 DE 7 · CONSOLA TPA MAWDY & AUDITORÍA',
+    tag: 'CONSOLA TPA MAWDY & AUDITORÍA',
     title: 'La aseguradora auditora Mawdy TPA verifica la pertinencia médica y aprueba la cobertura.',
     metric: '💰 Control de Siniestralidad: Validación instantánea de gasto y autorización de despacho'
   },
   5: {
-    tag: 'SLIDE 5 DE 7 · MOTOR HEALTH SCORE & CONTROL 24H',
+    tag: 'MOTOR HEALTH SCORE & CONTROL 24H',
     title: 'El motor predictivo enciende el seguimiento de adherencia farmacológica a las 24 horas.',
     metric: '⚙️ Prevención de Recaídas: Formulario interactivo enviado al WhatsApp de la paciente'
   },
   6: {
-    tag: 'SLIDE 6 DE 7 · ADHERENCIA COMPROBADA EN WHATSAPP',
+    tag: 'ADHERENCIA COMPROBADA EN WHATSAPP',
     title: 'Verónica confirma la toma del medicamento. La adherencia comprobada recupera el Health Score a 88 pts.',
     metric: '📈 Adherencia Verificada: Alcanza el Estado Apto para Alta Médica (>80/100 pts)'
   },
   7: {
-    tag: 'SLIDE 7 DE 7 · ALTA MÉDICA OFICIAL & CIERRE DE CASO',
+    tag: 'ALTA MÉDICA OFICIAL & CIERRE DE CASO',
     title: 'El Dr. Navarrete evalúa la curva histórica de recuperación y firma el Alta Médica Oficial.',
     metric: '🎓 Cierre Clínico Exitoso: Certificado oficial enviado al paciente · Reducción de reclamos TPA'
   }
 };
 
 function mostrarSlideAutoPlay(stepNum) {
-  const banner = document.getElementById('autoPlayBanner');
   const tagEl = document.getElementById('slideTag');
   const titleEl = document.getElementById('slideTitle');
   const metricEl = document.getElementById('slideMetric');
 
-  if (!banner || !SLIDES[stepNum]) return;
+  if (!SLIDES[stepNum]) return;
 
   const data = SLIDES[stepNum];
   if (tagEl) tagEl.textContent = data.tag;
   if (titleEl) titleEl.textContent = data.title;
   if (metricEl) metricEl.textContent = data.metric;
-
-  banner.classList.add('visible');
 }
 
 function ocultarSlideAutoPlay() {
-  const banner = document.getElementById('autoPlayBanner');
-  if (banner) banner.classList.remove('visible');
+  mostrarSlideAutoPlay(1);
 }
+
 
 function toggleAutoPlay() {
   if (isPlaying) {

@@ -98,51 +98,51 @@ function toggleAutoPlay() {
 }
 
 function startAutoPlay() {
+  clearAutoPlayTimeouts();
+  resetDemoToZeroQuiet();
+
   isPlaying = true;
   const btn = document.getElementById('btnPlay');
   if (btn) btn.textContent = '⏸ Pausar Demo';
 
-  resetDemoToZero();
-  clearAutoPlayTimeouts();
-
-  // Paso 1: Enviar síntoma del paciente a WhatsApp (t = 1.2s)
+  // Paso 1: Enviar síntoma del paciente a WhatsApp (t = 1.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(1);
     simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C');
-  }, 1200));
+  }, 1000));
 
-  // Paso 2: Conmutar a Consola Médica y Emitir Receta Digital (t = 6.5s)
+  // Paso 2: Conmutar a Consola Médica y Emitir Receta Digital (t = 6.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(2);
     firmarRecetaDemo();
-  }, 6500));
+  }, 6000));
 
-  // Paso 3: Conmutar a Consola TPA Mawdy y Dictaminar Pertinente (t = 11.5s)
+  // Paso 3: Conmutar a Consola TPA Mawdy y Dictaminar Pertinente (t = 11.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(4);
     dictaminarDemo('aprobado');
-  }, 11500));
+  }, 11000));
 
-  // Paso 4: Disparar Seguimiento de Medicamentos 24h & Confirmar Adherencia (t = 16.5s)
+  // Paso 4: Disparar Seguimiento de Medicamentos 24h & Confirmar Adherencia (t = 16.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(5);
     autoPlayTimeouts.push(setTimeout(() => {
       if (!isPlaying) return;
       confirmarAdherenciaDemo(true, 'Paracetamol 500mg');
-    }, 2800));
-  }, 16500));
+    }, 2500));
+  }, 16000));
 
-  // Paso 5: Conmutar a Health Score para mostrar Alta Médica (>80 pts) (t = 22.5s)
+  // Paso 5: Conmutar a Health Score para mostrar Alta Médica (>80 pts) (t = 22.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     switchRightTab(3); // Pestaña Health Score & Gráfico Histórico
     stopAutoPlay();
     mostrarNotificacion('🏆 Demo completada: Alta médica otorgada a Verónica (>80 pts)', '#16a34a');
-  }, 22500));
+  }, 22000));
 }
 
 function stopAutoPlay() {
@@ -153,10 +153,7 @@ function stopAutoPlay() {
   if (btn) btn.textContent = '▶ Auto-Play Demo';
 }
 
-
-// ── REINICIALIZAR DESDE CERO (ESTADO 0) ─────────────────────────────────────
-function resetDemoToZero() {
-  stopAutoPlay();
+function resetDemoToZeroQuiet() {
   currentStep = 1;
 
   // Reset chips
@@ -179,6 +176,50 @@ function resetDemoToZero() {
         <div class="wa-time">09:15</div>
       </div>
     `;
+    waBox.scrollTop = waBox.scrollHeight;
+  }
+
+  // Restablecer score inicial
+  updateHealthScoreUI(76, 'Estado Inicial Base (76/100)', 'badge-green', '-0 pts', '76 / 100', 'Póliza Mawdy · Tratamiento HTA al día');
+
+  // Restablecer estados de consolas
+  const emptyState = document.getElementById('docEmptyState');
+  const activeCard = document.getElementById('docActiveCard');
+  if (emptyState) emptyState.style.display = 'block';
+  if (activeCard) activeCard.style.display = 'none';
+
+  const tpaEmpty = document.getElementById('tpaEmptyState');
+  const tpaTable = document.getElementById('tpaTable');
+  if (tpaEmpty) tpaEmpty.style.display = 'block';
+  if (tpaTable) tpaTable.style.display = 'none';
+
+  switchRightTab(2);
+}
+
+function resetDemoToZeroQuiet() {
+  currentStep = 1;
+
+  // Reset chips
+  document.querySelectorAll('.demo-step-chip').forEach((chip, idx) => {
+    chip.classList.toggle('active', idx === 0);
+    chip.classList.remove('completed');
+  });
+
+  const narrativeEl = document.getElementById('narrativeText');
+  if (narrativeEl) {
+    narrativeEl.textContent = 'Paso 0: Sistema MediLyft listo. Escriba un síntoma en el WhatsApp a la izquierda para iniciar el caso...';
+  }
+
+  // Reset WhatsApp Chat
+  const waBox = document.getElementById('waChatBox');
+  if (waBox) {
+    waBox.innerHTML = `
+      <div class="wa-msg in">
+        ¡Hola Verónica! 👋 bienvenido a *MediLyft*. Por favor cuéntenos cuáles son sus síntomas principales hoy.
+        <div class="wa-time">09:15</div>
+      </div>
+    `;
+    waBox.scrollTop = waBox.scrollHeight;
   }
 
   // Reset Consola Médica
@@ -216,6 +257,13 @@ function resetDemoToZero() {
 
   switchRightTab(2);
 }
+
+// ── REINICIALIZAR DESDE CERO (ESTADO 0) ─────────────────────────────────────
+function resetDemoToZero() {
+  stopAutoPlay();
+  resetDemoToZeroQuiet();
+}
+
 
 // ── ACTUALIZACIÓN DINÁMICA DEL HEALTH SCORE EN EL BACKEND ──────────────────
 function updateHealthScoreUI(score, statusText, badgeClass, penalty, totalText, sintomaLabel) {

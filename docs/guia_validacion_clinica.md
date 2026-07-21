@@ -187,83 +187,139 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 ### Módulo 5: Monitoreo de Enfermedades Crónicas
 
 **Archivo**: [flujo-cronicas.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/src/flows/flujo-cronicas.js)
-**16 patologías con funciones `evaluar()` independientes**
+**17 patologías con funciones `evaluar()` independientes**
 
-#### 5.1 Hipertensión
+#### 5.1 Hipertensión Arterial (`hipertension`)
 
 | Parámetro | Nivel 3 (Emergencia 🚨) | Nivel 2 (Atención ⚠️) | Nivel 1 (Normal ✅) |
 |-----------|------------------------|----------------------|---------------------|
 | PA Sistólica | ≥ 180 | ≥ 160 | < 130 |
 | PA Diastólica | ≥ 110 | ≥ 100 | < 85 |
-| Síntomas | = '3' (graves) | = '2' (moderados) | — |
+| Síntomas | = '3' (visión borrosa / cefalea intensa) | = '2' (cefalea / mareos leves) | = '1' (sin síntomas) |
 | PA Sistólica baja | < 90 (Hipotensión 🚨) | — | — |
 | PA Diastólica baja | < 60 (Hipotensión 🚨) | — | — |
 
 **Acción Nivel 3**: Mensaje "Acuda a urgencias inmediatamente" + alerta Telegram
 **Acción Nivel 2**: Mensaje "Contacte a su médico hoy" + alerta al panel
 
-#### 5.2 Diabetes Tipo 1 y Tipo 2
+#### 5.2 Diabetes Tipo 1 (`diabetes_tipo1`)
 
 | Parámetro | Nivel 3 (Emergencia 🚨) | Nivel 2 (Atención ⚠️) | Nivel 1 (Normal ✅) |
 |-----------|------------------------|----------------------|---------------------|
 | Glucosa (mg/dL) | < 54 (Hipoglucemia severa) | < 70 (Hipoglucemia) | 70 - 180 |
 | Glucosa (mg/dL) | > 400 (Crisis hiperglucémica) | > 300 | — |
+| Glucosa (mg/dL) | — | > 180 (Elevada) | — |
+| Síntomas | = '3' (confusión / pérdida conocimiento) | = '2' (temblor / sudoración) | = '1' (sin síntomas) |
+
+#### 5.3 Diabetes Tipo 2 (`diabetes_tipo2`)
+
+| Parámetro | Nivel 3 (Emergencia 🚨) | Nivel 2 (Atención ⚠️) | Nivel 1 (Normal ✅) |
+|-----------|------------------------|----------------------|---------------------|
+| Glucosa (mg/dL) | < 54 (Hipoglucemia) | < 70 (Hipoglucemia) | 70 - 180 |
+| Glucosa (mg/dL) | > 400 (Crisis hiperglucémica) | > 300 | — |
 | Glucosa (mg/dL) | — | > 180 | — |
-| Síntomas | — | = '2' (moderados) | — |
+| Medicación | — | = '2' (no tomó) | = '1' (sí tomó) |
 
-#### 5.3 EPOC
-
-| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
-|-----------|-----------|-----------|-----------|
-| SpO2 | < 85% | < 88% | ≥ 91% |
-| SpO2 | — | < 91% | — |
-| Disnea | — | = '2' (moderada) | — |
-
-#### 5.4 Asma
+#### 5.4 EPOC (`epoc`)
 
 | Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
 |-----------|-----------|-----------|-----------|
-| SpO2 | < 90% | < 94% | ≥ 94% |
-| Rescatador + SpO2 | = '3' AND SpO2 < 94% (🚨) | = '3' | — |
+| SpO2 (%) | < 85% | < 88% | ≥ 91% |
+| SpO2 (%) | — | < 91% | — |
+| Disnea | = '3' (muy difícil / agitada) | = '2' (un poco más difícil) | = '1' (normal) |
 
-#### 5.5 Insuficiencia Cardíaca
-
-| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
-|-----------|-----------|-----------|-----------|
-| Diferencia de peso | ≥ 3 kg | ≥ 2 kg | < 1 kg |
-| Disnea | = '3' (severa) | — | — |
-| Edema | — | = '3' o = '2' | — |
-| Diferencia de peso | — | ≥ 1 kg | — |
-
-#### 5.6 Enfermedad Renal Crónica
+#### 5.5 Asma (`asma`)
 
 | Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
 |-----------|-----------|-----------|-----------|
-| PA Sistólica | ≥ 180 | ≥ 160 | < 160 |
-| Síntomas | = '3' | = '2' | — |
+| SpO2 (%) | < 90% | < 94% | ≥ 94% |
+| Rescatador + SpO2 | = '3' (≥3 veces) AND SpO2 < 94% | = '3' (≥3 veces) | = '1' o '2' |
 
-#### 5.7 Post ACV (Accidente Cerebrovascular)
+#### 5.6 Insuficiencia Cardíaca (`insuficiencia_cardiaca`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Aumento de peso | ≥ 3 kg vs peso anterior | ≥ 2 kg | < 1 kg |
+| Disnea | = '3' (en reposo / acostado) | — | = '1' o '2' |
+| Edema | — | = '3' o = '2' (tobillos/piernas) | = '1' (sin edema) |
+| Aumento de peso | — | ≥ 1 kg | — |
+
+#### 5.7 Enfermedad Renal Crónica (`enfermedad_renal`)
 
 | Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
 |-----------|-----------|-----------|-----------|
 | PA Sistólica | ≥ 180 | ≥ 160 | < 160 |
+| Síntomas | = '3' (orina espumosa / confusión) | = '2' (hinchazón leve cara/pies) | = '1' (sin síntomas) |
 
-#### 5.8 Fibrilación Auricular
-
-| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
-|-----------|-----------|-----------|-----------|
-| Frecuencia Cardíaca | > 150 bpm | > 110 bpm | 40-110 bpm |
-| Frecuencia Cardíaca | < 40 bpm (Bradicardia 🚨) | — | — |
-
-#### 5.9 Artritis Reumatoide
+#### 5.8 Trastorno Tiroideo (`tiroides`)
 
 | Parámetro | Nivel 2 ⚠️ | Nivel 1 ✅ |
 |-----------|-----------|-----------|
-| Dolor (escala 0-10) | ≥ 8 (alta prioridad) o ≥ 5 | < 5 |
+| Síntomas Hipo/Hiper | = '3' (palpitaciones/sudoración) o = '2' (fatiga/frío) | = '1' (sin síntomas nuevos) |
+| Medicación | — | = '1' (tomó) / '2' (recordar tomar) |
+
+#### 5.9 Artritis Reumatoide (`artritis_reumatoide`)
+
+| Parámetro | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|
+| Dolor (escala 0-10) | ≥ 8 (brote severo) o ≥ 5 | < 5 |
 | Rigidez matutina | > 60 min (alta prioridad) o > 30 min | ≤ 30 min |
 
-> [!IMPORTANT]
-> Artritis NO tiene Nivel 3 definido. ¿Se requiere? Ejemplo: articulación caliente + fiebre = artritis séptica (emergencia).
+#### 5.10 Lupus Eritematoso Sistémico (`lupus`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Fiebre (°C) | = '3' (>38°C) | = '2' (37.3–38°C) | = '1' (normal) |
+| Síntomas | = '3' (empeoramiento súbito) | = '2' (erupciones, dolor articular) | = '1' (sin síntomas) |
+
+#### 5.11 Epilepsia (`epilepsia`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Crisis convulsivas | = '3' (severa o múltiples) | = '2' (una crisis leve) | = '1' (sin crisis) |
+| Medicación | — | = '3' (no tomó antiepiléptico) | = '1' o '2' |
+
+#### 5.12 Post ACV (`post_acv`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Síntomas neurológicos | = '3' (parálisis facial / confusión) o = '2' (debilidad brazo/habla) | — | = '1' (sin síntomas) |
+| PA Sistólica | ≥ 180 mmHg | ≥ 160 mmHg | < 160 mmHg |
+
+#### 5.13 Fibrilación Auricular (`fibrilacion_auricular`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Frecuencia Cardíaca | > 150 bpm o < 40 bpm (Bradicardia) | > 110 bpm | 40 - 110 bpm |
+| Síntomas | = '3' (palpitaciones intensas / síncope / dolor pecho) | = '2' (palpitaciones leves) | = '1' (sin síntomas) |
+
+#### 5.14 Depresión Crónica (`depresion`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Estado de Ánimo | = '3' (muy mal / en crisis) | = '2' (triste / sin energía) | = '1' (bien o regular) |
+| Protocolo Salud Mental | Mensaje empático + Alerta médica prioritaria | Notificación a equipo médico | Registro normal |
+
+#### 5.15 Obesidad / Sobrepeso (`obesidad`)
+
+| Parámetro | Nivel 1 ✅ |
+|-----------|-----------|
+| Peso (kg) | Registro continuo en expediente |
+| Actividad Física | 1 = 3+ días, 2 = 1-2 días, 3 = No realizó (mensaje motivacional) |
+
+#### 5.16 Osteoporosis (`osteoporosis`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Caídas / Golpes | = '3' (caída con dolor intenso / fractura) | = '2' (caída leve sin lesión) | = '1' (sin caídas) |
+| Suplementación | — | — | = '1' (tomó calcio/vit D) |
+
+#### 5.17 VIH / SIDA (`vih`)
+
+| Parámetro | Nivel 3 🚨 | Nivel 2 ⚠️ | Nivel 1 ✅ |
+|-----------|-----------|-----------|-----------|
+| Síntomas | = '3' (síntomas severos / sospecha infección oportunista) | = '2' (fiebre, fatiga, baja de peso) | = '1' (sin síntomas) |
+| Antirretrovirales (ARV) | — | = '3' (no tomó ARV hoy) | = '1' o '2' |
 
 #### Acciones Automáticas por Nivel (todas las patologías)
 
@@ -277,9 +333,9 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 - [ ] ¿Cada umbral por patología está alineado con guías clínicas vigentes (AHA, ADA, GOLD, etc.)?
 - [ ] ¿Se requiere agregar Nivel 3 para Artritis (artritis séptica)?
 - [ ] ¿Los mensajes de Nivel 3 deben incluir instrucciones específicas por patología?
-- [ ] ¿Falta alguna patología crónica prioritaria? (Ej: Hipotiroidismo, Epilepsia, VIH)
 - [ ] ¿Los umbrales deben ajustarse por edad del paciente?
 - [ ] ¿Se necesita distinguir entre diabetes gestacional y tipo 1/2?
+
 
 ---
 

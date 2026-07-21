@@ -37,22 +37,22 @@ function calcularScore({ bienestar, sistolica, diastolica, glucosa, colesterol, 
     componentes.push({ obtenido: pts, maximo: 20 });
   }
 
-  // IMC — 20 pts (requiere peso y altura)
+  // IMC — 15 pts (requiere peso y altura)
   if (peso != null && altura != null) {
     const imc = parseFloat(peso) / (parseFloat(altura) / 100) ** 2;
     let pts;
-    if (imc < 18.5 || imc >= 30) pts = 5;   // Bajo/Obeso
-    else if (imc >= 25)           pts = 12;  // Sobrepeso
-    else                          pts = 20;  // Normal
-    componentes.push({ obtenido: pts, maximo: 20 });
+    if (imc < 18.5 || imc >= 30) pts = 3;   // Bajo/Obeso
+    else if (imc >= 25)           pts = 8;   // Sobrepeso
+    else                          pts = 15;  // Normal
+    componentes.push({ obtenido: pts, maximo: 15 });
   }
 
-  // Bienestar subjetivo — 25 pts (escala 1=Muy bien … 5=Muy mal)
+  // Bienestar subjetivo — 10 pts (escala 1=Muy bien … 5=Muy mal)
   if (bienestar != null) {
     const b = parseInt(bienestar);
-    const ptsMap = { 1: 25, 2: 18, 3: 10, 4: 5, 5: 0 };
+    const ptsMap = { 1: 10, 2: 8, 3: 5, 4: 2, 5: 0 };
     const pts = ptsMap[b];
-    if (pts != null) componentes.push({ obtenido: pts, maximo: 25 });
+    if (pts != null) componentes.push({ obtenido: pts, maximo: 10 });
   }
 
   if (!componentes.length) return { score: null, etiqueta: null };

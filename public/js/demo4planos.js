@@ -150,9 +150,70 @@ function moverCursorYClick(targetSelector, callback, delayAfterClick = 400) {
   autoPlayTimeouts.push(t0);
 }
 
+
 function ocultarCursorVirtual() {
   const cursor = document.getElementById('virtualCursor');
   if (cursor) cursor.style.opacity = '0';
+}
+
+const SLIDES = {
+
+  1: {
+    tag: 'SLIDE 1 DE 7 · CANAL WHATSAPP & TRIAJE INTELIGENTE',
+    title: 'Verónica reporta cefalea y fiebre. La IA analiza su historial y bloquea Ibuprofeno por alergia a AINEs.',
+    metric: '🛡️ Gobernanza Médica: 0% riesgo de error farmacéutico · Health Score ajustado a 61 pts'
+  },
+  2: {
+    tag: 'SLIDE 2 DE 7 · CONSOLA MÉDICA & TELECONSULTA HD',
+    title: 'El Dr. Patricio Navarrete atiende mediante Teleconsulta HD cifrada para evaluar el síntoma agudo.',
+    metric: '📞 Resolución Digital: Atención médica inmediata en vivo sin esperas en sala urgencias'
+  },
+  3: {
+    tag: 'SLIDE 3 DE 7 · PRESCRIPCIÓN SEGURA & PDF',
+    title: 'El médico emite la Receta Digital con Paracetamol 500mg (tratamiento analgésico seguro).',
+    metric: '📄 Firma Electrónica: Documento oficial firmado entregado al WhatsApp del paciente'
+  },
+  4: {
+    tag: 'SLIDE 4 DE 7 · CONSOLA TPA MAWDY & AUDITORÍA',
+    title: 'La aseguradora auditora Mawdy TPA verifica la pertinencia médica y aprueba la cobertura.',
+    metric: '💰 Control de Siniestralidad: Validación instantánea de gasto y autorización de despacho'
+  },
+  5: {
+    tag: 'SLIDE 5 DE 7 · MOTOR HEALTH SCORE & CONTROL 24H',
+    title: 'El motor predictivo enciende el seguimiento de adherencia farmacológica a las 24 horas.',
+    metric: '⚙️ Prevención de Recaídas: Formulario interactivo enviado al WhatsApp de la paciente'
+  },
+  6: {
+    tag: 'SLIDE 6 DE 7 · ADHERENCIA COMPROBADA EN WHATSAPP',
+    title: 'Verónica confirma la toma del medicamento. La adherencia comprobada recupera el Health Score a 88 pts.',
+    metric: '📈 Adherencia Verificada: Alcanza el Estado Apto para Alta Médica (>80/100 pts)'
+  },
+  7: {
+    tag: 'SLIDE 7 DE 7 · ALTA MÉDICA OFICIAL & CIERRE DE CASO',
+    title: 'El Dr. Navarrete evalúa la curva histórica de recuperación y firma el Alta Médica Oficial.',
+    metric: '🎓 Cierre Clínico Exitoso: Certificado oficial enviado al paciente · Reducción de reclamos TPA'
+  }
+};
+
+function mostrarSlideAutoPlay(stepNum) {
+  const banner = document.getElementById('autoPlayBanner');
+  const tagEl = document.getElementById('slideTag');
+  const titleEl = document.getElementById('slideTitle');
+  const metricEl = document.getElementById('slideMetric');
+
+  if (!banner || !SLIDES[stepNum]) return;
+
+  const data = SLIDES[stepNum];
+  if (tagEl) tagEl.textContent = data.tag;
+  if (titleEl) titleEl.textContent = data.title;
+  if (metricEl) metricEl.textContent = data.metric;
+
+  banner.classList.add('visible');
+}
+
+function ocultarSlideAutoPlay() {
+  const banner = document.getElementById('autoPlayBanner');
+  if (banner) banner.classList.remove('visible');
 }
 
 function toggleAutoPlay() {
@@ -175,6 +236,7 @@ function startAutoPlay() {
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     setStep(1);
+    mostrarSlideAutoPlay(1);
     moverCursorYClick('.wa-chip-btn', () => {
       simularMensajeUsuario('Tengo dolor de cabeza severo desde hace 2 días y fiebre de 38.2°C');
     });
@@ -185,11 +247,13 @@ function startAutoPlay() {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead2', () => {
       switchRightTab(2);
+      mostrarSlideAutoPlay(2);
       // Iniciar Teleconsulta HD (t = +1.4s)
       autoPlayTimeouts.push(setTimeout(() => {
         if (!isPlaying) return;
         moverCursorYClick('#btnCallDoctor', () => {
           iniciarVideollamadaDemo();
+          mostrarSlideAutoPlay(3);
           // Firmar Receta Digital PDF (t = +2.5s)
           autoPlayTimeouts.push(setTimeout(() => {
             if (!isPlaying) return;
@@ -207,6 +271,7 @@ function startAutoPlay() {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead4', () => {
       switchRightTab(4);
+      mostrarSlideAutoPlay(4);
       autoPlayTimeouts.push(setTimeout(() => {
         if (!isPlaying) return;
         moverCursorYClick('#btnAuditApprove', () => {
@@ -221,6 +286,7 @@ function startAutoPlay() {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead3', () => {
       switchRightTab(3);
+      mostrarSlideAutoPlay(5);
       autoPlayTimeouts.push(setTimeout(() => {
         if (!isPlaying) return;
         moverCursorYClick('#tab3 button[onclick*="enviarSeguimientoMedicamentosDemo"]', () => {
@@ -233,36 +299,39 @@ function startAutoPlay() {
   // Paso 5: Mover a WhatsApp -> Hacer click en [✅ Sí, medicación tomada] (t = 33.0s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
+    mostrarSlideAutoPlay(6);
     moverCursorYClick('[onclick*="confirmarAdherenciaDemo(true"]', () => {
       confirmarAdherenciaDemo(true, 'Paracetamol 500mg');
     });
   }, 33000));
 
-  // Paso 6: Mover a Pestaña Health Score para ver estado APTO PARA ALTA (>80 pts) (t = 39.5s)
+  // Paso 6: Mover a Pestaña Health Score para ver estado APTO PARA ALTA (>80 pts) y Firmar Alta (t = 39.5s)
   autoPlayTimeouts.push(setTimeout(() => {
     if (!isPlaying) return;
     moverCursorYClick('#tabHead3', () => {
       switchRightTab(3);
+      mostrarSlideAutoPlay(7);
       // Mover cursor a botón Firmar Alta Médica (t = +1.8s)
       autoPlayTimeouts.push(setTimeout(() => {
         if (!isPlaying) return;
         moverCursorYClick('#btnSignAlta', () => {
           firmarAltaMedicaDemo();
           ocultarCursorVirtual();
-          stopAutoPlay();
-          mostrarNotificacion('🏆 Demo completada: Alta Médica oficial otorgada por el médico tratante', '#16a34a');
+          autoPlayTimeouts.push(setTimeout(() => {
+            ocultarSlideAutoPlay();
+            stopAutoPlay();
+            mostrarNotificacion('🏆 Demo completada: Alta Médica oficial otorgada por el médico tratante', '#16a34a');
+          }, 3500));
         });
       }, 1800));
     });
   }, 39500));
 }
 
-
-
-
 function stopAutoPlay() {
   isPlaying = false;
   ocultarCursorVirtual();
+  ocultarSlideAutoPlay();
   clearAutoPlayTimeouts();
   if (autoPlayInterval) clearInterval(autoPlayInterval);
   const btn = document.getElementById('btnPlay');
@@ -311,7 +380,10 @@ function resetDemoToZeroQuiet() {
   if (tpaTable) tpaTable.style.display = 'none';
 
   switchRightTab(2);
+}
+
 let altaMedicaFirmada = false;
+
 
 function firmarAltaMedicaDemo() {
   altaMedicaFirmada = true;

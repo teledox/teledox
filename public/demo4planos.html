@@ -491,9 +491,62 @@
     animation: rippleAnim 0.6s ease-out forwards;
   }
 
-  @keyframes rippleAnim {
-    0% { transform: translate(-50%, -50%) scale(0.2); opacity: 1; }
-    100% { transform: translate(-50%, -50%) scale(1.9); opacity: 0; }
+  /* ── AUTO-PLAY EXECUTIVE PRESENTER OVERLAY ── */
+  #autoPlayBanner {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(40px);
+    width: min(920px, 94vw);
+    background: rgba(15, 23, 42, 0.94);
+    border: 2px solid #3b82f6;
+    border-radius: 14px;
+    padding: 16px 20px;
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(14px);
+    z-index: 999990;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+    font-family: inherit;
+  }
+
+  #autoPlayBanner.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .slide-tag {
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    color: #60a5fa;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(37, 99, 235, 0.2);
+    border: 1px solid rgba(96, 165, 250, 0.4);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 6px;
+  }
+
+  .slide-title {
+    font-size: 16.5px;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.35;
+    margin-bottom: 4px;
+  }
+
+  .slide-metric {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 </style>
 </head>
@@ -501,6 +554,14 @@
 
 <!-- CURSOR VIRTUAL AUTO-PLAY -->
 <div id="virtualCursor"></div>
+
+<!-- BANNER EXPLICATIVO AUTO-PLAY (MODO PRESENTACIÓN) -->
+<div id="autoPlayBanner">
+  <div class="slide-tag" id="slideTag">SLIDE 1 DE 7 · CANAL WHATSAPP &amp; TRIAJE INTELIGENTE</div>
+  <div class="slide-title" id="slideTitle">Verónica reporta cefalea y fiebre. La IA analiza su historial y bloquea Ibuprofeno por alergia a AINEs.</div>
+  <div class="slide-metric" id="slideMetric">🛡️ Gobernanza Médica: 0% riesgo de error farmacéutico · Health Score ajustado a 61 pts</div>
+</div>
+
 
 
 <!-- BARRA SUPERIOR DE CONTROL DEMO -->

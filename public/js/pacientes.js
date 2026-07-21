@@ -61,17 +61,16 @@ async function showPacienteDetalle(id) {
       <td>${escapeHtml(c.diagnostico) || '—'}</td>
       <td>${c.nivel_sintomas === 3 ? '<span class="badge badge-red">Grave</span>' : c.nivel_sintomas === 2 ? '<span class="badge badge-yellow">Medio</span>' : '<span class="badge badge-green">Leve</span>'}</td>
       <td><span class="badge badge-gray">${c.estado}</span></td>
-      <td><button class="btn btn-sm" onclick="openReceta('${c.id}','${id}')">➡️ Ir a consulta</button></td>
-      ${esAdmin ? `<td><button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca" onclick="eliminarConsultaDesdeDetalle('${c.id}','${id}')">🗑</button></td>` : ''}
     </tr>`).join('')}</tbody></table>`
     : '<div class="empty-state">Sin consultas</div>';
 
-  const [seguimientos, labSeguimientos, cronicas, ultimoBienestar, healthScores] = await Promise.all([
+  const [seguimientos, labSeguimientos, cronicas, ultimoBienestar, healthScores, trackingCasos] = await Promise.all([
     supa('GET', 'recordatorios', null, `?paciente_id=eq.${id}&order=tipo.asc,activo.desc,created_at.desc`).then(r => r || []),
     supa('GET', 'seguimiento_laboratorio', null, `?paciente_id=eq.${id}&order=created_at.desc&limit=5&select=*,consultas(created_at,diagnostico)`).then(r => r || []),
     supa('GET', 'enfermedades_cronicas', null, `?paciente_id=eq.${id}&order=activo.desc,created_at.desc`).then(r => r || []),
     supa('GET', 'seguimiento_respuestas', null, `?paciente_id=eq.${id}&tipo=eq.bienestar&respuesta=not.is.null&order=created_at.desc&limit=5`).then(r => r || []),
-    supa('GET', 'paciente_health_score', null, `?paciente_id=eq.${id}&order=created_at.desc&limit=1`).then(r => r || [])
+    supa('GET', 'paciente_health_score', null, `?paciente_id=eq.${id}&order=created_at.desc&limit=1`).then(r => r || []),
+    supa('GET', 'tracking_casos', null, pac.telefono ? `?or=(paciente_id.eq.${id},telefono.eq.${encodeURIComponent(pac.telefono)})&order=created_at.desc&limit=1` : `?paciente_id=eq.${id}&order=created_at.desc&limit=1`).then(r => r || [])
   ]);
 
   const fmtCada = s => s.frecuencia_horas < 1 ? `cada ${Math.round(s.frecuencia_horas * 60)} min` : `cada ${s.frecuencia_horas}h`;
@@ -79,6 +78,47 @@ async function showPacienteDetalle(id) {
   const _BW_LBL = ['','Excelente','Bien','Regular','Mal','Muy mal'];
   const _btnDes = (recId) => `<button class="btn btn-sm" style="background:#fee2e2;color:#dc2626;border-color:#fecaca;white-space:nowrap" onclick="desactivarRecordatorio('${recId}','${id}')">🔕 Desactivar</button>`;
   const _btnRea = (recId) => `<button class="btn btn-sm" style="white-space:nowrap" onclick="reactivarRecordatorio('${recId}','${id}')">🔔 Reactivar</button>`;
+
+  // ── Sección Controles de Monitoreo WhatsApp ─────────────────────────────
+  const trk = trackingCasos[0] || null;
+  let htmlTrackingControl = `<div style="font-size:13px;font-weight:600;color:#374151;margin-bottom:8px">📱 Monitoreo y Recordatorios WhatsApp</div>`;
+
+  if (trk) {
+    const estCls = trk.estado === 'activo' ? 'badge-green' : trk.estado === 'pausado' ? 'badge-yellow' : 'badge-gray';
+    const estLbl = trk.estado === 'activo' ? 'Activo' : trk.estado === 'pausado' ? 'Pausado' : trk.estado;
+    const bioActivo = trk.biometricos_activos === true;
+
+    htmlTrackingControl += `
+      <div class="detail-item" style="margin-bottom:12px;background:#f8fafc;padding:10px;border-radius:6px;border:1px solid #e2e8f0">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div>
+            <div style="font-weight:600;font-size:13px;color:#0f172a">Programa: ${escapeHtml(trk.diagnostico || 'Monitoreo General')}</div>
+            <div style="font-size:11px;color:#64748b;margin-top:3px">
+              Estado: <span class="badge ${estCls}">${estLbl}</span> ·
+              Biométricos: <span class="badge ${bioActivo ? 'badge-green' : 'badge-gray'}">${bioActivo ? 'Activados' : 'Inactivos'}</span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-sm" style="${trk.estado === 'activo' ? 'background:#fef3c7;color:#d97706;border-color:#fde68a' : 'background:#dcfce7;color:#15803d;border-color:#bbf7d0'}" onclick="toggleEstadoTrackingPaciente('${trk.id}', '${trk.estado === 'activo' ? 'pausado' : 'activo'}', '${id}')">
+              ${trk.estado === 'activo' ? '⏸️ Pausar WhatsApp' : '▶️ Reanudar WhatsApp'}
+            </button>
+            <button class="btn btn-sm" style="${bioActivo ? 'background:#fee2e2;color:#dc2626;border-color:#fecaca' : 'background:#e0e7ff;color:#4338ca;border-color:#c7d2fe'}" onclick="toggleBiometricosPaciente('${trk.id}', ${!bioActivo}, '${id}')">
+              ${bioActivo ? '🔕 Desactivar Biométricos' : '📊 Activar Biométricos'}
+            </button>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    htmlTrackingControl += `
+      <div class="detail-item" style="margin-bottom:12px;background:#f8fafc;padding:10px;border-radius:6px;border:1px solid #e2e8f0">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+          <div style="font-size:12px;color:#64748b">Sin programa de monitoreo WhatsApp activo.</div>
+          <button class="btn btn-sm" style="background:#e0e7ff;color:#4338ca;border-color:#c7d2fe" onclick="crearProgramaTrackingFicha('${id}', '${escapeHtml(pac.telefono || '')}', '${escapeHtml(pac.nombre || '')}', '${escapeHtml(pac.cliente_b2b_id || '')}')">
+            ➕ Iniciar Programa WhatsApp
+          </button>
+        </div>
+      </div>`;
+  }
 
   // ── Sección Health Score ─────────────────────────────────────────────────
   const _HS_COL = { controlado: '#16a34a', en_riesgo: '#f59e0b', alerta: '#dc2626' };
@@ -192,7 +232,7 @@ async function showPacienteDetalle(id) {
         </div>`).join('')
     : `<div class="empty-state" style="padding:6px 0;font-size:12px">Sin enfermedades crónicas registradas.</div>`;
 
-  document.getElementById('seguimientoList').innerHTML = htmlHealthScore + htmlBienestar + htmlMeds + htmlLab + htmlCronicas;
+  document.getElementById('seguimientoList').innerHTML = htmlTrackingControl + htmlHealthScore + htmlBienestar + htmlMeds + htmlLab + htmlCronicas;
 
   showPage('paciente-detalle');
   document.querySelectorAll('#page-paciente-detalle .tab').forEach(t => t.classList.remove('active'));
@@ -202,6 +242,40 @@ async function showPacienteDetalle(id) {
 }
 
 // ── Activar / desactivar recordatorios de seguimiento del bot ──────────────
+async function toggleEstadoTrackingPaciente(casoId, nuevoEstado, pacienteId) {
+  await supa('PATCH', 'tracking_casos', { estado: nuevoEstado }, `?id=eq.${casoId}`);
+  showToast(`✓ Estado de monitoreo WhatsApp actualizado a "${nuevoEstado}"`);
+  showPacienteDetalle(pacienteId);
+}
+
+async function toggleBiometricosPaciente(casoId, nuevoEstado, pacienteId) {
+  await supa('PATCH', 'tracking_casos', { biometricos_activos: nuevoEstado }, `?id=eq.${casoId}`);
+  showToast(nuevoEstado ? '📊 Registros biométricos activados por WhatsApp' : '🔕 Registros biométricos desactivados');
+  showPacienteDetalle(pacienteId);
+}
+
+async function crearProgramaTrackingFicha(pacienteId, telefono, nombre, empresaId) {
+  if (!telefono) { alert('El paciente no tiene número de teléfono registrado.'); return; }
+  const diag = prompt('Ingrese el diagnóstico o programa de seguimiento (ej: Control Hipertensión / Diabetes / Post-atención):', 'Control General');
+  if (!diag) return;
+
+  await supa('POST', 'tracking_casos', {
+    paciente_id: pacienteId,
+    telefono: telefono,
+    paciente_nombre: nombre,
+    empresa_id: empresaId || null,
+    diagnostico: diag,
+    estado: 'activo',
+    biometricos_activos: true,
+    horario_inicio: 8,
+    horario_fin: 21,
+    proximo_seguimiento: new Date().toISOString()
+  });
+
+  showToast('✓ Programa de monitoreo WhatsApp activado');
+  showPacienteDetalle(pacienteId);
+}
+
 async function desactivarRecordatorio(recId, pacienteId) {
   await supa('PATCH', 'recordatorios', { activo: false }, `?id=eq.${recId}`);
   showToast('🔕 Seguimiento desactivado');

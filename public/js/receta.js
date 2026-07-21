@@ -371,6 +371,28 @@ async function renderHealthScoreConsulta() {
       </div>
     </div>` : `<div class="empty-state" style="padding:6px 0;font-size:12px">Aún no hay suficiente actividad de seguimiento para calcular el score de esta consulta.</div>`;
 
+  // ── Controles de Monitoreo WhatsApp en Consulta ────────────────────────
+  if (recetaPacienteId) {
+    const trkArr = await supa('GET', 'tracking_casos', null, `?or=(paciente_id.eq.${recetaPacienteId},telefono.eq.${encodeURIComponent(currentPacienteData?.telefono || '')})&order=created_at.desc&limit=1`).then(r => r || []);
+    const trk = trkArr[0] || null;
+    if (trk) {
+      const estLbl = trk.estado === 'activo' ? 'Activo' : trk.estado === 'pausado' ? 'Pausado' : trk.estado;
+      const bioActivo = trk.biometricos_activos === true;
+      el.innerHTML += `
+        <div style="margin-top:10px;padding:8px;background:#f8fafc;border-radius:6px;border:1px solid #e2e8f0">
+          <div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:6px">📱 Monitoreo WhatsApp (${estLbl})</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap">
+            <button class="btn btn-sm" style="font-size:11px;padding:3px 8px;${trk.estado === 'activo' ? 'background:#fef3c7;color:#d97706;border-color:#fde68a' : 'background:#dcfce7;color:#15803d;border-color:#bbf7d0'}" onclick="toggleEstadoTrackingConsulta('${trk.id}', '${trk.estado === 'activo' ? 'pausado' : 'activo'}')">
+              ${trk.estado === 'activo' ? '⏸️ Pausar' : '▶️ Reanudar'}
+            </button>
+            <button class="btn btn-sm" style="font-size:11px;padding:3px 8px;${bioActivo ? 'background:#fee2e2;color:#dc2626;border-color:#fecaca' : 'background:#e0e7ff;color:#4338ca;border-color:#c7d2fe'}" onclick="toggleBiometricosConsulta('${trk.id}', ${!bioActivo})">
+              ${bioActivo ? '🔕 Biométricos Off' : '📊 Biométricos On'}
+            </button>
+          </div>
+        </div>`;
+    }
+  }
+
   const btnAlta = document.getElementById('btnDarDeAlta');
   if (btnAlta) {
     if (yaCerrado) {
@@ -382,6 +404,19 @@ async function renderHealthScoreConsulta() {
     }
   }
 }
+
+async function toggleEstadoTrackingConsulta(casoId, nuevoEstado) {
+  await supa('PATCH', 'tracking_casos', { estado: nuevoEstado }, `?id=eq.${casoId}`);
+  showToast(`✓ Monitoreo WhatsApp actualizado a "${nuevoEstado}"`);
+  renderHealthScoreConsulta();
+}
+
+async function toggleBiometricosConsulta(casoId, nuevoEstado) {
+  await supa('PATCH', 'tracking_casos', { biometricos_activos: nuevoEstado }, `?id=eq.${casoId}`);
+  showToast(nuevoEstado ? '📊 Biométricos por WhatsApp activados' : '🔕 Biométricos desactivados');
+  renderHealthScoreConsulta();
+}
+
 
 // ── Dar de alta — cierre manual del caso por el médico ──────────────────────
 // A diferencia del cierre automático (paciente responde el WhatsApp de fin de

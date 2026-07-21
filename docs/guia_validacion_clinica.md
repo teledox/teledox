@@ -141,10 +141,6 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 | ≥ 40 | `en_riesgo` | 🟡 Amarillo |
 | < 40 | `alerta` | 🔴 Rojo |
 
-> [!WARNING]
-> **Brecha en el Panel Médico Principal (`public/index.html`)**:
-> En el panel principal del médico, en la ficha del paciente ([pacientes.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/public/js/pacientes.js)) y en la tarjeta de consulta ([receta.js](file:///Users/francoortiz/Desktop/MEDILYFT/teledox/public/js/receta.js)), el médico puede **visualizar** el widget del Health Score para orientar su prescripción, **pero NO tiene un botón o switch para activar, pausar o configurar los recordatorios automáticos por WhatsApp**. Ese control actualmente solo existe en la interfaz separada `/tracking/index.html` (Salud Ocupacional B2B) y no posee un endpoint dedicado en `api/`.
-
 #### Puntos a Validar con la Doctora
 - [ ] ¿Los pesos activos (30 PA / 25 Glucosa / 20 Colesterol / 15 IMC / 10 Bienestar) son adecuados?
 - [ ] ¿Los umbrales de PA siguen guías AHA/ESC actualizadas?
@@ -152,6 +148,7 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 - [ ] ¿El IMC es suficiente o se necesita circunferencia de cintura?
 - [ ] ¿Los cortes 70/40 para etiquetas finales son adecuados?
 - [ ] ¿Se necesitan ajustes por edad, sexo o antecedentes?
+
 
 ---
 
@@ -429,8 +426,8 @@ El score suma **exactamente 100 puntos en base directa**, asignando el peso corr
 
 | Funcionalidad | Estado | Impacto |
 |---------------|--------|---------|
-| Control de Recordatorios en Panel Médico Principal | ❌ Inexistente en `public/index.html` (solo en `/tracking`) | El doctor no puede activar/pausar recordatorios WhatsApp desde la atención médica |
 | Health Score en producción real | Solo existe en demo (`simularTriajeIA`) | No se calcula Health Score real de síntomas agudos |
+
 | Perfilamiento de riesgo del paciente | ❌ No implementado | No hay scoring predictivo basado en historial completo |
 | Interacción fármaco-alergia automática | ❌ No implementado | Alergias son texto libre, no se cruzan con medicamentos |
 | Firma electrónica en documentos | ❌ No implementado | PDFs se generan sin firma digital validada |

@@ -421,6 +421,39 @@ Se dispara automáticamente **2 horas después de concluida la última dosis del
 - [ ] ¿Se requiere un segundo control a las 48 horas si la respuesta fue `parcial`?
 
 
+---
+
+### Módulo 7: Perfilamiento y Scoring Predictivo de Riesgo Clínico (Propuesta de Protocolo)
+
+**Concepto**: Integración de antecedentes, biométricos y comportamiento para estratificar a los pacientes en 4 niveles de riesgo clínico y activar planes preventivos automatizados.
+
+#### 🧮 Matriz de Puntuación de Riesgo Unificado (0 a 100 Puntos de Riesgo)
+
+La puntuación global de riesgo combina 3 dimensiones ponderadas:
+
+| Dimensión | Variables de Entrada | Puntos de Riesgo Asignados | Peso Relativo |
+|-----------|----------------------|----------------------------|---------------|
+| **1. Carga Morbosa y Edad** | • Edad ≥ 65 años<br>• Comorbilidad HTA + Diabetes<br>• ≥ 2 Enfermedades crónicas | • +10 pts si Edad ≥ 65 años<br>• +10 pts si HTA + Diabetes<br>• +10 pts si ≥2 crónicas | **30%** (máx 30 pts) |
+| **2. Control Biométrico Reciente** | • Health Score Biométrico (Módulo 3) | • **Alerta (< 40 pts)**: +40 pts riesgo<br>• **En Riesgo (40-69 pts)**: +20 pts riesgo<br>• **Controlado (≥ 70 pts)**: 0 pts riesgo | **40%** (máx 40 pts) |
+| **3. Adherencia y Engagement** | • Health Score Adherencia (Módulo 4) | • **Alerta (< 40 pts)**: +30 pts riesgo<br>• **En Riesgo (40-69 pts)**: +15 pts riesgo<br>• **Controlado (≥ 70 pts)**: 0 pts riesgo | **30%** (máx 30 pts) |
+
+#### 🚦 Clasificación del Nivel de Riesgo Global y Acciones Automáticas
+
+| Puntuación de Riesgo | Nivel de Riesgo | Color | Protocolo de Atención en Sistema |
+|----------------------|-----------------|-------|----------------------------------|
+| **0 - 24 pts** | **Riesgo Bajo** | 🟢 Verde | Monitoreo estándar por WhatsApp (check-in de rutina semanal/mensual). |
+| **25 - 49 pts** | **Riesgo Medio** | 🟡 Amarillo | Recordatorios intensificados + sugerencia automática de agendar consulta de control trimestral. |
+| **50 - 74 pts** | **Riesgo Alto** | 🔴 Rojo | Notificación prioritaria en el panel del médico tratante + llamada/gestión de enfermería B2B. |
+| **≥ 75 pts** | **Riesgo Crítico** | 🚨 Alerta | Alerta roja en Telegram + agendamiento de teleconsulta prioritaria sin costo / derivación presencial. |
+
+#### Puntos a Validar con la Doctora
+- [ ] ¿Los pesos relativos (30% Antecedentes/Edad, 40% Biométricos, 30% Adherencia) reflejan la vulnerabilidad médica real?
+- [ ] ¿La coexistencia de Diabetes e Hipertensión debe forzar directamente el pase a Riesgo Alto (🔴)?
+- [ ] ¿Cada cuánto tiempo se debe recalcular el Riesgo Global del paciente (semanal / mensual / tras cada consulta)?
+- [ ] ¿Qué protocolo de intervención rápida debe seguir el gestor de salud ante un paciente en Riesgo Crítico (🚨)?
+
+
+
 
 
 

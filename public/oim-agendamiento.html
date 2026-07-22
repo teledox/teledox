@@ -701,26 +701,9 @@
               <div class="tag-list" id="list-medicamentos"></div>
             </div>
 
-            <!-- 4. Canales de Acceso -->
-            <div class="form-group full">
-              <label>Canales de Notificación y Acceso Directo</label>
-              <div class="channel-box">
-                <label class="checkbox-label">
-                  <input type="checkbox" id="chk_whatsapp" checked>
-                  <span>📱 <strong>Enviar por WhatsApp al paciente:</strong> Notifica automáticamente con enlace directo de conexión sin instalar apps.</span>
-                </label>
-                <label class="checkbox-label">
-                  <input type="checkbox" id="chk_pantalla_local" checked>
-                  <span>🖥️ <strong>Abrir en Pantalla Local:</strong> Permite iniciar la videoconsulta de inmediato en este dispositivo / tablet.</span>
-                </label>
-              </div>
-            </div>
-
-          </div>
-
           <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
             <button type="submit" class="btn btn-primary" id="btn-submit">
-              <span>📲</span> Confirmar Agendamiento (WhatsApp + Pantalla)
+              <span>📋</span> Confirmar Agendamiento
             </button>
           </div>
         </form>
@@ -996,9 +979,6 @@
       btn.disabled = true;
       btn.innerHTML = '⏳ Procesando Agendamiento...';
 
-      const chkWhatsApp = document.getElementById('chk_whatsapp').checked;
-      const chkPantallaLocal = document.getElementById('chk_pantalla_local').checked;
-
       const payload = {
         cedula_pasaporte: document.getElementById('cedula_pasaporte').value,
         nombre: document.getElementById('nombre').value,
@@ -1012,9 +992,7 @@
         nivel_sintomas: document.getElementById('nivel_sintomas').value,
         alergias: obtenerValoresSlots('alergias', 'list-alergias'),
         antecedentes_cronicos: obtenerValoresSlots('antecedentes_cronicos', 'list-antecedentes'),
-        medicamentos_activos: obtenerValoresSlots('medicamentos_activos', 'list-medicamentos'),
-        enviar_whatsapp: chkWhatsApp,
-        abrir_pantalla_local: chkPantallaLocal
+        medicamentos_activos: obtenerValoresSlots('medicamentos_activos', 'list-medicamentos')
       };
 
       try {
@@ -1027,27 +1005,21 @@
         const data = await res.json();
         
         btn.disabled = false;
-        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Pantalla)';
+        btn.innerHTML = '<span>📋</span> Confirmar Agendamiento';
 
         if (res.ok && data.ok) {
-          if (chkPantallaLocal && data.link_teleconsulta) {
-            window.open(data.link_teleconsulta, '_blank');
-          }
-          mostrarModal(data.link_teleconsulta, data.whatsapp_enviado, chkPantallaLocal);
+          mostrarModal(data.link_teleconsulta, data.whatsapp_enviado);
         } else {
           alert('⚠️ Error en el agendamiento: ' + (data.error || 'Verifique los datos ingresados'));
         }
 
       } catch (err) {
         btn.disabled = false;
-        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Pantalla)';
+        btn.innerHTML = '<span>📋</span> Confirmar Agendamiento';
 
         // Fallback demo si backend offline
         const demoLink = `https://medilyft.app/teleconsulta/oim-${Date.now()}`;
-        if (chkPantallaLocal) {
-          window.open(demoLink, '_blank');
-        }
-        mostrarModal(demoLink, chkWhatsApp, chkPantallaLocal);
+        mostrarModal(demoLink, false);
       }
     }
 

@@ -90,7 +90,7 @@ async function agendarPacienteOIM(params = {}) {
         apellidos: (apellido || '').trim(),
         telefono: telLimpio || existentes[0].telefono,
         correo: email || existentes[0].correo,
-        residencia: lugar_residencia || centroFinal,
+        lugar_residencia: lugar_residencia || centroFinal,
         ...(oimEmpresaId ? { cliente_b2b_id: oimEmpresaId } : {})
       }, `?id=eq.${pacienteId}`);
     }
@@ -108,7 +108,7 @@ async function agendarPacienteOIM(params = {}) {
       fecha_nacimiento: fecha_nacimiento || null,
       telefono: telLimpio,
       correo: email || null,
-      residencia: lugar_residencia || centroFinal,
+      lugar_residencia: lugar_residencia || centroFinal,
       cliente_b2b_id: oimEmpresaId || null
     });
     pacienteId = Array.isArray(nuevoPaciente) ? nuevoPaciente[0]?.id : nuevoPaciente?.id;

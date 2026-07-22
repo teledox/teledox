@@ -62,7 +62,16 @@ async function agendarPacienteOIM(params = {}) {
     } catch (_) {}
   }
 
-  // 2. Buscar o crear paciente en Supabase (usando únicamente columnas reales de `pacientes`)
+  // 2. Convertir antecedentes crónicos a array para la columna `text[]` en Postgres
+  let enfermedadesArray = null;
+  if (Array.isArray(antecedentes_cronicos)) {
+    enfermedadesArray = antecedentes_cronicos.map(s => String(s).trim()).filter(Boolean);
+  } else if (typeof antecedentes_cronicos === 'string' && antecedentes_cronicos.trim()) {
+    enfermedadesArray = antecedentes_cronicos.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  if (enfermedadesArray && enfermedadesArray.length === 0) enfermedadesArray = null;
+
+  // Buscar o crear paciente en Supabase (usando únicamente columnas reales de `pacientes`)
   let pacienteId = null;
   try {
     const existentes = await query('GET', 'pacientes', null, `?cedula=eq.${encodeURIComponent(cedulaLimpia)}`);
@@ -74,7 +83,7 @@ async function agendarPacienteOIM(params = {}) {
         telefono: telLimpio || existentes[0].telefono,
         correo: email || existentes[0].correo,
         lugar_residencia: residenciaFinal,
-        ...(antecedentes_cronicos ? { enfermedades_cronicas: antecedentes_cronicos } : {}),
+        ...(enfermedadesArray ? { enfermedades_cronicas: enfermedadesArray } : {}),
         ...(oimEmpresaId ? { cliente_b2b_id: oimEmpresaId } : {})
       }, `?id=eq.${pacienteId}`);
     }
@@ -92,7 +101,7 @@ async function agendarPacienteOIM(params = {}) {
       telefono: telLimpio,
       correo: email || null,
       lugar_residencia: residenciaFinal,
-      enfermedades_cronicas: antecedentes_cronicos || null,
+      enfermedades_cronicas: enfermedadesArray,
       cliente_b2b_id: oimEmpresaId || null
     });
     pacienteId = Array.isArray(nuevoPaciente) ? nuevoPaciente[0]?.id : nuevoPaciente?.id;

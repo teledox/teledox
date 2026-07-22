@@ -644,6 +644,25 @@
             </div>
 
             <div class="form-group">
+              <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+              <input type="date" id="fecha_nacimiento">
+            </div>
+
+            <div class="form-group">
+              <label for="sexo">Sexo</label>
+              <select id="sexo">
+                <option value="M" selected>Masculino</option>
+                <option value="F">Femenino</option>
+                <option value="Otro">Otro / Prefiero no decir</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="edad">Edad (Años)</label>
+              <input type="number" id="edad" placeholder="Ej: 34" min="0" max="120">
+            </div>
+
+            <div class="form-group">
               <label for="telefono">Teléfono WhatsApp de Contacto</label>
               <input type="tel" id="telefono" placeholder="Ej: 0998765432" required>
             </div>
@@ -654,8 +673,13 @@
             </div>
 
             <div class="form-group">
-              <label for="edad">Edad (Años)</label>
-              <input type="number" id="edad" placeholder="Ej: 34" min="0" max="120">
+              <label for="lugar_residencia">Lugar de Residencia / Punto OIM</label>
+              <input type="text" id="lugar_residencia" placeholder="Ej: Quito, Pichincha" value="OIM Ecuador">
+            </div>
+
+            <div class="form-group">
+              <label for="nombre_empresa">Empresa / Organización</label>
+              <input type="text" id="nombre_empresa" value="OIM Ecuador" placeholder="Ej: OIM Ecuador">
             </div>
 
             <!-- 3. Triaje y Perfil Clínico -->
@@ -951,9 +975,13 @@
       document.getElementById('cedula_pasaporte').value = '17' + Math.floor(10000000 + Math.random() * 90000000);
       document.getElementById('nombre').value = 'Verónica Lucía';
       document.getElementById('apellido').value = 'Alvarado Benítez';
+      document.getElementById('fecha_nacimiento').value = '1990-05-14';
+      document.getElementById('sexo').value = 'F';
+      document.getElementById('edad').value = '36';
       document.getElementById('telefono').value = '0995847362';
       document.getElementById('email').value = 'veronica.alvarado@ejemplo.org';
-      document.getElementById('edad').value = '36';
+      document.getElementById('lugar_residencia').value = 'Quito, Pichincha';
+      document.getElementById('nombre_empresa').value = 'OIM Ecuador';
       document.getElementById('motivo_consulta').value = 'Cefalea opresiva constante de 48 horas y náuseas';
       document.getElementById('nivel_sintomas').value = '2';
       
@@ -977,10 +1005,14 @@
         cedula_pasaporte: document.getElementById('cedula_pasaporte').value,
         nombre: document.getElementById('nombre').value,
         apellido: document.getElementById('apellido').value,
+        fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+        sexo: document.getElementById('sexo').value,
         telefono: document.getElementById('telefono').value,
         email: document.getElementById('email').value,
         edad: document.getElementById('edad').value,
-        nombre_centro: 'OIM Ecuador',
+        lugar_residencia: document.getElementById('lugar_residencia').value,
+        nombre_empresa: document.getElementById('nombre_empresa').value,
+        nombre_centro: document.getElementById('nombre_empresa').value || 'OIM Ecuador',
         operador_id: document.getElementById('operador_id').value,
         motivo_consulta: document.getElementById('motivo_consulta').value,
         nivel_sintomas: document.getElementById('nivel_sintomas').value,

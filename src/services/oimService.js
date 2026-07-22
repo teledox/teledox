@@ -22,6 +22,7 @@ async function agendarPacienteOIM(params = {}) {
     apellido,
     edad,
     fecha_nacimiento,
+    sexo,
     telefono,
     email,
     lugar_residencia,
@@ -31,6 +32,7 @@ async function agendarPacienteOIM(params = {}) {
     antecedentes_cronicos = '',
     medicamentos_activos = '',
     empresa_id = null,
+    nombre_empresa = null,
     operador_id = 'operador_oim'
   } = params;
 
@@ -80,6 +82,9 @@ async function agendarPacienteOIM(params = {}) {
       await query('PATCH', 'pacientes', {
         nombre: nombre.trim(),
         apellidos: (apellido || '').trim(),
+        edad: edad ? parseInt(edad) : existentes[0].edad,
+        fecha_nacimiento: fecha_nacimiento || existentes[0].fecha_nacimiento,
+        sexo: sexo || existentes[0].sexo,
         telefono: telLimpio || existentes[0].telefono,
         correo: email || existentes[0].correo,
         lugar_residencia: residenciaFinal,
@@ -98,6 +103,7 @@ async function agendarPacienteOIM(params = {}) {
       apellidos: (apellido || '').trim(),
       edad: edad ? parseInt(edad) : null,
       fecha_nacimiento: fecha_nacimiento || null,
+      sexo: sexo || 'M',
       telefono: telLimpio,
       correo: email || null,
       lugar_residencia: residenciaFinal,

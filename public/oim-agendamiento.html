@@ -881,22 +881,16 @@
   <!-- MODAL DE FEEDBACK AGENDAMIENTO -->
   <div class="modal-backdrop" id="modal-feedback">
     <div class="modal-card">
-      <div style="font-size: 3rem; text-align: center;">✅</div>
-      <h3 style="font-family: var(--font-title); font-size: 1.5rem; text-align: center;" id="modal-title">¡Agendamiento Exitoso!</h3>
+      <div style="font-size: 3.5rem; text-align: center;">✅</div>
+      <h3 style="font-family: var(--font-title); font-size: 1.4rem; font-weight: 800; text-align: center; color: var(--color-text-main);" id="modal-title">¡Agendamiento Registrado!</h3>
       <p style="font-size: 0.95rem; color: var(--color-text-sub); line-height: 1.5; text-align: center;" id="modal-desc">
-        La teleconsulta ha sido registrada en el sistema.
+        La consulta ha sido registrada exitosamente en el panel médico de MediLyft. Un médico revisará el caso y despachará el enlace de teleconsulta.
       </p>
 
-      <div style="background: var(--color-surface-sub); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; border: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 0.5rem;">
-        <div><strong>Enlace de Videoconsulta Generado:</strong></div>
-        <div style="word-break: break-all; color: var(--color-oim); font-family: monospace;" id="modal-link">https://medilyft.app/teleconsulta/oim-demo</div>
-      </div>
-
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        <button class="btn btn-outline" style="flex: 1;" onclick="cerrarModal()">Cerrar</button>
-        <a id="btn-abrir-videoconsulta" href="#" target="_blank" class="btn btn-accent" style="flex: 1.2; text-decoration: none;">
-          <span>🖥️</span> Abrir en Pantalla Local
-        </a>
+      <div style="display: flex; justify-content: center; margin-top: 0.5rem;">
+        <button class="btn btn-primary" style="min-width: 180px;" onclick="cerrarModal()">
+          Entendido
+        </button>
       </div>
     </div>
   </div>
@@ -1023,12 +1017,8 @@
       }
     }
 
-    function mostrarModal(link, waEnviado, pantallaAbierta) {
-      document.getElementById('modal-link').innerText = link;
-      document.getElementById('btn-abrir-videoconsulta').href = link;
-      
-      let msgDesc = '📋 Consulta agendada con éxito. Registrada en el panel médico de MediLyft (OIM PACIENTE). Un médico revisará la información y enviará el enlace directo por WhatsApp y se habilitará en este portal.';
-      document.getElementById('modal-desc').innerText = msgDesc;
+    function mostrarModal() {
+      document.getElementById('modal-desc').innerText = '📋 Consulta agendada con éxito. Registrada en el panel médico de MediLyft (OIM PACIENTE). Un médico revisará la información, notificará al paciente por WhatsApp y el enlace se habilitará en la pestaña Auditoría de Consultas.';
       document.getElementById('modal-feedback').style.display = 'flex';
       cargarAuditoriaOIM();
     }

@@ -77,10 +77,22 @@
       gap: 1.25rem;
     }
     
+    .brand-logo-container {
+      background: #ffffff;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.4);
+    }
+
     .brand-logo-img {
-      height: 42px;
+      height: 36px;
       width: auto;
       object-fit: contain;
+      display: block;
     }
     
     .brand-titles {
@@ -554,7 +566,9 @@
   <!-- Topbar Header -->
   <header>
     <div class="brand-wrap">
-      <img src="oim.png" alt="OIM Ecuador Logo" class="brand-logo-img" onerror="this.style.display='none'">
+      <div class="brand-logo-container">
+        <img src="oim.png" alt="OIM Ecuador Logo" class="brand-logo-img" onerror="this.parentElement.style.display='none'">
+      </div>
       <div class="brand-titles">
         <div class="brand-title-main">OIM Ecuador · MediLyft</div>
         <div class="brand-title-sub">Plataforma de Salud Comunitaria & Agendamiento</div>

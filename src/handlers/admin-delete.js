@@ -49,10 +49,11 @@ async function eliminarConsulta(consultaId) {
 
   // 2. Resto de dependientes
   await Promise.allSettled([
-    q('DELETE', 'notificaciones',  `?consulta_id=eq.${consultaId}`),
-    q('DELETE', 'documentos',      `?consulta_id=eq.${consultaId}`),
-    q('DELETE', 'planillaje_b2b',  `?consulta_id=eq.${consultaId}`),
-    q('DELETE', 'documentos_datos',`?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'enlaces_teleconsulta',      `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'notificaciones',            `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'documentos',                `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'documentos_datos',          `?consulta_id=eq.${consultaId}`),
+    q('DELETE', 'seguimientos_laboratorio',  `?consulta_id=eq.${consultaId}`),
   ]);
 
   // 3. Consulta
@@ -109,10 +110,11 @@ async function eliminarPaciente(pacienteId) {
 
     // 1b. Resto de dependientes de consultas
     await Promise.allSettled([
-      q('DELETE', 'notificaciones',  `?consulta_id=in.${inC}`),
-      q('DELETE', 'documentos',      `?consulta_id=in.${inC}`),
-      q('DELETE', 'planillaje_b2b',  `?consulta_id=in.${inC}`),
-      q('DELETE', 'documentos_datos',`?consulta_id=in.${inC}`),
+      q('DELETE', 'enlaces_teleconsulta',      `?consulta_id=in.${inC}`),
+      q('DELETE', 'notificaciones',            `?consulta_id=in.${inC}`),
+      q('DELETE', 'documentos',                `?consulta_id=in.${inC}`),
+      q('DELETE', 'documentos_datos',          `?consulta_id=in.${inC}`),
+      q('DELETE', 'seguimientos_laboratorio',  `?consulta_id=in.${inC}`),
     ]);
 
     await q('DELETE', 'consultas', `?paciente_id=eq.${pacienteId}`);
@@ -120,6 +122,7 @@ async function eliminarPaciente(pacienteId) {
 
   // 2. Tablas directas del paciente
   await Promise.allSettled([
+    q('DELETE', 'enlaces_teleconsulta',  `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'enfermedades_cronicas', `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'antecedentes',          `?paciente_id=eq.${pacienteId}`),
     q('DELETE', 'documentos',            `?paciente_id=eq.${pacienteId}`),

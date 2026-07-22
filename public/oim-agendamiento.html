@@ -355,7 +355,7 @@
     /* KPI Stats Bar */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 1.25rem;
     }
     
@@ -455,6 +455,55 @@
     .tag-red { background: var(--color-danger-bg); color: var(--color-danger); }
     .tag-gold { background: var(--color-warning-bg); color: var(--color-warning); }
 
+    /* Dynamic Slots / Tag Items */
+    .tag-input-wrap {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .tag-input-wrap input {
+      flex: 1;
+    }
+    .btn-add-slot {
+      padding: 0.5rem 0.85rem;
+      font-size: 0.85rem;
+      background: var(--color-oim-light);
+      color: var(--color-oim);
+      border: 1px solid rgba(0, 51, 160, 0.2);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-weight: 700;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+    }
+    .btn-add-slot:hover {
+      background: var(--color-oim);
+      color: #ffffff;
+    }
+    .tag-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin-top: 0.35rem;
+    }
+    .pill-item {
+      background: #eff6ff;
+      color: #1e40af;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      border: 1px solid #bfdbfe;
+    }
+    .pill-item .remove-btn {
+      cursor: pointer;
+      color: #ef4444;
+      font-weight: 700;
+      margin-left: 0.2rem;
+    }
+
     /* Modal Feedback */
     .modal-backdrop {
       position: fixed;
@@ -539,7 +588,7 @@
         <div class="card-header">
           <div>
             <h2 class="card-title"><span>📝</span> Formulario de Agendamiento de Teleconsulta</h2>
-            <p class="card-subtitle">Flujo asistido para operadores OIM en gabinetes de salud físicos y brigadas móviles.</p>
+            <p class="card-subtitle">Flujo asistido para operadores OIM en puntos de atención y brigadas móviles.</p>
           </div>
           <button class="btn btn-outline" onclick="autocompletarDemo()">
             ⚡ Cargar Datos Demo
@@ -617,32 +666,45 @@
               </select>
             </div>
 
+            <!-- Multi-Slot Inputs -->
             <div class="form-group">
-              <label for="alergias">Alergias Conocidas</label>
-              <input type="text" id="alergias" placeholder="Ej: Alergia a Penicilina, Ibuprofeno o Ninguna">
+              <label for="alergias">Alergias Conocidas (Múltiples)</label>
+              <div class="tag-input-wrap">
+                <input type="text" id="alergias" placeholder="Ej: Penicilina, Ibuprofeno" onkeypress="handleSlotKeypress(event, 'alergias', 'list-alergias')">
+                <button type="button" class="btn-add-slot" onclick="agregarSlot('alergias', 'list-alergias')">➕ Agregar</button>
+              </div>
+              <div class="tag-list" id="list-alergias"></div>
             </div>
 
             <div class="form-group">
-              <label for="antecedentes_cronicos">Antecedentes Crónicos</label>
-              <input type="text" id="antecedentes_cronicos" placeholder="Ej: Hipertensión Arterial, Asma o Ninguno">
+              <label for="antecedentes_cronicos">Antecedentes Crónicos (Múltiples)</label>
+              <div class="tag-input-wrap">
+                <input type="text" id="antecedentes_cronicos" placeholder="Ej: Hipertensión, Asma" onkeypress="handleSlotKeypress(event, 'antecedentes_cronicos', 'list-antecedentes')">
+                <button type="button" class="btn-add-slot" onclick="agregarSlot('antecedentes_cronicos', 'list-antecedentes')">➕ Agregar</button>
+              </div>
+              <div class="tag-list" id="list-antecedentes"></div>
             </div>
 
             <div class="form-group">
-              <label for="medicamentos_activos">Medicamentos que Toma Actualmente</label>
-              <input type="text" id="medicamentos_activos" placeholder="Ej: Losartán 50mg / Metformina 850mg">
+              <label for="medicamentos_activos">Medicamentos Actuales (Múltiples)</label>
+              <div class="tag-input-wrap">
+                <input type="text" id="medicamentos_activos" placeholder="Ej: Losartán 50mg, Metformina 850mg" onkeypress="handleSlotKeypress(event, 'medicamentos_activos', 'list-medicamentos')">
+                <button type="button" class="btn-add-slot" onclick="agregarSlot('medicamentos_activos', 'list-medicamentos')">➕ Agregar</button>
+              </div>
+              <div class="tag-list" id="list-medicamentos"></div>
             </div>
 
-            <!-- 4. Canales de Acceso (Móvil vs. Gabinete) -->
+            <!-- 4. Canales de Acceso -->
             <div class="form-group full">
-              <label>Canales de Acceso a la Teleconsulta (Móvil & Gabinete OIM)</label>
+              <label>Canales de Notificación y Acceso Directo</label>
               <div class="channel-box">
                 <label class="checkbox-label">
                   <input type="checkbox" id="chk_whatsapp" checked>
                   <span>📱 <strong>Enviar por WhatsApp al paciente:</strong> Notifica automáticamente con enlace directo de conexión sin instalar apps.</span>
                 </label>
                 <label class="checkbox-label">
-                  <input type="checkbox" id="chk_gabinete" checked>
-                  <span>🖥️ <strong>Abrir en Gabinete OIM:</strong> Permite iniciar la videoconsulta de inmediato en esta misma pantalla/iPad del centro.</span>
+                  <input type="checkbox" id="chk_pantalla_local" checked>
+                  <span>🖥️ <strong>Abrir en Pantalla Local:</strong> Permite iniciar la videoconsulta de inmediato en este dispositivo / tablet.</span>
                 </label>
               </div>
             </div>
@@ -651,7 +713,7 @@
 
           <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
             <button type="submit" class="btn btn-primary" id="btn-submit">
-              <span>📲</span> Confirmar Agendamiento (WhatsApp + Gabinete)
+              <span>📲</span> Confirmar Agendamiento (WhatsApp + Pantalla)
             </button>
           </div>
         </form>
@@ -662,19 +724,10 @@
     <!-- TAB 2: MÉTRICAS DE PACIENTES OIM -->
     <section id="tab-metricas" class="tab-panel">
       
-      <!-- Filtros de Métricas -->
+      <!-- Filtros de Métricas Globales -->
       <div class="card" style="padding: 1.25rem;">
         <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-          <div style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-sub);">Filtros de Reporte OIM:</div>
-          
-          <select id="filter-centro" onchange="cargarMetricas()" style="max-width: 240px;">
-            <option value="">Todos los Centros OIM</option>
-            <option value="Tulcán">Centro OIM Tulcán</option>
-            <option value="Quito">Centro OIM Quito</option>
-            <option value="Guayaquil">Centro OIM Guayaquil</option>
-            <option value="Ibarra">Centro OIM Ibarra</option>
-            <option value="Huaquillas">Centro OIM Huaquillas</option>
-          </select>
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-sub);">Filtro de Período OIM:</div>
 
           <input type="date" id="filter-inicio" value="2026-07-01" onchange="cargarMetricas()">
           <input type="date" id="filter-fin" value="2026-07-31" onchange="cargarMetricas()">
@@ -698,78 +751,53 @@
         </div>
 
         <div class="kpi-card green">
-          <div class="kpi-label">Adherencia Fármacos</div>
-          <div class="kpi-value" id="kpi-adherencia">86.4%</div>
-          <div class="kpi-sub">Dosis confirmadas</div>
+          <div class="kpi-label">Resolución Telemédica</div>
+          <div class="kpi-value" id="kpi-resolucion">94.2%</div>
+          <div class="kpi-sub">Atenciones sin derivación</div>
         </div>
 
         <div class="kpi-card gold">
-          <div class="kpi-label">Health Score Prom.</div>
-          <div class="kpi-value" id="kpi-score">78.2</div>
-          <div class="kpi-sub">Indicador comunitario</div>
+          <div class="kpi-label">Tiempo Prom. Atención</div>
+          <div class="kpi-value" id="kpi-tiempo">14.5 min</div>
+          <div class="kpi-sub">Duración por consulta</div>
         </div>
 
-        <div class="kpi-card red">
-          <div class="kpi-label">Derivaciones 911</div>
-          <div class="kpi-value" id="kpi-urgencias">4</div>
-          <div class="kpi-sub">Emergencias derivadas</div>
+        <div class="kpi-card blue">
+          <div class="kpi-label">Recetas Emitidas</div>
+          <div class="kpi-value" id="kpi-recetas">428</div>
+          <div class="kpi-sub">Prescripciones digitales</div>
+        </div>
+
+        <div class="kpi-card green">
+          <div class="kpi-label">Satisfacción Beneficiario</div>
+          <div class="kpi-value" id="kpi-satisfaccion">4.9 ★</div>
+          <div class="kpi-sub">Valoración post-atención</div>
         </div>
       </div>
 
-      <!-- Tablas de Cobertura y Epidemiología -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
-        
-        <!-- Cobertura por Centro OIM -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title"><span>🏥</span> Cobertura por Centro Físico OIM</h3>
-          </div>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Centro OIM</th>
-                  <th>Teleconsultas</th>
-                  <th>Estado</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-centros">
-                <tr><td>Centro OIM Tulcán (Frontera)</td><td><strong>142</strong></td><td><span class="tag tag-green">✓ Alta demanda</span></td></tr>
-                <tr><td>Centro OIM Quito Norte</td><td><strong>118</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
-                <tr><td>Centro OIM Guayaquil</td><td><strong>94</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
-                <tr><td>Centro OIM Huaquillas</td><td><strong>76</strong></td><td><span class="tag tag-gold">⚠ Frontera Sur</span></td></tr>
-                <tr><td>Centro OIM Ibarra</td><td><strong>48</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
-                <tr><td>Otros Centros OIM (Cuenca, Loja, Manta)</td><td><strong>34</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
-              </tbody>
-            </table>
-          </div>
+      <!-- Tabla de Perfil Epidemiológico Global -->
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title"><span>🗂️</span> Perfil Epidemiológico Prevalente (CIE-10 Global)</h3>
         </div>
-
-        <!-- Perfil Epidemiológico -->
-        <div class="card">
-          <div class="card-header">
-            <h3 class="card-title"><span>🗂️</span> Perfil Epidemiológico Prevalente (CIE-10)</h3>
-          </div>
-          <div class="table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Diagnóstico Prevalente</th>
-                  <th>Casos</th>
-                  <th>% Población</th>
-                </tr>
-              </thead>
-              <tbody id="tbody-epi">
-                <tr><td>Infecciones Respiratorias Agudas (J06.9)</td><td>175</td><td><span class="tag tag-red">34.2%</span></td></tr>
-                <tr><td>Cefalea y Migraña (R51)</td><td>110</td><td><span class="tag tag-gold">21.5%</span></td></tr>
-                <tr><td>Gastroenteritis / Síndrome Diarreico (K52.9)</td><td>93</td><td><span class="tag tag-blue">18.1%</span></td></tr>
-                <tr><td>Hipertensión Arterial Primaria (I10)</td><td>76</td><td><span class="tag tag-blue">14.8%</span></td></tr>
-                <tr><td>Dermatitis y Afecciones Cutáneas (L30.9)</td><td>58</td><td><span class="tag tag-green">11.4%</span></td></tr>
-              </tbody>
-            </table>
-          </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Diagnóstico Prevalente</th>
+                <th>Casos Atendidos</th>
+                <th>% Población Atendida</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-epi">
+              <tr><td>Infecciones Respiratorias Agudas (J06.9)</td><td>175</td><td><span class="tag tag-red">34.2%</span></td></tr>
+              <tr><td>Cefalea y Migraña (R51)</td><td>110</td><td><span class="tag tag-gold">21.5%</span></td></tr>
+              <tr><td>Gastroenteritis / Síndrome Diarreico (K52.9)</td><td>93</td><td><span class="tag tag-blue">18.1%</span></td></tr>
+              <tr><td>Hipertensión Arterial Primaria (I10)</td><td>76</td><td><span class="tag tag-blue">14.8%</span></td></tr>
+              <tr><td>Dermatitis y Afecciones Cutáneas (L30.9)</td><td>58</td><td><span class="tag tag-green">11.4%</span></td></tr>
+            </tbody>
+          </table>
         </div>
-
       </div>
 
     </section>
@@ -869,7 +897,7 @@
       <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
         <button class="btn btn-outline" style="flex: 1;" onclick="cerrarModal()">Cerrar</button>
         <a id="btn-abrir-videoconsulta" href="#" target="_blank" class="btn btn-accent" style="flex: 1.2; text-decoration: none;">
-          <span>🖥️</span> Abrir en Gabinete OIM
+          <span>🖥️</span> Abrir en Pantalla Local
         </a>
       </div>
     </div>
@@ -889,6 +917,41 @@
       }
     }
 
+    // Slot Helper Functions for Alergias, Antecedentes, Medicamentos
+    function agregarSlot(fieldId, listId, textOverride = null) {
+      const input = document.getElementById(fieldId);
+      const val = textOverride || input.value.trim();
+      if (!val) return;
+
+      const list = document.getElementById(listId);
+      const tag = document.createElement('span');
+      tag.className = 'pill-item';
+      tag.dataset.value = val;
+      tag.innerHTML = `${val} <span class="remove-btn" onclick="this.parentElement.remove()">✕</span>`;
+      list.appendChild(tag);
+      if (!textOverride) input.value = '';
+    }
+
+    function handleSlotKeypress(e, fieldId, listId) {
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault();
+        agregarSlot(fieldId, listId);
+      }
+    }
+
+    function obtenerValoresSlots(fieldId, listId) {
+      const directVal = document.getElementById(fieldId).value.trim();
+      const pills = Array.from(document.querySelectorAll(`#${listId} .pill-item`)).map(el => el.dataset.value);
+      if (directVal) pills.push(directVal);
+      return pills.length > 0 ? pills.join(', ') : 'Ninguna';
+    }
+
+    function limpiarSlots() {
+      document.getElementById('list-alergias').innerHTML = '';
+      document.getElementById('list-antecedentes').innerHTML = '';
+      document.getElementById('list-medicamentos').innerHTML = '';
+    }
+
     // Demo Data Auto-fill
     function autocompletarDemo() {
       document.getElementById('cedula_pasaporte').value = '17' + Math.floor(10000000 + Math.random() * 90000000);
@@ -899,9 +962,14 @@
       document.getElementById('edad').value = '36';
       document.getElementById('motivo_consulta').value = 'Cefalea opresiva constante de 48 horas y náuseas';
       document.getElementById('nivel_sintomas').value = '2';
-      document.getElementById('alergias').value = 'Alergia a AINEs (Ibuprofeno)';
-      document.getElementById('antecedentes_cronicos').value = 'Hipertensión Arterial grado 1';
-      document.getElementById('medicamentos_activos').value = 'Losartán 50mg cada 24 horas';
+      
+      limpiarSlots();
+      agregarSlot('alergias', 'list-alergias', 'Alergia a AINEs (Ibuprofeno)');
+      agregarSlot('alergias', 'list-alergias', 'Alergia a Sulfa');
+      agregarSlot('antecedentes_cronicos', 'list-antecedentes', 'Hipertensión Arterial Grado 1');
+      agregarSlot('antecedentes_cronicos', 'list-antecedentes', 'Asma Bronquial Leve');
+      agregarSlot('medicamentos_activos', 'list-medicamentos', 'Losartán 50mg c/24h');
+      agregarSlot('medicamentos_activos', 'list-medicamentos', 'Salbutamol Inhalador PRN');
     }
 
     // Submit Handler for Agendamiento
@@ -912,7 +980,7 @@
       btn.innerHTML = '⏳ Procesando Agendamiento...';
 
       const chkWhatsApp = document.getElementById('chk_whatsapp').checked;
-      const chkGabinete = document.getElementById('chk_gabinete').checked;
+      const chkPantallaLocal = document.getElementById('chk_pantalla_local').checked;
 
       const payload = {
         cedula_pasaporte: document.getElementById('cedula_pasaporte').value,
@@ -925,11 +993,11 @@
         operador_id: document.getElementById('operador_id').value,
         motivo_consulta: document.getElementById('motivo_consulta').value,
         nivel_sintomas: document.getElementById('nivel_sintomas').value,
-        alergias: document.getElementById('alergias').value,
-        antecedentes_cronicos: document.getElementById('antecedentes_cronicos').value,
-        medicamentos_activos: document.getElementById('medicamentos_activos').value,
+        alergias: obtenerValoresSlots('alergias', 'list-alergias'),
+        antecedentes_cronicos: obtenerValoresSlots('antecedentes_cronicos', 'list-antecedentes'),
+        medicamentos_activos: obtenerValoresSlots('medicamentos_activos', 'list-medicamentos'),
         enviar_whatsapp: chkWhatsApp,
-        abrir_gabinete: chkGabinete
+        abrir_pantalla_local: chkPantallaLocal
       };
 
       try {
@@ -942,41 +1010,41 @@
         const data = await res.json();
         
         btn.disabled = false;
-        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Gabinete)';
+        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Pantalla)';
 
         if (res.ok && data.ok) {
-          if (chkGabinete && data.link_teleconsulta) {
+          if (chkPantallaLocal && data.link_teleconsulta) {
             window.open(data.link_teleconsulta, '_blank');
           }
-          mostrarModal(data.link_teleconsulta, data.whatsapp_enviado, chkGabinete);
+          mostrarModal(data.link_teleconsulta, data.whatsapp_enviado, chkPantallaLocal);
         } else {
           alert('⚠️ Error en el agendamiento: ' + (data.error || 'Verifique los datos ingresados'));
         }
 
       } catch (err) {
         btn.disabled = false;
-        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Gabinete)';
+        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Pantalla)';
 
         // Fallback demo si backend offline
         const demoLink = `https://medilyft.app/teleconsulta/oim-${Date.now()}`;
-        if (chkGabinete) {
+        if (chkPantallaLocal) {
           window.open(demoLink, '_blank');
         }
-        mostrarModal(demoLink, chkWhatsApp, chkGabinete);
+        mostrarModal(demoLink, chkWhatsApp, chkPantallaLocal);
       }
     }
 
-    function mostrarModal(link, waEnviado, gabineteAbierto) {
+    function mostrarModal(link, waEnviado, pantallaAbierta) {
       document.getElementById('modal-link').innerText = link;
       document.getElementById('btn-abrir-videoconsulta').href = link;
       
       let msgDesc = '';
-      if (waEnviado && gabineteAbierto) {
-        msgDesc = '📱 Se ha notificado al paciente por WhatsApp y 🖥️ se abrió el enlace en la pantalla del gabinete OIM.';
+      if (waEnviado && pantallaAbierta) {
+        msgDesc = '📱 Se ha notificado al paciente por WhatsApp y 🖥️ se abrió el enlace en la pantalla local.';
       } else if (waEnviado) {
         msgDesc = '📱 Notificación con enlace enviada exitosamente al WhatsApp del paciente.';
-      } else if (gabineteAbierto) {
-        msgDesc = '🖥️ La videoconsulta ha sido abierta en la pantalla del gabinete OIM.';
+      } else if (pantallaAbierta) {
+        msgDesc = '🖥️ La videoconsulta ha sido abierta en la pantalla local del dispositivo.';
       } else {
         msgDesc = 'La teleconsulta ha sido agendada y registrada en la plataforma.';
       }
@@ -988,24 +1056,25 @@
     function cerrarModal() {
       document.getElementById('modal-feedback').style.display = 'none';
       document.getElementById('form-agendamiento').reset();
+      limpiarSlots();
     }
 
     // Load Metrics
     async function cargarMetricas() {
-      const centro = document.getElementById('filter-centro').value;
-      const inicio = document.getElementById('filter-inicio').value;
-      const fin = document.getElementById('filter-fin').value;
+      const inicio = document.getElementById('filter-inicio')?.value || '2026-07-01';
+      const fin = document.getElementById('filter-fin')?.value || '2026-07-31';
 
       try {
-        const res = await fetch(`/api/oim/metricas?centro_id=${encodeURIComponent(centro)}&fecha_inicio=${inicio}&fecha_fin=${fin}`);
+        const res = await fetch(`/api/oim/metricas?fecha_inicio=${inicio}&fecha_fin=${fin}`);
         const data = await res.json();
 
         if (data.ok) {
           document.getElementById('kpi-pacientes').innerText = data.cobertura_volumen.total_pacientes_unicos || '348';
           document.getElementById('kpi-consultas').innerText = data.cobertura_volumen.total_teleconsultas || '512';
-          document.getElementById('kpi-adherencia').innerText = (data.adherencia_tratamiento.tasa_adherencia_global_pct || 86.4) + '%';
-          document.getElementById('kpi-score').innerText = data.perfil_epidemiologico.health_score_comunitario_promedio || '78.2';
-          document.getElementById('kpi-urgencias').innerText = data.resolucion_custodia_casos.derivaciones_urgencias_911 || '4';
+          document.getElementById('kpi-resolucion').innerText = (data.resolucion_custodia_casos.tasa_resolucion_pct || 94.2) + '%';
+          document.getElementById('kpi-tiempo').innerText = (data.cobertura_volumen.tiempo_promedio_atencion_min || 14.5) + ' min';
+          document.getElementById('kpi-recetas').innerText = data.recetas_emitidas || '428';
+          document.getElementById('kpi-satisfaccion').innerText = (data.satisfaccion_promedio || 4.9) + ' ★';
         }
       } catch (err) {
         console.log('Cargando datos demo de métricas OIM');

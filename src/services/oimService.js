@@ -247,13 +247,19 @@ async function exportarAuditoriaCSV(filters = {}) {
     estado_auditoria = null
   } = filters;
 
-  let queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia)&order=created_at.desc';
+  let queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,origen,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia,clientes_b2b(nombre_empresa))&order=created_at.desc';
   if (fecha_inicio) queryParams += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
   if (fecha_fin) queryParams += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
 
   let filas = [];
   try {
-    filas = await query('GET', 'consultas', null, queryParams) || [];
+    const todas = await query('GET', 'consultas', null, queryParams) || [];
+    filas = todas.filter(c => {
+      const p = c.pacientes || {};
+      return c.origen === 'B2B OIM' ||
+             (c.notas_medico || '').toLowerCase().includes('oim') ||
+             (p.clientes_b2b?.nombre_empresa || '').toLowerCase().includes('oim');
+    });
   } catch (e) {
     console.warn('[OIM CSV Export] Error consultando:', e.message);
   }
@@ -320,10 +326,18 @@ async function exportarAuditoriaCSV(filters = {}) {
  * 4. Obtener listado en vivo de consultas OIM con el estado de sus enlaces emitidos
  */
 async function obtenerConsultasAuditoriaOIM() {
-  const queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,paciente_id,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia)&order=created_at.desc&limit=50';
+  const queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,origen,paciente_id,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia,clientes_b2b(nombre_empresa))&order=created_at.desc&limit=100';
   let consultas = [];
   try {
-    consultas = await query('GET', 'consultas', null, queryParams) || [];
+    const todas = await query('GET', 'consultas', null, queryParams) || [];
+    // Filtrar estrictamente solo consultas pertenecientes a OIM
+    consultas = todas.filter(c => {
+      const p = c.pacientes || {};
+      const esOrigenOIM = c.origen === 'B2B OIM';
+      const esNotasOIM = (c.notas_medico || '').toLowerCase().includes('oim');
+      const esEmpresaOIM = (p.clientes_b2b?.nombre_empresa || '').toLowerCase().includes('oim');
+      return esOrigenOIM || esNotasOIM || esEmpresaOIM;
+    });
   } catch (e) {
     console.warn('[OIM Auditoría] Error consultando tabla consultas:', e.message);
   }

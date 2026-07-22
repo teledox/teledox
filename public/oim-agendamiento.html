@@ -561,7 +561,7 @@
       </div>
     </div>
     <div class="header-badge">
-      <span>🌐</span> 10 Centros de Atención OIM Activos
+      <span>🌐</span> OIM Ecuador · Sistema de Salud Telemédico
     </div>
   </header>
 
@@ -598,24 +598,8 @@
         <form id="form-agendamiento" onsubmit="procesarAgendamiento(event)">
           <div class="form-grid">
 
-            <!-- 1. Centro OIM y Operador -->
+            <!-- 1. Operador OIM -->
             <div class="form-group span-2">
-              <label for="centro_id">Punto de Atención / Centro OIM</label>
-              <select id="centro_id" required>
-                <option value="Centro OIM Tulcán">Centro OIM Tulcán (Frontera Norte)</option>
-                <option value="Centro OIM Quito Norte" selected>Centro OIM Quito Norte</option>
-                <option value="Centro OIM Guayaquil">Centro OIM Guayaquil</option>
-                <option value="Centro OIM Ibarra">Centro OIM Ibarra</option>
-                <option value="Centro OIM Huaquillas">Centro OIM Huaquillas (Frontera Sur)</option>
-                <option value="Centro OIM Cuenca">Centro OIM Cuenca</option>
-                <option value="Centro OIM Manta">Centro OIM Manta</option>
-                <option value="Centro OIM Loja">Centro OIM Loja</option>
-                <option value="Centro OIM Esmeraldas">Centro OIM Esmeraldas</option>
-                <option value="Centro OIM Santo Domingo">Centro OIM Santo Domingo</option>
-              </select>
-            </div>
-
-            <div class="form-group">
               <label for="operador_id">ID / Email del Operador OIM</label>
               <input type="text" id="operador_id" value="operador.quito@oim.org" required>
             </div>
@@ -824,7 +808,6 @@
                 <th>Fecha / Hora</th>
                 <th>Cédula/Doc</th>
                 <th>Paciente</th>
-                <th>Centro OIM</th>
                 <th>Motivo Consulta</th>
                 <th>Triaje</th>
                 <th>Auditoría</th>
@@ -836,7 +819,6 @@
                 <td>22/07/2026 18:30</td>
                 <td>1729485730</td>
                 <td>Carlos Mendoza</td>
-                <td>Centro OIM Tulcán</td>
                 <td>Cefalea y fiebre 38°C</td>
                 <td><span class="tag tag-gold">Moderado</span></td>
                 <td><span class="tag tag-green">✓ Pertinente</span></td>
@@ -846,7 +828,6 @@
                 <td>22/07/2026 17:15</td>
                 <td>0918273645</td>
                 <td>Daniela Suárez</td>
-                <td>Centro OIM Quito Norte</td>
                 <td>Control de Hipertensión Arterial</td>
                 <td><span class="tag tag-blue">Leve</span></td>
                 <td><span class="tag tag-green">✓ Pertinente</span></td>
@@ -856,7 +837,6 @@
                 <td>22/07/2026 16:40</td>
                 <td>1102938475</td>
                 <td>Miguel Rodríguez</td>
-                <td>Centro OIM Huaquillas</td>
                 <td>Crisis asmática leve</td>
                 <td><span class="tag tag-gold">Moderado</span></td>
                 <td><span class="tag tag-green">✓ Pertinente</span></td>
@@ -866,7 +846,6 @@
                 <td>22/07/2026 15:10</td>
                 <td>1782349102</td>
                 <td>Carmen Villacís</td>
-                <td>Centro OIM Guayaquil</td>
                 <td>Dolor torácico opresivo</td>
                 <td><span class="tag tag-red">🚨 911 Urgente</span></td>
                 <td><span class="tag tag-green">✓ Pertinente</span></td>
@@ -989,7 +968,7 @@
         telefono: document.getElementById('telefono').value,
         email: document.getElementById('email').value,
         edad: document.getElementById('edad').value,
-        nombre_centro: document.getElementById('centro_id').value,
+        nombre_centro: 'OIM Ecuador',
         operador_id: document.getElementById('operador_id').value,
         motivo_consulta: document.getElementById('motivo_consulta').value,
         nivel_sintomas: document.getElementById('nivel_sintomas').value,

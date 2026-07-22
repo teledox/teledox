@@ -9,22 +9,7 @@
 
 const { query } = require('./supabase');
 const { enviar: enviarWhatsApp } = require('./whatsapp');
-
-/**
- * Centros físicos por defecto de la OIM en Ecuador
- */
-const CENTROS_OIM_DEFAULT = [
-  'Centro OIM Tulcán',
-  'Centro OIM Quito Norte',
-  'Centro OIM Guayaquil',
-  'Centro OIM Ibarra',
-  'Centro OIM Huaquillas',
-  'Centro OIM Cuenca',
-  'Centro OIM Manta',
-  'Centro OIM Loja',
-  'Centro OIM Esmeraldas',
-  'Centro OIM Santo Domingo'
-];
+const { registrarPlanillajeB2B } = require('./planillaje');
 
 /**
  * 1. Agendamiento de Pacientes (Flujo Operador OIM)
@@ -39,7 +24,6 @@ async function agendarPacienteOIM(params = {}) {
     telefono,
     email,
     lugar_residencia,
-    centro_id,
     nombre_centro,
     motivo_consulta,
     nivel_sintomas = 1,
@@ -54,7 +38,7 @@ async function agendarPacienteOIM(params = {}) {
     throw new Error('Faltan campos obligatorios: cédula/pasaporte, nombre o motivo de consulta');
   }
 
-  const centroFinal = nombre_centro || centro_id || 'Centro OIM General';
+  const centroFinal = 'OIM Ecuador';
   const cedulaLimpia = String(cedula_pasaporte).trim();
 
   // Formateo inteligente de teléfono para WhatsApp (soporta internacional +33... y nacional 09...)
@@ -78,13 +62,12 @@ async function agendarPacienteOIM(params = {}) {
     } catch (_) {}
   }
 
-  // 2. Buscar o crear paciente en Supabase
+  // 2. Buscar o crear paciente en Supabase (solo columnas reales de `pacientes`)
   let pacienteId = null;
   try {
     const existentes = await query('GET', 'pacientes', null, `?cedula=eq.${encodeURIComponent(cedulaLimpia)}`);
     if (Array.isArray(existentes) && existentes.length > 0) {
       pacienteId = existentes[0].id;
-      // Actualizar datos del paciente existente
       await query('PATCH', 'pacientes', {
         nombre: nombre.trim(),
         apellidos: (apellido || '').trim(),
@@ -99,7 +82,6 @@ async function agendarPacienteOIM(params = {}) {
   }
 
   if (!pacienteId) {
-    // Crear nuevo paciente
     const nuevoPaciente = await query('POST', 'pacientes', {
       cedula: cedulaLimpia,
       nombre: nombre.trim(),
@@ -118,10 +100,9 @@ async function agendarPacienteOIM(params = {}) {
   const consultaCode = `oim-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
   const linkTeleconsulta = `https://medilyft.app/teleconsulta/${consultaCode}`;
 
-  // 4. Crear registro en tabla `consultas` con estado 'pendiente' para aparecer en el panel principal
+  // 4. Crear registro en `consultas` (utilizando la columna real `sintomas_descripcion`)
   const obsDetalle = [
-    `Centro OIM: ${centroFinal}`,
-    `Operador: ${operador_id}`,
+    `Operador OIM: ${operador_id}`,
     `Alergias: ${alergias || 'Ninguna'}`,
     `Antecedentes: ${antecedentes_cronicos || 'Sin antecedentes reportados'}`,
     `Medicamentos: ${medicamentos_activos || 'Ninguno'}`
@@ -129,31 +110,45 @@ async function agendarPacienteOIM(params = {}) {
 
   const nuevaConsulta = await query('POST', 'consultas', {
     paciente_id: pacienteId,
-    motivo: motivo_consulta,
-    estado: 'pendiente',
+    sintomas_descripcion: motivo_consulta,
     nivel_sintomas: parseInt(nivel_sintomas) || 1,
+    estado: 'pendiente',
     lugar_residencia: lugar_residencia || centroFinal,
-    empresa_id: oimEmpresaId || null,
     observaciones: obsDetalle
   });
 
   const consultaId = Array.isArray(nuevaConsulta) ? nuevaConsulta[0]?.id : nuevaConsulta?.id;
 
-  // 5. Registrar notificación en el panel principal con etiqueta 'B2B OIM'
+  // 5. Registrar planillaje B2B para trazabilidad institucional
+  if (oimEmpresaId && pacienteId) {
+    await registrarPlanillajeB2B({
+      cc_paciente_id: pacienteId,
+      cc_empresa_id: oimEmpresaId,
+      cc_cedula: cedulaLimpia,
+      cc_nombre: `${nombre.trim()} ${apellido || ''}`.trim(),
+      cc_telefono: telLimpio,
+      cc_correo: email || '',
+      cc_residencia: lugar_residencia || centroFinal,
+      cc_sintomas: motivo_consulta,
+      cc_nivel: parseInt(nivel_sintomas) || 1
+    }, consultaId).catch(err => console.warn('[OIM Planillaje Error]:', err.message));
+  }
+
+  // 6. Registrar notificación para el panel principal de médicos
   if (consultaId) {
     await query('POST', 'notificaciones', {
       consulta_id: consultaId,
       paciente_id: pacienteId,
       tipo: 'nueva_consulta',
       etiqueta: 'B2B OIM',
-      mensaje: `Nueva consulta OIM (${centroFinal}): ${nombre.trim()} ${apellido || ''}`
+      mensaje: `Nueva consulta OIM: ${nombre.trim()} ${apellido || ''}`
     }).catch(err => console.warn('[OIM Agendamiento] Error creando notificación:', err.message));
   }
 
-  // 4. Notificar al paciente por WhatsApp (si se proporcionó teléfono)
+  // 7. Notificar al paciente por WhatsApp (si se proporcionó teléfono)
   let whatsappEnviado = false;
   if (telLimpio && telLimpio.length >= 9) {
-    const msgTexto = `👋 Hola *${nombre.trim()}*, la *Organización Internacional para las Migraciones (OIM)* y *MediLyft* han registrado tu atención médica telemédica.\n\n🏥 *Punto de Atención:* ${centroFinal}\n📋 *Motivo:* ${motivo_consulta}\n📹 *Enlace de acceso a la consulta:* ${linkTeleconsulta}\n\nUn médico te asistirá en breve. No requieres instalar ninguna aplicación adicional. 🩺💙`;
+    const msgTexto = `👋 Hola *${nombre.trim()}*, la *Organización Internacional para las Migraciones (OIM)* y *MediLyft* han registrado tu atención médica telemédica.\n\n📋 *Motivo:* ${motivo_consulta}\n📹 *Enlace de acceso a la consulta:* ${linkTeleconsulta}\n\nUn médico te asistirá en breve. No requieres instalar ninguna aplicación adicional. 🩺💙`;
     try {
       const resWa = await enviarWhatsApp(telLimpio, msgTexto);
       whatsappEnviado = !!resWa;

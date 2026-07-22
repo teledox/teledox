@@ -378,9 +378,57 @@ async function exportarAuditoriaCSV(filters = {}) {
   };
 }
 
+/**
+ * 4. Obtener listado de consultas OIM con el estado de sus enlaces emitidos
+ */
+async function obtenerConsultasAuditoriaOIM() {
+  const queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,lugar_residencia,observaciones,paciente_id,pacientes(cedula,nombre,apellidos,telefono)&order=created_at.desc&limit=50';
+  let consultas = [];
+  try {
+    consultas = await query('GET', 'consultas', null, queryParams) || [];
+  } catch (e) {
+    console.warn('[OIM Auditoría] Error consultando tabla consultas:', e.message);
+  }
+
+  // Obtener enlaces emitidos por médicos en enlaces_teleconsulta
+  let enlaces = [];
+  try {
+    enlaces = await query('GET', 'enlaces_teleconsulta', null, '?select=consulta_id,link,created_at&order=created_at.desc') || [];
+  } catch (_) {}
+
+  const linksMap = {};
+  if (Array.isArray(enlaces)) {
+    enlaces.forEach(e => {
+      if (e.consulta_id && !linksMap[e.consulta_id]) linksMap[e.consulta_id] = e.link;
+    });
+  }
+
+  const result = (consultas || []).map(c => {
+    const linkObj = linksMap[c.id];
+    return {
+      id: c.id,
+      created_at: c.created_at,
+      sintomas_descripcion: c.sintomas_descripcion || '',
+      estado: c.estado || 'pendiente',
+      nivel_sintomas: c.nivel_sintomas || 1,
+      lugar_residencia: c.lugar_residencia || 'OIM Ecuador',
+      observaciones: c.observaciones || '',
+      pacientes: c.pacientes || {},
+      link_teleconsulta: linkObj || null,
+      enlace_disponible: !!linkObj
+    };
+  });
+
+  return {
+    ok: true,
+    consultas: result
+  };
+}
+
 module.exports = {
   agendarPacienteOIM,
   obtenerMetricasOIM,
   exportarAuditoriaCSV,
+  obtenerConsultasAuditoriaOIM,
   CENTROS_OIM_DEFAULT
 };

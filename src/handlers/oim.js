@@ -3,7 +3,7 @@
  * Handler principal para los endpoints de OIM (Agendamiento, Métricas y Exportación CSV).
  */
 
-const { agendarPacienteOIM, obtenerMetricasOIM, exportarAuditoriaCSV } = require('../services/oimService');
+const { agendarPacienteOIM, obtenerMetricasOIM, exportarAuditoriaCSV, obtenerConsultasAuditoriaOIM } = require('../services/oimService');
 
 module.exports = async function handler(req, res) {
   // Habilitar CORS
@@ -36,7 +36,13 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(resultado);
     }
 
-    // 3. Exportación de Auditoría de Consultas en CSV
+    // 3. Listado de Consultas OIM para Auditoría en Vivo
+    if (urlPath.endsWith('/consultas') || req.body?.action === 'consultas') {
+      const resultado = await obtenerConsultasAuditoriaOIM();
+      return res.status(200).json(resultado);
+    }
+
+    // 4. Exportación de Auditoría de Consultas en CSV
     if (urlPath.endsWith('/exportar-auditoria-csv') || req.body?.action === 'exportar_csv') {
       const filters = method === 'GET' ? (req.query || {}) : (req.body || {});
       const { filename, csvContent, total_registros } = await exportarAuditoriaCSV(filters);
@@ -63,13 +69,16 @@ module.exports = async function handler(req, res) {
     } else if (action === 'metricas') {
       const resultado = await obtenerMetricasOIM(req.body || req.query || {});
       return res.status(200).json(resultado);
+    } else if (action === 'consultas') {
+      const resultado = await obtenerConsultasAuditoriaOIM();
+      return res.status(200).json(resultado);
     } else if (action === 'exportar_csv') {
       const resultado = await exportarAuditoriaCSV(req.body || req.query || {});
       return res.status(200).json(resultado);
     }
 
     return res.status(400).json({
-      error: 'Acción u sub-ruta no especificada. Rutas disponibles: /api/oim/agendamiento, /api/oim/metricas, /api/oim/exportar-auditoria-csv'
+      error: 'Acción u sub-ruta no especificada. Rutas disponibles: /api/oim/agendamiento, /api/oim/metricas, /api/oim/consultas, /api/oim/exportar-auditoria-csv'
     });
 
   } catch (err) {

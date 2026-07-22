@@ -237,6 +237,18 @@ module.exports = async function handler(req, res) {
       body: JSON.stringify({ paciente_id, consulta_id: consulta_id || null, medico_id: medico_id || null, link })
     }).catch(e => console.error('[enviar-link] Error registrando enlace:', e.message));
 
+    if (consulta_id) {
+      await fetch(`${SUPABASE_URL}/rest/v1/consultas?id=eq.${consulta_id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ estado: 'confirmada' })
+      }).catch(e => console.error('[enviar-link] Error actualizando estado consulta:', e.message));
+    }
+
     return res.status(200).json({ ok: true, numero, paciente: `${pac.nombre} ${pac.apellidos || ''}`.trim() });
 
   } catch (e) {

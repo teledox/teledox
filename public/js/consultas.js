@@ -63,10 +63,13 @@ async function loadConsultas() {
     const sinMedico = !c.medico_id;
     const puedeAtender = sinMedico && (currentUser.rol === 'medico' || currentUser.rol === 'admin');
     const empresaB2B = p.clientes_b2b?.nombre_empresa;
-    const origenHtml = empresaB2B
-      ? `<span class="alerta-tag" style="background:#eff6ff;color:#2563eb">🏢 ${escapeHtml(empresaB2B)}</span>`
-      : `<span class="alerta-tag" style="background:#f3f4f6;color:#6b7280">👤 B2C</span>`;
-    const etiquetaHtml = etiquetas[c.id] ? `<br><span class="alerta-tag">${escapeHtml(etiquetas[c.id])}</span>` : '';
+    const esOIM = (empresaB2B || '').toLowerCase().includes('oim') || (etiquetas[c.id] || '').toLowerCase().includes('oim');
+    const origenHtml = esOIM
+      ? `<span class="alerta-tag" style="background:#0033a0;color:#ffffff;font-weight:700">🏢 OIM PACIENTE</span>`
+      : empresaB2B
+        ? `<span class="alerta-tag" style="background:#eff6ff;color:#2563eb">🏢 ${escapeHtml(empresaB2B)}</span>`
+        : `<span class="alerta-tag" style="background:#f3f4f6;color:#6b7280">👤 B2C</span>`;
+    const etiquetaHtml = (etiquetas[c.id] && !esOIM) ? `<br><span class="alerta-tag">${escapeHtml(etiquetas[c.id])}</span>` : '';
 
     const nivelBadge = c.nivel_sintomas === 3
       ? '<span class="badge badge-red">🔴 Grave</span>'
@@ -90,6 +93,10 @@ async function loadConsultas() {
       ? `<div style="font-size:11px;color:#16a34a;margin-top:3px">🩺 Dr. ${escapeHtml(med.nombre)} ${escapeHtml(med.apellidos)}</div>`
       : `<div style="font-size:11px;color:#FF5A5F;margin-top:3px">⚠️ Sin médico asignado</div>`;
 
+    const btnOIM = esOIM
+      ? `<button class="btn btn-sm" style="background:#0033a0;color:#ffffff;font-weight:700" onclick="enviarLinkOIM('${c.id}','${c.paciente_id}',this)" title="Enviar enlace de teleconsulta al paciente por WhatsApp y habilitar en OIM">📩 Enviar Link (WhatsApp + OIM)</button>`
+      : '';
+
     return `
       <tr ${sinMedico && c.estado !== 'completada' ? 'style="background:#fff8f8"' : ''}>
         <td style="text-align:center;font-size:12px;font-weight:700;color:#aaa;min-width:36px">${totalCons - i}</td>
@@ -108,6 +115,7 @@ async function loadConsultas() {
         <td>${estadoBadge}${timerEspera}</td>
         <td style="display:flex;gap:4px;flex-wrap:wrap;min-width:170px">
           ${puedeAtender ? `<button class="btn btn-sm btn-atender" onclick="atenderConsulta('${c.id}',this)">🩺 Atender</button>` : ''}
+          ${btnOIM}
           ${c.estado === 'pendiente' && (currentUser.rol === 'operador' || currentUser.rol === 'admin') ? `<button class="btn btn-sm btn-primary" onclick="openAgendar('${c.id}','${c.paciente_id}')">📅 Agendar</button>` : ''}
           <button class="btn btn-sm btn-success" onclick="openReceta('${c.id}','${c.paciente_id}')">ℹ️ Abrir info</button>
           <label class="chk-completar" title="Marcar/desmarcar como completada">
@@ -122,6 +130,40 @@ async function loadConsultas() {
 
   // Iniciar de inmediato los cronómetros recién renderizados (el intervalo global los sigue actualizando)
   if (typeof startTimerUpdater === 'function') startTimerUpdater();
+}
+
+async function enviarLinkOIM(consultaId, pacienteId, btnEl) {
+  if (!confirm('¿Desea enviar el enlace de teleconsulta al paciente por WhatsApp y habilitarlo en el portal OIM?')) return;
+  if (btnEl) { btnEl.disabled = true; btnEl.innerText = '⏳ Enviando...'; }
+
+  const linkCode = `oim-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+  const link = `https://medilyft.app/teleconsulta/${linkCode}`;
+
+  try {
+    const res = await fetch('/api/enviar-link', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        paciente_id: pacienteId,
+        consulta_id: consultaId,
+        link: link,
+        medico_nombre: (currentUser?.nombre || 'Médico') + ' ' + (currentUser?.apellidos || '')
+      })
+    });
+
+    const data = await res.json();
+    if (res.ok && data.ok) {
+      alert('✅ Enlace enviado por WhatsApp al paciente y registrado para el portal OIM.');
+      if (btnEl) btnEl.innerText = '✅ Link Enviado';
+      loadConsultas();
+    } else {
+      alert('⚠️ Error enviando enlace: ' + (data.error || 'Verifique conexión'));
+      if (btnEl) { btnEl.disabled = false; btnEl.innerText = '📩 Enviar Link (WhatsApp + OIM)'; }
+    }
+  } catch (err) {
+    alert('⚠️ Error de conexión al enviar enlace');
+    if (btnEl) { btnEl.disabled = false; btnEl.innerText = '📩 Enviar Link (WhatsApp + OIM)'; }
+  }
 }
 
 // IDs de consultas en proceso de ser atendidas — bloqueadas del render

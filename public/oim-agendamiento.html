@@ -810,45 +810,15 @@
                 <th>Paciente</th>
                 <th>Motivo Consulta</th>
                 <th>Triaje</th>
-                <th>Auditoría</th>
+                <th>Estado Teleconsulta</th>
+                <th>Acciones</th>
               </tr>
             </thead>
             <tbody id="tbody-auditoria">
               <tr>
-                <td><code>#c-9821</code></td>
-                <td>22/07/2026 18:30</td>
-                <td>1729485730</td>
-                <td>Carlos Mendoza</td>
-                <td>Cefalea y fiebre 38°C</td>
-                <td><span class="tag tag-gold">Moderado</span></td>
-                <td><span class="tag tag-green">✓ Pertinente</span></td>
-              </tr>
-              <tr>
-                <td><code>#c-9820</code></td>
-                <td>22/07/2026 17:15</td>
-                <td>0918273645</td>
-                <td>Daniela Suárez</td>
-                <td>Control de Hipertensión Arterial</td>
-                <td><span class="tag tag-blue">Leve</span></td>
-                <td><span class="tag tag-green">✓ Pertinente</span></td>
-              </tr>
-              <tr>
-                <td><code>#c-9819</code></td>
-                <td>22/07/2026 16:40</td>
-                <td>1102938475</td>
-                <td>Miguel Rodríguez</td>
-                <td>Crisis asmática leve</td>
-                <td><span class="tag tag-gold">Moderado</span></td>
-                <td><span class="tag tag-green">✓ Pertinente</span></td>
-              </tr>
-              <tr>
-                <td><code>#c-9818</code></td>
-                <td>22/07/2026 15:10</td>
-                <td>1782349102</td>
-                <td>Carmen Villacís</td>
-                <td>Dolor torácico opresivo</td>
-                <td><span class="tag tag-red">🚨 911 Urgente</span></td>
-                <td><span class="tag tag-green">✓ Pertinente</span></td>
+                <td colspan="8" style="text-align:center;color:var(--color-text-muted);padding:1.5rem;">
+                  ⏳ Cargando atenciones OIM...
+                </td>
               </tr>
             </tbody>
           </table>
@@ -893,6 +863,8 @@
 
       if (tabId === 'tab-metricas') {
         cargarMetricas();
+      } else if (tabId === 'tab-auditoria') {
+        cargarAuditoriaOIM();
       }
     }
 
@@ -1017,25 +989,64 @@
       document.getElementById('modal-link').innerText = link;
       document.getElementById('btn-abrir-videoconsulta').href = link;
       
-      let msgDesc = '';
-      if (waEnviado && pantallaAbierta) {
-        msgDesc = '📱 Se ha notificado al paciente por WhatsApp y 🖥️ se abrió el enlace en la pantalla local.';
-      } else if (waEnviado) {
-        msgDesc = '📱 Notificación con enlace enviada exitosamente al WhatsApp del paciente.';
-      } else if (pantallaAbierta) {
-        msgDesc = '🖥️ La videoconsulta ha sido abierta en la pantalla local del dispositivo.';
-      } else {
-        msgDesc = 'La teleconsulta ha sido agendada y registrada en la plataforma.';
-      }
-
+      let msgDesc = '📋 Consulta agendada con éxito. Registrada en el panel médico de MediLyft (OIM PACIENTE). Un médico revisará la información y enviará el enlace directo por WhatsApp y se habilitará en este portal.';
       document.getElementById('modal-desc').innerText = msgDesc;
       document.getElementById('modal-feedback').style.display = 'flex';
+      cargarAuditoriaOIM();
     }
 
     function cerrarModal() {
       document.getElementById('modal-feedback').style.display = 'none';
       document.getElementById('form-agendamiento').reset();
       limpiarSlots();
+    }
+
+    // Load Live OIM Consultations Audit
+    async function cargarAuditoriaOIM() {
+      const tbody = document.getElementById('tbody-auditoria');
+      if (!tbody) return;
+
+      try {
+        const res = await fetch('/api/oim/consultas');
+        const data = await res.json();
+
+        if (data.ok && Array.isArray(data.consultas) && data.consultas.length > 0) {
+          tbody.innerHTML = data.consultas.map(c => {
+            const p = c.pacientes || {};
+            const dateStr = c.created_at ? new Date(c.created_at).toLocaleString('es-EC', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+            
+            const triajeBadge = c.nivel_sintomas === 3
+              ? '<span class="tag tag-red">🚨 911 Urgente</span>'
+              : c.nivel_sintomas === 2
+                ? '<span class="tag tag-gold">🟡 Moderado</span>'
+                : '<span class="tag tag-blue">🟢 Leve</span>';
+
+            const estadoBadge = c.enlace_disponible
+              ? '<span class="tag tag-green">✓ Enlace Disponible</span>'
+              : '<span class="tag tag-gold">⏳ Pendiente Enlace Médico</span>';
+
+            const accionBtn = c.enlace_disponible
+              ? `<a href="${c.link_teleconsulta}" target="_blank" class="btn btn-sm btn-accent" style="text-decoration:none;padding:0.4rem 0.8rem;font-size:0.8rem;">📹 Abrir Teleconsulta</a>`
+              : `<button class="btn btn-sm btn-outline" disabled style="opacity:0.65;cursor:not-allowed;padding:0.4rem 0.8rem;font-size:0.8rem;">⏳ Esperando Médico</button>`;
+
+            return `
+              <tr>
+                <td><code>#${c.id.substring(0, 8)}</code></td>
+                <td>${dateStr}</td>
+                <td>${p.cedula || 'N/A'}</td>
+                <td><strong>${p.nombre || 'Paciente'} ${p.apellidos || ''}</strong></td>
+                <td>${c.sintomas_descripcion || '—'}</td>
+                <td>${triajeBadge}</td>
+                <td>${estadoBadge}</td>
+                <td>${accionBtn}</td>
+              </tr>`;
+          }).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-text-muted);padding:1.5rem;">No se encontraron consultas registradas en OIM</td></tr>';
+        }
+      } catch (err) {
+        console.log('Error cargando auditoría OIM:', err);
+      }
     }
 
     // Load Metrics
@@ -1048,10 +1059,10 @@
         const data = await res.json();
 
         if (data.ok) {
-          document.getElementById('kpi-pacientes').innerText = data.cobertura_volumen.total_pacientes_unicos || '348';
-          document.getElementById('kpi-consultas').innerText = data.cobertura_volumen.total_teleconsultas || '512';
-          document.getElementById('kpi-resolucion').innerText = (data.resolucion_custodia_casos.tasa_resolucion_pct || 94.2) + '%';
-          document.getElementById('kpi-tiempo').innerText = (data.cobertura_volumen.tiempo_promedio_atencion_min || 14.5) + ' min';
+          document.getElementById('kpi-pacientes').innerText = data.cobertura_volumen?.total_pacientes_unicos || '348';
+          document.getElementById('kpi-consultas').innerText = data.cobertura_volumen?.total_teleconsultas || '512';
+          document.getElementById('kpi-resolucion').innerText = (data.resolucion_custodia_casos?.tasa_resolucion_pct || 94.2) + '%';
+          document.getElementById('kpi-tiempo').innerText = (data.cobertura_volumen?.tiempo_promedio_atencion_min || 14.5) + ' min';
           document.getElementById('kpi-recetas').innerText = data.recetas_emitidas || '428';
           document.getElementById('kpi-satisfaccion').innerText = (data.satisfaccion_promedio || 4.9) + ' ★';
         }

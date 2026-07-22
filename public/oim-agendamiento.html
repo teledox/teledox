@@ -618,118 +618,138 @@
           </button>
         </div>
 
-        <form id="form-agendamiento" onsubmit="procesarAgendamiento(event)">
-          <div class="form-grid">
-
-            <!-- 1. Operador OIM -->
-            <div class="form-group span-2">
-              <label for="operador_id">ID / Email del Operador OIM</label>
-              <input type="text" id="operador_id" value="operador.quito@oim.org" required>
+        <form id="form-agendamiento" onsubmit="procesarAgendamiento(event)" style="display: flex; flex-direction: column; gap: 1.5rem;">
+          
+          <!-- SECCIÓN 1: DATOS OPERATIVOS Y ORGANIZACIÓN -->
+          <div style="background: var(--color-surface-sub); padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border);">
+            <div style="font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; color: var(--color-oim-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+              <span>🏢</span> 1. DATOS OPERATIVOS Y ORGANIZACIÓN
             </div>
-
-            <!-- 2. Datos del Beneficiario / Paciente -->
-            <div class="form-group">
-              <label for="cedula_pasaporte">Cédula / Pasaporte / Doc. Movilidad</label>
-              <input type="text" id="cedula_pasaporte" placeholder="Ej: 1729485730" required>
-            </div>
-
-            <div class="form-group">
-              <label for="nombre">Nombres del Paciente</label>
-              <input type="text" id="nombre" placeholder="Ej: Carlos Eduardo" required>
-            </div>
-
-            <div class="form-group">
-              <label for="apellido">Apellidos del Paciente</label>
-              <input type="text" id="apellido" placeholder="Ej: Mendoza Rivas" required>
-            </div>
-
-            <div class="form-group">
-              <label for="fecha_nacimiento">Fecha de Nacimiento</label>
-              <input type="date" id="fecha_nacimiento">
-            </div>
-
-            <div class="form-group">
-              <label for="sexo">Sexo</label>
-              <select id="sexo">
-                <option value="M" selected>Masculino</option>
-                <option value="F">Femenino</option>
-                <option value="Otro">Otro / Prefiero no decir</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="edad">Edad (Años)</label>
-              <input type="number" id="edad" placeholder="Ej: 34" min="0" max="120">
-            </div>
-
-            <div class="form-group">
-              <label for="telefono">Teléfono WhatsApp de Contacto</label>
-              <input type="tel" id="telefono" placeholder="Ej: 0998765432" required>
-            </div>
-
-            <div class="form-group">
-              <label for="email">Correo Electrónico (Opcional)</label>
-              <input type="email" id="email" placeholder="paciente@ejemplo.com">
-            </div>
-
-            <div class="form-group">
-              <label for="lugar_residencia">Lugar de Residencia / Punto OIM</label>
-              <input type="text" id="lugar_residencia" placeholder="Ej: Quito, Pichincha" value="OIM Ecuador">
-            </div>
-
-            <div class="form-group">
-              <label for="nombre_empresa">Empresa / Organización</label>
-              <input type="text" id="nombre_empresa" value="OIM Ecuador" placeholder="Ej: OIM Ecuador">
-            </div>
-
-            <!-- 3. Triaje y Perfil Clínico -->
-            <div class="form-group span-2">
-              <label for="motivo_consulta">Motivo de Consulta / Síntomas Principales</label>
-              <input type="text" id="motivo_consulta" placeholder="Ej: Cefalea intensa de 3 días y fiebre 38°C" required>
-            </div>
-
-            <div class="form-group">
-              <label for="nivel_sintomas">Nivel de Triaje Estimado</label>
-              <select id="nivel_sintomas" required>
-                <option value="1" selected>🟢 Leve (Teleconsulta Estándar)</option>
-                <option value="2">🟡 Moderado (Atención Urgente < 15 min)</option>
-                <option value="3">🚨 Grave (Riesgo Vital / Alerta 911)</option>
-              </select>
-            </div>
-
-            <!-- Multi-Slot Inputs -->
-            <div class="form-group">
-              <label for="alergias">Alergias Conocidas (Múltiples)</label>
-              <div class="tag-input-wrap">
-                <input type="text" id="alergias" placeholder="Ej: Penicilina, Ibuprofeno" onkeypress="handleSlotKeypress(event, 'alergias', 'list-alergias')">
-                <button type="button" class="btn-add-slot" onclick="agregarSlot('alergias', 'list-alergias')">➕ Agregar</button>
+            <div class="form-grid">
+              <div class="form-group span-2">
+                <label for="operador_id">ID / Email del Operador OIM</label>
+                <input type="text" id="operador_id" value="operador.quito@oim.org" required>
               </div>
-              <div class="tag-list" id="list-alergias"></div>
-            </div>
-
-            <div class="form-group">
-              <label for="antecedentes_cronicos">Antecedentes Crónicos (Múltiples)</label>
-              <div class="tag-input-wrap">
-                <input type="text" id="antecedentes_cronicos" placeholder="Ej: Hipertensión, Asma" onkeypress="handleSlotKeypress(event, 'antecedentes_cronicos', 'list-antecedentes')">
-                <button type="button" class="btn-add-slot" onclick="agregarSlot('antecedentes_cronicos', 'list-antecedentes')">➕ Agregar</button>
+              <div class="form-group">
+                <label for="nombre_empresa">Empresa / Organización</label>
+                <input type="text" id="nombre_empresa" value="OIM Ecuador" placeholder="Ej: OIM Ecuador">
               </div>
-              <div class="tag-list" id="list-antecedentes"></div>
             </div>
+          </div>
 
-            <div class="form-group">
-              <label for="medicamentos_activos">Medicamentos Actuales (Múltiples)</label>
-              <div class="tag-input-wrap">
-                <input type="text" id="medicamentos_activos" placeholder="Ej: Losartán 50mg, Metformina 850mg" onkeypress="handleSlotKeypress(event, 'medicamentos_activos', 'list-medicamentos')">
-                <button type="button" class="btn-add-slot" onclick="agregarSlot('medicamentos_activos', 'list-medicamentos')">➕ Agregar</button>
+          <!-- SECCIÓN 2: INFORMACIÓN PERSONAL DEL PACIENTE -->
+          <div style="background: #ffffff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid var(--color-border); box-shadow: var(--shadow-sm);">
+            <div style="font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; color: var(--color-oim-dark); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid var(--color-border); padding-bottom: 0.5rem;">
+              <span>👤</span> 2. INFORMACIÓN PERSONAL DEL PACIENTE
+            </div>
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="cedula_pasaporte">Cédula / Pasaporte / Doc. Movilidad</label>
+                <input type="text" id="cedula_pasaporte" placeholder="Ej: 1729485730" required>
               </div>
-              <div class="tag-list" id="list-medicamentos"></div>
-            </div>
 
-          <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
-            <button type="submit" class="btn btn-primary" id="btn-submit">
+              <div class="form-group">
+                <label for="nombre">Nombres del Paciente</label>
+                <input type="text" id="nombre" placeholder="Ej: Carlos Eduardo" required>
+              </div>
+
+              <div class="form-group">
+                <label for="apellido">Apellidos del Paciente</label>
+                <input type="text" id="apellido" placeholder="Ej: Mendoza Rivas" required>
+              </div>
+
+              <div class="form-group">
+                <label for="fecha_nacimiento">Fecha de Nacimiento</label>
+                <input type="date" id="fecha_nacimiento">
+              </div>
+
+              <div class="form-group">
+                <label for="sexo">Sexo</label>
+                <select id="sexo">
+                  <option value="M" selected>Masculino</option>
+                  <option value="F">Femenino</option>
+                  <option value="Otro">Otro / Prefiero no decir</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="edad">Edad (Años)</label>
+                <input type="number" id="edad" placeholder="Ej: 34" min="0" max="120">
+              </div>
+
+              <div class="form-group">
+                <label for="telefono">Teléfono WhatsApp de Contacto</label>
+                <input type="tel" id="telefono" placeholder="Ej: 0998765432" required>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Correo Electrónico (Opcional)</label>
+                <input type="email" id="email" placeholder="paciente@ejemplo.com">
+              </div>
+
+              <div class="form-group">
+                <label for="lugar_residencia">Lugar de Residencia / Punto OIM</label>
+                <input type="text" id="lugar_residencia" placeholder="Ej: Quito, Pichincha" value="OIM Ecuador">
+              </div>
+            </div>
+          </div>
+
+          <!-- SECCIÓN 3: TRIAJE Y PERFIL CLÍNICO DEL PACIENTE -->
+          <div style="background: #f0f9ff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid #bae6fd;">
+            <div style="font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; color: #0369a1; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #bae6fd; padding-bottom: 0.5rem;">
+              <span>🩺</span> 3. TRIAJE Y PERFIL CLÍNICO DEL PACIENTE
+            </div>
+            <div class="form-grid">
+              <div class="form-group span-2">
+                <label for="motivo_consulta" style="color: #0369a1;">Motivo de Consulta / Síntomas Principales</label>
+                <input type="text" id="motivo_consulta" placeholder="Ej: Cefalea intensa de 3 días y fiebre 38°C" required style="border-color: #7dd3fc;">
+              </div>
+
+              <div class="form-group">
+                <label for="nivel_sintomas" style="color: #0369a1;">Nivel de Triaje Estimado</label>
+                <select id="nivel_sintomas" required style="border-color: #7dd3fc;">
+                  <option value="1" selected>🟢 Leve (Teleconsulta Estándar)</option>
+                  <option value="2">🟡 Moderado (Atención Urgente < 15 min)</option>
+                  <option value="3">🚨 Grave (Riesgo Vital / Alerta 911)</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="alergias" style="color: #0369a1;">Alergias Conocidas (Múltiples)</label>
+                <div class="tag-input-wrap">
+                  <input type="text" id="alergias" placeholder="Ej: Penicilina, Ibuprofeno" onkeypress="handleSlotKeypress(event, 'alergias', 'list-alergias')" style="border-color: #7dd3fc;">
+                  <button type="button" class="btn-add-slot" onclick="agregarSlot('alergias', 'list-alergias')">➕ Agregar</button>
+                </div>
+                <div class="tag-list" id="list-alergias"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="antecedentes_cronicos" style="color: #0369a1;">Antecedentes Crónicos (Múltiples)</label>
+                <div class="tag-input-wrap">
+                  <input type="text" id="antecedentes_cronicos" placeholder="Ej: Hipertensión, Asma" onkeypress="handleSlotKeypress(event, 'antecedentes_cronicos', 'list-antecedentes')" style="border-color: #7dd3fc;">
+                  <button type="button" class="btn-add-slot" onclick="agregarSlot('antecedentes_cronicos', 'list-antecedentes')">➕ Agregar</button>
+                </div>
+                <div class="tag-list" id="list-antecedentes"></div>
+              </div>
+
+              <div class="form-group">
+                <label for="medicamentos_activos" style="color: #0369a1;">Medicamentos Actuales (Múltiples)</label>
+                <div class="tag-input-wrap">
+                  <input type="text" id="medicamentos_activos" placeholder="Ej: Losartán 50mg, Metformina 850mg" onkeypress="handleSlotKeypress(event, 'medicamentos_activos', 'list-medicamentos')" style="border-color: #7dd3fc;">
+                  <button type="button" class="btn-add-slot" onclick="agregarSlot('medicamentos_activos', 'list-medicamentos')">➕ Agregar</button>
+                </div>
+                <div class="tag-list" id="list-medicamentos"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- FOOTER BOTÓN DE CONFIRMACIÓN -->
+          <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 0.5rem;">
+            <button type="submit" class="btn btn-primary" id="btn-submit" style="padding: 0.9rem 2rem; font-size: 1rem;">
               <span>📋</span> Confirmar Agendamiento
             </button>
           </div>
+
         </form>
       </div>
 

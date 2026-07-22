@@ -180,8 +180,7 @@ async function obtenerMetricasOIM(filters = {}) {
   } = filters;
 
   // 1. Obtener consultas en el período
-  let queryParams = '?select=id,created_at,estado,nivel_sintomas,lugar_residencia,motivo,paciente_id';
-  if (empresa_id) queryParams += `&empresa_id=eq.${empresa_id}`;
+  let queryParams = '?select=id,created_at,estado,nivel_sintomas,lugar_residencia,sintomas_descripcion,paciente_id';
   if (fecha_inicio) queryParams += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
   if (fecha_fin) queryParams += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
 
@@ -302,8 +301,7 @@ async function exportarAuditoriaCSV(filters = {}) {
     estado_auditoria = null
   } = filters;
 
-  let queryParams = '?select=id,created_at,motivo,estado,nivel_sintomas,lugar_residencia,observaciones,pacientes(cedula,nombre,apellidos,telefono)&order=created_at.desc';
-  if (empresa_id) queryParams += `&empresa_id=eq.${empresa_id}`;
+  let queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,lugar_residencia,observaciones,pacientes(cedula,nombre,apellidos,telefono)&order=created_at.desc';
   if (fecha_inicio) queryParams += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
   if (fecha_fin) queryParams += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
 
@@ -327,7 +325,7 @@ async function exportarAuditoriaCSV(filters = {}) {
     'Paciente Nombre',
     'Paciente Apellido',
     'Teléfono',
-    'Centro OIM / Ubicación',
+    'Ubicación / Residencia',
     'Motivo Consulta',
     'Nivel Triaje',
     'Estado Consulta',
@@ -359,8 +357,8 @@ async function exportarAuditoriaCSV(filters = {}) {
       escapeCsvField(p.nombre || 'Paciente'),
       escapeCsvField(p.apellidos || ''),
       escapeCsvField(p.telefono || ''),
-      escapeCsvField(f.lugar_residencia || 'Centro OIM General'),
-      escapeCsvField(f.motivo || ''),
+      escapeCsvField(f.lugar_residencia || 'OIM Ecuador'),
+      escapeCsvField(f.sintomas_descripcion || ''),
       escapeCsvField(triajeTexto),
       escapeCsvField(f.estado || 'agendada'),
       escapeCsvField(estadoAud),

@@ -1067,7 +1067,14 @@
               : '<span class="tag tag-gold">⏳ Pendiente Enlace Médico</span>';
 
             const accionBtn = c.enlace_disponible
-              ? `<a href="${c.link_teleconsulta}" target="_blank" class="btn btn-sm btn-accent" style="text-decoration:none;padding:0.4rem 0.8rem;font-size:0.8rem;">📹 Abrir Teleconsulta</a>`
+              ? `<div style="display:flex;gap:0.4rem;align-items:center;">
+                   <a href="${c.link_teleconsulta}" target="_blank" class="btn btn-sm btn-accent" style="text-decoration:none;padding:0.35rem 0.65rem;font-size:0.8rem;" title="Abrir teleconsulta en pantalla local">
+                     📹 Abrir
+                   </a>
+                   <button onclick="reenviarWhatsAppPaciente('${c.pacientes?.id || c.paciente_id || ''}', '${c.id}', '${c.link_teleconsulta}')" class="btn btn-sm btn-success" style="padding:0.35rem 0.65rem;font-size:0.8rem;" title="Enviar enlace por WhatsApp al paciente">
+                     📲 Enviar WA
+                   </button>
+                 </div>`
               : `<button class="btn btn-sm btn-outline" disabled style="opacity:0.65;cursor:not-allowed;padding:0.4rem 0.8rem;font-size:0.8rem;">⏳ Esperando Médico</button>`;
 
             return `
@@ -1087,6 +1094,27 @@
         }
       } catch (err) {
         console.log('Error cargando auditoría OIM:', err);
+      }
+    }
+
+    async function reenviarWhatsAppPaciente(pacienteId, consultaId, link) {
+      if (!pacienteId || !link) return alert('⚠️ No se puede enviar: Datos incompletos del paciente');
+      if (!confirm('¿Desea enviar/reenviar el enlace de teleconsulta al WhatsApp del paciente?')) return;
+
+      try {
+        const res = await fetch('/api/enviar-link', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paciente_id: pacienteId, consulta_id: consultaId, link })
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          alert(`📲 ¡Enlace de teleconsulta enviado por WhatsApp exitosamente a ${data.paciente || 'paciente'} (${data.numero})!`);
+        } else {
+          alert('⚠️ Error enviando WhatsApp: ' + (data.error || 'Verifique número de WhatsApp del paciente'));
+        }
+      } catch (err) {
+        alert('⚠️ Error de red al intentar enviar por WhatsApp');
       }
     }
 

@@ -325,11 +325,23 @@ async function exportarAuditoriaCSV(filters = {}) {
 /**
  * 4. Obtener listado en vivo de consultas OIM con el estado de sus enlaces emitidos
  */
-async function obtenerConsultasAuditoriaOIM() {
-  const queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,origen,paciente_id,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia,clientes_b2b(nombre_empresa))&order=created_at.desc&limit=100';
+async function obtenerConsultasAuditoriaOIM(filters = {}) {
+  const {
+    fecha_inicio = null,
+    fecha_fin = null,
+    nivel_sintomas = null,
+    estado_enlace = null,
+    search = null
+  } = filters;
+
+  let q = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,origen,paciente_id,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia,clientes_b2b(nombre_empresa))&order=created_at.desc&limit=200';
+  if (fecha_inicio) q += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
+  if (fecha_fin) q += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
+  if (nivel_sintomas) q += `&nivel_sintomas=eq.${parseInt(nivel_sintomas)}`;
+
   let consultas = [];
   try {
-    const todas = await query('GET', 'consultas', null, queryParams) || [];
+    const todas = await query('GET', 'consultas', null, q) || [];
     // Filtrar estrictamente solo consultas pertenecientes a OIM
     consultas = todas.filter(c => {
       const p = c.pacientes || {};
@@ -355,7 +367,7 @@ async function obtenerConsultasAuditoriaOIM() {
     });
   }
 
-  const result = (consultas || []).map(c => {
+  let result = (consultas || []).map(c => {
     const p = c.pacientes || {};
     const linkObj = linksMap[c.id];
     return {
@@ -371,6 +383,23 @@ async function obtenerConsultasAuditoriaOIM() {
       enlace_disponible: !!linkObj
     };
   });
+
+  // Filtrar por estado de enlace si se especificó
+  if (estado_enlace === 'disponible') {
+    result = result.filter(c => c.enlace_disponible);
+  } else if (estado_enlace === 'pendiente') {
+    result = result.filter(c => !c.enlace_disponible);
+  }
+
+  // Filtrar por búsqueda de texto en paciente / cédula / síntomas
+  if (search && String(search).trim()) {
+    const term = String(search).trim().toLowerCase();
+    result = result.filter(c => {
+      const p = c.pacientes || {};
+      const full = `${p.nombre || ''} ${p.apellidos || ''} ${p.cedula || ''} ${c.sintomas_descripcion || ''}`.toLowerCase();
+      return full.includes(term);
+    });
+  }
 
   return {
     ok: true,

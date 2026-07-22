@@ -800,6 +800,49 @@
           </button>
         </div>
 
+        <!-- BARRA DE FILTROS DE AUDITORÍA -->
+        <div style="background: var(--color-surface-sub); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem; border: 1px solid var(--color-border); display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end;">
+          <div style="flex: 1; min-width: 140px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-sub); margin-bottom: 0.3rem; display: block;">📅 Fecha Inicio</label>
+            <input type="date" id="audit-filter-inicio" class="input-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" onchange="cargarAuditoriaOIM()">
+          </div>
+
+          <div style="flex: 1; min-width: 140px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-sub); margin-bottom: 0.3rem; display: block;">📅 Fecha Fin</label>
+            <input type="date" id="audit-filter-fin" class="input-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" onchange="cargarAuditoriaOIM()">
+          </div>
+
+          <div style="flex: 1; min-width: 140px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-sub); margin-bottom: 0.3rem; display: block;">🚦 Triaje</label>
+            <select id="audit-filter-triaje" class="input-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" onchange="cargarAuditoriaOIM()">
+              <option value="">Todos los niveles</option>
+              <option value="1">🟢 Leve (Nivel 1)</option>
+              <option value="2">🟡 Moderado (Nivel 2)</option>
+              <option value="3">🚨 911 Urgente (Nivel 3)</option>
+            </select>
+          </div>
+
+          <div style="flex: 1; min-width: 150px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-sub); margin-bottom: 0.3rem; display: block;">📡 Estado Enlace</label>
+            <select id="audit-filter-estado" class="input-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" onchange="cargarAuditoriaOIM()">
+              <option value="">Todos los estados</option>
+              <option value="disponible">✓ Enlace Disponible</option>
+              <option value="pendiente">⏳ Pendiente Enlace</option>
+            </select>
+          </div>
+
+          <div style="flex: 1.5; min-width: 200px;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--color-text-sub); margin-bottom: 0.3rem; display: block;">🔎 Buscar Paciente / Cédula</label>
+            <input type="text" id="audit-filter-search" placeholder="Escriba cédula, nombre o síntoma..." class="input-control" style="padding: 0.45rem 0.75rem; font-size: 0.85rem;" oninput="cargarAuditoriaOIM()">
+          </div>
+
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-outline" style="padding: 0.45rem 0.85rem; font-size: 0.85rem;" onclick="limpiarFiltrosAuditoria()">
+              🔄 Limpiar
+            </button>
+          </div>
+        </div>
+
         <div class="table-container">
           <table>
             <thead>
@@ -1001,13 +1044,26 @@
       limpiarSlots();
     }
 
-    // Load Live OIM Consultations Audit
+    // Load Live OIM Consultations Audit with Filters
     async function cargarAuditoriaOIM() {
       const tbody = document.getElementById('tbody-auditoria');
       if (!tbody) return;
 
+      const inicio = document.getElementById('audit-filter-inicio')?.value || '';
+      const fin = document.getElementById('audit-filter-fin')?.value || '';
+      const triaje = document.getElementById('audit-filter-triaje')?.value || '';
+      const estado = document.getElementById('audit-filter-estado')?.value || '';
+      const search = document.getElementById('audit-filter-search')?.value || '';
+
+      const queryParams = new URLSearchParams();
+      if (inicio) queryParams.append('fecha_inicio', inicio);
+      if (fin) queryParams.append('fecha_fin', fin);
+      if (triaje) queryParams.append('nivel_sintomas', triaje);
+      if (estado) queryParams.append('estado_enlace', estado);
+      if (search) queryParams.append('search', search);
+
       try {
-        const res = await fetch('/api/oim/consultas');
+        const res = await fetch(`/api/oim/consultas?${queryParams.toString()}`);
         const data = await res.json();
 
         if (data.ok && Array.isArray(data.consultas) && data.consultas.length > 0) {
@@ -1042,11 +1098,20 @@
               </tr>`;
           }).join('');
         } else {
-          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-text-muted);padding:1.5rem;">No se encontraron consultas registradas en OIM</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--color-text-muted);padding:1.5rem;">No se encontraron consultas OIM con los filtros seleccionados</td></tr>';
         }
       } catch (err) {
         console.log('Error cargando auditoría OIM:', err);
       }
+    }
+
+    function limpiarFiltrosAuditoria() {
+      document.getElementById('audit-filter-inicio').value = '';
+      document.getElementById('audit-filter-fin').value = '';
+      document.getElementById('audit-filter-triaje').value = '';
+      document.getElementById('audit-filter-estado').value = '';
+      document.getElementById('audit-filter-search').value = '';
+      cargarAuditoriaOIM();
     }
 
     // Auto-load live audit table on page load and poll every 10 seconds for doctor link dispatch
@@ -1077,13 +1142,21 @@
       }
     }
 
-    // Export CSV
+    // Export CSV with active audit filters
     async function exportarCSV() {
-      const inicio = document.getElementById('filter-inicio')?.value || '2026-07-01';
-      const fin = document.getElementById('filter-fin')?.value || '2026-07-31';
+      const inicio = document.getElementById('audit-filter-inicio')?.value || '';
+      const fin = document.getElementById('audit-filter-fin')?.value || '';
+      const triaje = document.getElementById('audit-filter-triaje')?.value || '';
+      const search = document.getElementById('audit-filter-search')?.value || '';
+
+      const queryParams = new URLSearchParams({ download: 'true' });
+      if (inicio) queryParams.append('fecha_inicio', inicio);
+      if (fin) queryParams.append('fecha_fin', fin);
+      if (triaje) queryParams.append('nivel_sintomas', triaje);
+      if (search) queryParams.append('search', search);
 
       try {
-        const url = `/api/oim/exportar-auditoria-csv?download=true&fecha_inicio=${inicio}&fecha_fin=${fin}`;
+        const url = `/api/oim/exportar-auditoria-csv?${queryParams.toString()}`;
         window.location.href = url;
       } catch (e) {
         alert('Generando descarga de auditoría OIM en CSV...');

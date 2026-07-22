@@ -38,7 +38,8 @@ module.exports = async function handler(req, res) {
 
     // 3. Listado de Consultas OIM para Auditoría en Vivo
     if (urlPath.endsWith('/consultas') || req.body?.action === 'consultas') {
-      const resultado = await obtenerConsultasAuditoriaOIM();
+      const filters = method === 'GET' ? (req.query || {}) : (req.body || {});
+      const resultado = await obtenerConsultasAuditoriaOIM(filters);
       return res.status(200).json(resultado);
     }
 

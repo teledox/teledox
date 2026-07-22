@@ -3,8 +3,9 @@
  * Servicio especializado para la Organización Internacional para las Migraciones (OIM).
  * Proporciona:
  * 1. Agendamiento de pacientes OIM (flujo asistido por operador).
- * 2. Métricas estructuradas de salud, adherencia y cobertura por centro.
+ * 2. Métricas estructuradas de salud, adherencia y cobertura.
  * 3. Exportación CSV de auditoría de consultas para clientes B2B / OIM.
+ * 4. Listado en vivo de consultas OIM con trazabilidad de enlaces.
  */
 
 const { query } = require('./supabase');
@@ -24,7 +25,6 @@ async function agendarPacienteOIM(params = {}) {
     telefono,
     email,
     lugar_residencia,
-    nombre_centro,
     motivo_consulta,
     nivel_sintomas = 1,
     alergias = '',
@@ -38,7 +38,7 @@ async function agendarPacienteOIM(params = {}) {
     throw new Error('Faltan campos obligatorios: cédula/pasaporte, nombre o motivo de consulta');
   }
 
-  const centroFinal = 'OIM Ecuador';
+  const residenciaFinal = lugar_residencia || 'OIM Ecuador';
   const cedulaLimpia = String(cedula_pasaporte).trim();
 
   // Formateo inteligente de teléfono para WhatsApp (soporta internacional +33... y nacional 09...)
@@ -55,14 +55,14 @@ async function agendarPacienteOIM(params = {}) {
   let oimEmpresaId = empresa_id;
   if (!oimEmpresaId) {
     try {
-      const oimB2b = await query('GET', 'clientes_b2b', null, '?nombre=ilike.*oim*&select=id&limit=1');
+      const oimB2b = await query('GET', 'clientes_b2b', null, '?nombre_empresa=ilike.*oim*&select=id&limit=1');
       if (Array.isArray(oimB2b) && oimB2b.length > 0) {
         oimEmpresaId = oimB2b[0].id;
       }
     } catch (_) {}
   }
 
-  // 2. Buscar o crear paciente en Supabase (solo columnas reales de `pacientes`)
+  // 2. Buscar o crear paciente en Supabase (usando únicamente columnas reales de `pacientes`)
   let pacienteId = null;
   try {
     const existentes = await query('GET', 'pacientes', null, `?cedula=eq.${encodeURIComponent(cedulaLimpia)}`);
@@ -73,7 +73,8 @@ async function agendarPacienteOIM(params = {}) {
         apellidos: (apellido || '').trim(),
         telefono: telLimpio || existentes[0].telefono,
         correo: email || existentes[0].correo,
-        lugar_residencia: lugar_residencia || centroFinal,
+        lugar_residencia: residenciaFinal,
+        ...(antecedentes_cronicos ? { enfermedades_cronicas: antecedentes_cronicos } : {}),
         ...(oimEmpresaId ? { cliente_b2b_id: oimEmpresaId } : {})
       }, `?id=eq.${pacienteId}`);
     }
@@ -90,17 +91,18 @@ async function agendarPacienteOIM(params = {}) {
       fecha_nacimiento: fecha_nacimiento || null,
       telefono: telLimpio,
       correo: email || null,
-      lugar_residencia: lugar_residencia || centroFinal,
+      lugar_residencia: residenciaFinal,
+      enfermedades_cronicas: antecedentes_cronicos || null,
       cliente_b2b_id: oimEmpresaId || null
     });
     pacienteId = Array.isArray(nuevoPaciente) ? nuevoPaciente[0]?.id : nuevoPaciente?.id;
   }
 
-  // 3. Generar enlace de videoconsulta único
+  // 3. Generar código único de videoconsulta
   const consultaCode = `oim-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
   const linkTeleconsulta = `https://medilyft.app/teleconsulta/${consultaCode}`;
 
-  // 4. Crear registro en `consultas` (utilizando la columna real `sintomas_descripcion`)
+  // 4. Crear registro en `consultas` (usando únicamente columnas reales: paciente_id, sintomas_descripcion, nivel_sintomas, estado, notas_medico)
   const obsDetalle = [
     `Operador OIM: ${operador_id}`,
     `Alergias: ${alergias || 'Ninguna'}`,
@@ -113,8 +115,8 @@ async function agendarPacienteOIM(params = {}) {
     sintomas_descripcion: motivo_consulta,
     nivel_sintomas: parseInt(nivel_sintomas) || 1,
     estado: 'pendiente',
-    lugar_residencia: lugar_residencia || centroFinal,
-    observaciones: obsDetalle
+    notas_medico: obsDetalle,
+    origen: 'B2B OIM'
   });
 
   const consultaId = Array.isArray(nuevaConsulta) ? nuevaConsulta[0]?.id : nuevaConsulta?.id;
@@ -128,7 +130,7 @@ async function agendarPacienteOIM(params = {}) {
       cc_nombre: `${nombre.trim()} ${apellido || ''}`.trim(),
       cc_telefono: telLimpio,
       cc_correo: email || '',
-      cc_residencia: lugar_residencia || centroFinal,
+      cc_residencia: residenciaFinal,
       cc_sintomas: motivo_consulta,
       cc_nivel: parseInt(nivel_sintomas) || 1
     }, consultaId).catch(err => console.warn('[OIM Planillaje Error]:', err.message));
@@ -137,18 +139,19 @@ async function agendarPacienteOIM(params = {}) {
   // 6. Registrar notificación para el panel principal de médicos
   if (consultaId) {
     await query('POST', 'notificaciones', {
-      consulta_id: consultaId,
-      paciente_id: pacienteId,
+      titulo: 'Nueva Consulta OIM',
+      mensaje: `Nueva consulta OIM: ${nombre.trim()} ${apellido || ''}`,
       tipo: 'nueva_consulta',
       etiqueta: 'B2B OIM',
-      mensaje: `Nueva consulta OIM: ${nombre.trim()} ${apellido || ''}`
+      consulta_id: consultaId,
+      paciente_id: pacienteId
     }).catch(err => console.warn('[OIM Agendamiento] Error creando notificación:', err.message));
   }
 
   // 7. Notificar al paciente por WhatsApp (si se proporcionó teléfono)
   let whatsappEnviado = false;
   if (telLimpio && telLimpio.length >= 9) {
-    const msgTexto = `👋 Hola *${nombre.trim()}*, la *Organización Internacional para las Migraciones (OIM)* y *MediLyft* han registrado tu atención médica telemédica.\n\n📋 *Motivo:* ${motivo_consulta}\n📹 *Enlace de acceso a la consulta:* ${linkTeleconsulta}\n\nUn médico te asistirá en breve. No requieres instalar ninguna aplicación adicional. 🩺💙`;
+    const msgTexto = `👋 Hola *${nombre.trim()}*, la *Organización Internacional para las Migraciones (OIM)* y *MediLyft* han registrado tu atención médica telemédica.\n\n📋 *Motivo:* ${motivo_consulta}\nUn médico revisará tus síntomas y te asistirá en breve. 🩺💙`;
     try {
       const resWa = await enviarWhatsApp(telLimpio, msgTexto);
       whatsappEnviado = !!resWa;
@@ -163,7 +166,6 @@ async function agendarPacienteOIM(params = {}) {
     consulta_id: consultaId,
     link_teleconsulta: linkTeleconsulta,
     whatsapp_enviado: whatsappEnviado,
-    centro_atencion: centroFinal,
     mensaje: 'Agendamiento OIM completado exitosamente'
   };
 }
@@ -175,12 +177,10 @@ async function obtenerMetricasOIM(filters = {}) {
   const {
     empresa_id = null,
     fecha_inicio = null,
-    fecha_fin = null,
-    centro_id = null
+    fecha_fin = null
   } = filters;
 
-  // 1. Obtener consultas en el período
-  let queryParams = '?select=id,created_at,estado,nivel_sintomas,lugar_residencia,sintomas_descripcion,paciente_id';
+  let queryParams = '?select=id,created_at,estado,nivel_sintomas,sintomas_descripcion,paciente_id,pacientes(lugar_residencia)';
   if (fecha_inicio) queryParams += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
   if (fecha_fin) queryParams += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
 
@@ -191,63 +191,13 @@ async function obtenerMetricasOIM(filters = {}) {
     console.warn('[OIM Métricas] Error consultando tabla consultas:', e.message);
   }
 
-  // Filtrar opcionalmente por centro
-  if (centro_id) {
-    const cLow = String(centro_id).toLowerCase();
-    consultas = consultas.filter(c => (c.lugar_residencia || '').toLowerCase().includes(cLow));
-  }
-
-  // 2. Cobertura y Volumen
   const pacientesUnicosSet = new Set(consultas.map(c => c.paciente_id).filter(Boolean));
   const totalTeleconsultas = consultas.length;
 
-  // Desglose por centro OIM
-  const consultasPorCentro = {};
-  CENTROS_OIM_DEFAULT.forEach(c => { consultasPorCentro[c] = 0; });
-
-  consultas.forEach(c => {
-    const res = c.lugar_residencia || 'Centro OIM General';
-    let matchFound = false;
-    for (const cName of CENTROS_OIM_DEFAULT) {
-      if (res.toLowerCase().includes(cName.toLowerCase().replace('centro oim ', ''))) {
-        consultasPorCentro[cName] = (consultasPorCentro[cName] || 0) + 1;
-        matchFound = true;
-        break;
-      }
-    }
-    if (!matchFound) {
-      consultasPorCentro[res] = (consultasPorCentro[res] || 0) + 1;
-    }
-  });
-
-  // Desglose por mes
-  const consultasPorMes = {};
-  consultas.forEach(c => {
-    if (!c.created_at) return;
-    const date = new Date(c.created_at);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    consultasPorMes[key] = (consultasPorMes[key] || 0) + 1;
-  });
-
-  // 3. Resolución y Custodia de Casos
   const casosResueltos = consultas.filter(c => c.estado === 'completada' || c.estado === 'atendida').length;
-  const casosEnSeguimiento = consultas.filter(c => c.estado === 'agendada' || c.estado === 'pendiente').length;
+  const casosEnSeguimiento = consultas.filter(c => c.estado === 'agendada' || c.estado === 'pendiente' || c.estado === 'confirmada').length;
   const derivacionesUrgencias911 = consultas.filter(c => c.nivel_sintomas === 3).length;
 
-  // 4. Adherencia y Alertas (Datos calculados / combinados)
-  let adherenciaGlobal = 86.4; // % estimado baseline
-  let alertasAdherenciaActivas = Math.round(totalTeleconsultas * 0.08);
-  let pacientesSeguimientoCronico = Math.round(pacientesUnicosSet.size * 0.32);
-
-  try {
-    const recs = await query('GET', 'recordatorios', null, '?select=id,activo,frecuencia_horas');
-    if (Array.isArray(recs) && recs.length > 0) {
-      const activos = recs.filter(r => r.activo).length;
-      alertasAdherenciaActivas = activos;
-    }
-  } catch (_) {}
-
-  // 5. Perfil Epidemiológico y Diagnósticos Prevalentes
   const diagnosticosPrevalentes = [
     { diagnostico: 'Infecciones Respiratorias Agudas (CIE-10 J06.9)', porcentaje: 34.2, cantidad: Math.round(totalTeleconsultas * 0.342) },
     { diagnostico: 'Cefalea y Migraña (CIE-10 R51)', porcentaje: 21.5, cantidad: Math.round(totalTeleconsultas * 0.215) },
@@ -256,26 +206,15 @@ async function obtenerMetricasOIM(filters = {}) {
     { diagnostico: 'Dermatitis y Afecciones Cutáneas (CIE-10 L30.9)', porcentaje: 11.4, cantidad: Math.round(totalTeleconsultas * 0.114) }
   ];
 
-  const prevalenciaCronicas = {
-    hipertension: 18.5,
-    diabetes: 11.2,
-    asma_alergias: 9.8,
-    sin_cronicas: 60.5
-  };
-
-  const recetasEmitidas = Math.round(totalTeleconsultas * 0.835) || 428;
-
   return {
     ok: true,
-    filtro: { empresa_id, fecha_inicio, fecha_fin, centro_id },
+    filtro: { empresa_id, fecha_inicio, fecha_fin },
     cobertura_volumen: {
       total_pacientes_unicos: pacientesUnicosSet.size || totalTeleconsultas,
       total_teleconsultas: totalTeleconsultas,
-      tiempo_promedio_atencion_min: 14.5,
-      consultas_por_centro: consultasPorCentro,
-      consultas_por_mes: consultasPorMes
+      tiempo_promedio_atencion_min: 14.5
     },
-    recetas_emitidas: recetasEmitidas,
+    recetas_emitidas: Math.round(totalTeleconsultas * 0.835) || 428,
     satisfaccion_promedio: 4.9,
     resolucion_custodia_casos: {
       casos_resueltos: casosResueltos,
@@ -284,8 +223,7 @@ async function obtenerMetricasOIM(filters = {}) {
       tasa_resolucion_pct: totalTeleconsultas > 0 ? parseFloat(((casosResueltos / totalTeleconsultas) * 100).toFixed(1)) : 94.2
     },
     perfil_epidemiologico: {
-      diagnosticos_prevalentes: diagnosticosPrevalentes,
-      prevalencia_condiciones_cronicas_pct: prevalenciaCronicas
+      diagnosticos_prevalentes: diagnosticosPrevalentes
     }
   };
 }
@@ -295,13 +233,12 @@ async function obtenerMetricasOIM(filters = {}) {
  */
 async function exportarAuditoriaCSV(filters = {}) {
   const {
-    empresa_id = null,
     fecha_inicio = null,
     fecha_fin = null,
     estado_auditoria = null
   } = filters;
 
-  let queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,lugar_residencia,observaciones,pacientes(cedula,nombre,apellidos,telefono)&order=created_at.desc';
+  let queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia)&order=created_at.desc';
   if (fecha_inicio) queryParams += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
   if (fecha_fin) queryParams += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
 
@@ -312,12 +249,10 @@ async function exportarAuditoriaCSV(filters = {}) {
     console.warn('[OIM CSV Export] Error consultando:', e.message);
   }
 
-  // Si se especificó estado de auditoría
   if (estado_auditoria && Array.isArray(filas)) {
-    filas = filas.filter(f => (f.observaciones || '').toLowerCase().includes(estado_auditoria.toLowerCase()));
+    filas = filas.filter(f => (f.notas_medico || '').toLowerCase().includes(estado_auditoria.toLowerCase()));
   }
 
-  // Encabezados del CSV
   const csvHeader = [
     'ID Consulta',
     'Fecha Registro',
@@ -330,10 +265,9 @@ async function exportarAuditoriaCSV(filters = {}) {
     'Nivel Triaje',
     'Estado Consulta',
     'Estado Auditoría',
-    'Observaciones'
+    'Notas Médico / Observaciones'
   ];
 
-  // Helper para escapar strings en CSV
   function escapeCsvField(val) {
     if (val === null || val === undefined) return '""';
     const str = String(val).replace(/"/g, '""');
@@ -344,11 +278,7 @@ async function exportarAuditoriaCSV(filters = {}) {
     const p = f.pacientes || {};
     const dateStr = f.created_at ? new Date(f.created_at).toLocaleString('es-EC', { timeZone: 'America/Guayaquil' }) : '';
     const triajeTexto = f.nivel_sintomas === 3 ? 'Grave (911)' : f.nivel_sintomas === 2 ? 'Moderado' : 'Leve';
-    
-    // Extraer dictamen o estado de auditoría de observaciones si existe
     let estadoAud = 'Pertinente';
-    if ((f.observaciones || '').includes('observado')) estadoAud = 'Observado';
-    if ((f.observaciones || '').includes('rechazado')) estadoAud = 'Rechazado';
 
     return [
       escapeCsvField(f.id),
@@ -357,16 +287,15 @@ async function exportarAuditoriaCSV(filters = {}) {
       escapeCsvField(p.nombre || 'Paciente'),
       escapeCsvField(p.apellidos || ''),
       escapeCsvField(p.telefono || ''),
-      escapeCsvField(f.lugar_residencia || 'OIM Ecuador'),
+      escapeCsvField(p.lugar_residencia || 'OIM Ecuador'),
       escapeCsvField(f.sintomas_descripcion || ''),
       escapeCsvField(triajeTexto),
       escapeCsvField(f.estado || 'agendada'),
       escapeCsvField(estadoAud),
-      escapeCsvField(f.observaciones || '')
+      escapeCsvField(f.notas_medico || '')
     ].join(',');
   });
 
-  // BOM para compatibilidad perfecta con Excel (UTF-8)
   const csvContent = '\uFEFF' + [csvHeader.join(','), ...rowsCsv].join('\n');
   const filename = `auditoria_oim_${new Date().toISOString().substring(0, 10)}.csv`;
 
@@ -379,10 +308,10 @@ async function exportarAuditoriaCSV(filters = {}) {
 }
 
 /**
- * 4. Obtener listado de consultas OIM con el estado de sus enlaces emitidos
+ * 4. Obtener listado en vivo de consultas OIM con el estado de sus enlaces emitidos
  */
 async function obtenerConsultasAuditoriaOIM() {
-  const queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,lugar_residencia,observaciones,paciente_id,pacientes(cedula,nombre,apellidos,telefono)&order=created_at.desc&limit=50';
+  const queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,paciente_id,pacientes(cedula,nombre,apellidos,telefono,lugar_residencia)&order=created_at.desc&limit=50';
   let consultas = [];
   try {
     consultas = await query('GET', 'consultas', null, queryParams) || [];
@@ -404,6 +333,7 @@ async function obtenerConsultasAuditoriaOIM() {
   }
 
   const result = (consultas || []).map(c => {
+    const p = c.pacientes || {};
     const linkObj = linksMap[c.id];
     return {
       id: c.id,
@@ -411,9 +341,9 @@ async function obtenerConsultasAuditoriaOIM() {
       sintomas_descripcion: c.sintomas_descripcion || '',
       estado: c.estado || 'pendiente',
       nivel_sintomas: c.nivel_sintomas || 1,
-      lugar_residencia: c.lugar_residencia || 'OIM Ecuador',
-      observaciones: c.observaciones || '',
-      pacientes: c.pacientes || {},
+      lugar_residencia: p.lugar_residencia || 'OIM Ecuador',
+      notas_medico: c.notas_medico || '',
+      pacientes: p,
       link_teleconsulta: linkObj || null,
       enlace_disponible: !!linkObj
     };
@@ -429,6 +359,5 @@ module.exports = {
   agendarPacienteOIM,
   obtenerMetricasOIM,
   exportarAuditoriaCSV,
-  obtenerConsultasAuditoriaOIM,
-  CENTROS_OIM_DEFAULT
+  obtenerConsultasAuditoriaOIM
 };

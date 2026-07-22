@@ -1049,6 +1049,12 @@
       }
     }
 
+    // Auto-load live audit table on page load and poll every 10 seconds for doctor link dispatch
+    document.addEventListener('DOMContentLoaded', () => {
+      cargarAuditoriaOIM();
+      setInterval(cargarAuditoriaOIM, 10000);
+    });
+
     // Load Metrics
     async function cargarMetricas() {
       const inicio = document.getElementById('filter-inicio')?.value || '2026-07-01';

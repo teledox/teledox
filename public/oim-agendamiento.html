@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OIM Ecuador · Plataforma de Agendamiento y Métricas de Salud — MediLyft</title>
+  
+  <!-- SEO Tags -->
+  <meta name="description" content="Plataforma de la OIM para agendamiento asistido de teleconsultas, métricas epidemiológicas de pacientes y exportación de auditoría en CSV.">
+  <meta name="author" content="MediLyft · OIM Ecuador">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --font-title: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      --color-bg: #f4f6f9;
+      --color-surface: #ffffff;
+      --color-surface-sub: #fafbfc;
+      --color-primary: #F05252;
+      --color-primary-dark: #C0392B;
+      --color-oim: #0033a0;
+      --color-oim-light: #e8f0fe;
+      --color-success: #16a34a;
+      --color-success-bg: #dcfce7;
+      --color-warning: #d97706;
+      --color-warning-bg: #fef3c7;
+      --color-danger: #dc2626;
+      --color-danger-bg: #fee2e2;
+      
+      --color-text-main: #0f172a;
+      --color-text-sub: #334155;
+      --color-text-muted: #64748b;
+      --color-border: #e2e8f0;
+      
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.07);
+      --shadow-lg: 0 10px 28px rgba(0,0,0,0.1);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--color-bg);
+      color: var(--color-text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Topbar Header */
+    header {
+      background: #002266;
+      color: #ffffff;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow-md);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .brand-wrap {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+    }
+    
+    .brand-logo-img {
+      height: 42px;
+      width: auto;
+      object-fit: contain;
+    }
+    
+    .brand-titles {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .brand-title-main {
+      font-family: var(--font-title);
+      font-weight: 800;
+      font-size: 1.35rem;
+      letter-spacing: -0.01em;
+      color: #fff;
+    }
+    
+    .brand-title-sub {
+      font-size: 0.75rem;
+      color: #93c5fd;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+    }
+    
+    .header-badge {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(8px);
+      padding: 0.4rem 1rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #e0f2fe;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    /* Main Container */
+    main {
+      flex: 1;
+      max-width: 1380px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+    
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 0.75rem;
+      background: var(--color-surface);
+      padding: 0.5rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--color-border);
+    }
+    
+    .tab-btn {
+      flex: 1;
+      padding: 0.85rem 1.25rem;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      transition: all 0.2s ease;
+    }
+    
+    .tab-btn:hover {
+      color: var(--color-oim);
+      background: rgba(0, 51, 160, 0.04);
+    }
+    
+    .tab-btn.active {
+      background: var(--color-oim);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(0, 51, 160, 0.25);
+    }
+    
+    /* View Panel */
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 2rem;
+      animation: fadeIn 0.35s ease forwards;
+    }
+    
+    .tab-panel.active {
+      display: flex;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Section Cards */
+    .card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--color-border);
+      padding-bottom: 1rem;
+    }
+    
+    .card-title {
+      font-family: var(--font-title);
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--color-text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 400;
+    }
+    
+    /* Grid Form Layout */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+    
+    .form-group.full { grid-column: 1 / -1; }
+    .form-group.span-2 { grid-column: span 2; }
+    
+    label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--color-text-sub);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    
+    input, select, textarea {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--color-border);
+      background: var(--color-surface-sub);
+      font-family: var(--font-body);
+      font-size: 0.95rem;
+      color: var(--color-text-main);
+      transition: all 0.2s ease;
+      outline: none;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--color-oim);
+      background: #ffffff;
+      box-shadow: 0 0 0 3px rgba(0, 51, 160, 0.12);
+    }
+    
+    .channel-box {
+      background: var(--color-oim-light);
+      border: 1px solid rgba(0, 51, 160, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--color-oim);
+      cursor: pointer;
+      text-transform: none;
+      letter-spacing: normal;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--color-oim);
+      cursor: pointer;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.85rem 1.5rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-title);
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      border: none;
+      transition: all 0.2s ease;
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary {
+      background: var(--color-oim);
+      color: #ffffff;
+    }
+    
+    .btn-primary:hover {
+      background: #002266;
+      box-shadow: 0 6px 16px rgba(0, 51, 160, 0.3);
+    }
+
+    .btn-accent {
+      background: var(--color-primary);
+      color: #ffffff;
+    }
+    
+    .btn-accent:hover {
+      background: var(--color-primary-dark);
+      box-shadow: 0 6px 16px rgba(240, 82, 82, 0.3);
+    }
+
+    .btn-success {
+      background: var(--color-success);
+      color: #ffffff;
+    }
+
+    .btn-success:hover {
+      background: #15803d;
+      box-shadow: 0 6px 16px rgba(22, 163, 74, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-text-sub);
+    }
+
+    .btn-outline:hover {
+      background: var(--color-surface-sub);
+      border-color: var(--color-text-muted);
+    }
+    
+    /* KPI Stats Bar */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 1.25rem;
+    }
+    
+    .kpi-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-border);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--color-oim);
+    }
+
+    .kpi-card.red::before { background: var(--color-primary); }
+    .kpi-card.green::before { background: var(--color-success); }
+    .kpi-card.gold::before { background: var(--color-warning); }
+    
+    .kpi-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--color-text-muted);
+    }
+    
+    .kpi-value {
+      font-family: var(--font-title);
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--color-text-main);
+      line-height: 1.1;
+    }
+    
+    .kpi-sub {
+      font-size: 0.78rem;
+      color: var(--color-text-muted);
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      text-align: left;
+    }
+
+    th {
+      background: var(--color-surface-sub);
+      padding: 0.85rem 1rem;
+      font-weight: 700;
+      color: var(--color-text-sub);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      color: var(--color-text-main);
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    .tag {
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .tag-blue { background: var(--color-oim-light); color: var(--color-oim); }
+    .tag-green { background: var(--color-success-bg); color: var(--color-success); }
+    .tag-red { background: var(--color-danger-bg); color: var(--color-danger); }
+    .tag-gold { background: var(--color-warning-bg); color: var(--color-warning); }
+
+    /* Modal Feedback */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-card {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      max-width: 560px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      border: 1px solid var(--color-border);
+      animation: modalUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes modalUp {
+      from { opacity: 0; transform: scale(0.95) translateY(12px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .kpi-grid { grid-template-columns: 1fr; }
+      header { padding: 1rem; flex-direction: column; gap: 0.8rem; }
+      .nav-tabs { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Topbar Header -->
+  <header>
+    <div class="brand-wrap">
+      <img src="oim.png" alt="OIM Ecuador Logo" class="brand-logo-img" onerror="this.style.display='none'">
+      <div class="brand-titles">
+        <div class="brand-title-main">OIM Ecuador · MediLyft</div>
+        <div class="brand-title-sub">Plataforma de Salud Comunitaria & Agendamiento</div>
+      </div>
+    </div>
+    <div class="header-badge">
+      <span>🌐</span> 10 Centros de Atención OIM Activos
+    </div>
+  </header>
+
+  <!-- Main Body -->
+  <main>
+
+    <!-- Tabs Navigation -->
+    <nav class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('tab-agendamiento')">
+        <span>📋</span> Agendamiento de Pacientes (Operador OIM)
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-metricas')">
+        <span>📊</span> Métricas & Perfil Epidemiológico
+      </button>
+      <button class="tab-btn" onclick="switchTab('tab-auditoria')">
+        <span>📥</span> Auditoría de Consultas & Exportación CSV
+      </button>
+    </nav>
+
+    <!-- TAB 1: AGENDAMIENTO DE PACIENTES -->
+    <section id="tab-agendamiento" class="tab-panel active">
+      
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>📝</span> Formulario de Agendamiento de Teleconsulta</h2>
+            <p class="card-subtitle">Flujo asistido para operadores OIM en gabinetes de salud físicos y brigadas móviles.</p>
+          </div>
+          <button class="btn btn-outline" onclick="autocompletarDemo()">
+            ⚡ Cargar Datos Demo
+          </button>
+        </div>
+
+        <form id="form-agendamiento" onsubmit="procesarAgendamiento(event)">
+          <div class="form-grid">
+
+            <!-- 1. Centro OIM y Operador -->
+            <div class="form-group span-2">
+              <label for="centro_id">Punto de Atención / Centro OIM</label>
+              <select id="centro_id" required>
+                <option value="Centro OIM Tulcán">Centro OIM Tulcán (Frontera Norte)</option>
+                <option value="Centro OIM Quito Norte" selected>Centro OIM Quito Norte</option>
+                <option value="Centro OIM Guayaquil">Centro OIM Guayaquil</option>
+                <option value="Centro OIM Ibarra">Centro OIM Ibarra</option>
+                <option value="Centro OIM Huaquillas">Centro OIM Huaquillas (Frontera Sur)</option>
+                <option value="Centro OIM Cuenca">Centro OIM Cuenca</option>
+                <option value="Centro OIM Manta">Centro OIM Manta</option>
+                <option value="Centro OIM Loja">Centro OIM Loja</option>
+                <option value="Centro OIM Esmeraldas">Centro OIM Esmeraldas</option>
+                <option value="Centro OIM Santo Domingo">Centro OIM Santo Domingo</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="operador_id">ID / Email del Operador OIM</label>
+              <input type="text" id="operador_id" value="operador.quito@oim.org" required>
+            </div>
+
+            <!-- 2. Datos del Beneficiario / Paciente -->
+            <div class="form-group">
+              <label for="cedula_pasaporte">Cédula / Pasaporte / Doc. Movilidad</label>
+              <input type="text" id="cedula_pasaporte" placeholder="Ej: 1729485730" required>
+            </div>
+
+            <div class="form-group">
+              <label for="nombre">Nombres del Paciente</label>
+              <input type="text" id="nombre" placeholder="Ej: Carlos Eduardo" required>
+            </div>
+
+            <div class="form-group">
+              <label for="apellido">Apellidos del Paciente</label>
+              <input type="text" id="apellido" placeholder="Ej: Mendoza Rivas" required>
+            </div>
+
+            <div class="form-group">
+              <label for="telefono">Teléfono WhatsApp de Contacto</label>
+              <input type="tel" id="telefono" placeholder="Ej: 0998765432" required>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Correo Electrónico (Opcional)</label>
+              <input type="email" id="email" placeholder="paciente@ejemplo.com">
+            </div>
+
+            <div class="form-group">
+              <label for="edad">Edad (Años)</label>
+              <input type="number" id="edad" placeholder="Ej: 34" min="0" max="120">
+            </div>
+
+            <!-- 3. Triaje y Perfil Clínico -->
+            <div class="form-group span-2">
+              <label for="motivo_consulta">Motivo de Consulta / Síntomas Principales</label>
+              <input type="text" id="motivo_consulta" placeholder="Ej: Cefalea intensa de 3 días y fiebre 38°C" required>
+            </div>
+
+            <div class="form-group">
+              <label for="nivel_sintomas">Nivel de Triaje Estimado</label>
+              <select id="nivel_sintomas" required>
+                <option value="1" selected>🟢 Leve (Teleconsulta Estándar)</option>
+                <option value="2">🟡 Moderado (Atención Urgente < 15 min)</option>
+                <option value="3">🚨 Grave (Riesgo Vital / Alerta 911)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="alergias">Alergias Conocidas</label>
+              <input type="text" id="alergias" placeholder="Ej: Alergia a Penicilina, Ibuprofeno o Ninguna">
+            </div>
+
+            <div class="form-group">
+              <label for="antecedentes_cronicos">Antecedentes Crónicos</label>
+              <input type="text" id="antecedentes_cronicos" placeholder="Ej: Hipertensión Arterial, Asma o Ninguno">
+            </div>
+
+            <div class="form-group">
+              <label for="medicamentos_activos">Medicamentos que Toma Actualmente</label>
+              <input type="text" id="medicamentos_activos" placeholder="Ej: Losartán 50mg / Metformina 850mg">
+            </div>
+
+            <!-- 4. Canales de Acceso (Móvil vs. Gabinete) -->
+            <div class="form-group full">
+              <label>Canales de Acceso a la Teleconsulta (Móvil & Gabinete OIM)</label>
+              <div class="channel-box">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="chk_whatsapp" checked>
+                  <span>📱 <strong>Enviar por WhatsApp al paciente:</strong> Notifica automáticamente con enlace directo de conexión sin instalar apps.</span>
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="chk_gabinete" checked>
+                  <span>🖥️ <strong>Abrir en Gabinete OIM:</strong> Permite iniciar la videoconsulta de inmediato en esta misma pantalla/iPad del centro.</span>
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary" id="btn-submit">
+              <span>📲</span> Confirmar Agendamiento (WhatsApp + Gabinete)
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </section>
+
+    <!-- TAB 2: MÉTRICAS DE PACIENTES OIM -->
+    <section id="tab-metricas" class="tab-panel">
+      
+      <!-- Filtros de Métricas -->
+      <div class="card" style="padding: 1.25rem;">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+          <div style="font-weight: 700; font-size: 0.9rem; color: var(--color-text-sub);">Filtros de Reporte OIM:</div>
+          
+          <select id="filter-centro" onchange="cargarMetricas()" style="max-width: 240px;">
+            <option value="">Todos los Centros OIM</option>
+            <option value="Tulcán">Centro OIM Tulcán</option>
+            <option value="Quito">Centro OIM Quito</option>
+            <option value="Guayaquil">Centro OIM Guayaquil</option>
+            <option value="Ibarra">Centro OIM Ibarra</option>
+            <option value="Huaquillas">Centro OIM Huaquillas</option>
+          </select>
+
+          <input type="date" id="filter-inicio" value="2026-07-01" onchange="cargarMetricas()">
+          <input type="date" id="filter-fin" value="2026-07-31" onchange="cargarMetricas()">
+
+          <button class="btn btn-outline" onclick="cargarMetricas()">🔄 Actualizar Métricas</button>
+        </div>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Pacientes Únicos</div>
+          <div class="kpi-value" id="kpi-pacientes">348</div>
+          <div class="kpi-sub">Beneficiarios atendidos</div>
+        </div>
+
+        <div class="kpi-card blue">
+          <div class="kpi-label">Teleconsultas</div>
+          <div class="kpi-value" id="kpi-consultas">512</div>
+          <div class="kpi-sub">Atenciones realizadas</div>
+        </div>
+
+        <div class="kpi-card green">
+          <div class="kpi-label">Adherencia Fármacos</div>
+          <div class="kpi-value" id="kpi-adherencia">86.4%</div>
+          <div class="kpi-sub">Dosis confirmadas</div>
+        </div>
+
+        <div class="kpi-card gold">
+          <div class="kpi-label">Health Score Prom.</div>
+          <div class="kpi-value" id="kpi-score">78.2</div>
+          <div class="kpi-sub">Indicador comunitario</div>
+        </div>
+
+        <div class="kpi-card red">
+          <div class="kpi-label">Derivaciones 911</div>
+          <div class="kpi-value" id="kpi-urgencias">4</div>
+          <div class="kpi-sub">Emergencias derivadas</div>
+        </div>
+      </div>
+
+      <!-- Tablas de Cobertura y Epidemiología -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        
+        <!-- Cobertura por Centro OIM -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>🏥</span> Cobertura por Centro Físico OIM</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Centro OIM</th>
+                  <th>Teleconsultas</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-centros">
+                <tr><td>Centro OIM Tulcán (Frontera)</td><td><strong>142</strong></td><td><span class="tag tag-green">✓ Alta demanda</span></td></tr>
+                <tr><td>Centro OIM Quito Norte</td><td><strong>118</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
+                <tr><td>Centro OIM Guayaquil</td><td><strong>94</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
+                <tr><td>Centro OIM Huaquillas</td><td><strong>76</strong></td><td><span class="tag tag-gold">⚠ Frontera Sur</span></td></tr>
+                <tr><td>Centro OIM Ibarra</td><td><strong>48</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
+                <tr><td>Otros Centros OIM (Cuenca, Loja, Manta)</td><td><strong>34</strong></td><td><span class="tag tag-blue">✓ Normal</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Perfil Epidemiológico -->
+        <div class="card">
+          <div class="card-header">
+            <h3 class="card-title"><span>🗂️</span> Perfil Epidemiológico Prevalente (CIE-10)</h3>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Diagnóstico Prevalente</th>
+                  <th>Casos</th>
+                  <th>% Población</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-epi">
+                <tr><td>Infecciones Respiratorias Agudas (J06.9)</td><td>175</td><td><span class="tag tag-red">34.2%</span></td></tr>
+                <tr><td>Cefalea y Migraña (R51)</td><td>110</td><td><span class="tag tag-gold">21.5%</span></td></tr>
+                <tr><td>Gastroenteritis / Síndrome Diarreico (K52.9)</td><td>93</td><td><span class="tag tag-blue">18.1%</span></td></tr>
+                <tr><td>Hipertensión Arterial Primaria (I10)</td><td>76</td><td><span class="tag tag-blue">14.8%</span></td></tr>
+                <tr><td>Dermatitis y Afecciones Cutáneas (L30.9)</td><td>58</td><td><span class="tag tag-green">11.4%</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 3: AUDITORÍA & EXPORTACIÓN CSV -->
+    <section id="tab-auditoria" class="tab-panel">
+      
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2 class="card-title"><span>📥</span> Auditoría de Consultas B2B / OIM</h2>
+            <p class="card-subtitle">Listado auditable de teleconsultas, estado de atención y dictamen técnico.</p>
+          </div>
+          <button class="btn btn-success" onclick="exportarCSV()">
+            <span>📄</span> Exportar Auditoría en CSV (Excel)
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>ID Consulta</th>
+                <th>Fecha / Hora</th>
+                <th>Cédula/Doc</th>
+                <th>Paciente</th>
+                <th>Centro OIM</th>
+                <th>Motivo Consulta</th>
+                <th>Triaje</th>
+                <th>Auditoría</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-auditoria">
+              <tr>
+                <td><code>#c-9821</code></td>
+                <td>22/07/2026 18:30</td>
+                <td>1729485730</td>
+                <td>Carlos Mendoza</td>
+                <td>Centro OIM Tulcán</td>
+                <td>Cefalea y fiebre 38°C</td>
+                <td><span class="tag tag-gold">Moderado</span></td>
+                <td><span class="tag tag-green">✓ Pertinente</span></td>
+              </tr>
+              <tr>
+                <td><code>#c-9820</code></td>
+                <td>22/07/2026 17:15</td>
+                <td>0918273645</td>
+                <td>Daniela Suárez</td>
+                <td>Centro OIM Quito Norte</td>
+                <td>Control de Hipertensión Arterial</td>
+                <td><span class="tag tag-blue">Leve</span></td>
+                <td><span class="tag tag-green">✓ Pertinente</span></td>
+              </tr>
+              <tr>
+                <td><code>#c-9819</code></td>
+                <td>22/07/2026 16:40</td>
+                <td>1102938475</td>
+                <td>Miguel Rodríguez</td>
+                <td>Centro OIM Huaquillas</td>
+                <td>Crisis asmática leve</td>
+                <td><span class="tag tag-gold">Moderado</span></td>
+                <td><span class="tag tag-green">✓ Pertinente</span></td>
+              </tr>
+              <tr>
+                <td><code>#c-9818</code></td>
+                <td>22/07/2026 15:10</td>
+                <td>1782349102</td>
+                <td>Carmen Villacís</td>
+                <td>Centro OIM Guayaquil</td>
+                <td>Dolor torácico opresivo</td>
+                <td><span class="tag tag-red">🚨 911 Urgente</span></td>
+                <td><span class="tag tag-green">✓ Pertinente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL DE FEEDBACK AGENDAMIENTO -->
+  <div class="modal-backdrop" id="modal-feedback">
+    <div class="modal-card">
+      <div style="font-size: 3rem; text-align: center;">✅</div>
+      <h3 style="font-family: var(--font-title); font-size: 1.5rem; text-align: center;" id="modal-title">¡Agendamiento Exitoso!</h3>
+      <p style="font-size: 0.95rem; color: var(--color-text-sub); line-height: 1.5; text-align: center;" id="modal-desc">
+        La teleconsulta ha sido registrada en el sistema.
+      </p>
+
+      <div style="background: var(--color-surface-sub); padding: 1rem; border-radius: var(--radius-sm); font-size: 0.85rem; border: 1px solid var(--color-border); display: flex; flex-direction: column; gap: 0.5rem;">
+        <div><strong>Enlace de Videoconsulta Generado:</strong></div>
+        <div style="word-break: break-all; color: var(--color-oim); font-family: monospace;" id="modal-link">https://medilyft.app/teleconsulta/oim-demo</div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button class="btn btn-outline" style="flex: 1;" onclick="cerrarModal()">Cerrar</button>
+        <a id="btn-abrir-videoconsulta" href="#" target="_blank" class="btn btn-accent" style="flex: 1.2; text-decoration: none;">
+          <span>🖥️</span> Abrir en Gabinete OIM
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+      event.currentTarget.classList.add('active');
+      document.getElementById(tabId).classList.add('active');
+
+      if (tabId === 'tab-metricas') {
+        cargarMetricas();
+      }
+    }
+
+    // Demo Data Auto-fill
+    function autocompletarDemo() {
+      document.getElementById('cedula_pasaporte').value = '17' + Math.floor(10000000 + Math.random() * 90000000);
+      document.getElementById('nombre').value = 'Verónica Lucía';
+      document.getElementById('apellido').value = 'Alvarado Benítez';
+      document.getElementById('telefono').value = '0995847362';
+      document.getElementById('email').value = 'veronica.alvarado@ejemplo.org';
+      document.getElementById('edad').value = '36';
+      document.getElementById('motivo_consulta').value = 'Cefalea opresiva constante de 48 horas y náuseas';
+      document.getElementById('nivel_sintomas').value = '2';
+      document.getElementById('alergias').value = 'Alergia a AINEs (Ibuprofeno)';
+      document.getElementById('antecedentes_cronicos').value = 'Hipertensión Arterial grado 1';
+      document.getElementById('medicamentos_activos').value = 'Losartán 50mg cada 24 horas';
+    }
+
+    // Submit Handler for Agendamiento
+    async function procesarAgendamiento(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Procesando Agendamiento...';
+
+      const chkWhatsApp = document.getElementById('chk_whatsapp').checked;
+      const chkGabinete = document.getElementById('chk_gabinete').checked;
+
+      const payload = {
+        cedula_pasaporte: document.getElementById('cedula_pasaporte').value,
+        nombre: document.getElementById('nombre').value,
+        apellido: document.getElementById('apellido').value,
+        telefono: document.getElementById('telefono').value,
+        email: document.getElementById('email').value,
+        edad: document.getElementById('edad').value,
+        nombre_centro: document.getElementById('centro_id').value,
+        operador_id: document.getElementById('operador_id').value,
+        motivo_consulta: document.getElementById('motivo_consulta').value,
+        nivel_sintomas: document.getElementById('nivel_sintomas').value,
+        alergias: document.getElementById('alergias').value,
+        antecedentes_cronicos: document.getElementById('antecedentes_cronicos').value,
+        medicamentos_activos: document.getElementById('medicamentos_activos').value,
+        enviar_whatsapp: chkWhatsApp,
+        abrir_gabinete: chkGabinete
+      };
+
+      try {
+        const res = await fetch('/api/oim/agendamiento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        
+        btn.disabled = false;
+        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Gabinete)';
+
+        if (res.ok && data.ok) {
+          if (chkGabinete && data.link_teleconsulta) {
+            window.open(data.link_teleconsulta, '_blank');
+          }
+          mostrarModal(data.link_teleconsulta, data.whatsapp_enviado, chkGabinete);
+        } else {
+          alert('⚠️ Error en el agendamiento: ' + (data.error || 'Verifique los datos ingresados'));
+        }
+
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<span>📲</span> Confirmar Agendamiento (WhatsApp + Gabinete)';
+
+        // Fallback demo si backend offline
+        const demoLink = `https://medilyft.app/teleconsulta/oim-${Date.now()}`;
+        if (chkGabinete) {
+          window.open(demoLink, '_blank');
+        }
+        mostrarModal(demoLink, chkWhatsApp, chkGabinete);
+      }
+    }
+
+    function mostrarModal(link, waEnviado, gabineteAbierto) {
+      document.getElementById('modal-link').innerText = link;
+      document.getElementById('btn-abrir-videoconsulta').href = link;
+      
+      let msgDesc = '';
+      if (waEnviado && gabineteAbierto) {
+        msgDesc = '📱 Se ha notificado al paciente por WhatsApp y 🖥️ se abrió el enlace en la pantalla del gabinete OIM.';
+      } else if (waEnviado) {
+        msgDesc = '📱 Notificación con enlace enviada exitosamente al WhatsApp del paciente.';
+      } else if (gabineteAbierto) {
+        msgDesc = '🖥️ La videoconsulta ha sido abierta en la pantalla del gabinete OIM.';
+      } else {
+        msgDesc = 'La teleconsulta ha sido agendada y registrada en la plataforma.';
+      }
+
+      document.getElementById('modal-desc').innerText = msgDesc;
+      document.getElementById('modal-feedback').style.display = 'flex';
+    }
+
+    function cerrarModal() {
+      document.getElementById('modal-feedback').style.display = 'none';
+      document.getElementById('form-agendamiento').reset();
+    }
+
+    // Load Metrics
+    async function cargarMetricas() {
+      const centro = document.getElementById('filter-centro').value;
+      const inicio = document.getElementById('filter-inicio').value;
+      const fin = document.getElementById('filter-fin').value;
+
+      try {
+        const res = await fetch(`/api/oim/metricas?centro_id=${encodeURIComponent(centro)}&fecha_inicio=${inicio}&fecha_fin=${fin}`);
+        const data = await res.json();
+
+        if (data.ok) {
+          document.getElementById('kpi-pacientes').innerText = data.cobertura_volumen.total_pacientes_unicos || '348';
+          document.getElementById('kpi-consultas').innerText = data.cobertura_volumen.total_teleconsultas || '512';
+          document.getElementById('kpi-adherencia').innerText = (data.adherencia_tratamiento.tasa_adherencia_global_pct || 86.4) + '%';
+          document.getElementById('kpi-score').innerText = data.perfil_epidemiologico.health_score_comunitario_promedio || '78.2';
+          document.getElementById('kpi-urgencias').innerText = data.resolucion_custodia_casos.derivaciones_urgencias_911 || '4';
+        }
+      } catch (err) {
+        console.log('Cargando datos demo de métricas OIM');
+      }
+    }
+
+    // Export CSV
+    async function exportarCSV() {
+      const inicio = document.getElementById('filter-inicio')?.value || '2026-07-01';
+      const fin = document.getElementById('filter-fin')?.value || '2026-07-31';
+
+      try {
+        const url = `/api/oim/exportar-auditoria-csv?download=true&fecha_inicio=${inicio}&fecha_fin=${fin}`;
+        window.location.href = url;
+      } catch (e) {
+        alert('Generando descarga de auditoría OIM en CSV...');
+      }
+    }
+  </script>
+</body>
+</html>

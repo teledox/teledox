@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "tracking",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "3000", "--directory", "/Users/francoortiz/Desktop/MEDILYFT/teledox/public/tracking"],
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["serve", "-l", "3000", "/Users/francoortiz/Desktop/MEDILYFT/teledox/public/tracking"],
       "port": 3000
     }
   ,{

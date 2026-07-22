@@ -493,14 +493,6 @@ html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-fam
       <div class="tp-row"><span class="tp-label">Antecedentes cargados</span><span class="tp-val">Dermatitis · Exposición química diaria</span></div>
       <div class="tp-row"><span class="tp-label">Acción recomendada</span><span class="tp-val">Videoconsulta Medicina General</span></div>
     </div>
-    <div class="derivation-box vis-up" id="p2deriv" style="animation-delay:.3s">
-      <div class="deriv-icon">📹</div>
-      <div class="deriv-info">
-        <h4>Videoconsulta agendada</h4>
-        <p>El médico recibe el historial completo antes de conectar — sin repetir antecedentes</p>
-      </div>
-      <div class="deriv-badge">< 20 min</div>
-    </div>
     <div class="stat-row vis-fade" id="p2stats" style="animation-delay:.45s">
       <div class="stat-box"><div class="stat-val" style="color:var(--green)">8 seg</div><div class="stat-lbl">Evaluación inicial</div></div>
       <div class="stat-box"><div class="stat-val" style="color:var(--blue)">96%</div><div class="stat-lbl">Orientación certera</div></div>
@@ -965,7 +957,7 @@ function anim1(){
   ['pb1','pb2','pb3','pb4'].forEach((id,i)=>show(id,300+i*150));
 }
 function anim2(){
-  ['p2hd','p2case','p2deriv','p2stats'].forEach((id,i)=>show(id,80+i*200));
+  ['p2hd','p2case','p2stats'].forEach((id,i)=>show(id,80+i*200));
   show('p2lbl',300);
   showMsg('c1m2',600);setTimeout(scrollChat,700);
   showTyping('c1t1',1400,900,'c1m3');setTimeout(scrollChat,1500);

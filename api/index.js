@@ -17,7 +17,11 @@ const handlers = {
   '/api/firma-electronica':      require('../src/handlers/firma-electronica'),
   '/api/responder-mensaje':      require('../src/handlers/responder-mensaje'),
   '/api/seguimiento-decision':   require('../src/handlers/seguimiento-decision'),
-  '/api/admin-delete':           require('../src/handlers/admin-delete')
+  '/api/admin-delete':           require('../src/handlers/admin-delete'),
+  '/api/oim':                    require('../src/handlers/oim'),
+  '/api/oim/agendamiento':       require('../src/handlers/oim'),
+  '/api/oim/metricas':           require('../src/handlers/oim'),
+  '/api/oim/exportar-auditoria-csv': require('../src/handlers/oim')
 };
 
 async function masterRouter(req, res) {

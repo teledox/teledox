@@ -694,10 +694,10 @@
             </div>
           </div>
 
-          <!-- SECCIÓN 3: TRIAJE Y PERFIL CLÍNICO DEL PACIENTE -->
+          <!-- SECCIÓN 3: PERFIL CLÍNICO DEL PACIENTE -->
           <div style="background: #f0f9ff; padding: 1.25rem; border-radius: var(--radius-md); border: 1px solid #bae6fd;">
             <div style="font-family: var(--font-title); font-weight: 800; font-size: 0.95rem; color: #0369a1; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1px solid #bae6fd; padding-bottom: 0.5rem;">
-              <span>🩺</span> 3. TRIAJE Y PERFIL CLÍNICO DEL PACIENTE
+              <span>🩺</span> 3. PERFIL CLÍNICO DEL PACIENTE
             </div>
             <div class="form-grid">
               <div class="form-group span-2">
@@ -712,6 +712,11 @@
                   <option value="2">🟡 Moderado (Atención Urgente < 15 min)</option>
                   <option value="3">🚨 Grave (Riesgo Vital / Alerta 911)</option>
                 </select>
+              </div>
+
+              <div class="form-group full">
+                <label for="observaciones_adicionales" style="color: #0369a1;">Observaciones & Detalles Adicionales</label>
+                <textarea id="observaciones_adicionales" rows="2" placeholder="Escriba detalles adicionales de los síntomas, evolución o notas de campo para el médico..." style="border-color: #7dd3fc; width: 100%;"></textarea>
               </div>
 
               <div class="form-group">
@@ -1004,6 +1009,7 @@
       document.getElementById('nombre_empresa').value = 'OIM Ecuador';
       document.getElementById('motivo_consulta').value = 'Cefalea opresiva constante de 48 horas y náuseas';
       document.getElementById('nivel_sintomas').value = '2';
+      document.getElementById('observaciones_adicionales').value = 'Paciente manifiesta dolor punzante en región frontal. Refiere falta de descanso en trayecto de viaje. Sin alérgenos severos reportados.';
       
       limpiarSlots();
       agregarSlot('alergias', 'list-alergias', 'Alergia a AINEs (Ibuprofeno)');
@@ -1035,6 +1041,7 @@
         nombre_centro: document.getElementById('nombre_empresa').value || 'OIM Ecuador',
         operador_id: document.getElementById('operador_id').value,
         motivo_consulta: document.getElementById('motivo_consulta').value,
+        observaciones_adicionales: document.getElementById('observaciones_adicionales').value,
         nivel_sintomas: document.getElementById('nivel_sintomas').value,
         alergias: obtenerValoresSlots('alergias', 'list-alergias'),
         antecedentes_cronicos: obtenerValoresSlots('antecedentes_cronicos', 'list-antecedentes'),

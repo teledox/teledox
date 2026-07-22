@@ -27,6 +27,7 @@ async function agendarPacienteOIM(params = {}) {
     email,
     lugar_residencia,
     motivo_consulta,
+    observaciones_adicionales = '',
     nivel_sintomas = 1,
     alergias = '',
     antecedentes_cronicos = '',
@@ -120,10 +121,11 @@ async function agendarPacienteOIM(params = {}) {
   // 4. Crear registro en `consultas` (usando únicamente columnas reales: paciente_id, sintomas_descripcion, nivel_sintomas, estado, notas_medico)
   const obsDetalle = [
     `Operador OIM: ${operador_id}`,
+    observaciones_adicionales?.trim() ? `Observaciones: ${observaciones_adicionales.trim()}` : null,
     `Alergias: ${alergias || 'Ninguna'}`,
     `Antecedentes: ${antecedentes_cronicos || 'Sin antecedentes reportados'}`,
     `Medicamentos: ${medicamentos_activos || 'Ninguno'}`
-  ].join(' | ');
+  ].filter(Boolean).join(' | ');
 
   const nuevaConsulta = await query('POST', 'consultas', {
     paciente_id: pacienteId,

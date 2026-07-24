@@ -626,13 +626,25 @@
               <span>🏢</span> 1. DATOS OPERATIVOS Y ORGANIZACIÓN
             </div>
             <div class="form-grid">
-              <div class="form-group span-2">
+              <div class="form-group">
                 <label for="operador_id">ID / Email del Operador OIM</label>
                 <input type="text" id="operador_id" value="operador.quito@oim.org" required>
               </div>
               <div class="form-group">
                 <label for="nombre_empresa">Empresa / Organización</label>
                 <input type="text" id="nombre_empresa" value="OIM Ecuador" placeholder="Ej: OIM Ecuador">
+              </div>
+              <div class="form-group">
+                <label for="servicio_brindado">Servicio Brindado</label>
+                <select id="servicio_brindado" required>
+                  <option value="Salud Psicológica & Apoyo Psicosocial" selected>🧠 Salud Psicológica & Apoyo Psicosocial</option>
+                  <option value="Telemedicina General">🩺 Telemedicina General</option>
+                  <option value="Teleorientación Médica">📡 Teleorientación Médica</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="fecha_servicio">Fecha del Servicio</label>
+                <input type="date" id="fecha_servicio" required>
               </div>
             </div>
           </div>
@@ -644,7 +656,7 @@
             </div>
             <div class="form-grid">
               <div class="form-group">
-                <label for="cedula_pasaporte">Cédula / Pasaporte / Doc. Movilidad</label>
+                <label for="cedula_pasaporte">Cédula de Origen / Doc. Identidad</label>
                 <input type="text" id="cedula_pasaporte" placeholder="Ej: 1729485730" required>
               </div>
 
@@ -659,12 +671,25 @@
               </div>
 
               <div class="form-group">
+                <label for="nacionalidad">Nacionalidad (Lugar Nacimiento)</label>
+                <select id="nacionalidad" required>
+                  <option value="Venezolana" selected>🇻🇪 Venezolana</option>
+                  <option value="Colombiana">🇨🇴 Colombiana</option>
+                  <option value="Ecuatoriana">🇪🇨 Ecuatoriana</option>
+                  <option value="Peruana">🇵🇪 Peruana</option>
+                  <option value="Haitiana">🇭🇹 Haitiana</option>
+                  <option value="Cubana">🇨🇺 Cubana</option>
+                  <option value="Otra">🌐 Otra Nacionalidad</option>
+                </select>
+              </div>
+
+              <div class="form-group">
                 <label for="fecha_nacimiento">Fecha de Nacimiento</label>
                 <input type="date" id="fecha_nacimiento">
               </div>
 
               <div class="form-group">
-                <label for="sexo">Sexo</label>
+                <label for="sexo">Género / Sexo</label>
                 <select id="sexo">
                   <option value="M" selected>Masculino</option>
                   <option value="F">Femenino</option>
@@ -678,8 +703,43 @@
               </div>
 
               <div class="form-group">
-                <label for="telefono">Teléfono WhatsApp de Contacto</label>
+                <label for="telefono">Número de Contacto (WhatsApp)</label>
                 <input type="tel" id="telefono" placeholder="Ej: 0998765432" required>
+              </div>
+
+              <div class="form-group">
+                <label for="segundo_telefono">Segundo Número de Contacto</label>
+                <input type="tel" id="segundo_telefono" placeholder="Ej: 0991234567 (Opcional)">
+              </div>
+
+              <div class="form-group">
+                <label for="provincia">Provincia de Residencia</label>
+                <select id="provincia" required>
+                  <option value="Pichincha" selected>Pichincha</option>
+                  <option value="Guayas">Guayas</option>
+                  <option value="Azuay">Azuay</option>
+                  <option value="El Oro">El Oro</option>
+                  <option value="Carchi">Carchi</option>
+                  <option value="Manabí">Manabí</option>
+                  <option value="Loja">Loja</option>
+                  <option value="Imbabura">Imbabura</option>
+                  <option value="Chimborazo">Chimborazo</option>
+                  <option value="Tungurahua">Tungurahua</option>
+                  <option value="Cotopaxi">Cotopaxi</option>
+                  <option value="Los Ríos">Los Ríos</option>
+                  <option value="Esmeraldas">Esmeraldas</option>
+                  <option value="Santa Elena">Santa Elena</option>
+                  <option value="Santo Domingo de los Tsáchilas">Santo Domingo de los Tsáchilas</option>
+                  <option value="Cañar">Cañar</option>
+                  <option value="Bolívar">Bolívar</option>
+                  <option value="Sucumbíos">Sucumbíos</option>
+                  <option value="Orellana">Orellana</option>
+                  <option value="Napo">Napo</option>
+                  <option value="Pastaza">Pastaza</option>
+                  <option value="Morona Santiago">Morona Santiago</option>
+                  <option value="Zamora Chinchipe">Zamora Chinchipe</option>
+                  <option value="Galápagos">Galápagos</option>
+                </select>
               </div>
 
               <div class="form-group">
@@ -687,10 +747,28 @@
                 <input type="email" id="email" placeholder="paciente@ejemplo.com">
               </div>
 
-              <div class="form-group">
-                <label for="lugar_residencia">Lugar de Residencia / Punto OIM</label>
-                <input type="text" id="lugar_residencia" placeholder="Ej: Quito, Pichincha" value="OIM Ecuador">
-              </div>
+              <!-- COLLAPSIBLE DOCUMENTOS ADICIONALES -->
+              <details style="grid-column: 1 / -1; background: #f8fafc; border: 1px dashed var(--color-border); padding: 0.85rem; border-radius: var(--radius-sm); margin-top: 0.25rem;">
+                <summary style="font-weight: 700; font-size: 0.88rem; color: var(--color-oim-dark); cursor: pointer;">
+                  📄 Documentos de Identificación Adicionales (Pasaporte, Certificado de Nacimiento, Otro)
+                </summary>
+                <div class="form-grid" style="margin-top: 0.85rem;">
+                  <div class="form-group">
+                    <label for="numero_pasaporte">No. de Pasaporte</label>
+                    <input type="text" id="numero_pasaporte" placeholder="Ej: A12345678">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="certificado_nacimiento">No. Certificado de Nacimiento</label>
+                    <input type="text" id="certificado_nacimiento" placeholder="Ej: CN-987654 (Menores)">
+                  </div>
+
+                  <div class="form-group">
+                    <label for="otro_documento">No. de Otro Documento</label>
+                    <input type="text" id="otro_documento" placeholder="Ej: Visa / Carnet UNHCR">
+                  </div>
+                </div>
+              </details>
             </div>
           </div>
 
@@ -769,9 +847,14 @@
             <h2 class="card-title"><span>📥</span> Auditoría de Consultas</h2>
             <p class="card-subtitle">Listado auditable de teleconsultas, estado de atención y dictamen técnico.</p>
           </div>
-          <button class="btn btn-success" onclick="exportarCSV()">
-            <span>📄</span> Exportar Auditoría en CSV (Excel)
-          </button>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-outline" style="border-color: var(--color-oim); color: var(--color-oim);" onclick="exportarPlantillaOIMCSV()">
+              <span>📋</span> Exportar Plantilla Oficial OIM (CSV)
+            </button>
+            <button class="btn btn-success" onclick="exportarCSV()">
+              <span>📄</span> Exportar Auditoría MediLyft (CSV)
+            </button>
+          </div>
         </div>
 
         <!-- BARRA DE FILTROS DE AUDITORÍA -->
@@ -995,18 +1078,31 @@
       document.getElementById('list-medicamentos').innerHTML = '';
     }
 
+    // Initialize default values on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const fechaServ = document.getElementById('fecha_servicio');
+      if (fechaServ && !fechaServ.value) {
+        fechaServ.value = new Date().toISOString().substring(0, 10);
+      }
+    });
+
     // Demo Data Auto-fill
     function autocompletarDemo() {
       document.getElementById('cedula_pasaporte').value = '17' + Math.floor(10000000 + Math.random() * 90000000);
       document.getElementById('nombre').value = 'Verónica Lucía';
       document.getElementById('apellido').value = 'Alvarado Benítez';
+      document.getElementById('nacionalidad').value = 'Venezolana';
       document.getElementById('fecha_nacimiento').value = '1990-05-14';
       document.getElementById('sexo').value = 'F';
       document.getElementById('edad').value = '36';
       document.getElementById('telefono').value = '0995847362';
+      document.getElementById('segundo_telefono').value = '0991234567';
+      document.getElementById('provincia').value = 'Pichincha';
       document.getElementById('email').value = 'veronica.alvarado@ejemplo.org';
-      document.getElementById('lugar_residencia').value = 'Quito, Pichincha';
       document.getElementById('nombre_empresa').value = 'OIM Ecuador';
+      document.getElementById('servicio_brindado').value = 'Salud Psicológica & Apoyo Psicosocial';
+      document.getElementById('fecha_servicio').value = new Date().toISOString().substring(0, 10);
+      document.getElementById('numero_pasaporte').value = 'VEN-8492019';
       document.getElementById('motivo_consulta').value = 'Cefalea opresiva constante de 48 horas y náuseas';
       document.getElementById('nivel_sintomas').value = '2';
       document.getElementById('observaciones_adicionales').value = 'Paciente manifiesta dolor punzante en región frontal. Refiere falta de descanso en trayecto de viaje. Sin alérgenos severos reportados.';
@@ -1031,14 +1127,22 @@
         cedula_pasaporte: document.getElementById('cedula_pasaporte').value,
         nombre: document.getElementById('nombre').value,
         apellido: document.getElementById('apellido').value,
+        nacionalidad: document.getElementById('nacionalidad').value,
         fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
         sexo: document.getElementById('sexo').value,
         telefono: document.getElementById('telefono').value,
+        segundo_telefono: document.getElementById('segundo_telefono')?.value || '',
+        provincia: document.getElementById('provincia').value,
+        lugar_residencia: document.getElementById('provincia').value,
         email: document.getElementById('email').value,
         edad: document.getElementById('edad').value,
-        lugar_residencia: document.getElementById('lugar_residencia').value,
         nombre_empresa: document.getElementById('nombre_empresa').value,
         nombre_centro: document.getElementById('nombre_empresa').value || 'OIM Ecuador',
+        servicio_brindado: document.getElementById('servicio_brindado').value,
+        fecha_servicio: document.getElementById('fecha_servicio').value,
+        numero_pasaporte: document.getElementById('numero_pasaporte')?.value || '',
+        certificado_nacimiento: document.getElementById('certificado_nacimiento')?.value || '',
+        otro_documento: document.getElementById('otro_documento')?.value || '',
         operador_id: document.getElementById('operador_id').value,
         motivo_consulta: document.getElementById('motivo_consulta').value,
         observaciones_adicionales: document.getElementById('observaciones_adicionales').value,
@@ -1214,7 +1318,7 @@
       }
     }
 
-    // Export CSV with active audit filters
+    // Export CSV with active audit filters (Standard MediLyft)
     async function exportarCSV() {
       const inicio = document.getElementById('audit-filter-inicio')?.value || '';
       const fin = document.getElementById('audit-filter-fin')?.value || '';
@@ -1232,6 +1336,23 @@
         window.location.href = url;
       } catch (e) {
         alert('Generando descarga de auditoría OIM en CSV...');
+      }
+    }
+
+    // Export CSV matching exact Official OIM Template (Perfiles de beneficiarios template SaludPsicologica.xlsx)
+    async function exportarPlantillaOIMCSV() {
+      const inicio = document.getElementById('audit-filter-inicio')?.value || '';
+      const fin = document.getElementById('audit-filter-fin')?.value || '';
+
+      const queryParams = new URLSearchParams({ download: 'true' });
+      if (inicio) queryParams.append('fecha_inicio', inicio);
+      if (fin) queryParams.append('fecha_fin', fin);
+
+      try {
+        const url = `/api/oim/exportar-plantilla-oim-csv?${queryParams.toString()}`;
+        window.location.href = url;
+      } catch (e) {
+        alert('Generando descarga de Plantilla Oficial OIM en CSV...');
       }
     }
   </script>

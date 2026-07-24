@@ -32,6 +32,14 @@ async function agendarPacienteOIM(params = {}) {
     alergias = '',
     antecedentes_cronicos = '',
     medicamentos_activos = '',
+    nacionalidad = '',
+    provincia = '',
+    segundo_telefono = '',
+    numero_pasaporte = '',
+    certificado_nacimiento = '',
+    otro_documento = '',
+    servicio_brindado = 'Salud Psicológica & Apoyo Psicosocial',
+    fecha_servicio = null,
     empresa_id = null,
     nombre_empresa = null,
     operador_id = 'operador_oim'
@@ -41,7 +49,7 @@ async function agendarPacienteOIM(params = {}) {
     throw new Error('Faltan campos obligatorios: cédula/pasaporte, nombre o motivo de consulta');
   }
 
-  const residenciaFinal = lugar_residencia || 'OIM Ecuador';
+  const residenciaFinal = provincia || lugar_residencia || 'OIM Ecuador';
   const cedulaLimpia = String(cedula_pasaporte).trim();
 
   // Formateo inteligente de teléfono para WhatsApp (soporta internacional +33... y nacional 09...)
@@ -121,6 +129,13 @@ async function agendarPacienteOIM(params = {}) {
   // 4. Crear registro en `consultas` (usando únicamente columnas reales: paciente_id, sintomas_descripcion, nivel_sintomas, estado, notas_medico)
   const obsDetalle = [
     `Operador OIM: ${operador_id}`,
+    servicio_brindado ? `Servicio: ${servicio_brindado}` : null,
+    nacionalidad ? `Nacionalidad: ${nacionalidad}` : null,
+    provincia ? `Provincia: ${provincia}` : null,
+    segundo_telefono ? `Tel2: ${segundo_telefono}` : null,
+    numero_pasaporte ? `Pasaporte: ${numero_pasaporte}` : null,
+    certificado_nacimiento ? `CertNac: ${certificado_nacimiento}` : null,
+    otro_documento ? `OtroDoc: ${otro_documento}` : null,
     observaciones_adicionales?.trim() ? `Observaciones: ${observaciones_adicionales.trim()}` : null,
     `Alergias: ${alergias || 'Ninguna'}`,
     `Antecedentes: ${antecedentes_cronicos || 'Sin antecedentes reportados'}`,
@@ -331,6 +346,110 @@ async function exportarAuditoriaCSV(filters = {}) {
 }
 
 /**
+ * 3.5. Exporta el reporte en el formato EXACTO de la Plantilla Oficial OIM (Perfiles de beneficiarios template SaludPsicologica.xlsx)
+ */
+async function exportarPlantillaOficialOIMCSV(filters = {}) {
+  const {
+    fecha_inicio = null,
+    fecha_fin = null
+  } = filters;
+
+  let queryParams = '?select=id,created_at,sintomas_descripcion,estado,nivel_sintomas,notas_medico,origen,pacientes(cedula,nombre,apellidos,telefono,correo,fecha_nacimiento,sexo,lugar_residencia,clientes_b2b(nombre_empresa))&order=created_at.desc';
+  if (fecha_inicio) queryParams += `&created_at=gte.${encodeURIComponent(fecha_inicio)}`;
+  if (fecha_fin) queryParams += `&created_at=lte.${encodeURIComponent(fecha_fin + 'T23:59:59')}`;
+
+  let filas = [];
+  try {
+    const todas = await query('GET', 'consultas', null, queryParams) || [];
+    filas = todas.filter(c => {
+      const p = c.pacientes || {};
+      return c.origen === 'B2B OIM' ||
+             (c.notas_medico || '').toLowerCase().includes('oim') ||
+             (p.clientes_b2b?.nombre_empresa || '').toLowerCase().includes('oim');
+    });
+  } catch (e) {
+    console.warn('[OIM Export Oficial] Error consultando:', e.message);
+  }
+
+  const csvHeader = [
+    '',
+    'Nombres y apellidos completos',
+    'Fecha de nacimiento',
+    'Género',
+    'Número de contacto',
+    'Segundo número de contacto',
+    'Fecha del servicio entregado',
+    'Provincia de residencia',
+    'Ingrese su correo electrónico',
+    'Ingrese su nacionalidad de acuerdo al lugar de nacimiento',
+    'Número de documento de identificación de su lugar de nacimiento',
+    'No de Pasaporte',
+    'No del cerificado de nacimiento',
+    'Numero de otro documento',
+    'Servicio Brindado'
+  ];
+
+  function escapeCsvField(val) {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  }
+
+  function extractNotaVal(notas, key) {
+    if (!notas) return '';
+    const match = notas.match(new RegExp(`${key}:\\s*([^|]+)`));
+    return match ? match[1].trim() : '';
+  }
+
+  const rowsCsv = filas.map((f, idx) => {
+    const p = f.pacientes || {};
+    const notas = f.notas_medico || '';
+    const nombresCompletos = `${p.nombre || ''} ${p.apellidos || ''}`.trim() || 'Beneficiario OIM';
+    const fechaNac = p.fecha_nacimiento || extractNotaVal(notas, 'FechaNac') || '';
+    const genero = p.sexo === 'M' ? 'Masculino' : p.sexo === 'F' ? 'Femenino' : (p.sexo || 'Masculino');
+    const tel1 = p.telefono || '';
+    const tel2 = extractNotaVal(notas, 'Tel2') || '';
+    const fechaServicio = f.created_at ? new Date(f.created_at).toISOString().substring(0, 10) : new Date().toISOString().substring(0, 10);
+    const provincia = extractNotaVal(notas, 'Provincia') || p.lugar_residencia || 'Pichincha';
+    const correo = p.correo || '';
+    const nacionalidad = extractNotaVal(notas, 'Nacionalidad') || 'Venezolana';
+    const docOrigen = p.cedula || '';
+    const pasaporte = extractNotaVal(notas, 'Pasaporte') || '';
+    const certNac = extractNotaVal(notas, 'CertNac') || '';
+    const otroDoc = extractNotaVal(notas, 'OtroDoc') || '';
+    const servicio = extractNotaVal(notas, 'Servicio') || 'Salud Psicológica & Apoyo Psicosocial';
+
+    return [
+      escapeCsvField(idx + 1),
+      escapeCsvField(nombresCompletos),
+      escapeCsvField(fechaNac),
+      escapeCsvField(genero),
+      escapeCsvField(tel1),
+      escapeCsvField(tel2),
+      escapeCsvField(fechaServicio),
+      escapeCsvField(provincia),
+      escapeCsvField(correo),
+      escapeCsvField(nacionalidad),
+      escapeCsvField(docOrigen),
+      escapeCsvField(pasaporte),
+      escapeCsvField(certNac),
+      escapeCsvField(otroDoc),
+      escapeCsvField(servicio)
+    ].join(',');
+  });
+
+  const csvContent = '\uFEFF' + [csvHeader.join(','), ...rowsCsv].join('\n');
+  const filename = `plantilla_oficial_oim_${new Date().toISOString().substring(0, 10)}.csv`;
+
+  return {
+    ok: true,
+    total_registros: filas.length,
+    filename,
+    csvContent
+  };
+}
+
+/**
  * 4. Obtener listado en vivo de consultas OIM con el estado de sus enlaces emitidos
  */
 async function obtenerConsultasAuditoriaOIM(filters = {}) {
@@ -419,5 +538,6 @@ module.exports = {
   agendarPacienteOIM,
   obtenerMetricasOIM,
   exportarAuditoriaCSV,
+  exportarPlantillaOficialOIMCSV,
   obtenerConsultasAuditoriaOIM
 };

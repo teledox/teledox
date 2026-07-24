@@ -3,7 +3,7 @@
  * Handler principal para los endpoints de OIM (Agendamiento, Métricas y Exportación CSV).
  */
 
-const { agendarPacienteOIM, obtenerMetricasOIM, exportarAuditoriaCSV, obtenerConsultasAuditoriaOIM } = require('../services/oimService');
+const { agendarPacienteOIM, obtenerMetricasOIM, exportarAuditoriaCSV, exportarPlantillaOficialOIMCSV, obtenerConsultasAuditoriaOIM } = require('../services/oimService');
 
 module.exports = async function handler(req, res) {
   // Habilitar CORS
@@ -43,10 +43,29 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(resultado);
     }
 
-    // 4. Exportación de Auditoría de Consultas en CSV
+    // 4. Exportación de Auditoría de Consultas en CSV (Formato Estándar)
     if (urlPath.endsWith('/exportar-auditoria-csv') || req.body?.action === 'exportar_csv') {
       const filters = method === 'GET' ? (req.query || {}) : (req.body || {});
       const { filename, csvContent, total_registros } = await exportarAuditoriaCSV(filters);
+
+      if (req.query?.download === 'true' || method === 'GET') {
+        res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        return res.status(200).send(csvContent);
+      }
+
+      return res.status(200).json({
+        ok: true,
+        total_registros,
+        filename,
+        csv_data: csvContent
+      });
+    }
+
+    // 4.5. Exportación de Plantilla Oficial OIM (Perfiles de beneficiarios template SaludPsicologica.xlsx)
+    if (urlPath.endsWith('/exportar-plantilla-oim-csv') || req.body?.action === 'exportar_plantilla_oim_csv') {
+      const filters = method === 'GET' ? (req.query || {}) : (req.body || {});
+      const { filename, csvContent, total_registros } = await exportarPlantillaOficialOIMCSV(filters);
 
       if (req.query?.download === 'true' || method === 'GET') {
         res.setHeader('Content-Type', 'text/csv; charset=utf-8');
